@@ -23,6 +23,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface DocRepo extends JpaRepository<Doc, String> {
+public interface DocRepo extends JpaRepository<Doc, Long> {
 
 }

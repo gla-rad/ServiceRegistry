@@ -17,6 +17,10 @@ package net.maritimeconnectivity.serviceregistry.repos;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 /**
  * Spring Data JPA repository for the Instance entity.
@@ -24,5 +28,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public interface InstanceRepo extends JpaRepository<Instance, String> {
+
+    @Query("select distinct instance from Instance instance left join fetch instance.designs left join fetch instance.docs")
+    List<Instance> findAllWithEagerRelationships();
+
+    @Query("select instance from Instance instance left join fetch instance.designs left join fetch instance.docs where instance.id =:id")
+    Instance findOneWithEagerRelationships(@Param("id") Long id);
 
 }

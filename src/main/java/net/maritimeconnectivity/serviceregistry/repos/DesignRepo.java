@@ -17,6 +17,10 @@ package net.maritimeconnectivity.serviceregistry.repos;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.Design;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 /**
  * Spring Data JPA repository for the Design entity.
@@ -25,4 +29,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 public interface DesignRepo extends JpaRepository<Design, String> {
 
+    @Query("select distinct design from Design design left join fetch design.specifications left join fetch design.docs")
+    List<Design> findAllWithEagerRelationships();
+
+    @Query("select design from Design design left join fetch design.specifications left join fetch design.docs where design.id =:id")
+    Design findOneWithEagerRelationships(@Param("id") Long id);
+    
 }
