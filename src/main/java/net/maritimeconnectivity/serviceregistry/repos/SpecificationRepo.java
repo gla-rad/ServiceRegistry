@@ -17,6 +17,10 @@ package net.maritimeconnectivity.serviceregistry.repos;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 /**
  * Spring Data JPA repository for the Specification entity.
@@ -24,5 +28,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public interface SpecificationRepo extends JpaRepository<Specification, String> {
+
+    @Query("select distinct specification from Specification specification left join fetch specification.docs")
+    List<Specification> findAllWithEagerRelationships();
+
+    @Query("select specification from Specification specification left join fetch specification.docs where specification.id =:id")
+    Specification findOneWithEagerRelationships(@Param("id") Long id);
 
 }
