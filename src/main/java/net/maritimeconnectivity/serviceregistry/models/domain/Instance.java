@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.locationtech.jts.geom.Geometry;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -69,8 +70,8 @@ public class Instance implements Serializable {
     @Column(name = "comment", nullable = true)
     private String comment;
 
-    @Column(name = "geometry", columnDefinition = "LONGTEXT")
-    private String geometry;
+    @Column(name = "geometry")
+    private Geometry geometry;
 
     @Column(name = "geometry_content_type")
     private String geometryContentType;
@@ -261,7 +262,7 @@ public class Instance implements Serializable {
      *
      * @return the geometry
      */
-    public String getGeometry() {
+    public Geometry getGeometry() {
         return geometry;
     }
 
@@ -270,7 +271,7 @@ public class Instance implements Serializable {
      *
      * @param geometry the geometry
      */
-    public void setGeometry(String geometry) {
+    public void setGeometry(Geometry geometry) {
         this.geometry = geometry;
     }
 
