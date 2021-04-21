@@ -82,6 +82,11 @@
 			<artifactId>hibernate-spatial</artifactId>
 			<version>${hibernate.spatial.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.apache.maven</groupId>
+			<artifactId>maven-artifact</artifactId>
+			<version>3.8.1</version>
+		</dependency>
 
 		<!-- The Webjars -->
 		<dependency>

@@ -38,6 +38,7 @@ import java.util.Optional;
  */
 @Service
 @Slf4j
+@Transactional
 public class DocService {
 
     @Autowired
