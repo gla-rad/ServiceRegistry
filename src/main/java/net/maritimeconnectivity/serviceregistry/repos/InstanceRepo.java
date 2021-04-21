@@ -15,14 +15,14 @@
  */
 package net.maritimeconnectivity.serviceregistry.repos;
 
-import net.maritimeconnectivity.serviceregistry.models.domain.Authority;
+import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
- * Spring Data JPA repository for the Authority entity.
+ * Spring Data JPA repository for the Instance entity.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface AuthorityRepository extends JpaRepository<Authority, String> {
+public interface InstanceRepo extends JpaRepository<Instance, String> {
 
 }

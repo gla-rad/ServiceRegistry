@@ -13,17 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package net.maritimeconnectivity.serviceregistry.repos;
 
-package net.maritimeconnectivity.serviceregistry.services;
-
-import org.springframework.stereotype.Service;
+import net.maritimeconnectivity.serviceregistry.models.domain.SpecificationTemplate;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
- * The Authority Service
+ * Spring Data JPA repository for the SpecificationTemplate entity.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Service
-public class AuthorityService {
+public interface SpecificationTemplateRepo extends JpaRepository<SpecificationTemplate, String> {
 
 }
