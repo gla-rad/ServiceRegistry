@@ -38,6 +38,8 @@ import java.util.Optional;
 
 /**
  * REST controller for managing Doc.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @RestController
 @RequestMapping("/api")

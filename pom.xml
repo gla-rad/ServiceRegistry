@@ -92,6 +92,11 @@
 			<artifactId>maven-artifact</artifactId>
 			<version>3.8.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.locationtech.jts.io</groupId>
+			<artifactId>jts-io-common</artifactId>
+			<version>1.18.1</version>
+		</dependency>
 
 		<!-- Swagger -->
 		<dependency>
