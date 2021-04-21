@@ -27,12 +27,72 @@ import java.util.List;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface DesignRepo extends JpaRepository<Design, String> {
+public interface DesignRepo extends JpaRepository<Design, Long> {
 
-    @Query("select distinct design from Design design left join fetch design.specifications left join fetch design.docs")
+    /**
+     * Find all with eager relationships list.
+     *
+     * @return the list
+     */
+    @Query("select distinct design " +
+            " from Design design " +
+            " left join fetch design.specifications " +
+            " left join fetch design.docs ")
     List<Design> findAllWithEagerRelationships();
 
-    @Query("select design from Design design left join fetch design.specifications left join fetch design.docs where design.id =:id")
+    /**
+     * Find one with eager relationships design.
+     *
+     * @param id the id
+     * @return the design
+     */
+    @Query("select design " +
+            " from Design design " +
+            " left join fetch design.specifications " +
+            " left join fetch design.docs " +
+            " where design.id =:id")
     Design findOneWithEagerRelationships(@Param("id") Long id);
-    
+
+    /**
+     * Find by domain id list.
+     *
+     * @param id the id
+     * @return the list
+     */
+    @Query("select distinct design " +
+            " from Design design " +
+            " left join fetch design.specifications " +
+            " left join fetch design.docs " +
+            " where design.designId = :id")
+    List<Design> findByDomainId(@Param("id") String id);
+
+    /**
+     * Find by domain id and version list.
+     *
+     * @param id      the id
+     * @param version the version
+     * @return the list
+     */
+    @Query("select distinct design " +
+            "from Design design " +
+            "left join fetch design.specifications " +
+            "left join fetch design.docs " +
+            "where design.designId = :id " +
+            "and design.version = :version")
+    List<Design> findByDomainIdAndVersion(@Param("id") String id, @Param("version") String version);
+
+    /**
+     * Find by specification id list.
+     *
+     * @param id the id
+     * @return the list
+     */
+    @Query("select distinct design " +
+            "from Design design " +
+            "left join fetch design.specifications " +
+            "left join fetch design.docs " +
+            "join design.specifications as specification " +
+            "where specification.specificationId = :id")
+    List<Design> findBySpecificationId(@Param("id") String id);
+
 }

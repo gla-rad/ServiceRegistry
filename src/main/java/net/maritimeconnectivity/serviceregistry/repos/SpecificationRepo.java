@@ -29,10 +29,26 @@ import java.util.List;
  */
 public interface SpecificationRepo extends JpaRepository<Specification, String> {
 
-    @Query("select distinct specification from Specification specification left join fetch specification.docs")
+    /**
+     * Find all with eager relationships list.
+     *
+     * @return the list
+     */
+    @Query("select distinct specification " +
+            "from Specification specification " +
+            "left join fetch specification.docs")
     List<Specification> findAllWithEagerRelationships();
 
-    @Query("select specification from Specification specification left join fetch specification.docs where specification.id =:id")
+    /**
+     * Find one with eager relationships specification.
+     *
+     * @param id the id
+     * @return the specification
+     */
+    @Query("select specification " +
+            "from Specification specification " +
+            "left join fetch specification.docs " +
+            "where specification.id =:id")
     Specification findOneWithEagerRelationships(@Param("id") Long id);
 
 }

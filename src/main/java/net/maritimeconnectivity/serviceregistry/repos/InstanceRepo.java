@@ -29,10 +29,28 @@ import java.util.List;
  */
 public interface InstanceRepo extends JpaRepository<Instance, String> {
 
-    @Query("select distinct instance from Instance instance left join fetch instance.designs left join fetch instance.docs")
+    /**
+     * Find all with eager relationships list.
+     *
+     * @return the list
+     */
+    @Query("select distinct instance " +
+            "from Instance instance left " +
+            "join fetch instance.designs " +
+            "left join fetch instance.docs")
     List<Instance> findAllWithEagerRelationships();
 
-    @Query("select instance from Instance instance left join fetch instance.designs left join fetch instance.docs where instance.id =:id")
+    /**
+     * Find one with eager relationships instance.
+     *
+     * @param id the id
+     * @return the instance
+     */
+    @Query("select instance " +
+            "from Instance instance " +
+            "left join fetch instance.designs " +
+            "left join fetch instance.docs " +
+            "where instance.id =:id")
     Instance findOneWithEagerRelationships(@Param("id") Long id);
 
 }
