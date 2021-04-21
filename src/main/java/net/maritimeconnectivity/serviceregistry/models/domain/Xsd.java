@@ -50,7 +50,7 @@ public class Xsd {
     private String comment;
 
     @NotNull
-    @Column(name = "content", nullable = false, columnDefinition = "LONGTEXT")
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @Column(name = "content_content_type", nullable = false)
