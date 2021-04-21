@@ -18,8 +18,19 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.geojson.GeoJsonReader;
+import org.locationtech.jts.io.geojson.GeoJsonWriter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -70,6 +81,8 @@ public class Instance implements Serializable {
     @Column(name = "comment", nullable = true)
     private String comment;
 
+    @JsonSerialize(using = GeometryJSONSerializer.class, as=String.class)
+    @JsonDeserialize(using = GeometryJSONDeserializer.class, as=String.class)
     @Column(name = "geometry")
     private Geometry geometry;
 
@@ -615,6 +628,24 @@ public class Instance implements Serializable {
      */
     public void setCompliant(boolean compliant) {
         this.compliant = compliant;
+    }
+
+    /**
+     * Gets the geometry as a JSON node object.
+     *
+     * @return the geometry in JSON format
+     */
+    public JsonNode getGeometryJson() {
+        return GeometryJSONConverter.convertFromGeometry(this.geometry);
+    }
+
+    /**
+     * Sets the geometry from a JSON node object.
+     *
+     * @param geometry the geometry in a JSON format
+     */
+    public void setGeometryJson(JsonNode geometry) throws ParseException {
+        this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
     }
 
     /**

@@ -40,6 +40,8 @@ import java.util.Optional;
 
 /**
  * REST controller for managing Design.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @RestController
 @RequestMapping("/api")

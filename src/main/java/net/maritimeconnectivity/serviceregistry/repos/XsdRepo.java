@@ -23,6 +23,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface XsdRepo extends JpaRepository<Xsd, String> {
+public interface XsdRepo extends JpaRepository<Xsd, Long> {
 
 }
