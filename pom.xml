@@ -20,7 +20,11 @@
 		<java.version>11</java.version>
 		<spring-cloud.version>Hoxton.SR8</spring-cloud.version>
 		<hibernate.spatial.version>5.4.30.Final</hibernate.spatial.version>
+		<keycloak.version>12.0.1</keycloak.version>
 		<swagger.version>3.0.0</swagger.version>
+		<bootstrap.version>4.5.2</bootstrap.version>
+		<jquery.version>3.1.1-1</jquery.version>
+		<fa.version>5.11.2</fa.version>
 	</properties>
 
 	<build>
@@ -109,17 +113,17 @@
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>bootstrap</artifactId>
-			<version>4.5.2</version>
+			<version>${bootstrap.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>jquery</artifactId>
-			<version>3.1.1-1</version>
+			<version>${jquery.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>font-awesome</artifactId>
-			<version>5.11.2</version>
+			<version>${fa.version}</version>
 		</dependency>
 
 		<dependency>
@@ -159,7 +163,7 @@
 			<dependency>
 				<groupId>org.keycloak.bom</groupId>
 				<artifactId>keycloak-adapter-bom</artifactId>
-				<version>11.0.2</version>
+				<version>${keycloak.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
