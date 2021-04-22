@@ -25,14 +25,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * The Home Viewer Controller.
+ * The Home View Controller.
  *
  * This is the home controller that allows user to view the main options.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Controller
-public class HomeViewerController {
+public class HomeViewController {
 
     /**
      * The home page of the Message Broker Application.
