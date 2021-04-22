@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface SpecificationRepo extends JpaRepository<Specification, String> {
+public interface SpecificationRepo extends JpaRepository<Specification, Long> {
 
     /**
      * Find all with eager relationships list.
@@ -50,5 +50,31 @@ public interface SpecificationRepo extends JpaRepository<Specification, String> 
             "left join fetch specification.docs " +
             "where specification.id =:id")
     Specification findOneWithEagerRelationships(@Param("id") Long id);
+
+    /**
+     * Find by domain id list.
+     *
+     * @param id the id
+     * @return the list
+     */
+    @Query("select distinct specification " +
+            "from Specification specification " +
+            "left join fetch specification.docs " +
+            "where specification.specificationId = :id")
+    List<Specification> findByDomainId(@Param("id") String id);
+
+    /**
+     * Find by domain id and version list.
+     *
+     * @param id      the id
+     * @param version the version
+     * @return the list
+     */
+    @Query("select distinct specification " +
+            "from Specification specification " +
+            "left join fetch specification.docs " +
+            "where specification.specificationId = :id " +
+            "and specification.version = :version")
+    List<Specification> findByDomainIdAndVersion(@Param("id") String id, @Param("version") String version);
 
 }
