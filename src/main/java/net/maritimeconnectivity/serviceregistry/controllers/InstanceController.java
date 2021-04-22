@@ -16,7 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
@@ -117,7 +116,7 @@ public class InstanceController {
     public ResponseEntity<List<Instance>> getAllInstances(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
-        Page<Instance> page = instanceService.findAll(pageable);
+        Page<Instance> page = this.instanceService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/instances");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -151,7 +150,7 @@ public class InstanceController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteInstance(@PathVariable Long id) {
         log.debug("REST request to delete Instance : {}", id);
-        instanceService.delete(id);
+        this.instanceService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString())).build();
     }
 
@@ -166,7 +165,7 @@ public class InstanceController {
      */
     private ResponseEntity<Instance> saveInstance(Instance instance, boolean newInstance) throws URISyntaxException {
         try {
-            instanceService.save(instance);
+            this.instanceService.save(instance);
         } catch (XMLValidationException e) {
             log.error("Error parsing xml: ", e);
             return ResponseEntity.badRequest()

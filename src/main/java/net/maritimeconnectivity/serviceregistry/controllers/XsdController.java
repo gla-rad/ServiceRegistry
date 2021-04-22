@@ -18,7 +18,6 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xsd;
-import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import net.maritimeconnectivity.serviceregistry.services.XsdService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
@@ -65,7 +64,7 @@ public class XsdController {
         if (xsd.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("xsd", "idexists", "A new xsd cannot already have an ID")).body(null);
         }
-        Xsd result = xsdService.save(xsd);
+        Xsd result = this.xsdService.save(xsd);
         return ResponseEntity.created(new URI("/api/xsds/" + result.getId()))
                 .headers(HeaderUtil.createEntityCreationAlert("xsd", result.getId().toString()))
                 .body(result);
@@ -88,7 +87,7 @@ public class XsdController {
         if (xsd.getId() == null) {
             return createXsd(xsd);
         }
-        Xsd result = xsdService.save(xsd);
+        Xsd result = this.xsdService.save(xsd);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert("xsd", xsd.getId().toString()))
                 .body(result);
@@ -107,7 +106,7 @@ public class XsdController {
     public ResponseEntity<List<Xsd>> getAllXsds(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Xsds");
-        Page<Xsd> page = xsdService.findAll(pageable);
+        Page<Xsd> page = this.xsdService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/xsds");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -123,7 +122,7 @@ public class XsdController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xsd> getXsd(@PathVariable Long id) {
         log.debug("REST request to get Xsd : {}", id);
-        Xsd xsd = xsdService.findOne(id);
+        Xsd xsd = this.xsdService.findOne(id);
         return Optional.ofNullable(xsd)
                 .map(result -> new ResponseEntity<>(
                         result,
@@ -142,7 +141,7 @@ public class XsdController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteXsd(@PathVariable Long id) {
         log.debug("REST request to delete Xsd : {}", id);
-        xsdService.delete(id);
+        this.xsdService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("xsd", id.toString())).build();
     }
 

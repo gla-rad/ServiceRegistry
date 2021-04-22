@@ -19,7 +19,6 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
-import net.maritimeconnectivity.serviceregistry.services.XsdService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +64,7 @@ public class XmlController {
         if (xml.getId() != null) {
             return ResponseEntity.badRequest().headers(HeaderUtil.createFailureAlert("xml", "idexists", "A new xml cannot already have an ID")).body(null);
         }
-        Xml result = xmlService.save(xml);
+        Xml result = this.xmlService.save(xml);
         return ResponseEntity.created(new URI("/api/xmls/" + result.getId()))
                 .headers(HeaderUtil.createEntityCreationAlert("xml", result.getId().toString()))
                 .body(result);
@@ -88,7 +87,7 @@ public class XmlController {
         if (xml.getId() == null) {
             return createXml(xml);
         }
-        Xml result = xmlService.save(xml);
+        Xml result = this.xmlService.save(xml);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert("xml", xml.getId().toString()))
                 .body(result);
@@ -107,7 +106,7 @@ public class XmlController {
     public ResponseEntity<List<Xml>> getAllXmls(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Xmls");
-        Page<Xml> page = xmlService.findAll(pageable);
+        Page<Xml> page = this.xmlService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/xmls");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -123,7 +122,7 @@ public class XmlController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> getXml(@PathVariable Long id) {
         log.debug("REST request to get Xml : {}", id);
-        Xml xml = xmlService.findOne(id);
+        Xml xml = this.xmlService.findOne(id);
         return Optional.ofNullable(xml)
                 .map(result -> new ResponseEntity<>(
                         result,

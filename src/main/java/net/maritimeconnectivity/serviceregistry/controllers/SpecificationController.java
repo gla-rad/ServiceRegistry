@@ -78,7 +78,7 @@ public class SpecificationController {
         }
         specification.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         specification.setLastUpdatedAt(specification.getPublishedAt());
-        Specification result = specificationService.save(specification);
+        Specification result = this.specificationService.save(specification);
         return ResponseEntity.created(new URI("/api/specifications/" + result.getId()))
                 .headers(HeaderUtil.createEntityCreationAlert("specification", result.getId().toString()))
                 .body(result);
@@ -116,7 +116,7 @@ public class SpecificationController {
             specification.setPublishedAt(specification.getLastUpdatedAt());
         }
 
-        Specification result = specificationService.save(specification);
+        Specification result = this.specificationService.save(specification);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert("specification", specification.getId().toString()))
                 .body(result);
@@ -135,7 +135,7 @@ public class SpecificationController {
     public ResponseEntity<List<Specification>> getAllSpecifications(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Specifications");
-        Page<Specification> page = specificationService.findAll(pageable);
+        Page<Specification> page = this.specificationService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/specifications");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -151,7 +151,7 @@ public class SpecificationController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Specification> getSpecification(@PathVariable Long id) {
         log.debug("REST request to get Specification : {}", id);
-        Specification specification = specificationService.findOne(id);
+        Specification specification = this.specificationService.findOne(id);
         return Optional.ofNullable(specification)
                 .map(result -> new ResponseEntity<>(
                         result,
@@ -170,7 +170,7 @@ public class SpecificationController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteSpecification(@PathVariable Long id) {
         log.debug("REST request to delete Specification : {}", id);
-        specificationService.delete(id);
+        this.specificationService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("specification", id.toString())).build();
     }
 
