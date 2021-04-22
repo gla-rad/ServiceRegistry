@@ -17,12 +17,40 @@ package net.maritimeconnectivity.serviceregistry.repos;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.SpecificationTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.List;
 
 /**
  * Spring Data JPA repository for the SpecificationTemplate entity.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public interface SpecificationTemplateRepo extends JpaRepository<SpecificationTemplate, String> {
+public interface SpecificationTemplateRepo extends JpaRepository<SpecificationTemplate, Long> {
+
+    /**
+     * Find all with eager relationships list.
+     *
+     * @return the list
+     */
+    @Query("select distinct specificationTemplate " +
+            "from SpecificationTemplate specificationTemplate " +
+            "left join fetch specificationTemplate.docs " +
+            "left join fetch specificationTemplate.xsds")
+    List<SpecificationTemplate> findAllWithEagerRelationships();
+
+    /**
+     * Find one with eager relationships specification template.
+     *
+     * @param id the id
+     * @return the specification template
+     */
+    @Query("select specificationTemplate " +
+            "from SpecificationTemplate specificationTemplate " +
+            "left join fetch specificationTemplate.docs " +
+            "left join fetch specificationTemplate.xsds " +
+            "where specificationTemplate.id =:id")
+    SpecificationTemplate findOneWithEagerRelationships(@Param("id") Long id);
 
 }

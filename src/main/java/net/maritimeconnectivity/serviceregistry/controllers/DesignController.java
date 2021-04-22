@@ -81,7 +81,7 @@ public class DesignController {
         design.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         design.setLastUpdatedAt(design.getPublishedAt());
 
-        Design result = designService.save(design);
+        Design result = this.designService.save(design);
         return ResponseEntity.created(new URI("/api/designs/" + result.getId()))
                 .headers(HeaderUtil.createEntityCreationAlert("design", result.getId().toString()))
                 .body(result);
@@ -122,7 +122,7 @@ public class DesignController {
             design.setPublishedAt(design.getLastUpdatedAt());
         }
 
-        Design result = designService.save(design);
+        Design result = this.designService.save(design);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert("design", design.getId().toString()))
                 .body(result);
@@ -141,7 +141,7 @@ public class DesignController {
     public ResponseEntity<List<Design>> getAllDesigns(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Designs");
-        Page<Design> page = designService.findAll(pageable);
+        Page<Design> page = this.designService.findAll(pageable);
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/designs");
         return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
     }
@@ -157,7 +157,7 @@ public class DesignController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Design> getDesign(@PathVariable Long id) {
         log.debug("REST request to get Design : {}", id);
-        Design design = designService.findOne(id);
+        Design design = this.designService.findOne(id);
         return Optional.ofNullable(design)
                 .map(result -> new ResponseEntity<>(
                         result,
@@ -176,7 +176,7 @@ public class DesignController {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDesign(@PathVariable Long id) {
         log.debug("REST request to delete Design : {}", id);
-        designService.delete(id);
+        this.designService.delete(id);
         return ResponseEntity.ok().headers(HeaderUtil.createEntityDeletionAlert("design", id.toString())).build();
     }
 
