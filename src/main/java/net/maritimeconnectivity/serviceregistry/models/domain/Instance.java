@@ -85,7 +85,7 @@ public class Instance implements Serializable {
     @NotNull
     @Column(name = "instance_id", nullable = true)
     @JsonProperty("instanceId")
-    private String instanceId;
+    private String instanceId; //MRN
 
     @Column(name = "keywords")
     private String keywords;
@@ -132,13 +132,13 @@ public class Instance implements Serializable {
      * The Designs.
      */
     @ElementCollection
-    Map<String, Double> designs = new HashMap<>();
+    Map<String, String> designs = new HashMap<>();
 
     /**
      * The Specifications.
      */
     @ElementCollection
-    Map<String, Double> specifications = new HashMap<>();
+    Map<String, String> specifications = new HashMap<>();
 
     /**
      * Gets id.
@@ -505,7 +505,7 @@ public class Instance implements Serializable {
      *
      * @return the designs
      */
-    public Map<String, Double> getDesigns() {
+    public Map<String, String> getDesigns() {
         return designs;
     }
 
@@ -514,7 +514,7 @@ public class Instance implements Serializable {
      *
      * @param designs the designs
      */
-    public void setDesigns(Map<String, Double> designs) {
+    public void setDesigns(Map<String, String> designs) {
         this.designs = designs;
     }
 
@@ -523,7 +523,7 @@ public class Instance implements Serializable {
      *
      * @return the specifications
      */
-    public Map<String, Double> getSpecifications() {
+    public Map<String, String> getSpecifications() {
         return specifications;
     }
 
@@ -532,7 +532,7 @@ public class Instance implements Serializable {
      *
      * @param specifications the specifications
      */
-    public void setSpecifications(Map<String, Double> specifications) {
+    public void setSpecifications(Map<String, String> specifications) {
         this.specifications = specifications;
     }
 
