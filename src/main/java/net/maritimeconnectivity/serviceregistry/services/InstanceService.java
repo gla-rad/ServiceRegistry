@@ -55,13 +55,8 @@ import java.util.List;
 @Transactional
 public class InstanceService {
 
-    private static final boolean SEARCH_INCLUDE_NONCOMPLIANT_BY_DEFAULT = false;
-
     @Autowired
     private InstanceRepo instanceRepo;
-
-    @Autowired
-    private DesignService designService;
 
     @Autowired
     private XmlService xmlService;
@@ -93,35 +88,9 @@ public class InstanceService {
         // First of all validate the object
         this.validateInstanceForSave(instance);
 
-        // set compliant flag if is instance compliant
-        setCompliantFlag(instance);
-
         Instance result = this.instanceRepo.save(instance);
         return result;
     }
-
-    /**
-     * Sets compliant flag to service instance to true if service has design and
-     * specification, to false if service has not these documents.
-     *
-     * @param instance
-     */
-    private void setCompliantFlag(Instance instance) {
-        if (instance == null) {
-            return;
-        }
-
-        if (instance.getDesigns() != null
-                && instance.getDesigns().size() > 0
-                && instance.getSpecificationId() != null
-                && !instance.getSpecificationId().isEmpty()) {
-
-            instance.setCompliant(true);
-        } else {
-            instance.setCompliant(false);
-        }
-    }
-
 
     /**
      * Get all the instances.
@@ -167,7 +136,7 @@ public class InstanceService {
      * @param status the status of the entity
      * @throws Exception
      */
-    public void updateStatus(Long id, String status) throws Exception {
+    public void updateStatus(Long id, InstanceStatus status) throws Exception {
         log.debug("Request to update status of Instance : {}", id);
         try {
             Instance instance = this.instanceRepo.findOneWithEagerRelationships(id);
@@ -176,7 +145,7 @@ public class InstanceService {
             if (instanceXml != null && instanceXml.getContent() != null) {
                 String xml = instanceXml.getContent().toString();
                 //Update the status value inside the xml definition
-                String resultXml = XmlUtil.updateXmlNode(status, xml, "/*[local-name()='serviceInstance']/*[local-name()='status']");
+                String resultXml = XmlUtil.updateXmlNode(status.getStatus(), xml, "/*[local-name()='serviceInstance']/*[local-name()='status']");
                 instanceXml.setContent(resultXml);
                 // Save XML
                 xmlService.save(instanceXml);
@@ -211,33 +180,17 @@ public class InstanceService {
     /**
      * Get one instance by domain specific id (for example, maritime id) and version.
      *
-     * @param domainId the domain specific id of the instance
-     * @param version  the version identifier of the instance
-     * @return the entity
-     */
-    public Instance findByDomainId(String domainId, String version) {
-        return findByDomainId(domainId, version, SEARCH_INCLUDE_NONCOMPLIANT_BY_DEFAULT);
-    }
-
-    /**
-     * Get one instance by domain specific id (for example, maritime id) and version.
-     *
      * @param domainId            the domain specific id of the instance
      * @param version             the version identifier of the instance
-     * @param includeNonCompliant include also non-compliant services
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findByDomainId(String domainId, String version, boolean includeNonCompliant) {
+    public Instance findByDomainId(String domainId, String version) {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
         Instance instance = null;
         try {
             Iterable<Instance> instances;
-            if (includeNonCompliant) {
-                instances = this.instanceRepo.findByDomainIdAndVersionEagerRelationshipsWithNonCompliant(domainId, version);
-            } else {
-                instances = this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version);
-            }
+            instances = this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version);
 
             if (instances.iterator().hasNext()) {
                 instance = instances.iterator().next();
@@ -252,39 +205,23 @@ public class InstanceService {
     /**
      * Get one instance by domain specific id (for example, maritime id), only return the latest version.
      *
-     * @param domainId the domain specific id of the instance
-     * @return the entity
-     */
-    public Instance findLatestVersionByDomainId(String domainId) {
-        return findLatestVersionByDomainId(domainId, SEARCH_INCLUDE_NONCOMPLIANT_BY_DEFAULT);
-    }
-
-    /**
-     * Get one instance by domain specific id (for example, maritime id), only return the latest version.
-     *
      * @param domainId            the domain specific id of the instance
-     * @param includeNonCompliant include also non-compliant services
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findLatestVersionByDomainId(String domainId, boolean includeNonCompliant) {
+    public Instance findLatestVersionByDomainId(String domainId) {
         log.debug("Request to get Instance by domain id {}", domainId);
         Instance instance = null;
         DefaultArtifactVersion latestVersion = new DefaultArtifactVersion("0.0");
         try {
-
             Iterable<Instance> instances;
-            if (includeNonCompliant) {
-                instances = this.instanceRepo.findByDomainIdEagerRelationshipsWithNonCompliant(domainId);
-            } else {
-                instances = this.instanceRepo.findByDomainIdEagerRelationships(domainId);
-            }
+            instances = this.instanceRepo.findByDomainIdEagerRelationships(domainId);
 
             if (instances.iterator().hasNext()) {
                 Instance i = instances.iterator().next();
                 //Compare version numbers, save the instance if it's a newer version
                 DefaultArtifactVersion iv = new DefaultArtifactVersion(i.getVersion());
-                if (iv.compareTo(latestVersion) > 0 && i.getStatus().equalsIgnoreCase(Instance.SERVICESTATUS_LIVE)) {
+                if (iv.compareTo(latestVersion) > 0 && i.getStatus().equals(InstanceStatus.LIVE)) {
                     instance = i;
                     latestVersion = iv;
                 }
@@ -310,44 +247,9 @@ public class InstanceService {
      * @throws GeometryParseException If fails second phase (Parsing geo data)
      */
     public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException {
-        Assert.notNull(designService, "Design service can not be null!");
         if(instance == null) {
             return;
         }
-        try {
-            String xml = instance.getInstanceAsXml().getContent().toString();
-            XmlUtil.validateXml(xml, "ServiceInstanceSchema.xsd");
-            instance = this.parseInstanceAttributesFromXML(instance);
-
-            DesignImplementation document = this.parseInstanceDesignImplementationFromXML(instance);
-            if(document != null) {
-                Design findByDomainId = this.designService.findByDomainId(document.getDesignId(), document.getVersion());
-                if(findByDomainId != null) {
-                    if(instance.getDesigns().isEmpty()) {
-                        instance.setDesigns(new HashSet<>());
-                    }
-                    instance.getDesigns().add(findByDomainId);
-                } else {
-                    // nothing
-                }
-            }
-
-            if (instance.getDesigns() != null && instance.getDesigns().size() > 0) {
-                Design design = instance.getDesigns().iterator().next();
-                if (design != null) {
-                    instance.setDesignId(design.getDesignId());
-                    if (design.getSpecifications() != null && design.getSpecifications().size() > 0) {
-                        Specification specification = design.getSpecifications().iterator().next();
-                        if (specification != null) {
-                            instance.setSpecificationId(specification.getSpecificationId());
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new XMLValidationException("ServiceInstance is not valid.", e);
-        }
-
         try {
             this.parseInstanceGeometryFromXML(instance);
         } catch (Exception e) {
@@ -375,7 +277,7 @@ public class InstanceService {
         instance.setVersion(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='version']").evaluate(doc, XPathConstants.STRING).toString());
         instance.setInstanceId(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='id']").evaluate(doc, XPathConstants.STRING).toString());
         instance.setKeywords(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='keywords']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setStatus(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='status']").evaluate(doc, XPathConstants.STRING).toString());
+//        instance.setStatus(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='status']").evaluate(doc, XPathConstants.STRING).toString());
         instance.setComment(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='description']").evaluate(doc, XPathConstants.STRING).toString());
         instance.setEndpointUri(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='URL']").evaluate(doc, XPathConstants.STRING).toString());
         instance.setMmsi(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='MMSI']").evaluate(doc, XPathConstants.STRING).toString());
@@ -387,20 +289,6 @@ public class InstanceService {
             instance.setUnlocode(unLoCode);
         }
         return instance;
-    }
-
-    private DesignImplementation parseInstanceDesignImplementationFromXML(Instance instance) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = null;
-        builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(new ByteArrayInputStream(instance.getInstanceAsXml().getContent().toString().getBytes(StandardCharsets.UTF_8)));
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        XPath xPath = xPathFactory.newXPath();
-
-        String implementedServiceDesign = xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='implementsServiceDesign']/*[local-name()='id']").evaluate(doc, XPathConstants.STRING).toString();
-        String implementedServiceDesignVersion = xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='implementsServiceDesign']/*[local-name()='version']").evaluate(doc, XPathConstants.STRING).toString();
-
-        return new DesignImplementation(implementedServiceDesign, implementedServiceDesignVersion);
     }
 
     /**

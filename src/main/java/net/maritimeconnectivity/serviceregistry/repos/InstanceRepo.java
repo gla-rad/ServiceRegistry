@@ -35,9 +35,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
      * @return the list
      */
     @Query("select distinct instance " +
-            "from Instance instance left " +
-            "join fetch instance.designs " +
-            "left join fetch instance.docs")
+            "from Instance instance ")
     List<Instance> findAllWithEagerRelationships();
 
     /**
@@ -48,8 +46,6 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
      */
     @Query("select instance " +
             "from Instance instance " +
-            "left join fetch instance.designs " +
-            "left join fetch instance.docs " +
             "where instance.id =:id")
     Instance findOneWithEagerRelationships(@Param("id") Long id);
 
@@ -61,24 +57,8 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
      */
     @Query("select distinct instance " +
             "from Instance instance " +
-            "left join fetch instance.designs " +
-            "left join fetch instance.docs " +
-            "where instance.instanceId = :id " +
-            "and instance.compliant = true")
+            "where instance.instanceId = :id ")
     List<Instance> findByDomainIdEagerRelationships(@Param("id") String id);
-
-    /**
-     * Find by domain id eager relationships with non compliant list.
-     *
-     * @param id the id
-     * @return the list
-     */
-    @Query("select distinct instance " +
-            "from Instance instance " +
-            "left join fetch instance.designs " +
-            "left join fetch instance.docs " +
-            "where instance.instanceId = :id")
-    List<Instance> findByDomainIdEagerRelationshipsWithNonCompliant(@Param("id") String id);
 
     /**
      * Find by domain id and version eager relationships list.
@@ -89,27 +69,10 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
      */
     @Query("select distinct instance " +
             "from Instance instance " +
-            "left join fetch instance.designs " +
-            "left join fetch instance.docs " +
-            "where instance.instanceId = :id " +
-            "and instance.version = :version " +
-            "and instance.compliant = true")
-    List<Instance> findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
-
-    /**
-     * Find by domain id and version eager relationships with non compliant list.
-     *
-     * @param id      the id
-     * @param version the version
-     * @return the list
-     */
-    @Query("select distinct instance " +
-            "from Instance instance " +
-            "left join fetch instance.designs " +
-            "left join fetch instance.docs " +
             "where instance.instanceId = :id " +
             "and instance.version = :version")
-    List<Instance> findByDomainIdAndVersionEagerRelationshipsWithNonCompliant(@Param("id") String id, @Param("version") String version);
+    List<Instance> findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
+
 
     /**
      * Find by domain id list.

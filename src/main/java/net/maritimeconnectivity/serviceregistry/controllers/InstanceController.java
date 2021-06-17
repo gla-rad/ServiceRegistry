@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.services.DesignService;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
@@ -52,9 +51,6 @@ public class InstanceController {
 
     @Autowired
     private InstanceService instanceService;
-
-    @Autowired
-    private DesignService designService;
 
     /**
      * POST  /instances : Create a new instance.
