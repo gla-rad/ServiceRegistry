@@ -38,8 +38,13 @@ import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Utility class for XML manipulation.
@@ -85,20 +90,21 @@ public class XmlUtil {
     /**
      * Validate xml against a schema on classpath
      *
-     * @param xml            the XML as string
-     * @param schemaFileName the name of the XSD on the classpath
+     * @param xml the XML as string
+     * @param schemaFiles the location of the XSD schemas on the classpath
      * @return true if successful, throws SAXEXception if xml invalid
      * @throws SAXException the sax exception
      * @throws IOException  the io exception
      */
-    public static boolean validateXml(String xml, String schemaFileName) throws SAXException, IOException {
-        //File schemaFile = new File(schemaFileName);
+    public static boolean validateXml(String xml, List<String> schemaFiles) throws SAXException, IOException {
         Source xmlSource = new StreamSource(new StringReader(xml));
         SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
         schemaFactory.setResourceResolver(new ResourceResolver());
-        InputStream schemaInputStream = XmlUtil.class.getClassLoader().getResourceAsStream(schemaFileName);
-        StreamSource schemaStreamSource = new StreamSource(schemaInputStream);
-        Schema schema = schemaFactory.newSchema(schemaStreamSource);
+        List<StreamSource> sources = schemaFiles.stream()
+                .map(XmlUtil.class.getClassLoader()::getResourceAsStream)
+                .map(StreamSource::new)
+                .collect(Collectors.toList());
+        Schema schema = schemaFactory.newSchema(sources.toArray(new Source[]{}));
         Validator validator = schema.newValidator();
         validator.validate(xmlSource);
         return true;

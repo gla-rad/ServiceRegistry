@@ -623,7 +623,7 @@ public class Instance implements Serializable {
         // this.setStatus(InstanceStatus.fromString(serviceInstance.getStatus().value())); // Do we need this?
         this.setComment(serviceInstance.getDescription());
         this.setName(serviceInstance.getName());
-        this.setEndpointUri(serviceInstance.getURL());
+        this.setEndpointUri(serviceInstance.getEndpoint());
         this.setMmsi(serviceInstance.getMMSI());
         this.setImo(serviceInstance.getIMO());
         this.setServiceType(serviceInstance.getServiceType());
