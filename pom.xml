@@ -27,6 +27,17 @@
 		<fa.version>5.11.2</fa.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>grad</id>
+			<url>http://gla-rrnav1.dyndns.org:8081/repository/grad/</url>
+		</repository>
+		<repository>
+			<id>grad-snapshots</id>
+			<url>http://gla-rrnav1.dyndns.org:8081/repository/grad-snapshots/</url>
+		</repository>
+	</repositories>
+
 	<build>
 		<plugins>
 			<plugin>
@@ -152,6 +163,12 @@
             <version>3.18.1</version>
             <scope>compile</scope>
         </dependency>
+		<dependency>
+			<groupId>net.maritimeconnectivity.eNav</groupId>
+			<artifactId>g1128-schemas</artifactId>
+			<version>0.0.1</version>
+			<classifier>jdk11</classifier>
+		</dependency>
 	</dependencies>
 
 	<dependencyManagement>

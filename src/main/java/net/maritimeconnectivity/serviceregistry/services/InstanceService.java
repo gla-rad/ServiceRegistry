@@ -22,9 +22,11 @@ import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseExceptio
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
+import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import net.maritimeconnectivity.serviceregistry.utils.XmlUtil;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -32,7 +34,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.Assert;
 import org.w3c.dom.Document;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -42,7 +43,6 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
 import java.util.List;
 
 /**
@@ -88,8 +88,8 @@ public class InstanceService {
         // First of all validate the object
         this.validateInstanceForSave(instance);
 
-        Instance result = this.instanceRepo.save(instance);
-        return result;
+        // The save and return
+        return this.instanceRepo.save(instance);
     }
 
     /**
@@ -101,9 +101,7 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Page<Instance> findAll(Pageable pageable) {
         log.debug("Request to get all Instances");
-        Page<Instance> result = null;
-        result = this.instanceRepo.findAll(pageable);
-        return result;
+        return this.instanceRepo.findAll(pageable);
     }
 
     /**
@@ -115,8 +113,7 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Instance findOne(Long id) {
         log.debug("Request to get Instance : {}", id);
-        Instance instance = this.instanceRepo.findOneWithEagerRelationships(id);
-        return instance;
+        return this.instanceRepo.findOneWithEagerRelationships(id);
     }
 
     /**
@@ -134,7 +131,7 @@ public class InstanceService {
      *
      * @param id     the id of the entity
      * @param status the status of the entity
-     * @throws Exception
+     * @throws Exception any exceptions thrown while updating the status
      */
     public void updateStatus(Long id, InstanceStatus status) throws Exception {
         log.debug("Request to update status of Instance : {}", id);
@@ -143,7 +140,7 @@ public class InstanceService {
 
             Xml instanceXml = instance.getInstanceAsXml();
             if (instanceXml != null && instanceXml.getContent() != null) {
-                String xml = instanceXml.getContent().toString();
+                String xml = instanceXml.getContent();
                 //Update the status value inside the xml definition
                 String resultXml = XmlUtil.updateXmlNode(status.getStatus(), xml, "/*[local-name()='serviceInstance']/*[local-name()='status']");
                 instanceXml.setContent(resultXml);
@@ -265,29 +262,12 @@ public class InstanceService {
      * @throws Exception if the XML is invalid or attributes not present
      */
     private Instance parseInstanceAttributesFromXML(Instance instance) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = null;
-        builder = factory.newDocumentBuilder();
         log.info("Parsing XML: " + instance.getInstanceAsXml().getContent().toString());
-        Document doc = builder.parse(new ByteArrayInputStream(instance.getInstanceAsXml().getContent().toString().getBytes(StandardCharsets.UTF_8)));
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        XPath xPath = xPathFactory.newXPath();
+        ServiceInstance serviceInstance = G1128Utils.unmarshallG1128SI(instance.getInstanceAsXml().getContent());
 
-        instance.setName(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='name']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setVersion(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='version']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setInstanceId(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='id']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setKeywords(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='keywords']").evaluate(doc, XPathConstants.STRING).toString());
-//        instance.setStatus(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='status']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setComment(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='description']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setEndpointUri(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='URL']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setMmsi(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='MMSI']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setImo(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='IMO']").evaluate(doc, XPathConstants.STRING).toString());
-        instance.setServiceType(xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='serviceType']").evaluate(doc, XPathConstants.STRING).toString());
+        // Populate the instance object
+        instance.copyFromG1128(serviceInstance);
 
-        String unLoCode = xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='unLoCode']").evaluate(doc, XPathConstants.STRING).toString();
-        if (unLoCode != null && unLoCode.length() > 0) {
-            instance.setUnlocode(unLoCode);
-        }
         return instance;
     }
 
