@@ -1,0 +1,49 @@
+<serviceInstance
+        xmlns="http://efficiensea2.org/maritime-cloud/service-registry/v1/ServiceInstanceSchema.xsd"
+        xmlns:ServiceSpecificationSchema="http://efficiensea2.org/maritime-cloud/service-registry/v1/ServiceSpecificationSchema.xsd">
+    <id>urn:mrn:mcp:service:mcc:torg:instance:100</id>
+    <version>1</version>
+    <name>TestInstance_ForautoTest</name>
+    <status>released</status>
+    <description>
+        A simple service implementing the AddressPersonLookupServiceSpecification
+    </description>
+    <keywords>winter navigation</keywords>
+    <endpoint>
+        https://testservice3.mcp.enav.kronshtadt.ru/mcl/addressLookupServiceImpl/
+    </endpoint>
+    <requiresAuthorization>true</requiresAuthorization>
+    <offersServiceLevel>
+        <availability>0</availability>
+        <name>Development</name>
+        <description>
+            This service implementation is under active development, 0% availability is guaranteed.
+        </description>
+    </offersServiceLevel>
+    <coversAreas>
+        <coversArea>
+            <name>Saint-Petersburg, Russia</name>
+            <description>Saint-Petersburg city in Russian Federation</description>
+            <geometryAsWKT>
+                POLYGON(( 29.571 59.796, 30.606 59.796, 30.606 60.099, 29.571 60.099, 29.571 59.796 ))
+            </geometryAsWKT>
+        </coversArea>
+    </coversAreas>
+    <implementsServiceDesign>
+        <id>urn:mrn:mcp:service:mcc:torg:design:100</id>
+        <version>1</version>
+    </implementsServiceDesign>
+    <producedBy>
+        <ServiceSpecificationSchema:id>urn:mrn:mcp:service:mcc:torg:specification:100</ServiceSpecificationSchema:id>
+        <ServiceSpecificationSchema:name>someName</ServiceSpecificationSchema:name>
+        <ServiceSpecificationSchema:description>Somedescription</ServiceSpecificationSchema:description>
+        <ServiceSpecificationSchema:contactInfo>Unknown@kronshtadt.ru</ServiceSpecificationSchema:contactInfo>
+        <ServiceSpecificationSchema:isCommercial>false</ServiceSpecificationSchema:isCommercial>
+    </producedBy>
+    <providedBy>
+        <ServiceSpecificationSchema:id>Provider ID</ServiceSpecificationSchema:id>
+        <ServiceSpecificationSchema:name>Provider Name</ServiceSpecificationSchema:name>
+        <ServiceSpecificationSchema:description>Provider Description</ServiceSpecificationSchema:description>
+        <ServiceSpecificationSchema:contactInfo>provider@email.com</ServiceSpecificationSchema:contactInfo>
+    </providedBy>
+</serviceInstance>

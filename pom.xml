@@ -108,6 +108,11 @@
 			<artifactId>jts-io-common</artifactId>
 			<version>1.18.1</version>
 		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.10.0</version>
+		</dependency>
 
 		<!-- Swagger -->
 		<dependency>
@@ -166,7 +171,7 @@
 		<dependency>
 			<groupId>net.maritimeconnectivity.eNav</groupId>
 			<artifactId>g1128-schemas</artifactId>
-			<version>0.0.1</version>
+			<version>0.0.4</version>
 			<classifier>jdk11</classifier>
 		</dependency>
 	</dependencies>

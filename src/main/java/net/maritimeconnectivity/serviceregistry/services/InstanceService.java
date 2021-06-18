@@ -35,14 +35,18 @@ import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.xpath.XPath;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathFactory;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -76,23 +80,6 @@ public class InstanceService {
             "}";
 
     /**
-     * Save a instance.
-     *
-     * @param instance the entity to save
-     * @return the persisted entity
-     */
-    @Transactional
-    public Instance save(Instance instance) throws XMLValidationException, GeometryParseException {
-        log.debug("Request to save Instance : {}", instance);
-
-        // First of all validate the object
-        this.validateInstanceForSave(instance);
-
-        // The save and return
-        return this.instanceRepo.save(instance);
-    }
-
-    /**
      * Get all the instances.
      *
      * @param pageable the pagination information
@@ -113,7 +100,24 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Instance findOne(Long id) {
         log.debug("Request to get Instance : {}", id);
-        return this.instanceRepo.findOneWithEagerRelationships(id);
+        return this.instanceRepo.findById(id).orElse(null);
+    }
+
+    /**
+     * Save a instance.
+     *
+     * @param instance the entity to save
+     * @return the persisted entity
+     */
+    @Transactional
+    public Instance save(Instance instance) throws XMLValidationException, GeometryParseException {
+        log.debug("Request to save Instance : {}", instance);
+
+        // First of all validate the object
+        this.validateInstanceForSave(instance);
+
+        // The save and return
+        return this.instanceRepo.save(instance);
     }
 
     /**
@@ -247,10 +251,25 @@ public class InstanceService {
         if(instance == null) {
             return;
         }
+        String xml = instance.getInstanceAsXml().getContent();
+        try {
+            XmlUtil.validateXml(xml, Arrays.asList("ServiceInstanceSchema.xsd"));
+        } catch (SAXException e) {
+            throw new XMLValidationException("ServiceInstance is not valid.", e);
+        } catch (IOException e) {
+            throw new XMLValidationException("ServiceInstance is not valid.", e);
+        }
+
+        try {
+            instance = this.parseInstanceAttributesFromXML(instance);
+        } catch (JAXBException e) {
+            throw new XMLValidationException("ServiceInstance is not valid.", e);
+        }
+
         try {
             this.parseInstanceGeometryFromXML(instance);
         } catch (Exception e) {
-            throw new GeometryParseException("GeometryParse error.", e);
+            throw new GeometryParseException("Geometry Parsing error.", e);
         }
     }
 
@@ -259,9 +278,9 @@ public class InstanceService {
      *
      * @param instance the instance to parse
      * @return an instance with its attributes set
-     * @throws Exception if the XML is invalid or attributes not present
+     * @throws JAXBException if the XML is invalid or required attributes not present
      */
-    private Instance parseInstanceAttributesFromXML(Instance instance) throws Exception {
+    private Instance parseInstanceAttributesFromXML(Instance instance) throws JAXBException {
         log.info("Parsing XML: " + instance.getInstanceAsXml().getContent().toString());
         ServiceInstance serviceInstance = G1128Utils.unmarshallG1128SI(instance.getInstanceAsXml().getContent());
 
@@ -279,6 +298,9 @@ public class InstanceService {
      * @throws Exception if the XML is invalid or attributes not present
      */
     private Instance parseInstanceGeometryFromXML(Instance instance) throws Exception {
+        log.info("Parsing XML: " + instance.getInstanceAsXml().getContent().toString());
+        ServiceInstance serviceInstance = G1128Utils.unmarshallG1128SI(instance.getInstanceAsXml().getContent());
+        serviceInstance.getCoversAreas().getCoversArea().get(0).getGeometryAsWKT();
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = null;
         builder = factory.newDocumentBuilder();
