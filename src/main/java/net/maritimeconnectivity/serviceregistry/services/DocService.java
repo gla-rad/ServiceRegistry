@@ -18,10 +18,8 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
-import net.maritimeconnectivity.serviceregistry.repos.DesignRepo;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
-import net.maritimeconnectivity.serviceregistry.repos.SpecificationRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,12 +43,6 @@ public class DocService {
     private DocRepo docRepo;
 
     @Autowired
-    private DesignRepo designRepo;
-
-    @Autowired
-    private SpecificationRepo specificationRepo;
-
-    @Autowired
     private InstanceRepo instanceRepo;
 
     /**
@@ -62,28 +54,6 @@ public class DocService {
     public Doc save(Doc doc){
         log.debug("Request to save Doc : {}", doc);
         this.docRepo.save(doc);
-
-        // Save the linked designed, if any
-        Optional.of(this.designRepo)
-                .map(DesignRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(d -> d.getDesignAsDoc() != null && d.getDesignAsDoc().getId() == doc.getId())
-                .forEach(d -> {
-                    log.debug("Updating Linked Specification: {}", d);
-                    this.designRepo.save(d);
-                });
-
-        // Save the linked specifications, if any
-        Optional.of(this.specificationRepo)
-                .map(SpecificationRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(s -> s.getSpecAsDoc() != null && s.getSpecAsDoc().getId() == doc.getId())
-                .forEach(s -> {
-                    log.debug("Updating Linked Specification: {}", s);
-                    this.specificationRepo.save(s);
-                });
 
         // Save the linked instances, if any
         Optional.of(this.instanceRepo)
