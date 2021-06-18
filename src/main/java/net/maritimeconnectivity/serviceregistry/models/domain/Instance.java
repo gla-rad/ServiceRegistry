@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -606,5 +607,26 @@ public class Instance implements Serializable {
                 ", imo='" + imo + '\'' +
                 ", serviceType='" + serviceType + '\'' +
                 '}';
+    }
+
+    /**
+     * A helper function that copies all the necessary information from a
+     * G1128 Service Instance specification.
+     *
+     * @param serviceInstance the G1128 service instance specification
+     */
+    public void copyFromG1128(ServiceInstance serviceInstance) {
+        this.setName(serviceInstance.getName());
+        this.setVersion(serviceInstance.getVersion());
+        this.setInstanceId(serviceInstance.getId());
+        this.setKeywords(serviceInstance.getKeywords());
+        // this.setStatus(InstanceStatus.fromString(serviceInstance.getStatus().value())); // Do we need this?
+        this.setComment(serviceInstance.getDescription());
+        this.setName(serviceInstance.getName());
+        this.setEndpointUri(serviceInstance.getURL());
+        this.setMmsi(serviceInstance.getMMSI());
+        this.setImo(serviceInstance.getIMO());
+        this.setServiceType(serviceInstance.getServiceType());
+        this.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
     }
 }
