@@ -69,7 +69,7 @@ public class TestWebSecurityConfig extends WebSecurityConfigurerAdapter {
         httpSecurity.csrf().disable()
                 .authorizeRequests()
                 .antMatchers("/**")
-                .permitAll();;
+                .permitAll();
 
     }
 
