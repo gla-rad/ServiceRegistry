@@ -66,6 +66,11 @@ public class Doc implements Serializable {
     @Column(name = "filecontent_content_type", nullable = false)
     private String filecontentContentType;
 
+    @ManyToMany(mappedBy = "docs")
+    @JsonIgnore
+    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    private Set<Instance> instances = new HashSet<>();
+
     /**
      * Instantiates a new Doc.
      */
@@ -179,6 +184,24 @@ public class Doc implements Serializable {
      */
     public void setFilecontentContentType(String filecontentContentType) {
         this.filecontentContentType = filecontentContentType;
+    }
+
+    /**
+     * Gets instances.
+     *
+     * @return the instances
+     */
+    public Set<Instance> getInstances() {
+        return instances;
+    }
+
+    /**
+     * Sets instances.
+     *
+     * @param instances the instances
+     */
+    public void setInstances(Set<Instance> instances) {
+        this.instances = instances;
     }
 
 }

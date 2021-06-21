@@ -21,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.xml.sax.SAXException;
+import org.xml.sax.SAXParseException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,9 +54,28 @@ class XmlUtilTest {
      * schema definition.
      */
     @Test
-    public void testValidateXml() throws IOException, SAXException {
+    public void testValidateXmlTrue() throws IOException, SAXException {
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
-        XmlUtil.validateXml(xml, this.sources);
+        assertTrue(XmlUtil.validateXml(xml, this.sources));
+    }
+
+    /**
+     * Test that we can detect errors while validating an XML against an
+     * XSD schema definition, is the XMl does not conform to it. These
+     * errors will be thrown as exceptions so we should expect them.
+     */
+    @Test
+    public void testValidateXmlFalse() throws IOException, SAXException {
+        InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
+        String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+
+        // Introduce an error in the XML
+        String wrongXml = xml.replaceAll("id", "wrongIdTag");
+
+        // And  the exception
+        assertThrows(SAXParseException.class, () ->
+            XmlUtil.validateXml(wrongXml, this.sources)
+        );
     }
 }
