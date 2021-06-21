@@ -74,8 +74,8 @@ public class Instance implements Serializable {
     @Column(name = "comment", nullable = true)
     private String comment;
 
-    @JsonSerialize(using = GeometryJSONSerializer.class, as=String.class)
-    @JsonDeserialize(using = GeometryJSONDeserializer.class, as=String.class)
+    @JsonSerialize(using = GeometryJSONSerializer.class)
+    @JsonDeserialize(using = GeometryJSONDeserializer.class)
     @Column(name = "geometry")
     private Geometry geometry;
 

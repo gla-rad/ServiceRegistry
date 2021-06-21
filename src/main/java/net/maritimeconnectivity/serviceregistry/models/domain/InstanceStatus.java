@@ -26,7 +26,7 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
  */
 public enum InstanceStatus {
     PENDING("Pending"),
-    LIVE("Authorised"),
+    LIVE("Live"),
     INACTIVE("Inactive");
 
     // Enum variables
