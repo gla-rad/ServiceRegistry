@@ -25,9 +25,10 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public enum InstanceStatus {
-    PENDING("Pending"),
-    LIVE("Live"),
-    INACTIVE("Inactive");
+    PROVISIONAL("provisional"),
+    RELEASED("released"),
+    DEPRECATED("deprecated"),
+    DELETED("deleted");
 
     // Enum variables
     private String status;

@@ -31,9 +31,7 @@ import org.locationtech.jts.io.ParseException;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * The type Instance.
@@ -128,6 +126,13 @@ public class Instance implements Serializable {
     @OneToOne
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
+
+    @ManyToMany(fetch=FetchType.LAZY)
+    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @JoinTable(name = "instance_docs",
+            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
+            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
+    private Set<Doc> docs = new HashSet<>();
 
     /**
      * The Designs.
@@ -502,6 +507,24 @@ public class Instance implements Serializable {
     }
 
     /**
+     * Gets docs.
+     *
+     * @return the docs
+     */
+    public Set<Doc> getDocs() {
+        return docs;
+    }
+
+    /**
+     * Sets docs.
+     *
+     * @param docs the docs
+     */
+    public void setDocs(Set<Doc> docs) {
+        this.docs = docs;
+    }
+
+    /**
      * Gets designs.
      *
      * @return the designs
@@ -609,24 +632,4 @@ public class Instance implements Serializable {
                 '}';
     }
 
-    /**
-     * A helper function that copies all the necessary information from a
-     * G1128 Service Instance specification.
-     *
-     * @param serviceInstance the G1128 service instance specification
-     */
-    public void copyFromG1128(ServiceInstance serviceInstance) {
-        this.setName(serviceInstance.getName());
-        this.setVersion(serviceInstance.getVersion());
-        this.setInstanceId(serviceInstance.getId());
-        this.setKeywords(serviceInstance.getKeywords());
-        // this.setStatus(InstanceStatus.fromString(serviceInstance.getStatus().value())); // Do we need this?
-        this.setComment(serviceInstance.getDescription());
-        this.setName(serviceInstance.getName());
-        this.setEndpointUri(serviceInstance.getEndpoint());
-        this.setMmsi(serviceInstance.getMMSI());
-        this.setImo(serviceInstance.getIMO());
-        this.setServiceType(serviceInstance.getServiceType());
-        this.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
-    }
 }

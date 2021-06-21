@@ -16,76 +16,65 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceSpecification;
-
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.JAXBIntrospector;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.*;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.Charset;
 
-public class G1128Utils {
+public class G1128Utils<T> {
+
+    // Class Variables
+    private Class<T> g1128Spec;
 
     /**
-     * Using the G1128 utilities we can easily parse through a G1128 Service
-     * Design XML definition and create a ServiceDesign POJO.
+     * The G1128Utils constructor that initialises the G1128 specification
+     * object class type.
      *
-     * @param serviceSpecificationXML the G1128 service design XML definition
-     * @return The unmarshalled G1128 ServiceDesign object
-     * @throws JAXBException any JAXB exceptions while unmarshalling the XML
+     * @param g1128Spec the G1128 specification object class type
      */
-    public static ServiceDesign unmarshallG1128SD(String serviceSpecificationXML) throws JAXBException {
-        // Create the JAXB objects
-        JAXBContext jaxbContext = JAXBContext.newInstance(ServiceInstance.class);
-        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-
-        // Transform the S125 context into an input stream
-        ByteArrayInputStream is = new ByteArrayInputStream(serviceSpecificationXML.getBytes());
-
-        // And translate
-        return (ServiceDesign) JAXBIntrospector.getValue(jaxbUnmarshaller.unmarshal(is));
+    public G1128Utils(Class<T> g1128Spec) {
+        this.g1128Spec = g1128Spec;
     }
 
     /**
-     * Using the G1128 utilities we can easily parse through a G1128 Service
-     * Specification XML definition and create a ServiceSpecification POJO.
+     * Using the G1128 utilities we can marshall back a service instance
+     * specification document into it's XML view.
      *
-     * @param serviceSpecificationXML the G1128 service specification XML specification
-     * @return The unmarshalled G1128 ServiceSpecification object
-     * @throws JAXBException any JAXB exceptions while unmarshalling the XML
+     * @param serviceInstance the Service Instance object
+     * @return the marshalled G1128 Service Instance XML representation
      */
-    public static ServiceSpecification unmarshallG1128SS(String serviceSpecificationXML) throws JAXBException {
+    public String marshalG1128(T serviceInstance) throws JAXBException {
         // Create the JAXB objects
-        JAXBContext jaxbContext = JAXBContext.newInstance(ServiceInstance.class);
-        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        JAXBContext jaxbContext = JAXBContext.newInstance(this.g1128Spec);
+        Marshaller jaxbMarshaller = jaxbContext.createMarshaller();
+        jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
-        // Transform the S125 context into an input stream
-        ByteArrayInputStream is = new ByteArrayInputStream(serviceSpecificationXML.getBytes());
+        // Transform the G1128 object to an output stream
+        ByteArrayOutputStream xmlStream = new ByteArrayOutputStream();
+        jaxbMarshaller.marshal(serviceInstance,xmlStream);
 
-        // And translate
-        return (ServiceSpecification) JAXBIntrospector.getValue(jaxbUnmarshaller.unmarshal(is));
+        // Return the XML string
+        return xmlStream.toString(Charset.defaultCharset());
     }
 
     /**
-     * Using the G1128 utilities we can easily parse through a G1128 Service
-     * Instance XML definition and create a ServiceInstance POJO.
+     * Using the G1128 utilities we can easily parse through a G1128 XML
+     * specification and create the respective G1128 POJO.
      *
-     * @param serviceInstanceXML the G1128 service instance XML specification
-     * @return The unmarshalled G1128 ServiceInstance object
+     * @param g1128Xml the G1128 XML specification
+     * @return The unmarshalled G1128 object
      * @throws JAXBException any JAXB exceptions while unmarshalling the XML
      */
-    public static ServiceInstance unmarshallG1128SI(String serviceInstanceXML) throws JAXBException {
+    public T unmarshallG1128(String g1128Xml) throws JAXBException {
         // Create the JAXB objects
-        JAXBContext jaxbContext = JAXBContext.newInstance(ServiceInstance.class);
+        JAXBContext jaxbContext = JAXBContext.newInstance(this.g1128Spec);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
 
-        // Transform the S125 context into an input stream
-        ByteArrayInputStream is = new ByteArrayInputStream(serviceInstanceXML.getBytes());
+        // Transform the G1128 context into an input stream
+        ByteArrayInputStream is = new ByteArrayInputStream(g1128Xml.getBytes());
 
         // And translate
-        return (ServiceInstance) JAXBIntrospector.getValue(jaxbUnmarshaller.unmarshal(is));
+        return (T) JAXBIntrospector.getValue(jaxbUnmarshaller.unmarshal(is));
     }
 
 }

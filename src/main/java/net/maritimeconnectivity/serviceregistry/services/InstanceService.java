@@ -16,17 +16,28 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
-import net.maritimeconnectivity.serviceregistry.models.domain.*;
+import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.InstanceStatus;
+import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import net.maritimeconnectivity.serviceregistry.utils.XmlUtil;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.util.GeometryCombiner;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -34,20 +45,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 /**
  * Service Implementation for managing Instance.
@@ -59,20 +61,41 @@ import java.util.List;
 @Transactional
 public class InstanceService {
 
+    /**
+     * The Instance Repository.
+     */
     @Autowired
     private InstanceRepo instanceRepo;
 
+    /**
+     * The XML Service.
+     */
     @Autowired
     private XmlService xmlService;
 
+    /**
+     * The UnLoCode Service.
+     *
+     * Lazy load to avoid loading it every time.
+     */
     @Autowired
     @Lazy
     private UnLoCodeService unLoCodeService;
 
     /**
-     * Definition of the whole world area in GeoJSON
+     * Definition of the G1128 Schema Sources.
      */
-    private String wholeWorldGeoJson = "{\n" +
+    List<String> g1128Sources = Arrays.asList(new String[] {
+            "xsd/ServiceBaseTypesSchema.xsd",
+            "xsd/ServiceDesignSchema.xsd",
+            "xsd/ServiceSpecificationSchema.xsd",
+            "xsd/ServiceInstanceSchema.xsd"
+    });
+
+    /**
+     * Definition of the whole world area in GeoJSON.
+     */
+    String wholeWorldGeoJson = "{\n" +
             "  \"type\": \"Polygon\",\n" +
             "  \"coordinates\": [\n" +
             "    [[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]\n" +
@@ -100,7 +123,7 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Instance findOne(Long id) {
         log.debug("Request to get Instance : {}", id);
-        return this.instanceRepo.findById(id).orElse(null);
+        return this.instanceRepo.findOneWithEagerRelationships(id);
     }
 
     /**
@@ -110,11 +133,17 @@ public class InstanceService {
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws XMLValidationException, GeometryParseException {
+    public Instance save(Instance instance) throws XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
         // First of all validate the object
         this.validateInstanceForSave(instance);
+
+        // Don't accept empty geometry value, set whole earth coverage
+        if (instance.getGeometry() == null) {
+            log.debug("Setting whole-earth coverage");
+            instance.setGeometryJson(new ObjectMapper().readTree(wholeWorldGeoJson));
+        }
 
         // The save and return
         return this.instanceRepo.save(instance);
@@ -137,45 +166,43 @@ public class InstanceService {
      * @param status the status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
-    public void updateStatus(Long id, InstanceStatus status) throws Exception {
+    public void updateStatus(Long id, InstanceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException {
         log.debug("Request to update status of Instance : {}", id);
-        try {
-            Instance instance = this.instanceRepo.findOneWithEagerRelationships(id);
 
+        // Try to find if the instance does indeed exist
+        Instance instance = this.instanceRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+
+        // Update the instance status
+        try {
             Xml instanceXml = instance.getInstanceAsXml();
             if (instanceXml != null && instanceXml.getContent() != null) {
-                String xml = instanceXml.getContent();
-                //Update the status value inside the xml definition
-                String resultXml = XmlUtil.updateXmlNode(status.getStatus(), xml, "/*[local-name()='serviceInstance']/*[local-name()='status']");
-                instanceXml.setContent(resultXml);
+                // Unmarshall the XML, update the status and re-marshall the to XML
+                ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
+                serviceInstance.setStatus(ServiceStatus.fromValue(status.getStatus()));
+                instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
                 // Save XML
                 xmlService.save(instanceXml);
-                instance.setInstanceAsXml(instanceXml);
             }
-
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (InvalidPersistentPropertyPath e) {
-            log.error("Problem during instance status update.", e);
-            log.error("   Source: ", e.getSource());
-            log.error("   ResolvedPath:  ", e.getResolvedPath());
-            log.error("   ResolvedPath:  ", e.getUnresolvableSegment());
-            throw e;
-        } catch (Throwable e) {
+        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException e) {
             log.error("Problem during instance status update.", e);
             throw e;
         }
     }
 
-
-    public Instance findAllByDomainId(String domainId, String version) {
+    /**
+     * Get all the instances that match a domain specific ID (for example,
+     * maritime id), regardless of their version.
+     *
+     * @param domainId          the domain specific id of the instance
+     * @return the list of matching entities
+     */
+    public List<Instance> findAllByDomainId(String domainId) {
         log.debug("Request to get Instance by domain id {} and version {} without restriction");
-        List<Instance> findByDomainIdAndVersion = this.instanceRepo.findByDomainIdAndVersion(domainId, version);
-        if (findByDomainIdAndVersion != null && !findByDomainIdAndVersion.isEmpty()) {
-            return findByDomainIdAndVersion.get(0);
-        }
-        return null;
+        return this.instanceRepo.findByDomainId(domainId);
     }
 
     /**
@@ -186,21 +213,15 @@ public class InstanceService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findByDomainId(String domainId, String version) {
+    public Instance findByDomainIdAndVersion(String domainId, String version) {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
-        Instance instance = null;
         try {
-            Iterable<Instance> instances;
-            instances = this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version);
-
-            if (instances.iterator().hasNext()) {
-                instance = instances.iterator().next();
-            }
+            return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version);
         } catch (Exception e) {
             log.debug("Could not find instance for domain id {} and version {}", domainId, version);
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
-        return instance;
+        return null;
     }
 
     /**
@@ -212,26 +233,15 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Instance findLatestVersionByDomainId(String domainId) {
         log.debug("Request to get Instance by domain id {}", domainId);
-        Instance instance = null;
-        DefaultArtifactVersion latestVersion = new DefaultArtifactVersion("0.0");
         try {
-            Iterable<Instance> instances;
-            instances = this.instanceRepo.findByDomainIdEagerRelationships(domainId);
-
-            if (instances.iterator().hasNext()) {
-                Instance i = instances.iterator().next();
-                //Compare version numbers, save the instance if it's a newer version
-                DefaultArtifactVersion iv = new DefaultArtifactVersion(i.getVersion());
-                if (iv.compareTo(latestVersion) > 0 && i.getStatus().equals(InstanceStatus.LIVE)) {
-                    instance = i;
-                    latestVersion = iv;
-                }
-            }
+            return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
+                .max(Comparator.comparing(i -> new DefaultArtifactVersion(i.getVersion())))
+                .orElseThrow(() -> new DataNotFoundException("No instance found!", null));
         } catch (Exception e) {
             log.debug("Could not find a live instance for domain id {}", domainId);
-            e.printStackTrace();
+            log.error(e.getMessage());
         }
-        return instance;
+        return null;
     }
 
     /**
@@ -251,9 +261,9 @@ public class InstanceService {
         if(instance == null) {
             return;
         }
-        String xml = instance.getInstanceAsXml().getContent();
+
         try {
-            XmlUtil.validateXml(xml, Arrays.asList("ServiceInstanceSchema.xsd"));
+            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), this.g1128Sources);
         } catch (SAXException e) {
             throw new XMLValidationException("ServiceInstance is not valid.", e);
         } catch (IOException e) {
@@ -261,14 +271,14 @@ public class InstanceService {
         }
 
         try {
-            instance = this.parseInstanceAttributesFromXML(instance);
+            this.parseInstanceAttributesFromXML(instance);
         } catch (JAXBException e) {
             throw new XMLValidationException("ServiceInstance is not valid.", e);
         }
 
         try {
             this.parseInstanceGeometryFromXML(instance);
-        } catch (Exception e) {
+        } catch (JAXBException | ParseException e) {
             throw new GeometryParseException("Geometry Parsing error.", e);
         }
     }
@@ -280,14 +290,22 @@ public class InstanceService {
      * @return an instance with its attributes set
      * @throws JAXBException if the XML is invalid or required attributes not present
      */
-    private Instance parseInstanceAttributesFromXML(Instance instance) throws JAXBException {
-        log.info("Parsing XML: " + instance.getInstanceAsXml().getContent().toString());
-        ServiceInstance serviceInstance = G1128Utils.unmarshallG1128SI(instance.getInstanceAsXml().getContent());
+    private void parseInstanceAttributesFromXML(Instance instance) throws JAXBException {
+        log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
+        ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
         // Populate the instance object
-        instance.copyFromG1128(serviceInstance);
-
-        return instance;
+        instance.setName(serviceInstance.getName());
+        instance.setVersion(serviceInstance.getVersion());
+        instance.setInstanceId(serviceInstance.getId());
+        instance.setKeywords(serviceInstance.getKeywords());
+        // instance.setStatus(InstanceStatus.fromString(serviceInstance.getStatus().value())); // Do we need this?
+        instance.setComment(serviceInstance.getDescription());
+        instance.setEndpointUri(serviceInstance.getEndpoint());
+        instance.setMmsi(serviceInstance.getMMSI());
+        instance.setImo(serviceInstance.getIMO());
+        instance.setServiceType(serviceInstance.getServiceType());
+        instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
     }
 
     /**
@@ -297,34 +315,30 @@ public class InstanceService {
      * @return an instance with its attributes set
      * @throws Exception if the XML is invalid or attributes not present
      */
-    private Instance parseInstanceGeometryFromXML(Instance instance) throws Exception {
-        log.info("Parsing XML: " + instance.getInstanceAsXml().getContent().toString());
-        ServiceInstance serviceInstance = G1128Utils.unmarshallG1128SI(instance.getInstanceAsXml().getContent());
-        serviceInstance.getCoversAreas().getCoversArea().get(0).getGeometryAsWKT();
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = null;
-        builder = factory.newDocumentBuilder();
-        log.info("Parsing XML: " + instance.getInstanceAsXml().getContent().toString());
-        Document doc = builder.parse(new ByteArrayInputStream(instance.getInstanceAsXml().getContent().toString().getBytes(StandardCharsets.UTF_8)));
-        XPathFactory xPathFactory = XPathFactory.newInstance();
-        XPath xPath = xPathFactory.newXPath();
+    private void parseInstanceGeometryFromXML(Instance instance) throws JAXBException, ParseException {
+        log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
+        ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
-        String unLoCode = xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='coversAreas']/*[local-name()='unLoCode']").evaluate(doc, XPathConstants.STRING).toString();
-        String geometryAsWKT = xPath.compile("/*[local-name()='serviceInstance']/*[local-name()='coversAreas']/*[local-name()='coversArea']/*[local-name()='geometryAsWKT']").evaluate(doc);
+        String unLoCode = serviceInstance.getCoversAreas().getUnLoCode();
+        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas().getCoversAreas();
 
         //UN/LOCODE and Coverage Geometry are supported simultaneously. However, for geo-searches, Coverage takes precedence over UN/LOCODE.
         if (unLoCode != null && unLoCode.length() > 0) {
-            instance.setUnlocode(unLoCode);
+            instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
         }
 
-        if (geometryAsWKT != null && geometryAsWKT.length() > 0) {
-            JsonNode geometryAsGeoJson = WKTUtil.convertWKTtoGeoJson(geometryAsWKT);
-            instance.setGeometryJson(geometryAsGeoJson);
+        if (coverageAreas != null && coverageAreas.size() > 0) {
+            List<Geometry> geometryList = new ArrayList();
+            for(CoverageArea coverageArea : coverageAreas) {
+                JsonNode geoJson = WKTUtil.convertWKTtoGeoJson(coverageArea.getGeometryAsWKT());
+                geometryList.add(Optional.of(geoJson)
+                        .map(GeometryJSONConverter::convertToGeometry)
+                        .orElseThrow(() -> new ParseException("Invalid geometry detected")));
+            }
+            instance.setGeometry(new GeometryCombiner(geometryList).combine());
         } else if (unLoCode != null && unLoCode.length() > 0) {
             unLoCodeService.applyUnLoCodeMapping(instance, unLoCode);
         }
-
-        return instance;
     }
 
 
