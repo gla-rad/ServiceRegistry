@@ -19,6 +19,7 @@
 <head>
     <meta charset="UTF-8">
     <title>MCP Service Registry</title>
+    <link rel="stylesheet" th:href="@{/static/css/tableFont.css}" />
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
@@ -26,7 +27,6 @@
     <script th:src="@{/static/utils.js}"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.2/css/buttons.dataTables.css" />
-
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
@@ -37,6 +37,11 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
             <ul class="navbar-nav mr-auto">
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/index.html">
+                        Home
+                    </a>
+                </li>
                 <li class="nav-item" sec:authorize="isAuthenticated()">
                     <a class="nav-link" href="/instances">
                         Instances
