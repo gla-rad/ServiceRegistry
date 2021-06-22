@@ -24,6 +24,7 @@ import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -88,7 +90,8 @@ public class InstanceController {
      * POST  /instances : Create a new instance.
      *
      * @param instance the instance to create
-     * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
+     * @return the ResponseEntity with status 201 (Created) and with body the new instance,
+     * or with status 400 (Bad Request) if the instance has already an ID, or coudln't be created
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -111,8 +114,7 @@ public class InstanceController {
      * @param id the ID of the instance to be updated
      * @param instance the instance to update
      * @return the ResponseEntity with status 200 (OK) and with body the updated instance,
-     * or with status 400 (Bad Request) if the instance is not valid,
-     * or with status 500 (Internal Server Error) if the instance couldnt be updated
+     * or with status 400 (Bad Request) if the instance is not valid or couldn't be updated,
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -176,5 +178,40 @@ public class InstanceController {
                 .body(instance);
     }
 
+    /**
+     * PUT  /instances/{id}/status : Updates an the "ID" instance status
+     *
+     * @param id the ID of the instance to be updated
+     * @param status the new status value
+     * @return the ResponseEntity with status 200 (OK),
+     * or with status 400 (Bad Request) if the instance status couldn't be updated
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PutMapping(value = "/instances/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateInstanceStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") ServiceStatus status) throws URISyntaxException {
+        log.debug("REST request to update instance {} status : {}", id, status.value());
+
+        try {
+            this.instanceService.updateStatus(id, status);
+        } catch (XMLValidationException e) {
+            log.error("Error parsing xml: ", e);
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("status", e.getMessage(), e.toString()))
+                    .build();
+        } catch (GeometryParseException e) {
+            log.error("Error parsing geometry: ", e);
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("status", e.getMessage(), e.toString()))
+                    .build();
+        } catch (Exception e) {
+            log.error("Unknown error: ", e);
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("status", e.getMessage(), e.toString()))
+                    .build();
+        }
+
+        // Return an OK response
+        return ResponseEntity.ok().build();
+    }
 
 }
