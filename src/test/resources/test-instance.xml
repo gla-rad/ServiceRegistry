@@ -7,7 +7,7 @@
     <status>released</status>
     <description>A simple service implementing a custom service specification</description>
     <keywords>test mcp navigation</keywords>
-    <endpoint>https://testservice.mcp.enav.org/service/endpoing/</endpoint>
+    <endpoint>https://testservice.mcp.enav.org/service/endpoint/</endpoint>
     <requiresAuthorization>true</requiresAuthorization>
     <offersServiceLevel>
         <availability>0</availability>
@@ -22,14 +22,14 @@
         </coversArea>
     </coversAreas>
     <implementsServiceDesign>
-        <id>urn:mrn:mcp:service:mcc:torg:design:100</id>
+        <id>urn:mrn:mcp:service:test:org:design:100</id>
         <version>1</version>
     </implementsServiceDesign>
     <producedBy>
-        <ServiceSpecificationSchema:id>urn:mrn:mcp:service:mcc:torg:specification:100</ServiceSpecificationSchema:id>
+        <ServiceSpecificationSchema:id>urn:mrn:mcp:service:test:org:specification:100</ServiceSpecificationSchema:id>
         <ServiceSpecificationSchema:name>someName</ServiceSpecificationSchema:name>
         <ServiceSpecificationSchema:description>Somedescription</ServiceSpecificationSchema:description>
-        <ServiceSpecificationSchema:contactInfo>Unknown@kronshtadt.ru</ServiceSpecificationSchema:contactInfo>
+        <ServiceSpecificationSchema:contactInfo>unknown@test.org</ServiceSpecificationSchema:contactInfo>
         <ServiceSpecificationSchema:isCommercial>false</ServiceSpecificationSchema:isCommercial>
     </producedBy>
     <providedBy>
