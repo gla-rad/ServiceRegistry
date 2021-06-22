@@ -76,7 +76,8 @@ public class InstanceController {
      * GET  /instances/{id} : get the "ID" instance.
      *
      * @param id the ID of the instance to retrieve
-     * @return the ResponseEntity with status 200 (OK) and with body the instance, or with status 404 (Not Found)
+     * @return the ResponseEntity with status 200 (OK) and with body the instance,
+     * or with status 404 (Not Found)
      */
     @GetMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> getInstance(@PathVariable Long id) {
@@ -100,7 +101,7 @@ public class InstanceController {
         if (instance.getId() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new instance cannot already have an ID"))
-                    .body(null);
+                    .build();
         }
         instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         instance.setLastUpdatedAt(instance.getPublishedAt());
