@@ -119,11 +119,11 @@ public class Instance implements Serializable {
     @JsonProperty("serviceType")
     private String serviceType;
 
-    @OneToOne(cascade = {CascadeType.ALL})
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
     private Xml instanceAsXml;
 
-    @OneToOne(cascade = {CascadeType.ALL})  
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
 
