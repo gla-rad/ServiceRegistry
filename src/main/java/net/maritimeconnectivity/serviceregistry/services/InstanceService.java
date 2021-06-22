@@ -265,21 +265,21 @@ public class InstanceService {
         try {
             XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), this.g1128Sources);
         } catch (SAXException e) {
-            throw new XMLValidationException("ServiceInstance is not valid.", e);
+            throw new XMLValidationException("Service Instance XML is not valid.", e);
         } catch (IOException e) {
-            throw new XMLValidationException("ServiceInstance is not valid.", e);
+            throw new XMLValidationException("Service Instance XML could not be parsed.", e);
         }
 
         try {
             this.parseInstanceAttributesFromXML(instance);
         } catch (JAXBException e) {
-            throw new XMLValidationException("ServiceInstance is not valid.", e);
+            throw new XMLValidationException("Service Instance contains invalid attributes.", e);
         }
 
         try {
             this.parseInstanceGeometryFromXML(instance);
         } catch (JAXBException | ParseException e) {
-            throw new GeometryParseException("Geometry Parsing error.", e);
+            throw new GeometryParseException("Service Instance geometry parsing error.", e);
         }
     }
 
