@@ -63,7 +63,7 @@ public class GeometryJSONConverter {
         }
 
         try {
-            return new GeoJsonReader().read(jsonNode.asText());
+            return new GeoJsonReader().read(jsonNode.toString());
         } catch (ParseException e) {
             return null;
         }

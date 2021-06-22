@@ -40,7 +40,7 @@ public class WKTUtil {
      * @throws ParseException if the WKT geometry was invalid
      * @throws IOException    if the geoJson string could not be read by the Json parser
      */
-    public static JsonNode convertWKTtoGeoJson(String geometryAsWKT) throws ParseException, IOException {
+    public static JsonNode convertWKTtoGeoJson(String geometryAsWKT) throws ParseException {
         WKTReader wktReader = new WKTReader();
         Geometry geometry = wktReader.read(geometryAsWKT);
         if (geometry == null) {

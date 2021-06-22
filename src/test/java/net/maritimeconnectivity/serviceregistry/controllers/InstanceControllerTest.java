@@ -98,7 +98,7 @@ class InstanceControllerTest {
         this.newInstance.setName("Instance Name");
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
-        this.newInstance.setStatus(InstanceStatus.LIVE);
+        this.newInstance.setStatus(InstanceStatus.RELEASED);
 
         // Create an instance with an ID
         this.existingInstance = new Instance();
@@ -107,7 +107,7 @@ class InstanceControllerTest {
         this.existingInstance.setName("Instance Name");
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
-        this.existingInstance.setStatus(InstanceStatus.LIVE);
+        this.existingInstance.setStatus(InstanceStatus.RELEASED);
     }
 
     /**
