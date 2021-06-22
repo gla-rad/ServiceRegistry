@@ -2,11 +2,14 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
+import net.maritimeconnectivity.serviceregistry.utils.UserContext;
 import org.apache.commons.io.IOUtils;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,6 +62,12 @@ class InstanceServiceTest {
      */
     @Mock
     private XmlService xmlService;
+
+    /**
+     * The User Context.
+     */
+    @Mock
+    private UserContext userContext;
 
     // Test Variables
     private List<Instance> instances;
@@ -178,7 +187,7 @@ class InstanceServiceTest {
      * object, the saving operation will fail and not continue.
      */
     @Test
-    public void testSaveValidationError() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException {
+    public void testSaveValidationError() throws XMLValidationException, GeometryParseException, DataNotFoundException {
         doThrow(XMLValidationException.class).when(this.instanceService).validateInstanceForSave(any());
 
         // Make sure the exception propagates
@@ -195,9 +204,10 @@ class InstanceServiceTest {
      * the validation checks are successful.
      */
     @Test
-    public void testSaveWithGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException {
+    public void testSaveWithGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
         doReturn(this.newInstance).when(this.instanceRepo).save(any());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
+        doReturn(Optional.of(new UserToken()).map(t -> {t.setOrganisation("org"); return t;})).when(this.userContext).getJwtToken();
 
         // Perform the service call
         Instance result = this.instanceService.save(this.newInstance);
@@ -216,6 +226,9 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getServiceType(), result.getServiceType());
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals(this.newInstance.getGeometry(), result.getGeometry());
+        assertEquals("org", this.newInstance.getOrganizationId());
+        assertNotNull(this.newInstance.getLastUpdatedAt());
+        assertNotNull(this.newInstance.getPublishedAt());
 
         // Also that a saving call took place in the repository
         verify(this.instanceRepo, times(1)).save(this.newInstance);
@@ -228,9 +241,10 @@ class InstanceServiceTest {
      * instance geometry.
      */
     @Test
-    public void testSaveNoGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException {
+    public void testSaveNoGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
         doAnswer(i -> i.getArguments()[0]).when(this.instanceRepo).save(any());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
+        doReturn(Optional.of(new UserToken()).map(t -> {t.setOrganisation("org"); return t;})).when(this.userContext).getJwtToken();
 
         // Make sure the geometry of the instance is empty
         this.newInstance.setGeometry(null);
@@ -251,6 +265,9 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getImo(), result.getImo());
         assertEquals(this.newInstance.getServiceType(), result.getServiceType());
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
+        assertEquals("org", this.newInstance.getOrganizationId());
+        assertNotNull(this.newInstance.getLastUpdatedAt());
+        assertNotNull(this.newInstance.getPublishedAt());
 
         // Check the geometry
         assertNotNull(result.getGeometry());
@@ -394,7 +411,7 @@ class InstanceServiceTest {
      * provided XML and geometry values.
      */
     @Test
-    public void testValidateInstanceForSave() throws IOException, XMLValidationException, GeometryParseException {
+    public void testValidateInstanceForSave() throws IOException, XMLValidationException, GeometryParseException, DataNotFoundException {
         // Load a valid test XML for our instance
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xmlContent = IOUtils.toString(in, StandardCharsets.UTF_8.name());
