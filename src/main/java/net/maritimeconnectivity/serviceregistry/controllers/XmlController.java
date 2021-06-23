@@ -158,7 +158,7 @@ public class XmlController {
      * on the G1128 design specification schema.
      *
      * @param content the xml content to be validated
-     * @return the ResponseEntity with status 201 (Created) and with body of the G1128 design specification,
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 design specification,
      * or with status 400 (Bad Request) if the content is invalid
      */
     @PostMapping(value = "/xmls/validate/design", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -178,7 +178,7 @@ public class XmlController {
      * on the G1128 service specification schema.
      *
      * @param content the xml content to be validated
-     * @return the ResponseEntity with status 201 (Created) and with body of the G1128 service specification,
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 service specification,
      * or with status 400 (Bad Request) if the content is invalid
      */
     @PostMapping(value = "/xmls/validate/service", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -198,7 +198,7 @@ public class XmlController {
      * on the G1128 instance specification schema.
      *
      * @param content the xml content to be validated
-     * @return the ResponseEntity with status 200 (Created) and with body of the G1128 instance specification,
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 instance specification,
      * or with status 400 (Bad Request) if the content is invalid
      */
     @PostMapping(value = "/xmls/validate/instance", produces = MediaType.APPLICATION_JSON_VALUE)
