@@ -20,8 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.InstanceStatus;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +47,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -98,7 +98,7 @@ class InstanceControllerTest {
         this.newInstance.setName("Instance Name");
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
-        this.newInstance.setStatus(InstanceStatus.RELEASED);
+        this.newInstance.setStatus(ServiceStatus.RELEASED);
 
         // Create an instance with an ID
         this.existingInstance = new Instance();
@@ -107,7 +107,7 @@ class InstanceControllerTest {
         this.existingInstance.setName("Instance Name");
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
-        this.existingInstance.setStatus(InstanceStatus.RELEASED);
+        this.existingInstance.setStatus(ServiceStatus.RELEASED);
     }
 
     /**
@@ -118,7 +118,7 @@ class InstanceControllerTest {
     public void testGetAllInstances() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<Instance> page = new PageImpl<>(this.instances.subList(0, 5), this.pageable, this.instances.size());
-        when(this.instanceService.findAll(any())).thenReturn(page);
+        doReturn(page).when(this.instanceService).findAll(any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/instances"))
@@ -139,18 +139,17 @@ class InstanceControllerTest {
      */
     @Test
     public void testGetInstance() throws Exception {
-        Long id = 0L;
-        when(this.instanceService.findOne(id)).thenReturn(this.instances.get(id.intValue()));
+        doReturn(this.existingInstance).when(this.instanceService).findOne(this.existingInstance.getId());
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/{id}", id))
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/{id}", this.existingInstance.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
         Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.instances.get(id.intValue()), result);
+        assertEquals(this.existingInstance, result);
     }
 
     /**
@@ -160,7 +159,7 @@ class InstanceControllerTest {
     @Test
     public void testGetInstanceNotFound() throws Exception {
         Long id = 0L;
-        when(this.instanceService.findOne(any())).thenReturn(null);
+        doReturn(null).when(this.instanceService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/instances/{id}", id))
@@ -175,12 +174,12 @@ class InstanceControllerTest {
     @Test
     public void testPostInstance() throws Exception {
         // Mock the service call for creating a new instance
-        when(this.instanceService.save(any())).thenReturn(this.existingInstance);
+        doReturn(this.existingInstance).when(this.instanceService).save(any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/instances")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(newInstance)))
+                .content(this.objectMapper.writeValueAsString(this.newInstance)))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -214,19 +213,19 @@ class InstanceControllerTest {
     @Test
     public void testPutInstance() throws Exception {
         // Mock the service call for updating an existing instance
-        when(instanceService.save(any())).thenReturn(existingInstance);
+        doReturn(this.existingInstance).when(this.instanceService).save(any());
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(put("/api/instances/{id}", existingInstance.getId())
+        MvcResult mvcResult = this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(objectMapper.writeValueAsString(existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(existingInstance, result);
+        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
+        assertEquals(this.existingInstance, result);
     }
 
     /**
@@ -237,10 +236,10 @@ class InstanceControllerTest {
     @Test
     public void testPutInstanceXMLFailure() throws Exception {
         // Mock an XML Validation exception when saving the instance
-        when(instanceService.save(any())).thenThrow(XMLValidationException.class);
+        doThrow(XMLValidationException.class).when(this.instanceService).save(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(put("/api/instances/{id}", existingInstance.getId())
+        this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
@@ -257,10 +256,10 @@ class InstanceControllerTest {
     @Test
     public void testPutInstanceGeometryParseFailure() throws Exception {
         // Mock a Geometry Parse exception when saving the instance
-        when(instanceService.save(any())).thenThrow(GeometryParseException.class);
+        doThrow(GeometryParseException.class).when(this.instanceService).save(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(put("/api/instances/{id}", existingInstance.getId())
+        this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
@@ -277,10 +276,10 @@ class InstanceControllerTest {
     @Test
     public void testPutInstanceGeneralFailure() throws Exception {
         // Mock a general Exception when saving the instance
-        when(instanceService.save(any())).thenThrow(RuntimeException.class);
+        doThrow(RuntimeException.class).when(this.instanceService).save(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(put("/api/instances/{id}", existingInstance.getId())
+        this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
@@ -296,9 +295,40 @@ class InstanceControllerTest {
     @Test
     public void testDeleteInstance() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(delete("/api/instances/{id}", existingInstance.getId())
+        this.mockMvc.perform(delete("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
+                .andReturn();
+    }
+
+    /**
+     * Test that we can update an existing instance's status correctly through a
+     * PUT request. The status values should be as specified in the G1128
+     * specification.
+     */
+    @Test
+    public void testPutInstanceStatus() throws Exception {
+        // Mock the service call for updating an existing instance
+        doNothing().when(this.instanceService).updateStatus(any(), any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(put("/api/instances/{id}/status", this.existingInstance.getId())
+                .queryParam("status", ServiceStatus.DEPRECATED.value())
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+    /**
+     * Test that if we do NOT provide a valid service instance status, a
+     * bad request response will be returned.
+     */
+    @Test
+    public void testPutInstanceStatusError() throws Exception {
+        // Perform the MVC request
+        this.mockMvc.perform(put("/api/instances/{id}/status", this.existingInstance.getId())
+                .queryParam("status", "Wrong Value")
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(status().isBadRequest())
                 .andReturn();
     }
 

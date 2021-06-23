@@ -23,7 +23,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -92,7 +93,7 @@ public class Instance implements Serializable {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "varchar(30) default 'Pending Validation'")
-    private InstanceStatus status;
+    private ServiceStatus status;
 
     @Column(name = "organization_id")
     @JsonProperty("organizationId")
@@ -128,7 +129,7 @@ public class Instance implements Serializable {
     private Doc instanceAsDoc;
 
     @ManyToMany(fetch=FetchType.LAZY)
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "instance_docs",
             joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
             inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
@@ -331,7 +332,7 @@ public class Instance implements Serializable {
      *
      * @return the status
      */
-    public InstanceStatus getStatus() {
+    public ServiceStatus getStatus() {
         return status;
     }
 
@@ -340,7 +341,7 @@ public class Instance implements Serializable {
      *
      * @param status the status
      */
-    public void setStatus(InstanceStatus status) {
+    public void setStatus(ServiceStatus status) {
         this.status = status;
     }
 

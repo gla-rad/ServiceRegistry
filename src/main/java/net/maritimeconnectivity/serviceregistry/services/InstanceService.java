@@ -24,7 +24,6 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.InstanceStatus;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
@@ -42,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.mapping.context.InvalidPersistentPropertyPath;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
@@ -166,7 +164,7 @@ public class InstanceService {
      * @param status the status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
-    public void updateStatus(Long id, InstanceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException {
+    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException {
         log.debug("Request to update status of Instance : {}", id);
 
         // Try to find if the instance does indeed exist
@@ -179,7 +177,7 @@ public class InstanceService {
             if (instanceXml != null && instanceXml.getContent() != null) {
                 // Unmarshall the XML, update the status and re-marshall the to XML
                 ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
-                serviceInstance.setStatus(ServiceStatus.fromValue(status.getStatus()));
+                serviceInstance.setStatus(status);
                 instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
                 // Save XML
                 xmlService.save(instanceXml);
@@ -322,11 +320,13 @@ public class InstanceService {
         String unLoCode = serviceInstance.getCoversAreas().getUnLoCode();
         List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas().getCoversAreas();
 
-        //UN/LOCODE and Coverage Geometry are supported simultaneously. However, for geo-searches, Coverage takes precedence over UN/LOCODE.
+        //UN/LOCODE and Coverage Geometry are supported simultaneously.
+        // However, for geo-searches, Coverage takes precedence over UN/LOCODE.
         if (unLoCode != null && unLoCode.length() > 0) {
             instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
         }
 
+        // Check the coverage areas
         if (coverageAreas != null && coverageAreas.size() > 0) {
             List<Geometry> geometryList = new ArrayList();
             for(CoverageArea coverageArea : coverageAreas) {
@@ -340,6 +340,5 @@ public class InstanceService {
             unLoCodeService.applyUnLoCodeMapping(instance, unLoCode);
         }
     }
-
 
 }
