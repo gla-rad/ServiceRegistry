@@ -20,6 +20,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -38,12 +41,15 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import javax.xml.bind.JAXBException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -247,6 +253,108 @@ class XmlControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/xmls/{id}", this.existingXml.getId()))
                 .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Test that we can validate correctly a G1128 design specification XML.
+     */
+    @Test
+    void testValidateXmlDesign() throws Exception {
+        doReturn(new ServiceDesign()).when(this.xmlService).validate(any(), eq(ServiceDesign.class));
+        String xml = "<serviceDesign></serviceDesign>";
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/design")
+                .content(xml))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse and validate the response
+        ServiceDesign result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ServiceDesign.class);
+        assertNotNull(result);
+    }
+
+    /**
+     * Test that we can detect when the provided G1128 design specification
+     * XML is invalid.
+     */
+    @Test
+    void testValidateXmlDesignFails() throws Exception {
+        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(ServiceDesign.class));
+        String xml = "<serviceDesign></serviceDesign>";
+
+        // Perform the MVC request
+        this.mockMvc.perform(post("/api/xmls/validate/design")
+                .content(xml))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Test that we can validate correctly a G1128 service specification XML.
+     */
+    @Test
+    void testValidateXmlService() throws Exception {
+        doReturn(new ServiceSpecification()).when(this.xmlService).validate(any(), eq(ServiceSpecification.class));
+        String xml = "<serviceSpecification></serviceSpecification>";
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/service")
+                .content(xml))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse and validate the response
+        ServiceSpecification result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ServiceSpecification.class);
+        assertNotNull(result);
+    }
+
+    /**
+     * Test that we can detect when the provided G1128 service specification
+     * XML is invalid.
+     */
+    @Test
+    void testValidateXmlServiceFails() throws Exception {
+        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(ServiceSpecification.class));
+        String xml = "<serviceSpecification></serviceSpecification>";
+
+        // Perform the MVC request
+        this.mockMvc.perform(post("/api/xmls/validate/service")
+                .content(xml))
+                .andExpect(status().isBadRequest());
+    }
+
+    /**
+     * Test that we can validate correctly a G1128 instance specification XML.
+     */
+    @Test
+    void testValidateXmlInstance() throws Exception {
+        doReturn(new ServiceDesign()).when(this.xmlService).validate(any(), eq(ServiceInstance.class));
+        String xml = "<serviceInstance></serviceInstance>";
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/instance")
+                .content(xml))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse and validate the response
+        ServiceInstance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ServiceInstance.class);
+        assertNotNull(result);
+    }
+
+    /**
+     * Test that we can detect when the provided G1128 instance specification
+     * XML is invalid.
+     */
+    @Test
+    void testValidateXmlInstanceFails() throws Exception {
+        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(ServiceInstance.class));
+        String xml = "<serviceInstance></serviceInstance>";
+
+        // Perform the MVC request
+        this.mockMvc.perform(post("/api/xmls/validate/instance")
+                .content(xml))
+                .andExpect(status().isBadRequest());
     }
 
 }
