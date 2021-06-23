@@ -110,7 +110,7 @@ class DocServiceTest {
      * database through a paged call.
      */
     @Test
-    public void testFindAll() {
+    void testFindAll() {
         // Created a result page to be returned by the mocked repository
         Page<Doc> page = new PageImpl<>(this.docs.subList(0, 5), this.pageable, this.docs.size());
         doReturn(page).when(this.docRepo).findAll(this.pageable);
@@ -132,7 +132,7 @@ class DocServiceTest {
      * ID and all the eager relationships are loaded.
      */
     @Test
-    public void testFindOne() throws DataNotFoundException {
+    void testFindOne() throws DataNotFoundException {
         doReturn(Optional.of(this.existingDoc)).when(this.docRepo).findById(this.existingDoc.getId());
 
         // Perform the service call
@@ -156,7 +156,7 @@ class DocServiceTest {
      * exception will be thrown.
      */
     @Test
-    public void testFindOneNotFound() {
+    void testFindOneNotFound() {
         doReturn(Optional.empty()).when(this.docRepo).findById(this.existingDoc.getId());
 
         // Perform the service call
@@ -169,7 +169,7 @@ class DocServiceTest {
      * Test that we can save successfully a valid doc.
      */
     @Test
-    public void testSave() {
+    void testSave() {
         doReturn(this.existingDoc).when(this.docRepo).save(this.newDoc);
 
         //Perform the service call
@@ -189,7 +189,7 @@ class DocServiceTest {
      * Test that we can successfully delete an existing doc.
      */
     @Test
-    public void testDelete() throws DataNotFoundException {
+    void testDelete() throws DataNotFoundException {
         doReturn(Boolean.TRUE).when(this.docRepo).existsById(this.existingDoc.getId());
         doNothing().when(this.docRepo).deleteById(this.existingDoc.getId());
 
@@ -205,7 +205,7 @@ class DocServiceTest {
      * exception will be thrown.
      */
     @Test
-    public void testDeleteNotFound() {
+    void testDeleteNotFound() {
         doReturn(Boolean.FALSE).when(this.docRepo).existsById(this.existingDoc.getId());
 
         // Perform the service call
