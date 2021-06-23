@@ -54,7 +54,7 @@ class XmlUtilTest {
      * schema definition.
      */
     @Test
-    public void testValidateXmlTrue() throws IOException, SAXException {
+    void testValidateXmlTrue() throws IOException, SAXException {
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
         assertTrue(XmlUtil.validateXml(xml, this.sources));
@@ -66,7 +66,7 @@ class XmlUtilTest {
      * errors will be thrown as exceptions so we should expect them.
      */
     @Test
-    public void testValidateXmlFalse() throws IOException, SAXException {
+    void testValidateXmlFalse() throws IOException, SAXException {
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
 
@@ -78,4 +78,5 @@ class XmlUtilTest {
             XmlUtil.validateXml(wrongXml, this.sources)
         );
     }
+
 }

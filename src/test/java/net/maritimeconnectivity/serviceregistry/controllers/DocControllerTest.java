@@ -113,7 +113,7 @@ class DocControllerTest {
      * a paged result.
      */
     @Test
-    public void testGetAllDocs() throws Exception {
+    void testGetAllDocs() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<Doc> page = new PageImpl<>(this.docs.subList(0, 5), this.pageable, this.docs.size());
         doReturn(page).when(this.docService).findAll(any());
@@ -136,7 +136,7 @@ class DocControllerTest {
      * provided entry ID.
      */
     @Test
-    public void testGetDoc() throws Exception {
+    void testGetDoc() throws Exception {
         doReturn(this.existingDoc).when(this.docService).findOne(this.existingDoc.getId());
 
         // Perform the MVC request
@@ -155,7 +155,7 @@ class DocControllerTest {
      * NOT_FOUND response will be returned.
      */
     @Test
-    public void testGetDocNotFound() throws Exception {
+    void testGetDocNotFound() throws Exception {
         Long id = 0L;
         doThrow(DataNotFoundException.class).when(this.docService).findOne(any());
 
@@ -170,7 +170,7 @@ class DocControllerTest {
      * value will have the ID field populated.
      */
     @Test
-    public void testPostDoc() throws Exception {
+    void testPostDoc() throws Exception {
         // Mock the service call for creating a new instance
         doReturn(this.existingDoc).when(this.docService).save(any());
 
@@ -193,7 +193,7 @@ class DocControllerTest {
      * the error in the header.
      */
     @Test
-    public void testPostDocWithId() throws Exception {
+    void testPostDocWithId() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -209,7 +209,7 @@ class DocControllerTest {
      * request will be returned.
      */
     @Test
-    public void testPostDocWrongFormat() throws Exception {
+    void testPostDocWrongFormat() throws Exception {
         // Set a wrong format on the uploaded doc
         this.existingDoc.setFilecontentContentType("wrongType");
 
@@ -228,7 +228,7 @@ class DocControllerTest {
      * request. The incoming instance should always have an ID.
      */
     @Test
-    public void testPutDoc() throws Exception {
+    void testPutDoc() throws Exception {
         // Mock the service call for updating an existing instance
         doReturn(this.existingDoc).when(this.docService).save(any());
 
@@ -250,7 +250,7 @@ class DocControllerTest {
      * request will be returned.
      */
     @Test
-    public void testPutDocWrongFormat() throws Exception {
+    void testPutDocWrongFormat() throws Exception {
         // Set a wrong format on the uploaded doc
         this.existingDoc.setFilecontentContentType("wrongType");
 
@@ -269,7 +269,7 @@ class DocControllerTest {
      * ID.
      */
     @Test
-    public void testDeleteDoc() throws Exception {
+    void testDeleteDoc() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/docs/{id}", this.existingDoc.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -282,7 +282,7 @@ class DocControllerTest {
      * NOT_FOUND response will be returned.
      */
     @Test
-    public void testDeleteDocNotFound() throws Exception {
+    void testDeleteDocNotFound() throws Exception {
         doThrow(DataNotFoundException.class).when(this.docService).delete(any());
 
         // Perform the MVC request

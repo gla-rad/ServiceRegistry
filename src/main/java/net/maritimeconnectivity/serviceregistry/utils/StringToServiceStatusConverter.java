@@ -28,6 +28,7 @@ import org.springframework.core.convert.converter.Converter;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public class StringToServiceStatusConverter implements Converter<String, ServiceStatus> {
+
     @Override
     public ServiceStatus convert(String source) {
         for (ServiceStatus s : ServiceStatus.values()) {
@@ -37,4 +38,5 @@ public class StringToServiceStatusConverter implements Converter<String, Service
         }
         return null;
     }
+
 }
