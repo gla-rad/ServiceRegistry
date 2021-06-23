@@ -17,8 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
 import org.apache.commons.io.IOUtils;
