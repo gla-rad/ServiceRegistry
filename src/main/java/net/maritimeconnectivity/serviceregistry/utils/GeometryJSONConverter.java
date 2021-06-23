@@ -31,6 +31,7 @@ import java.io.IOException;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public class GeometryJSONConverter {
+
     /**
      * Convert from geometry to a JSON node.
      *
@@ -58,7 +59,7 @@ public class GeometryJSONConverter {
      * @return the geometry
      */
     public static Geometry convertToGeometry(JsonNode jsonNode) {
-        if (jsonNode == null  || jsonNode.asText() == null || jsonNode.asText() == "null") {
+        if (jsonNode == null  || jsonNode.toString() == "null" || jsonNode.asText() == "null") {
             return null;
         }
 

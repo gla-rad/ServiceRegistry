@@ -110,7 +110,7 @@ class XmlControllerTest {
      * a paged result.
      */
     @Test
-    public void testGetAllXmls() throws Exception {
+    void testGetAllXmls() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<Xml> page = new PageImpl<>(this.xmls.subList(0, 5), this.pageable, this.xmls.size());
         doReturn(page).when(this.xmlService).findAll(any());
@@ -133,7 +133,7 @@ class XmlControllerTest {
      * provided entry ID.
      */
     @Test
-    public void testGetXml() throws Exception {
+    void testGetXml() throws Exception {
         doReturn(this.existingXml).when(this.xmlService).findOne(this.existingXml.getId());
 
         // Perform the MVC request
@@ -152,7 +152,7 @@ class XmlControllerTest {
      * NOT_FOUND response will be returned.
      */
     @Test
-    public void testGetXmlNotFound() throws Exception {
+    void testGetXmlNotFound() throws Exception {
         Long id = 0L;
         doThrow(DataNotFoundException.class).when(this.xmlService).findOne(any());
 
@@ -167,7 +167,7 @@ class XmlControllerTest {
      * value will have the ID field populated.
      */
     @Test
-    public void testPostXml() throws Exception {
+    void testPostXml() throws Exception {
         // Mock the service call for creating a new instance
         doReturn(this.existingXml).when(this.xmlService).save(any());
 
@@ -190,7 +190,7 @@ class XmlControllerTest {
      * the error in the header.
      */
     @Test
-    public void testPostXmlWithId() throws Exception {
+    void testPostXmlWithId() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/xmls")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -206,7 +206,7 @@ class XmlControllerTest {
      * request. The incoming instance should always have an ID.
      */
     @Test
-    public void testPutXml() throws Exception {
+    void testPutXml() throws Exception {
         // Mock the service call for updating an existing instance
         doReturn(this.existingXml).when(this.xmlService).save(any());
 
@@ -228,7 +228,7 @@ class XmlControllerTest {
      * ID.
      */
     @Test
-    public void testDeleteXml() throws Exception {
+    void testDeleteXml() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/xmls/{id}", this.existingXml.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -241,7 +241,7 @@ class XmlControllerTest {
      * NOT_FOUND response will be returned.
      */
     @Test
-    public void testDeleteXmlNotFound() throws Exception {
+    void testDeleteXmlNotFound() throws Exception {
         doThrow(DataNotFoundException.class).when(this.xmlService).delete(any());
 
         // Perform the MVC request
