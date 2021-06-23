@@ -135,7 +135,7 @@ class InstanceServiceTest {
      * database through a paged call.
      */
     @Test
-    public void testFindAll() {
+    void testFindAll() {
         // Created a result page to be returned by the mocked repository
         Page<Instance> page = new PageImpl<>(this.instances.subList(0, 5), this.pageable, this.instances.size());
         doReturn(page).when(this.instanceRepo).findAll(this.pageable);
@@ -157,7 +157,7 @@ class InstanceServiceTest {
      * ID and all the eager relationships are loaded.
      */
     @Test
-    public void testFindOne() throws DataNotFoundException {
+    void testFindOne() throws DataNotFoundException {
         doReturn(this.existingInstance).when(instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
 
         // Perform the service call
@@ -188,7 +188,7 @@ class InstanceServiceTest {
      * object, the saving operation will fail and not continue.
      */
     @Test
-    public void testSaveValidationError() throws XMLValidationException, GeometryParseException, DataNotFoundException {
+    void testSaveValidationError() throws XMLValidationException, GeometryParseException, DataNotFoundException {
         doThrow(XMLValidationException.class).when(this.instanceService).validateInstanceForSave(any());
 
         // Perform the service call
@@ -205,7 +205,7 @@ class InstanceServiceTest {
      * provided ID is invalid, a DataNotFoundException will be thrown.
      */
     @Test
-    public void testSaveNoValidId() {
+    void testSaveNoValidId() {
         doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
 
         // Perform the service call
@@ -222,7 +222,7 @@ class InstanceServiceTest {
      * the validation checks are successful.
      */
     @Test
-    public void testSaveWithGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
+    void testSaveWithGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
         doReturn(this.newInstance).when(this.instanceRepo).save(any());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
         doReturn(Optional.of(new UserToken()).map(t -> {t.setOrganisation("org"); return t;})).when(this.userContext).getJwtToken();
@@ -259,7 +259,7 @@ class InstanceServiceTest {
      * instance geometry.
      */
     @Test
-    public void testSaveNoGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
+    void testSaveNoGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
         doAnswer(i -> i.getArguments()[0]).when(this.instanceRepo).save(any());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
         doReturn(Optional.of(new UserToken()).map(t -> {t.setOrganisation("org"); return t;})).when(this.userContext).getJwtToken();
@@ -300,7 +300,7 @@ class InstanceServiceTest {
      * Test that we can successfully delete an existing instance.
      */
     @Test
-    public void testDelete() throws DataNotFoundException {
+    void testDelete() throws DataNotFoundException {
         doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
 
@@ -316,7 +316,7 @@ class InstanceServiceTest {
      * exception will be thrown.
      */
     @Test
-    public void testDeleteNotFound() {
+    void testDeleteNotFound() {
         doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
 
         // Perform the service call
@@ -329,7 +329,7 @@ class InstanceServiceTest {
      * Test that we can update the status of a service in a separate call.
      */
     @Test
-    public void testUpdateStatus() throws DataNotFoundException, XMLValidationException, GeometryParseException, JAXBException, ParseException, JsonProcessingException {
+    void testUpdateStatus() throws DataNotFoundException, XMLValidationException, GeometryParseException, JAXBException, ParseException, JsonProcessingException {
         doReturn(this.existingInstance).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
 
@@ -347,7 +347,7 @@ class InstanceServiceTest {
      * to update the status of, a DataNotFoundException will be thrown.
      */
     @Test
-    public void testUpdateStatusNotFound() throws DataNotFoundException, XMLValidationException, GeometryParseException {
+    void testUpdateStatusNotFound() throws DataNotFoundException, XMLValidationException, GeometryParseException {
         doReturn(null).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
 
         // Perform the service call
@@ -364,7 +364,7 @@ class InstanceServiceTest {
      * instance, this will be propagated by the instance service.
      */
     @Test
-    public void testUpdateStatusError() throws DataNotFoundException, XMLValidationException, GeometryParseException {
+    void testUpdateStatusError() throws DataNotFoundException, XMLValidationException, GeometryParseException {
         doReturn(this.existingInstance).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
         doThrow(XMLValidationException.class).when(this.instanceService).validateInstanceForSave(any());
 
@@ -382,7 +382,7 @@ class InstanceServiceTest {
      * domain ID.
      */
     @Test
-    public void testFindAllByDomainId() {
+    void testFindAllByDomainId() {
         doReturn(this.instances).when(this.instanceRepo).findByDomainId("domainId");
 
         // Perform the service call
@@ -402,7 +402,7 @@ class InstanceServiceTest {
      * specific domain ID and version of the instance.
      */
     @Test
-    public void testFindByDomainIdAndVersion() {
+    void testFindByDomainIdAndVersion() {
         doReturn(this.existingInstance).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships("domainId", "0.0.1Test");
 
         // Perform the service call
@@ -433,7 +433,7 @@ class InstanceServiceTest {
      * providing just the specific domain ID.
      */
     @Test
-    public void testFindLatestVersionByDomainId() {
+    void testFindLatestVersionByDomainId() {
         doReturn(this.instances).when(this.instanceRepo).findByDomainIdEagerRelationships("domainId");
 
         // Perform the service call
@@ -461,7 +461,7 @@ class InstanceServiceTest {
      * provided XML and geometry values.
      */
     @Test
-    public void testValidateInstanceForSave() throws IOException, XMLValidationException, GeometryParseException, DataNotFoundException {
+    void testValidateInstanceForSave() throws IOException, XMLValidationException, GeometryParseException, DataNotFoundException {
         // Load a valid test XML for our instance
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xmlContent = IOUtils.toString(in, StandardCharsets.UTF_8.name());
@@ -478,7 +478,7 @@ class InstanceServiceTest {
      * saving request.
      */
     @Test
-    public void testValidateInstanceForSaveXMLError() throws IOException {
+    void testValidateInstanceForSaveXMLError() throws IOException {
         // Load a valid test XML for our instance
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xmlContent = IOUtils.toString(in, StandardCharsets.UTF_8.name());
@@ -498,7 +498,7 @@ class InstanceServiceTest {
      * saving request.
      */
     @Test
-    public void testValidateInstanceForSaveGeometryError() throws IOException {
+    void testValidateInstanceForSaveGeometryError() throws IOException {
         // Load a valid test XML for our instance
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xmlContent = IOUtils.toString(in, StandardCharsets.UTF_8.name());
