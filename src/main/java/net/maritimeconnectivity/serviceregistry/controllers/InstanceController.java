@@ -21,28 +21,22 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
-import net.maritimeconnectivity.serviceregistry.utils.UserContext;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * REST controller for managing Instance.
@@ -87,9 +81,14 @@ public class InstanceController {
     @GetMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> getInstance(@PathVariable Long id) {
         log.debug("REST request to get Instance : {}", id);
-        return Optional.ofNullable(this.instanceService.findOne(id))
-                .map(ResponseEntity.ok()::body)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            Instance result = this.instanceService.findOne(id);
+            return ResponseEntity.ok()
+                    .body(result);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.notFound()
+                    .build();
+        }
     }
 
     /**
@@ -136,7 +135,12 @@ public class InstanceController {
     @DeleteMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteInstance(@PathVariable Long id) {
         log.debug("REST request to delete Instance : {}", id);
-        this.instanceService.delete(id);
+        try {
+            this.instanceService.delete(id);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.notFound()
+                    .build();
+        }
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString()))
                 .build();
@@ -176,9 +180,13 @@ public class InstanceController {
                     .body(instance);
         }
 
-        return (newInstance ? ResponseEntity.created(new URI("/api/instances/" + instance.getId())) : ResponseEntity.ok())
-                .headers(HeaderUtil.createEntityUpdateAlert("instance", instance.getId().toString()))
-                .body(instance);
+        return newInstance ?
+                ResponseEntity.created(new URI("/api/instances/" + instance.getId()))
+                        .headers(HeaderUtil.createEntityCreationAlert("instance", instance.getId().toString()))
+                        .body(instance) :
+                ResponseEntity.ok()
+                        .headers(HeaderUtil.createEntityUpdateAlert("instance", instance.getId().toString()))
+                        .body(instance);
     }
 
     /**
@@ -199,27 +207,25 @@ public class InstanceController {
         } catch (DataNotFoundException ex) {
             log.error("Instance not found: ", ex);
             return ResponseEntity.notFound()
-                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
         } catch (XMLValidationException ex) {
             log.error("Error parsing xml: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
         } catch (GeometryParseException ex) {
             log.error("Error parsing geometry: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
         } catch (Exception ex) {
             log.error("Unknown error: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
         }
 
         // Return an OK response
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok()
+                .headers(HeaderUtil.createEntityStatusUpdateAlert("instance", id.toString()))
+                .build();
     }
 
 }

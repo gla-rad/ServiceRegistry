@@ -17,12 +17,14 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -35,20 +37,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class XmlService {
 
+    /**
+     * The XML Repository.
+     */
     @Autowired
     private XmlRepo xmlRepo;
-
-    /**
-     * Save a xml.
-     *
-     * @param xml the entity to save
-     * @return the persisted entity
-     */
-    public Xml save(Xml xml) {
-        log.debug("Request to save Xml : {}", xml);
-        Xml result = this.xmlRepo.save(xml);
-        return result;
-    }
 
     /**
      *  Get all the xmls.
@@ -59,8 +52,7 @@ public class XmlService {
     @Transactional(readOnly = true)
     public Page<Xml> findAll(Pageable pageable) {
         log.debug("Request to get all Xmls");
-        Page<Xml> result = this.xmlRepo.findAll(pageable);
-        return result;
+        return this.xmlRepo.findAll(pageable);
     }
 
     /**
@@ -70,10 +62,22 @@ public class XmlService {
      *  @return the entity
      */
     @Transactional(readOnly = true)
-    public Xml findOne(Long id) {
+    public Xml findOne(Long id) throws DataNotFoundException {
         log.debug("Request to get Xml : {}", id);
-        Xml xml = this.xmlRepo.findById(id).orElse(null);
-        return xml;
+        return this.xmlRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("", null));
+    }
+
+    /**
+     * Save a xml.
+     *
+     * @param xml the entity to save
+     * @return the persisted entity
+     */
+    @Transactional
+    public Xml save(Xml xml) {
+        log.debug("Request to save Xml : {}", xml);
+        return this.xmlRepo.save(xml);
     }
 
     /**
@@ -81,9 +85,14 @@ public class XmlService {
      *
      *  @param id the id of the entity
      */
-    public void delete(Long id) {
+    @Transactional(propagation = Propagation.NESTED)
+    public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Xml : {}", id);
-        this.xmlRepo.deleteById(id);
+        if(this.xmlRepo.existsById(id)) {
+            this.xmlRepo.deleteById(id);
+        } else {
+            throw new DataNotFoundException("No xml found for the provided ID", null);
+        }
     }
 
 }
