@@ -116,7 +116,7 @@ class InstanceControllerTest {
      * a paged result.
      */
     @Test
-    public void testGetAllInstances() throws Exception {
+    void testGetAllInstances() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<Instance> page = new PageImpl<>(this.instances.subList(0, 5), this.pageable, this.instances.size());
         doReturn(page).when(this.instanceService).findAll(any());
@@ -139,7 +139,7 @@ class InstanceControllerTest {
      * provided entry ID.
      */
     @Test
-    public void testGetInstance() throws Exception {
+    void testGetInstance() throws Exception {
         doReturn(this.existingInstance).when(this.instanceService).findOne(this.existingInstance.getId());
 
         // Perform the MVC request
@@ -158,7 +158,7 @@ class InstanceControllerTest {
      * NOT_FOUND response will be returned.
      */
     @Test
-    public void testGetInstanceNotFound() throws Exception {
+    void testGetInstanceNotFound() throws Exception {
         Long id = 0L;
         doThrow(DataNotFoundException.class).when(this.instanceService).findOne(any());
 
@@ -173,7 +173,7 @@ class InstanceControllerTest {
      * value will have the ID field populated.
      */
     @Test
-    public void testPostInstance() throws Exception {
+    void testPostInstance() throws Exception {
         // Mock the service call for creating a new instance
         doReturn(this.existingInstance).when(this.instanceService).save(any());
 
@@ -196,7 +196,7 @@ class InstanceControllerTest {
      * the error in the header.
      */
     @Test
-    public void testPostInstanceWithId() throws Exception {
+    void testPostInstanceWithId() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/instances")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -212,7 +212,7 @@ class InstanceControllerTest {
      * request. The incoming instance should always have an ID.
      */
     @Test
-    public void testPutInstance() throws Exception {
+    void testPutInstance() throws Exception {
         // Mock the service call for updating an existing instance
         doReturn(this.existingInstance).when(this.instanceService).save(any());
 
@@ -235,7 +235,7 @@ class InstanceControllerTest {
      * the error in the header.
      */
     @Test
-    public void testPutInstanceXMLFailure() throws Exception {
+    void testPutInstanceXMLFailure() throws Exception {
         // Mock an XML Validation exception when saving the instance
         doThrow(XMLValidationException.class).when(this.instanceService).save(any());
 
@@ -255,7 +255,7 @@ class InstanceControllerTest {
      * description of the error in the header.
      */
     @Test
-    public void testPutInstanceGeometryParseFailure() throws Exception {
+    void testPutInstanceGeometryParseFailure() throws Exception {
         // Mock a Geometry Parse exception when saving the instance
         doThrow(GeometryParseException.class).when(this.instanceService).save(any());
 
@@ -275,7 +275,7 @@ class InstanceControllerTest {
      * of the error in the header.
      */
     @Test
-    public void testPutInstanceGeneralFailure() throws Exception {
+    void testPutInstanceGeneralFailure() throws Exception {
         // Mock a general Exception when saving the instance
         doThrow(RuntimeException.class).when(this.instanceService).save(any());
 
@@ -294,7 +294,7 @@ class InstanceControllerTest {
      * ID.
      */
     @Test
-    public void testDeleteInstance() throws Exception {
+    void testDeleteInstance() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -307,7 +307,7 @@ class InstanceControllerTest {
      * NOT_FOUND response will be returned.
      */
     @Test
-    public void testDeleteInstanceNotFound() throws Exception {
+    void testDeleteInstanceNotFound() throws Exception {
         doThrow(DataNotFoundException.class).when(this.instanceService).delete(any());
 
         // Perform the MVC request
@@ -321,7 +321,7 @@ class InstanceControllerTest {
      * specification.
      */
     @Test
-    public void testPutInstanceStatus() throws Exception {
+    void testPutInstanceStatus() throws Exception {
         // Mock the service call for updating an existing instance
         doNothing().when(this.instanceService).updateStatus(any(), any());
 
@@ -337,7 +337,7 @@ class InstanceControllerTest {
      * bad request response will be returned.
      */
     @Test
-    public void testPutInstanceStatusError() throws Exception {
+    void testPutInstanceStatusError() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}/status", this.existingInstance.getId())
                 .queryParam("status", "Wrong Value")

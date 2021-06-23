@@ -103,7 +103,7 @@ class XmlServiceTest {
      * database through a paged call.
      */
     @Test
-    public void testFindAll() {
+    void testFindAll() {
         // Created a result page to be returned by the mocked repository
         Page<Xml> page = new PageImpl<>(this.xmls.subList(0, 5), this.pageable, this.xmls.size());
         doReturn(page).when(this.xmlRepo).findAll(this.pageable);
@@ -125,7 +125,7 @@ class XmlServiceTest {
      * ID and all the eager relationships are loaded.
      */
     @Test
-    public void testFindOne() throws DataNotFoundException {
+    void testFindOne() throws DataNotFoundException {
         doReturn(Optional.of(this.existingXml)).when(this.xmlRepo).findById(this.existingXml.getId());
 
         // Perform the service call
@@ -148,7 +148,7 @@ class XmlServiceTest {
      * exception will be thrown.
      */
     @Test
-    public void testFindOneNotFound() {
+    void testFindOneNotFound() {
         doReturn(Optional.ofNullable(null)).when(this.xmlRepo).findById(this.existingXml.getId());
 
         // Perform the service call
@@ -161,7 +161,7 @@ class XmlServiceTest {
      * Test that we can save successfully a valid xml.
      */
     @Test
-    public void testSave() {
+    void testSave() {
         doReturn(this.existingXml).when(this.xmlRepo).save(this.newXml);
 
         //Perform the service call
@@ -180,7 +180,7 @@ class XmlServiceTest {
      * Test that we can successfully delete an existing xml.
      */
     @Test
-    public void testDelete() throws DataNotFoundException {
+    void testDelete() throws DataNotFoundException {
         doReturn(Boolean.TRUE).when(this.xmlRepo).existsById(this.existingXml.getId());
         doNothing().when(this.xmlRepo).deleteById(this.existingXml.getId());
 
@@ -196,7 +196,7 @@ class XmlServiceTest {
      * exception will be thrown.
      */
     @Test
-    public void testDeleteNotFound() {
+    void testDeleteNotFound() {
         doReturn(Boolean.FALSE).when(this.xmlRepo).existsById(this.existingXml.getId());
 
         // Perform the service call

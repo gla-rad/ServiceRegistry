@@ -19,16 +19,16 @@ package net.maritimeconnectivity.serviceregistry.utils;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.keycloak.KeycloakSecurityContext;
 import org.keycloak.adapters.OidcKeycloakAccount;
 import org.keycloak.adapters.spi.KeycloakAccount;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.security.Principal;
@@ -40,8 +40,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
-@RunWith(MockitoJUnitRunner.class)
-public class UserContextTest {
+@ExtendWith(MockitoExtension.class)
+class UserContextTest {
 
     /**
      * The User Context.
@@ -66,10 +66,10 @@ public class UserContextTest {
     private KeycloakAuthenticationToken keyCloakToken;
 
     /**
-     * Setup some base data.
+     * Common setup for all the tests.
      */
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setUp() {
         userToken = new UserToken();
         userToken.setUsername("username");
 
@@ -100,7 +100,7 @@ public class UserContextTest {
      * it's gonna be the same as the one returned from keycloak.
      */
     @Test
-    public void testGetJwtString() {
+    void testGetJwtString() {
         SecurityContextHolder.getContext().setAuthentication(keyCloakToken);
         final String jwtString = userContext.getJwtString().get();
         Assert.assertEquals("dontCareAboutThisNow", jwtString);
@@ -111,13 +111,12 @@ public class UserContextTest {
      * it's gonna be the same as the one returned from keycloak.
      */
     @Test
-    public void testGetJwtToken() {
+    void testGetJwtToken() {
         SecurityContextHolder.getContext().setAuthentication(keyCloakToken);
         doReturn(this.userToken).when(clientJwtTokenUtility).getTokenFromString(any());
         final UserToken userToken = userContext.getJwtToken().get();
         assertNotNull(userToken);
         assertEquals(this.userToken.getName(), userToken.getName());
     }
-
 
 }
