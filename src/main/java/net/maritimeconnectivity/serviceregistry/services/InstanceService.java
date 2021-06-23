@@ -37,14 +37,18 @@ import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -123,9 +127,10 @@ public class InstanceService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findOne(Long id) {
+    public Instance findOne(Long id) throws DataNotFoundException {
         log.debug("Request to get Instance : {}", id);
-        return this.instanceRepo.findOneWithEagerRelationships(id);
+        return Optional.ofNullable(id).map(this.instanceRepo::findOneWithEagerRelationships)
+                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
     }
 
     /**
@@ -168,9 +173,14 @@ public class InstanceService {
      *
      * @param id the id of the entity
      */
-    public void delete(Long id) {
+    @Transactional(propagation = Propagation.NESTED)
+    public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
-        this.instanceRepo.deleteById(id);
+        if(this.instanceRepo.existsById(id)) {
+            this.instanceRepo.deleteById(id);
+        } else {
+            throw new DataNotFoundException("No instance found for the provided ID", null);
+        }
     }
 
     /**
@@ -180,11 +190,13 @@ public class InstanceService {
      * @param status the status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
+    @Transactional
     public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException {
         log.debug("Request to update status of Instance : {}", id);
 
         // Try to find if the instance does indeed exist
-        Instance instance = this.instanceRepo.findById(id)
+        Instance instance = Optional.of(id)
+                .map(this.instanceRepo::findOneWithEagerRelationships)
                 .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
 
         // Update the instance status
@@ -278,8 +290,10 @@ public class InstanceService {
 
         // Try to find the instance if an ID is provided
         if(instance.getId() != null) {
-            this.instanceRepo.findById(instance.getId())
-                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+            Optional.of(instance.getId())
+                    .map(instanceRepo::existsById)
+                    .filter(Boolean.TRUE::equals)
+                    .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
         }
 
         try {

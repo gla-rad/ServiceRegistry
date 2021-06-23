@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
@@ -33,7 +34,6 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * REST controller for managing Doc.
@@ -84,9 +84,14 @@ public class DocController {
     @GetMapping(value = "/docs/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Doc> getDoc(@PathVariable Long id) {
         log.debug("REST request to get Doc : {}", id);
-        return Optional.ofNullable(this.docService.findOne(id))
-                .map(ResponseEntity.ok()::body)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            Doc result = this.docService.findOne(id);
+            return ResponseEntity.ok()
+                    .body(result);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.notFound()
+                    .build();
+        }
     }
 
     /**
@@ -149,7 +154,12 @@ public class DocController {
     @DeleteMapping(value = "/docs/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDoc(@PathVariable Long id) {
         log.debug("REST request to delete Doc : {}", id);
-        this.docService.delete(id);
+        try {
+            this.docService.delete(id);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.notFound()
+                    .build();
+        }
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("doc", id.toString()))
                 .build();
