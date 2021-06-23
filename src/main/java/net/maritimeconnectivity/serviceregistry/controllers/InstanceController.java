@@ -17,21 +17,26 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import net.maritimeconnectivity.serviceregistry.utils.UserContext;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.security.RolesAllowed;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
@@ -76,7 +81,8 @@ public class InstanceController {
      * GET  /instances/{id} : get the "ID" instance.
      *
      * @param id the ID of the instance to retrieve
-     * @return the ResponseEntity with status 200 (OK) and with body the instance, or with status 404 (Not Found)
+     * @return the ResponseEntity with status 200 (OK) and with body the instance,
+     * or with status 404 (Not Found)
      */
     @GetMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> getInstance(@PathVariable Long id) {
@@ -100,11 +106,8 @@ public class InstanceController {
         if (instance.getId() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new instance cannot already have an ID"))
-                    .body(null);
+                    .build();
         }
-        instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        instance.setLastUpdatedAt(instance.getPublishedAt());
-
         return saveInstance(instance, true);
     }
 
@@ -121,11 +124,6 @@ public class InstanceController {
     public ResponseEntity<Instance> updateInstance(@PathVariable Long id, @Valid @RequestBody Instance instance) throws URISyntaxException {
         log.debug("REST request to update Instance : {}", instance);
         instance.setId(id);
-        instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        if (instance.getPublishedAt() == null) {
-            instance.setPublishedAt(instance.getLastUpdatedAt());
-        }
-
         return saveInstance(instance, false);
     }
 
@@ -156,20 +154,25 @@ public class InstanceController {
     private ResponseEntity<Instance> saveInstance(Instance instance, boolean newInstance) throws URISyntaxException {
         try {
             instance = this.instanceService.save(instance);
-        } catch (XMLValidationException e) {
-            log.error("Error parsing xml: ", e);
+        } catch (DataNotFoundException ex) {
+            log.error("Instance not found: ", ex);
+            return ResponseEntity.notFound()
+                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
+                    .build();
+        } catch (XMLValidationException ex) {
+            log.error("Error parsing xml: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("instance", e.getMessage(), e.toString()))
+                    .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
-        } catch (GeometryParseException e) {
-            log.error("Error parsing geometry: ", e);
+        } catch (GeometryParseException ex) {
+            log.error("Error parsing geometry: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("instance", e.getMessage(), e.toString()))
+                    .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
-        } catch (Exception e) {
-            log.error("Unknown error: ", e);
+        } catch (Exception ex) {
+            log.error("Unknown error: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("instance", e.getMessage(), e.toString()))
+                    .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
         }
 
@@ -188,25 +191,30 @@ public class InstanceController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/instances/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") ServiceStatus status) throws URISyntaxException {
+    public ResponseEntity<Void> updateInstanceStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") ServiceStatus status) {
         log.debug("REST request to update instance {} status : {}", id, status.value());
 
         try {
             this.instanceService.updateStatus(id, status);
-        } catch (XMLValidationException e) {
-            log.error("Error parsing xml: ", e);
-            return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("status", e.getMessage(), e.toString()))
+        } catch (DataNotFoundException ex) {
+            log.error("Instance not found: ", ex);
+            return ResponseEntity.notFound()
+                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
-        } catch (GeometryParseException e) {
-            log.error("Error parsing geometry: ", e);
+        } catch (XMLValidationException ex) {
+            log.error("Error parsing xml: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("status", e.getMessage(), e.toString()))
+                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
-        } catch (Exception e) {
-            log.error("Unknown error: ", e);
+        } catch (GeometryParseException ex) {
+            log.error("Error parsing geometry: ", ex);
             return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("status", e.getMessage(), e.toString()))
+                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
+                    .build();
+        } catch (Exception ex) {
+            log.error("Unknown error: ", ex);
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
                     .build();
         }
 
