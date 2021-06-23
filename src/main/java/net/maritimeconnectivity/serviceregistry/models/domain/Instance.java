@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -30,9 +31,7 @@ import org.locationtech.jts.io.ParseException;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * The type Instance.
@@ -120,13 +119,20 @@ public class Instance implements Serializable {
     @JsonProperty("serviceType")
     private String serviceType;
 
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
     private Xml instanceAsXml;
 
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
+
+    @ManyToMany(fetch=FetchType.LAZY)
+    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @JoinTable(name = "instance_docs",
+            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
+            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
+    private Set<Doc> docs = new HashSet<>();
 
     /**
      * The Designs.
@@ -501,6 +507,24 @@ public class Instance implements Serializable {
     }
 
     /**
+     * Gets docs.
+     *
+     * @return the docs
+     */
+    public Set<Doc> getDocs() {
+        return docs;
+    }
+
+    /**
+     * Sets docs.
+     *
+     * @param docs the docs
+     */
+    public void setDocs(Set<Doc> docs) {
+        this.docs = docs;
+    }
+
+    /**
      * Gets designs.
      *
      * @return the designs
@@ -607,4 +631,5 @@ public class Instance implements Serializable {
                 ", serviceType='" + serviceType + '\'' +
                 '}';
     }
+
 }

@@ -34,7 +34,7 @@ public class GeometryJSONDeserializer extends JsonDeserializer<Geometry> {
 
     @Override
     public Geometry deserialize(JsonParser jsonParser,
-                                DeserializationContext deserializationContext) throws IOException, JsonProcessingException {
+                                DeserializationContext deserializationContext) throws IOException {
         ObjectMapper mapper = new ObjectMapper();
         return GeometryJSONConverter.convertToGeometry(mapper.readTree(jsonParser));
     }

@@ -116,7 +116,7 @@ public class InstanceController {
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Instance> updateInstance(@PathVariable Long id, @RequestBody Instance instance) throws URISyntaxException {
+    public ResponseEntity<Instance> updateInstance(@PathVariable Long id, @Valid @RequestBody Instance instance) throws URISyntaxException {
         log.debug("REST request to update Instance : {}", instance);
         instance.setId(id);
         instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
