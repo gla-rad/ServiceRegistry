@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.InstanceStatus;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import org.apache.commons.io.IOUtils;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -104,7 +104,7 @@ class InstanceServiceTest {
         this.newInstance.setName("Instance Name");
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
-        this.newInstance.setStatus(InstanceStatus.RELEASED);
+        this.newInstance.setStatus(ServiceStatus.RELEASED);
         this.newInstance.setGeometry(point);
         this.newInstance.setInstanceAsXml(xml);
 
@@ -115,7 +115,7 @@ class InstanceServiceTest {
         this.existingInstance.setName("Instance Name");
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
-        this.existingInstance.setStatus(InstanceStatus.RELEASED);
+        this.existingInstance.setStatus(ServiceStatus.RELEASED);
         this.existingInstance.setGeometry(point);
         this.existingInstance.setInstanceAsXml(xml);
     }
@@ -284,12 +284,12 @@ class InstanceServiceTest {
         doNothing().when(this.instanceService).validateInstanceForSave(any());
 
         // Perform the service call
-        this.instanceService.updateStatus(this.existingInstance.getId(), InstanceStatus.DEPRECATED);
+        this.instanceService.updateStatus(this.existingInstance.getId(), ServiceStatus.DEPRECATED);
 
         // Capture the save instance i
         ArgumentCaptor<Instance> argument = ArgumentCaptor.forClass(Instance.class);
         verify(this.instanceRepo, times(1)).save(argument.capture());
-        assertEquals(InstanceStatus.DEPRECATED, argument.getValue().getStatus());
+        assertEquals(ServiceStatus.DEPRECATED, argument.getValue().getStatus());
     }
 
     /**
@@ -303,7 +303,7 @@ class InstanceServiceTest {
 
         // Perform the service call
         assertThrows(XMLValidationException.class, () ->
-                this.instanceService.updateStatus(this.existingInstance.getId(), InstanceStatus.DEPRECATED)
+                this.instanceService.updateStatus(this.existingInstance.getId(), ServiceStatus.DEPRECATED)
         );
 
         // Since this is a validation exception, no saving should have been attempted
