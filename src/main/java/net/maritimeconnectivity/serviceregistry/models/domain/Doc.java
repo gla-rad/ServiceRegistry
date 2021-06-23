@@ -17,12 +17,14 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -68,7 +70,7 @@ public class Doc implements Serializable {
 
     @ManyToMany(mappedBy = "docs")
     @JsonIgnore
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Instance> instances = new HashSet<>();
 
     /**
@@ -204,4 +206,26 @@ public class Doc implements Serializable {
         this.instances = instances;
     }
 
+    /**
+     * Overrides the hashcode generation of the object.
+     *
+     * @return the generated hashcode
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Doc)) return false;
+        Doc doc = (Doc) o;
+        return id.equals(doc.id);
+    }
+
+    /**
+     * Overrides the string representation of the object.
+     *
+     * @return the string representation
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }
