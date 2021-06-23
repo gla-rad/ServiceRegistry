@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,13 +42,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
@@ -155,7 +154,7 @@ class XmlControllerTest {
     @Test
     public void testGetXmlNotFound() throws Exception {
         Long id = 0L;
-        doReturn(null).when(this.xmlService).findOne(any());
+        doThrow(DataNotFoundException.class).when(this.xmlService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/xmls/{id}", id))
@@ -198,7 +197,7 @@ class XmlControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingXml)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -235,6 +234,19 @@ class XmlControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
+    }
+
+    /**
+     * Test that if we do NOT find the xml we are trying to delete, an HTTP
+     * NOT_FOUND response will be returned.
+     */
+    @Test
+    public void testDeleteXmlNotFound() throws Exception {
+        doThrow(DataNotFoundException.class).when(this.xmlService).delete(any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(delete("/api/xmls/{id}", this.existingXml.getId()))
+                .andExpect(status().isNotFound());
     }
 
 }
