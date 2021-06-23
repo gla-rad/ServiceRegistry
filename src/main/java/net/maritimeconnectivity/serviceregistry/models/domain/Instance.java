@@ -16,11 +16,8 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
@@ -29,19 +26,17 @@ import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.geojson.GeoJsonReader;
-import org.locationtech.jts.io.geojson.GeoJsonWriter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * The type Instance.
- *
+ * <p>
  * Holds a description of an service instance.An instance can be compatible to
  * one or more specification templates. It has at least a technical
  * representation of the description in form of an XML and a filled out
@@ -56,8 +51,6 @@ import java.util.Set;
 public class Instance implements Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    public static final String SERVICESTATUS_LIVE = "live";
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -92,17 +85,19 @@ public class Instance implements Serializable {
     @NotNull
     @Column(name = "instance_id", nullable = true)
     @JsonProperty("instanceId")
-    private String instanceId;
+    private String instanceId; //MRN
 
     @Column(name = "keywords")
     private String keywords;
 
-    @Column(name = "status")
-    private String status;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "varchar(30) default 'Pending Validation'")
+    private InstanceStatus status;
 
     @Column(name = "organization_id")
     @JsonProperty("organizationId")
-    private String organizationId;
+    private String organizationId; // Use the JWT auth token for that
 
     @Column(name = "unlocode")
     private String unlocode;
@@ -125,14 +120,6 @@ public class Instance implements Serializable {
     @JsonProperty("serviceType")
     private String serviceType;
 
-    @Column(name = "design_id")
-    @JsonProperty("designId")
-    private String designId;
-
-    @Column(name = "specification_id")
-    @JsonProperty("specificationId")
-    private String specificationId;
-
     @OneToOne
     @JoinColumn(unique = true)
     private Xml instanceAsXml;
@@ -141,26 +128,17 @@ public class Instance implements Serializable {
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
 
-    @ManyToOne
-    private SpecificationTemplate implementedSpecificationVersion;
+    /**
+     * The Designs.
+     */
+    @ElementCollection
+    Map<String, String> designs = new HashMap<>();
 
-    @ManyToMany(fetch=FetchType.LAZY)
-    @JsonIgnore
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_designs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="designs_id", referencedColumnName="ID"))
-    private Set<Design> designs = new HashSet<>();
-
-    @ManyToMany(fetch=FetchType.LAZY)
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_docs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
-    private Set<Doc> docs = new HashSet<>();
-
-    @Column(name = "compliant")
-    private boolean compliant;
+    /**
+     * The Specifications.
+     */
+    @ElementCollection
+    Map<String, String> specifications = new HashMap<>();
 
     /**
      * Gets id.
@@ -347,7 +325,7 @@ public class Instance implements Serializable {
      *
      * @return the status
      */
-    public String getStatus() {
+    public InstanceStatus getStatus() {
         return status;
     }
 
@@ -356,7 +334,7 @@ public class Instance implements Serializable {
      *
      * @param status the status
      */
-    public void setStatus(String status) {
+    public void setStatus(InstanceStatus status) {
         this.status = status;
     }
 
@@ -487,42 +465,6 @@ public class Instance implements Serializable {
     }
 
     /**
-     * Gets design id.
-     *
-     * @return the design id
-     */
-    public String getDesignId() {
-        return designId;
-    }
-
-    /**
-     * Sets design id.
-     *
-     * @param designId the design id
-     */
-    public void setDesignId(String designId) {
-        this.designId = designId;
-    }
-
-    /**
-     * Gets specification id.
-     *
-     * @return the specification id
-     */
-    public String getSpecificationId() {
-        return specificationId;
-    }
-
-    /**
-     * Sets specification id.
-     *
-     * @param specificationId the specification id
-     */
-    public void setSpecificationId(String specificationId) {
-        this.specificationId = specificationId;
-    }
-
-    /**
      * Gets instance as xml.
      *
      * @return the instance as xml
@@ -559,29 +501,11 @@ public class Instance implements Serializable {
     }
 
     /**
-     * Gets implemented specification version.
-     *
-     * @return the implemented specification version
-     */
-    public SpecificationTemplate getImplementedSpecificationVersion() {
-        return implementedSpecificationVersion;
-    }
-
-    /**
-     * Sets implemented specification version.
-     *
-     * @param implementedSpecificationVersion the implemented specification version
-     */
-    public void setImplementedSpecificationVersion(SpecificationTemplate implementedSpecificationVersion) {
-        this.implementedSpecificationVersion = implementedSpecificationVersion;
-    }
-
-    /**
      * Gets designs.
      *
      * @return the designs
      */
-    public Set<Design> getDesigns() {
+    public Map<String, String> getDesigns() {
         return designs;
     }
 
@@ -590,44 +514,26 @@ public class Instance implements Serializable {
      *
      * @param designs the designs
      */
-    public void setDesigns(Set<Design> designs) {
+    public void setDesigns(Map<String, String> designs) {
         this.designs = designs;
     }
 
     /**
-     * Gets docs.
+     * Gets specifications.
      *
-     * @return the docs
+     * @return the specifications
      */
-    public Set<Doc> getDocs() {
-        return docs;
+    public Map<String, String> getSpecifications() {
+        return specifications;
     }
 
     /**
-     * Sets docs.
+     * Sets specifications.
      *
-     * @param docs the docs
+     * @param specifications the specifications
      */
-    public void setDocs(Set<Doc> docs) {
-        this.docs = docs;
-    }
-
-    /**
-     * Is compliant boolean.
-     *
-     * @return the boolean
-     */
-    public boolean isCompliant() {
-        return compliant;
-    }
-
-    /**
-     * Sets compliant.
-     *
-     * @param compliant the compliant
-     */
-    public void setCompliant(boolean compliant) {
-        this.compliant = compliant;
+    public void setSpecifications(Map<String, String> specifications) {
+        this.specifications = specifications;
     }
 
     /**
@@ -643,6 +549,7 @@ public class Instance implements Serializable {
      * Sets the geometry from a JSON node object.
      *
      * @param geometry the geometry in a JSON format
+     * @throws ParseException the parse exception
      */
     public void setGeometryJson(JsonNode geometry) throws ParseException {
         this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
@@ -698,8 +605,6 @@ public class Instance implements Serializable {
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
                 ", serviceType='" + serviceType + '\'' +
-                ", designId='" + designId + '\'' +
-                ", specificationId='" + specificationId + '\'' +
                 '}';
     }
 }

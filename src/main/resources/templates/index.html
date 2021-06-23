@@ -19,26 +19,45 @@
 <head>
     <meta charset="UTF-8">
     <title>MCP Service Registry</title>
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
     <link rel="stylesheet" th:href="@{webjars/font-awesome/5.11.2/css/all.min.css}"/>
-    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/static/utils.js}"></script>
 </head>
 <body>
-    <nav class="navbar navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
         <span class="navbar-brand mb-0 h1">MCP Service Registry</span>
-        <ul class="nav navbar-nav navbar-right">
-            <li class="nav-item" sec:authorize="!isAuthenticated()">
-                <a class="nav-link" href="/login" th:href="@{/login}">
-                    <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                </a>
-            </li>
-            <li sec:authorize="isAuthenticated()">
-                <a class="nav-link" href="/logout" th:href="@{/logout}">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </a>
-            </li>
-        </ul>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/instances">
+                        Instances
+                    </a>
+                </li>
+                <li class="nav-item" sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/about">
+                        About
+                    </a>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" href="/login" th:href="@{/login}">
+                        <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
+                    </a>
+                </li>
+                <li sec:authorize="isAuthenticated()">
+                    <a class="nav-link" href="/logout" th:href="@{/logout}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
     </nav>
     <div id="main-content" class="container mt-3">
         <div class="card" sec:authorize="!isAuthenticated()">
