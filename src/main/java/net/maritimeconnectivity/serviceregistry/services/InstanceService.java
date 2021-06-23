@@ -24,12 +24,10 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
-import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import net.maritimeconnectivity.serviceregistry.utils.XmlUtil;
+import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
@@ -79,6 +77,12 @@ public class InstanceService {
     @Autowired
     @Lazy
     private UnLoCodeService unLoCodeService;
+
+    /**
+     * The User Context.
+     */
+    @Autowired
+    private UserContext userContext;
 
     /**
      * Definition of the G1128 Schema Sources.
@@ -131,7 +135,7 @@ public class InstanceService {
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
         // First of all validate the object
@@ -142,6 +146,18 @@ public class InstanceService {
             log.debug("Setting whole-earth coverage");
             instance.setGeometryJson(new ObjectMapper().readTree(wholeWorldGeoJson));
         }
+
+        // Populate the save operation fields if required
+        // For new entries
+        if(instance.getId() == null) {
+            instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
+        }
+        // If the publication date is missing
+        if(instance.getPublishedAt() == null) {
+            instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
+        }
+        // And don't forget the last update
+        instance.setLastUpdatedAt(instance.getPublishedAt());
 
         // The save and return
         return this.instanceRepo.save(instance);
@@ -255,9 +271,15 @@ public class InstanceService {
      * @throws XMLValidationException If fails first phase (Validating and parsing XML)
      * @throws GeometryParseException If fails second phase (Parsing geo data)
      */
-    public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException {
+    public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException, DataNotFoundException {
         if(instance == null) {
             return;
+        }
+
+        // Try to find the instance if an ID is provided
+        if(instance.getId() != null) {
+            this.instanceRepo.findById(instance.getId())
+                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
         }
 
         try {

@@ -111,7 +111,7 @@ class XmlControllerTest {
      * a paged result.
      */
     @Test
-    public void testGetAlXmls() throws Exception {
+    public void testGetAllXmls() throws Exception {
         // Created a result page to be returned by the mocked service
         Page<Xml> page = new PageImpl<>(this.xmls.subList(0, 5), this.pageable, this.xmls.size());
         doReturn(page).when(this.xmlService).findAll(any());
