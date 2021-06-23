@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -94,7 +96,7 @@ class DocControllerTest {
         this.newDoc.setComment("No comment");
         this.newDoc.setMimetype("application/pdf");
         this.newDoc.setFilecontentContentType("application/pdf");
-        this.newDoc.setFilecontent(new byte[]{00});
+        this.newDoc.setFilecontent(new byte[]{0b00});
 
         // Create an existing doc
         this.existingDoc = new Doc();
@@ -103,7 +105,7 @@ class DocControllerTest {
         this.existingDoc.setComment("No comment");
         this.existingDoc.setMimetype("application/pdf");
         this.existingDoc.setFilecontentContentType("application/pdf");
-        this.existingDoc.setFilecontent(new byte[]{00});
+        this.existingDoc.setFilecontent(new byte[]{0b00});
     }
 
     /**
@@ -155,7 +157,7 @@ class DocControllerTest {
     @Test
     public void testGetDocNotFound() throws Exception {
         Long id = 0L;
-        doReturn(null).when(this.docService).findOne(any());
+        doThrow(DataNotFoundException.class).when(this.docService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/docs/{id}", id))
@@ -198,7 +200,7 @@ class DocControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingDoc)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -209,7 +211,7 @@ class DocControllerTest {
     @Test
     public void testPostDocWrongFormat() throws Exception {
         // Set a wrong format on the uploaded doc
-        this.existingDoc.setFilecontentContentType("wrongtype");
+        this.existingDoc.setFilecontentContentType("wrongType");
 
         // Perform the MVC request
         this.mockMvc.perform(post("/api/docs")
@@ -217,7 +219,7 @@ class DocControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingDoc)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -250,7 +252,7 @@ class DocControllerTest {
     @Test
     public void testPutDocWrongFormat() throws Exception {
         // Set a wrong format on the uploaded doc
-        this.existingDoc.setFilecontentContentType("wrongtype");
+        this.existingDoc.setFilecontentContentType("wrongType");
 
         // Perform the MVC request
         this.mockMvc.perform(put("/api/docs/{id}", this.existingDoc.getId())
@@ -258,7 +260,7 @@ class DocControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingDoc)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -273,6 +275,19 @@ class DocControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
+    }
+
+    /**
+     * Test that if we do NOT find the doc we are trying to delete, an HTTP
+     * NOT_FOUND response will be returned.
+     */
+    @Test
+    public void testDeleteDocNotFound() throws Exception {
+        doThrow(DataNotFoundException.class).when(this.docService).delete(any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(delete("/api/xmls/{id}", this.existingDoc.getId()))
+                .andExpect(status().isNotFound());
     }
 
 }

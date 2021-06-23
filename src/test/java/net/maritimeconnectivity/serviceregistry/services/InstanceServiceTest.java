@@ -31,6 +31,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -86,8 +87,8 @@ class InstanceServiceTest {
         for(long i=0; i<15; i++) {
             Instance instance = new Instance();
             instance.setId(i);
-            instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.{}", i));
-            instance.setName(String.format("Test Instance {}", i));
+            instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", i));
+            instance.setName(String.format("Test Instance %d", i));
             instance.setVersion("0.0." + i);
             this.instances.add(instance);
         }
@@ -109,7 +110,7 @@ class InstanceServiceTest {
 
         // Create a new instance
         this.newInstance = new Instance();
-        this.newInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.{}", 100L));
+        this.newInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", 100L));
         this.newInstance.setName("Instance Name");
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
@@ -120,7 +121,7 @@ class InstanceServiceTest {
         // Create an instance with an ID
         this.existingInstance = new Instance();
         this.existingInstance.setId(100L);
-        this.existingInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.{}", 100L));
+        this.existingInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", 100L));
         this.existingInstance.setName("Instance Name");
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
@@ -156,7 +157,7 @@ class InstanceServiceTest {
      * ID and all the eager relationships are loaded.
      */
     @Test
-    public void testFindOne() {
+    public void testFindOne() throws DataNotFoundException {
         doReturn(this.existingInstance).when(instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
 
         // Perform the service call
@@ -190,9 +191,26 @@ class InstanceServiceTest {
     public void testSaveValidationError() throws XMLValidationException, GeometryParseException, DataNotFoundException {
         doThrow(XMLValidationException.class).when(this.instanceService).validateInstanceForSave(any());
 
-        // Make sure the exception propagates
+        // Perform the service call
         assertThrows(XMLValidationException.class, () ->
                 this.instanceService.save(this.newInstance)
+        );
+
+        // And also that no saving calls took place in the repository
+        verify(this.instanceRepo, never()).save(any());
+    }
+
+    /**
+     * Test that when we are trying to update an existing instance but the
+     * provided ID is invalid, a DataNotFoundException will be thrown.
+     */
+    @Test
+    public void testSaveNoValidId() {
+        doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.instanceService.save(this.existingInstance)
         );
 
         // And also that no saving calls took place in the repository
@@ -279,10 +297,11 @@ class InstanceServiceTest {
     }
 
     /**
-     * Test that we can successfully delete an exising instance.
+     * Test that we can successfully delete an existing instance.
      */
     @Test
-    public void testDelete() throws XMLValidationException, GeometryParseException {
+    public void testDelete() throws DataNotFoundException {
+        doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
 
         // Perform the service call
@@ -293,11 +312,25 @@ class InstanceServiceTest {
     }
 
     /**
+     * Test that if we try to delete a non-existing instance then a DataNotFound
+     * exception will be thrown.
+     */
+    @Test
+    public void testDeleteNotFound() {
+        doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.instanceService.delete(this.existingInstance.getId())
+        );
+    }
+
+    /**
      * Test that we can update the status of a service in a separate call.
      */
     @Test
-    public void testUpdateStatus() throws Exception {
-        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
+    public void testUpdateStatus() throws DataNotFoundException, XMLValidationException, GeometryParseException, JAXBException, ParseException, JsonProcessingException {
+        doReturn(this.existingInstance).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
 
         // Perform the service call
@@ -310,12 +343,29 @@ class InstanceServiceTest {
     }
 
     /**
+     * Test that we if we do NOT find the instance based on the provided ID,
+     * to update the status of, a DataNotFoundException will be thrown.
+     */
+    @Test
+    public void testUpdateStatusNotFound() throws DataNotFoundException, XMLValidationException, GeometryParseException {
+        doReturn(null).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.instanceService.updateStatus(this.existingInstance.getId(), ServiceStatus.DEPRECATED)
+        );
+
+        // Since this is a validation exception, no saving should have been attempted
+        verify(this.instanceRepo, never()).save(any());
+    }
+
+    /**
      * Test that we if an error occurs while updating the status of an
      * instance, this will be propagated by the instance service.
      */
     @Test
-    public void testUpdateStatusError() throws Exception {
-        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
+    public void testUpdateStatusError() throws DataNotFoundException, XMLValidationException, GeometryParseException {
+        doReturn(this.existingInstance).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
         doThrow(XMLValidationException.class).when(this.instanceService).validateInstanceForSave(any());
 
         // Perform the service call

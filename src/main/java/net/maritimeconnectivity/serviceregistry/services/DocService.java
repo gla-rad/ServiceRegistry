@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
@@ -39,35 +40,17 @@ import java.util.Optional;
 @Transactional
 public class DocService {
 
+    /**
+     * The Doc Repository.
+     */
     @Autowired
     private DocRepo docRepo;
 
+    /**
+     * The Instance Repository.
+     */
     @Autowired
     private InstanceRepo instanceRepo;
-
-    /**
-     * Save a doc.
-     *
-     * @param doc the entity to save
-     * @return the persisted entity
-     */
-    public Doc save(Doc doc){
-        log.debug("Request to save Doc : {}", doc);
-        this.docRepo.save(doc);
-
-        // Save the linked instances, if any
-        Optional.of(this.instanceRepo)
-                .map(InstanceRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(i -> i.getInstanceAsDoc() != null && i.getInstanceAsDoc().getId() == doc.getId())
-                .forEach(i -> {
-                    log.debug("Updating Linked Instance: {}", i);
-                    this.instanceRepo.save(i);
-                });
-
-        return doc;
-    }
 
     /**
      *  Get all the docs.
@@ -78,8 +61,7 @@ public class DocService {
     @Transactional(readOnly = true)
     public Page<Doc> findAll(Pageable pageable) {
         this.log.debug("Request to get all Docs");
-        Page<Doc> result = this.docRepo.findAll(pageable);
-        return result;
+        return this.docRepo.findAll(pageable);
     }
 
     /**
@@ -89,10 +71,35 @@ public class DocService {
      *  @return the entity
      */
     @Transactional(readOnly = true)
-    public Doc findOne(Long id) {
+    public Doc findOne(Long id) throws DataNotFoundException {
         this.log.debug("Request to get Doc : {}", id);
-        Doc doc = this.docRepo.findById(id).orElse(null);
-        return doc;
+        return this.docRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("No doc found for the provided ID", null));
+    }
+
+    /**
+     * Save a doc.
+     *
+     * @param doc the entity to save
+     * @return the persisted entity
+     */
+    @Transactional
+    public Doc save(Doc doc){
+        log.debug("Request to save Doc : {}", doc);
+        Doc result = this.docRepo.save(doc);
+
+        // Save the linked instances, if any
+        Optional.of(this.instanceRepo)
+                .map(InstanceRepo::findAllWithEagerRelationships)
+                .orElse(Collections.emptyList())
+                .stream()
+                .filter(i -> i.getInstanceAsDoc() != null && i.getInstanceAsDoc().getId() == result.getId())
+                .forEach(i -> {
+                    log.debug("Updating Linked Instance: {}", i);
+                    this.instanceRepo.save(i);
+                });
+
+        return result;
     }
 
     /**
@@ -100,9 +107,14 @@ public class DocService {
      *
      *  @param id the id of the entity
      */
-    public void delete(Long id) {
+    @Transactional
+    public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Doc : {}", id);
-        this.docRepo.deleteById(id);
+        if(this.docRepo.existsById(id)) {
+            this.docRepo.deleteById(id);
+        } else {
+            throw new DataNotFoundException("No doc found for the provided ID", null);
+        }
     }
 
 }

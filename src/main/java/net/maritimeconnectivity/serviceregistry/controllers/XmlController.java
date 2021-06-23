@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
@@ -32,7 +33,6 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * REST controller for managing Xml.
@@ -77,9 +77,14 @@ public class XmlController {
     @GetMapping(value = "/xmls/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> getXml(@PathVariable Long id) {
         log.debug("REST request to get Xml : {}", id);
-        return Optional.ofNullable(this.xmlService.findOne(id))
-                .map(ResponseEntity.ok()::body)
-                .orElse(ResponseEntity.notFound().build());
+        try {
+            Xml result = this.xmlService.findOne(id);
+            return ResponseEntity.ok()
+                    .body(result);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.notFound()
+                    .build();
+        }
     }
 
     /**
@@ -132,7 +137,12 @@ public class XmlController {
     @DeleteMapping(value = "/xmls/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteXml(@PathVariable Long id) {
         log.debug("REST request to delete Xml : {}", id);
-        this.xmlService.delete(id);
+        try {
+            this.xmlService.delete(id);
+        } catch (DataNotFoundException ex) {
+            return ResponseEntity.notFound()
+                    .build();
+        }
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("xml", id.toString()))
                 .build();

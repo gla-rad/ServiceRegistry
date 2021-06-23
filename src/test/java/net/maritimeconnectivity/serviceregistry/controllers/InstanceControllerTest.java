@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -84,8 +85,8 @@ class InstanceControllerTest {
         for(long i=0; i<10; i++) {
             Instance instance = new Instance();
             instance.setId(i);
-            instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.{}", i));
-            instance.setName(String.format("Test Instance {}", i));
+            instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", i));
+            instance.setName(String.format("Test Instance %d", i));
             this.instances.add(instance);
         }
 
@@ -94,7 +95,7 @@ class InstanceControllerTest {
 
         // Create a new instance
         this.newInstance = new Instance();
-        this.newInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.{}", 100L));
+        this.newInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", 100L));
         this.newInstance.setName("Instance Name");
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
@@ -103,7 +104,7 @@ class InstanceControllerTest {
         // Create an instance with an ID
         this.existingInstance = new Instance();
         this.existingInstance.setId(100L);
-        this.existingInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.{}", 100L));
+        this.existingInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", 100L));
         this.existingInstance.setName("Instance Name");
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
@@ -159,7 +160,7 @@ class InstanceControllerTest {
     @Test
     public void testGetInstanceNotFound() throws Exception {
         Long id = 0L;
-        doReturn(null).when(this.instanceService).findOne(any());
+        doThrow(DataNotFoundException.class).when(this.instanceService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/instances/{id}", id))
@@ -202,7 +203,7 @@ class InstanceControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -244,7 +245,7 @@ class InstanceControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -264,7 +265,7 @@ class InstanceControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -284,7 +285,7 @@ class InstanceControllerTest {
                 .content(this.objectMapper.writeValueAsString(this.existingInstance)))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
-                .andExpect(header().exists("X-mcsrApp-error"))
+                .andExpect(header().exists("X-mcsrApp-params"))
                 .andReturn();
     }
 
@@ -299,6 +300,19 @@ class InstanceControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(status().isOk())
                 .andReturn();
+    }
+
+    /**
+     * Test that if we do NOT find the instance we are trying to delete, an HTTP
+     * NOT_FOUND response will be returned.
+     */
+    @Test
+    public void testDeleteInstanceNotFound() throws Exception {
+        doThrow(DataNotFoundException.class).when(this.instanceService).delete(any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(delete("/api/instances/{id}", this.existingInstance.getId()))
+                .andExpect(status().isNotFound());
     }
 
     /**
