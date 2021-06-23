@@ -18,7 +18,6 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
