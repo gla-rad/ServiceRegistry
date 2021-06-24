@@ -8,6 +8,9 @@
     <description>A simple service implementing a custom service specification</description>
     <keywords>test mcp navigation</keywords>
     <endpoint>https://testservice.mcp.enav.org/service/endpoint/</endpoint>
+    <MMSI>123456789</MMSI>
+    <IMO>987654321</IMO>
+    <serviceType>test</serviceType>
     <requiresAuthorization>true</requiresAuthorization>
     <offersServiceLevel>
         <availability>0</availability>

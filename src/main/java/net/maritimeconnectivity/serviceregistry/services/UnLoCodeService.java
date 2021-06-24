@@ -22,8 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import net.maritimeconnectivity.serviceregistry.utils.XmlUtil;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -39,7 +41,7 @@ public class UnLoCodeService {
     private static final String JSON_KEY_LOCATION = "Location";
     private static final String JSON_KEY_COORDINATES = "Coordinates";
 
-    private HashMap<String, UnLoCodeMapEntry> UnLoCodeMap = null;
+    HashMap<String, UnLoCodeMapEntry> UnLoCodeMap = null;
 
     /**
      * Once the service has been initialised, it will read the full list of the
@@ -67,15 +69,23 @@ public class UnLoCodeService {
         String pointWKT = "";
         try {
             if (e != null) {
+                // Translate the WKT notation to a JSON node
                 pointWKT = "POINT (" + e.getLongitude() + " " + e.getLatitude() + ")";
                 JsonNode pointJson = WKTUtil.convertWKTtoGeoJson(pointWKT);
-                //Update the json geometry so E2 can find it
+
+                // Update the json geometry so E2 can find it
                 instance.setGeometryJson(pointJson);
-                //insert the WKT geometry into the XML
+
+                // Create the G1128 geometry from the point WKT notation
+                CoverageArea coverageArea = new CoverageArea();
+                coverageArea.setGeometryAsWKT(pointWKT);
+
+                // Insert the G1128 geometry into the XML
                 Xml instanceXml = instance.getInstanceAsXml();
-                String xml = instanceXml.getContent().toString();
-                String resultXml = XmlUtil.updateXmlNode(pointWKT, xml, "/*[local-name()='serviceInstance']/*[local-name()='coversArea']/*[local-name()='coversArea']/*[local-name()='geometryAsWKT']");
-                instanceXml.setContent(resultXml);
+                ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
+                serviceInstance.getCoversAreas().getCoversAreas().clear();
+                serviceInstance.getCoversAreas().getCoversAreas().add(coverageArea);
+                instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
                 instance.setInstanceAsXml(instanceXml);
             }
         } catch (Exception ex) {
@@ -89,12 +99,11 @@ public class UnLoCodeService {
      * @throws Exception if the unLoCode mapping file could not be found
      */
     private void loadUnLoCodeMapping(InputStream inStream) throws IOException {
-        UnLoCodeMap = new HashMap<String, UnLoCodeMapEntry>();
+        UnLoCodeMap = new HashMap<>();
         ObjectMapper mapper = new ObjectMapper();
         double invalid = -99999;
 
-        JsonNode unLoCodeJson = null;
-        unLoCodeJson = mapper.readTree(inStream);
+        JsonNode unLoCodeJson = mapper.readTree(inStream);
         for (JsonNode entry : unLoCodeJson) {
             try {
                 UnLoCodeMapEntry unLoCode = new UnLoCodeMapEntry();
