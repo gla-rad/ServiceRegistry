@@ -22,6 +22,9 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceSpecification;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.xml.bind.JAXBException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -146,6 +150,66 @@ public class XmlController {
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("xml", id.toString()))
                 .build();
+    }
+
+    /**
+     * POST  /xmls/validate/design : Validates the provided XML schema based
+     * on the G1128 design specification schema.
+     *
+     * @param content the xml content to be validated
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 design specification,
+     * or with status 400 (Bad Request) if the content is invalid
+     */
+    @PostMapping(value = "/xmls/validate/design", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> validateDesignXml(@Valid @RequestBody String content) {
+        log.debug("REST request to validate design xml : {}", content);
+        try {
+            return ResponseEntity.ok()
+                    .body(this.xmlService.validate(content, ServiceDesign.class));
+        } catch (JAXBException ex) {
+            return ResponseEntity.badRequest()
+                    .build();
+        }
+    }
+
+    /**
+     * POST  /xmls/validate/service : Validates the provided XML schema based
+     * on the G1128 service specification schema.
+     *
+     * @param content the xml content to be validated
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 service specification,
+     * or with status 400 (Bad Request) if the content is invalid
+     */
+    @PostMapping(value = "/xmls/validate/service", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> validateServiceXml(@Valid @RequestBody String content) {
+        log.debug("REST request to validate service xml : {}", content);
+        try {
+            return ResponseEntity.ok()
+                    .body(this.xmlService.validate(content, ServiceSpecification.class));
+        } catch (JAXBException ex) {
+            return ResponseEntity.badRequest()
+                    .build();
+        }
+    }
+
+    /**
+     * POST  /xmls/validate/instance : Validates the provided XML schema based
+     * on the G1128 instance specification schema.
+     *
+     * @param content the xml content to be validated
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 instance specification,
+     * or with status 400 (Bad Request) if the content is invalid
+     */
+    @PostMapping(value = "/xmls/validate/instance", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> validateInstanceXml(@RequestBody String content) {
+        log.debug("REST request to validate instance xml : {}", content);
+        try {
+            return ResponseEntity.ok()
+                    .body(this.xmlService.validate(content, ServiceInstance.class));
+        } catch (JAXBException ex) {
+            return ResponseEntity.badRequest()
+                    .build();
+        }
     }
 
 }

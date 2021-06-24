@@ -40,7 +40,7 @@ user for the service to connect to:
 
 ```bash
 postgres=# CREATE DATABASE mcp_service_registry;
-postgres=# \c mcp_service_registry
+postgres=# \c mcp_service_registry;
 postgres=# CREATE EXTENSION postgis;
 postgres=# CREATE USER sysadmin WITH PASSWORD 'sysadmin';
 postgres=# GRANT ALL PRIVILEGES ON DATABASE mcp_service_registry to sysadmin;
