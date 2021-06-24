@@ -20,12 +20,16 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
+import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.xml.bind.JAXBException;
 
 /**
  * Service Implementation for managing Xml.
@@ -93,6 +97,19 @@ public class XmlService {
         } else {
             throw new DataNotFoundException("No xml found for the provided ID", null);
         }
+    }
+
+    /**
+     * This function accepts an XML content as an input, as well as the G1128
+     * specification schema, in order to validate whether the input is actually
+     * correct.
+     *
+     * @param content the XML content
+     * @param g1128Schema the class of the G1128 schema to validate the content with
+     * @return the generated G1128 specification object
+     */
+    public Object validate(String content, Class<?> g1128Schema) throws JAXBException {
+        return new G1128Utils<>(g1128Schema).unmarshallG1128(content);
     }
 
 }
