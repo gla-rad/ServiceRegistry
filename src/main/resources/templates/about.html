@@ -23,7 +23,6 @@
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
     <link rel="stylesheet" th:href="@{webjars/font-awesome/5.11.2/css/all.min.css}"/>
-    <script th:src="@{/static/utils.js}"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
@@ -82,11 +81,26 @@
         </div>
         <div class="card" sec:authorize="isAuthenticated()">
             <div class="card-header">
-                <h2>Welcome</h2>
+                <h2>Maritime Service Registry information</h2>
             </div>
             <div class="card-body">
                 <div class="row">
-                    <p class="m-2">Hello!!! You are logged in!!!</p>
+                    <h5>Name : </h5> <p>[[${MSRName}]] </p>
+                </div>
+                <div class="row">
+                    <h5>End point (MRN) : </h5> <p>[[${MSRMRN}]] </p>
+                </div>
+                <div class="row">
+                    <h5>End point (URL) : </h5> <p>[[${MSRURL}]] </p>
+                </div>
+                <div class="row">
+                    <h5>Operator name : </h5> <p>[[${operatorName}]] </p>
+                </div>
+                <div class="row">
+                    <h5>Operator MRN : </h5> <p>[[${operatorMRN}]] </p>
+                </div>
+                <div class="row">
+                    <h5>Contact : </h5> <p>[[${contact}]] </p>
                 </div>
             </div>
         </div>
