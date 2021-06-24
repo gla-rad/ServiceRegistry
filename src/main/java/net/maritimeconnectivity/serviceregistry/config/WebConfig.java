@@ -16,7 +16,9 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
+import net.maritimeconnectivity.serviceregistry.utils.StringToServiceStatusConverter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -55,6 +57,17 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/index.html");
+    }
+
+    /**
+     * Add the converter between strings and the G1128 Service Instance status
+     * enumeration.
+     *
+     * @param registry the Formatter Registry
+     */
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new StringToServiceStatusConverter());
     }
 
 }

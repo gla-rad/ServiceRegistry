@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
+import net.maritimeconnectivity.serviceregistry.models.domain.XmlInput;
 import org.w3c.dom.ls.LSInput;
 import org.w3c.dom.ls.LSResourceResolver;
 

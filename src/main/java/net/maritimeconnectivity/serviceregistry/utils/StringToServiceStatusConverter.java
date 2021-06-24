@@ -16,27 +16,27 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.locationtech.jts.geom.Geometry;
-
-import java.io.IOException;
+import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.springframework.core.convert.converter.Converter;
 
 /**
- * The type Geometry json deserializer.
+ * The Sting to Service Status Converter.
+ *
+ * This utility class can convert strings to G1128 Service Instance status
+ * enumeration entries.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class GeometryJSONDeserializer extends JsonDeserializer<Geometry> {
+public class StringToServiceStatusConverter implements Converter<String, ServiceStatus> {
 
     @Override
-    public Geometry deserialize(JsonParser jsonParser,
-                                DeserializationContext deserializationContext) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return GeometryJSONConverter.convertToGeometry(mapper.readTree(jsonParser));
+    public ServiceStatus convert(String source) {
+        for (ServiceStatus s : ServiceStatus.values()) {
+            if (s.value().equalsIgnoreCase(source)) {
+                return s;
+            }
+        }
+        return null;
     }
 
 }
