@@ -86,16 +86,6 @@ public class InstanceService {
     private UserContext userContext;
 
     /**
-     * Definition of the G1128 Schema Sources.
-     */
-    List<String> g1128Sources = Arrays.asList(new String[] {
-            "xsd/ServiceBaseTypesSchema.xsd",
-            "xsd/ServiceDesignSchema.xsd",
-            "xsd/ServiceSpecificationSchema.xsd",
-            "xsd/ServiceInstanceSchema.xsd"
-    });
-
-    /**
      * Definition of the whole world area in GeoJSON.
      */
     String wholeWorldGeoJson = "{\n" +
@@ -294,7 +284,7 @@ public class InstanceService {
         }
 
         try {
-            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), this.g1128Sources);
+            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), G1128Utils.SOURCES_LIST);
         } catch (SAXException e) {
             throw new XMLValidationException("Service Instance XML is not valid.", e);
         } catch (IOException e) {
