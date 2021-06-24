@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
+import net.maritimeconnectivity.serviceregistry.utils.StringToG1128SchemaConverter;
 import net.maritimeconnectivity.serviceregistry.utils.StringToServiceStatusConverter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
@@ -60,14 +61,15 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     /**
-     * Add the converter between strings and the G1128 Service Instance status
-     * enumeration.
+     * Add the converters between strings and the G1128 Service Instance status
+     * and the G1128 Schemas enumerations.
      *
      * @param registry the Formatter Registry
      */
     @Override
     public void addFormatters(FormatterRegistry registry) {
         registry.addConverter(new StringToServiceStatusConverter());
+        registry.addConverter(new StringToG1128SchemaConverter());
     }
 
 }

@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
 import org.apache.commons.io.IOUtils;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
@@ -217,13 +218,13 @@ class XmlServiceTest {
      * @throws JAXBException for any JAXB parsing exceptions
      */
     @Test
-    void testValidate() throws IOException, JAXBException {
+    void testValidate() throws IOException, JAXBException, DataNotFoundException {
         // Read a test service instance specification
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
 
         // Perform the serviec call
-        ServiceInstance serviceInstance = (ServiceInstance) this.xmlService.validate(xml, ServiceInstance.class);
+        ServiceInstance serviceInstance = (ServiceInstance) this.xmlService.validate(xml, G1128Schemas.INSTANCE);
 
         // Assert all information exists
         assertNotNull(serviceInstance);
@@ -243,6 +244,21 @@ class XmlServiceTest {
     }
 
     /**
+     * Test that when we don't have a valid G1128 schema class (e.g. for the
+     * G1128 BASE case), the validation will fail with a DataNotFoundException.
+     */
+    @Test
+    void testValidateNoClass() {
+        // Create a test invalid input
+        String xml = "Some random input";
+
+        // Perform the serviec call
+        assertThrows(DataNotFoundException.class, () ->
+                this.xmlService.validate(xml, G1128Schemas.BASE)
+        );
+    }
+
+    /**
      * Test that for an invalid input, the validation function will throw
      * a JAXBException which can then be caught.
      */
@@ -253,7 +269,7 @@ class XmlServiceTest {
 
         // Perform the serviec call
         assertThrows(JAXBException.class, () ->
-                this.xmlService.validate(xml, ServiceInstance.class)
+                this.xmlService.validate(xml, G1128Schemas.INSTANCE)
         );
     }
 
