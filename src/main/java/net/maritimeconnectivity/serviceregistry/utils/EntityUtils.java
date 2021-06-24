@@ -27,7 +27,7 @@ import java.util.TimeZone;
 public class EntityUtils {
 
     /**
-     * Private Contructor to only allow static functions.
+     * Private Constructor to only allow static functions.
      */
     private EntityUtils() {
 
