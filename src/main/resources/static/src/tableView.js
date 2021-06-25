@@ -52,62 +52,87 @@ var columnDefs = [{
     hoverMsg: "MRN of service instance description",
     placeholder: "MRN of the service instance description"
 }, {
-    data: "designs",
-    title: "designs",
-    hoverMsg: "MRN of service technical design",
-    placeholder: "MRN of the service technical design"
-}, {
-    data: "specifications",
-    title: "specifications",
-    hoverMsg: "MRN of service specification",
-    placeholder: "MRN of the service specification"
-}, {
     data: "lastUpdatedAt",
     title: "lastUpdatedAt",
     hoverMsg: "Recent updated date",
     readonly : true,
+    searchable: false,
+    disabled: true
+}, {
+    data: "designs",
+    title: "designs",
+    hoverMsg: "MRN of service technical design",
+    placeholder: "MRN of the service technical design",
+    visible: false,
     searchable: false
 }, {
-    data: "detail",
-    title: "detail",
-    hoverMsg: "Detail of service",
-    readonly : true,
-    orderable: false,
+    data: "specifications",
+    title: "specifications",
+    hoverMsg: "MRN of service specification",
+    placeholder: "MRN of the service specification",
+    visible: false,
+    searchable: false
+}, {
+    data: "publishedAt",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "instanceAsXml",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "instanceAsDoc",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "comment",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "geometry",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "geometryContentType",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "unlocode",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "mmsi",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "imo",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "docs",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "geometryJson",
+    type: "hidden",
+    visible: false,
+    searchable: false
+}, {
+    data: "endpointType",
+    type: "hidden",
+    visible: false,
     searchable: false
 }];
-
-var testDataSet = [
-    {
-        id: 0,
-        name: "test1",
-        version: "0.2.1",
-        lastUpdatedAt: "Feb",
-        instanceId: "urn:mrn:mcp:service:test:testOrg:instance:test1",
-        keywords: "test/MCP/navigational warning",
-        status: "LIVE",
-        organizationId: "urn:mrn:mcp:org:test:testOrg",
-        endpointUri: "https://maritimeconnectivity.net",
-        serviceType: "Navigational warning",
-        designs: ["urn:mrn:mcp:service:test:testOrg:design:test1"],
-        specifications: ["urn:mrn:mcp:service:test:testOrg:specification:test1"],
-        detail: "detail"
-    },
-    {
-        id: 1,
-        name: "test2",
-        version: "1.0",
-        lastUpdatedAt: "Feb",
-        instanceId: "urn:mrn:mcp:service:test:testOrg:instance:test2",
-        keywords: "test/MCP/navigational warning",
-        status: "PENDING",
-        organizationId: "urn:mrn:mcp:org:test:testOrg",
-        endpointUri: "https://maritimeconnectivity.net",
-        serviceType: "Navigational warning",
-        designs: ["urn:mrn:mcp:service:test:testOrg:design:test2"],
-        specifications: ["urn:mrn:mcp:service:test:testOrg:specification:test1"],
-        detail: "detail"
-    }
-];
 
 $(document).ready( function () {
     table = $('#table_id').DataTable({
@@ -117,8 +142,7 @@ $(document).ready( function () {
             "dataType": "json",
             "cache": false,
             "dataSrc": function (json) {
-                //return json;
-                return testDataSet;
+                return json;
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
                 console.error(thrownError);
