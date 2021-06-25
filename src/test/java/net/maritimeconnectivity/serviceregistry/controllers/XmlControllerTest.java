@@ -343,6 +343,7 @@ class XmlControllerTest {
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.DESIGN.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -363,6 +364,7 @@ class XmlControllerTest {
 
         // Perform the MVC request
         this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.DESIGN.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isBadRequest());
     }
@@ -377,6 +379,7 @@ class XmlControllerTest {
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.SERVICE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -397,6 +400,7 @@ class XmlControllerTest {
 
         // Perform the MVC request
         this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.SERVICE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isBadRequest());
     }
@@ -411,6 +415,7 @@ class XmlControllerTest {
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.INSTANCE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -431,6 +436,7 @@ class XmlControllerTest {
 
         // Perform the MVC request
         this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.INSTANCE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isBadRequest());
     }
