@@ -53,7 +53,7 @@ public class Instance implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
@@ -92,7 +92,7 @@ public class Instance implements Serializable {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "varchar(30) default 'Pending Validation'")
+    @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
     @Column(name = "organization_id")
