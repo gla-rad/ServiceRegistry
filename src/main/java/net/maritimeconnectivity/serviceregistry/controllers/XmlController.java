@@ -187,7 +187,7 @@ public class XmlController {
      * @return the ResponseEntity with status 200 (OK) and with body of the parsed G1128-compliant object,
      * or with status 400 (Bad Request) if the content is invalid
      */
-    @PostMapping(value = "/xmls/validate/{schema}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/xmls/validate/{schema}", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> validateXmlWithG1128Schema(@PathVariable G1128Schemas schema, @Valid @RequestBody String content) {
         log.debug("REST request to validate design xml : {}", content);
         try {
