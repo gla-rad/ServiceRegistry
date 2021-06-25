@@ -17,10 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
+import org.apache.commons.io.IOUtils;
+import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,11 +29,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import javax.xml.bind.JAXBException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -202,6 +208,68 @@ class XmlServiceTest {
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
                 this.xmlService.delete(this.existingXml.getId())
+        );
+    }
+
+    /**
+     * Test that we can successfully validate whether an XML content follows
+     * the G1128 specification.
+     * @throws IOException when the test XML input file cannot be read
+     * @throws JAXBException for any JAXB parsing exceptions
+     */
+    @Test
+    void testValidate() throws IOException, JAXBException, DataNotFoundException {
+        // Read a test service instance specification
+        InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
+        String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+
+        // Perform the serviec call
+        ServiceInstance serviceInstance = (ServiceInstance) this.xmlService.validate(xml, G1128Schemas.INSTANCE);
+
+        // Assert all information exists
+        assertNotNull(serviceInstance);
+        assertNotNull(serviceInstance.getName());
+        assertNotNull(serviceInstance.getVersion());
+        assertNotNull(serviceInstance.getId());
+        assertNotNull( serviceInstance.getKeywords());
+        assertNotNull(serviceInstance.getStatus());
+        assertNotNull(serviceInstance.getDescription());
+        assertNotNull(serviceInstance.getEndpoint());
+        assertNotNull(serviceInstance.getMMSI());
+        assertNotNull(serviceInstance.getIMO());
+        assertNotNull(serviceInstance.getServiceType());
+        assertNotNull(serviceInstance.getCoversAreas());
+        assertNotNull(serviceInstance.getProducedBy());
+        assertNotNull(serviceInstance.getProvidedBy());
+    }
+
+    /**
+     * Test that when we don't have a valid G1128 schema class (e.g. for the
+     * G1128 BASE case), the validation will fail with a DataNotFoundException.
+     */
+    @Test
+    void testValidateNoClass() {
+        // Create a test invalid input
+        String xml = "Some random input";
+
+        // Perform the serviec call
+        assertThrows(DataNotFoundException.class, () ->
+                this.xmlService.validate(xml, G1128Schemas.BASE)
+        );
+    }
+
+    /**
+     * Test that for an invalid input, the validation function will throw
+     * a JAXBException which can then be caught.
+     */
+    @Test
+    void testValidateFails() {
+        // Create a test invalid input
+        String xml = "Some invalid input";
+
+        // Perform the serviec call
+        assertThrows(JAXBException.class, () ->
+                this.xmlService.validate(xml, G1128Schemas.INSTANCE)
         );
     }
 
