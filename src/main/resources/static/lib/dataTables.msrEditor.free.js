@@ -157,14 +157,14 @@
 
                 this.language.modalClose = this.language.modalClose || 'Close';
                 this.language.edit = this.language.edit || {};
-                this.language.edit = { title: this.language.edit.title || 'Edit record',
+                this.language.edit = { title: this.language.edit.title || 'Edit instance',
                     button: this.language.edit.button || 'Edit'
                 };
                 this.language.delete = this.language.delete || {};
-                this.language.delete = { title: this.language.delete.title || 'Delete record',
+                this.language.delete = { title: this.language.delete.title || 'Delete instance',
                     button: this.language.delete.button || 'Delete' };
                 this.language.add = this.language.add || {};
-                this.language.add = { title: this.language.add.title || 'Add record',
+                this.language.add = { title: this.language.add.title || 'Add instance',
                     button: this.language.add.button || 'Add'
                 };
                 this.language.success = this.language.success || 'Success!';
@@ -555,7 +555,7 @@
                 $(selector + ' input[0]').trigger('focus');
                 $(selector).trigger("alteditor:some_dialog_opened").trigger("alteditor:add_dialog_opened");
 
-                // validation
+                // validation of XML
                 $('#validateXml').on('click', function (e) {
                     var xmlContent = $( '#xml-input' ).val();
                     that.onValidateXml(that,
@@ -619,7 +619,7 @@
                 var data = "", count=0;
                 data += "<div ><div class='row'>"
                 data += "<div class='col'><small>Enter G1128 XML for service instance</small>";
-                data += "<div class='input-group input-group-lg'><textarea class='form-control input-lg' id='xml-input'></textarea></div><div class='input-group-btn'><button type='button' id='validateXml' class='btn btn-default btn-lg'>Validate</button></div>";
+                data += "<div class='input-group input-group-sm'><textarea class='form-control input-sm' id='xml-input' rows=30></textarea></div><div class='input-group-btn'><button type='button' id='validateXml' class='btn btn-default btn-lg'>Validate</button></div>";
                 data += "</div>";
                 data += "<div class='col'>";
                 for (var j in columnDefs) {
