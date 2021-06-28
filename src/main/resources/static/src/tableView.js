@@ -11,44 +11,49 @@ var columnDefs = [{
 }, {
     data: "name",
     title: "name",
+    readonly : true,
     hoverMsg: "Name of service",
-    required: true,
     placeholder: "Name of the service"
 }, {
     data: "version",
     title: "version",
+    readonly : true,
     hoverMsg: "Version of service",
     placeholder: "Version of the service"
 }, {
     data: "serviceType",
     title: "serviceType",
+    readonly : true,
     hoverMsg: "Type of service",
     placeholder: "Type of the service"
 }, {
     data: "status",
     title: "status",
-    type: "select",
-    options: ["PENDING","LIVE", "INACTIVE"],
+    readonly : true,
     hoverMsg: "Status of service",
     placeholder: "Status of the service"
 }, {
     data: "endpointUri",
     title: "endpointUri",
+    readonly : true,
     hoverMsg: "Access point of service",
     placeholder: "Access point of the service"
 }, {
     data: "organizationId",
     title: "organizationId",
+    readonly : true,
     hoverMsg: "MRN of service provider",
     placeholder: "MRN of the service provider (organization)"
 }, {
     data: "keywords",
     title: "keywords",
+    readonly : true,
     hoverMsg: "Keywords of service",
     placeholder: "Keywords of the service"
 }, {
     data: "instanceId",
     title: "instanceId",
+    readonly : true,
     hoverMsg: "MRN of service instance description",
     placeholder: "MRN of the service instance description"
 }, {
@@ -59,80 +64,67 @@ var columnDefs = [{
     searchable: false,
     disabled: true
 }, {
-    data: "designs",
-    title: "designs",
-    hoverMsg: "MRN of service technical design",
-    placeholder: "MRN of the service technical design",
-    visible: false,
-    searchable: false
-}, {
-    data: "specifications",
-    title: "specifications",
-    hoverMsg: "MRN of service specification",
-    placeholder: "MRN of the service specification",
-    visible: false,
-    searchable: false
-}, {
     data: "publishedAt",
     type: "hidden",
-    visible: false,
-    searchable: false
-}, {
-    data: "instanceAsXml",
-    type: "hidden",
-    visible: false,
-    searchable: false
-}, {
-    data: "instanceAsDoc",
-    type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "comment",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "geometry",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "geometryContentType",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "unlocode",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "mmsi",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "imo",
     type: "hidden",
-    visible: false,
-    searchable: false
-}, {
-    data: "docs",
-    type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "geometryJson",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "endpointType",
     type: "hidden",
+    readonly : true,
     visible: false,
     searchable: false
 }];
+
+function nullIfEmpty(value){
+    if (value !== null && value === "")
+        return undefined;
+    else
+        return value;
+}
 
 $(document).ready( function () {
     table = $('#table_id').DataTable({
@@ -173,15 +165,9 @@ $(document).ready( function () {
             $.ajax({
                 url: '/api/instances',
                 type: 'POST',
-                contentType: 'application/json; charset=utf-8',
+                contentType: 'application/json',
                 dataType: 'json',
-                data: JSON.stringify({
-                    model: rowdata["model"],
-                    manufacturer: rowdata["manufacturer"],
-                    type: rowdata["type"],
-                    nomPower: nullIfEmpty(rowdata["nomPower"]),
-                    notes: rowdata["notes"]
-                }),
+                data: rowdata,
                 success: success,
                 error: error
             });
@@ -214,6 +200,17 @@ $(document).ready( function () {
                 success: success,
                 error: error
             });
-        }
+        },
+        onValidateXml: function (datatable, rowdata, success, error) {
+            $.ajax({
+                url: `api/xmls/validate/INSTANCE`,
+                type: 'POST',
+                contentType: 'application/xml',
+                dataType: 'json',
+                data: rowdata,
+                success: success,
+                error: error
+            });
+        },
     });
 } );
