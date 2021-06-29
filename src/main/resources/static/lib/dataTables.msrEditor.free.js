@@ -291,7 +291,7 @@
              * @private
              */
             _openEditModal: function () {
-
+                var that = this;
                 var dt = this.s.dt;
                 var adata = dt.rows({
                     selected: true
@@ -331,8 +331,33 @@
                     }
                 }
 
-                $(selector + ' input[0]').trigger('focus');
+                $(selector).find( '#xml-input' ).val(adata.data()[0]['instanceAsXml']['content']);
                 $(selector).trigger("alteditor:some_dialog_opened").trigger("alteditor:edit_dialog_opened");
+
+                // validation of XML
+                $('#validateXml').on('click', function (e) {
+                    var xmlContent = $( '#xml-input' ).val();
+                    that.onValidateXml(that,
+                        xmlContent,
+                        function(data){ that._validateXmlCallback(data); },
+                        function(data){ that._errorCallback(data);
+                        });
+                });
+            },
+
+            _alignData: function(rowDataArray, id, value, columnDefs){
+                if (id && columnDefs.includes(id)){
+                    if (id === 'geometryJson'){
+                        rowDataArray[id] = JSON.stringify(value);
+                    }
+                    else if (id === 'id'){
+                        rowDataArray[id] = parseInt(value);
+                    }
+                    else{
+                        rowDataArray[id] = value;
+                    }
+                }
+                return rowDataArray;
             },
 
             /**
@@ -343,7 +368,7 @@
                 var dt = this.s.dt;
 
                 // Complete new row data
-                var rowDataArray = {};
+                var rowDataArray = that._getInitialData();
 
                 var adata = dt.rows({
                     selected: true
@@ -352,9 +377,13 @@
                 // Original row data
                 var orginalRowDataArray = adata.data()[0];
 
+                rowDataArray["id"] = orginalRowDataArray["id"];
+
+                var columnDefData = columnDefs.map((e) => e["data"]);
+
                 // Getting the inputs from the edit-modal
                 $('form[name="altEditor-edit-form-' + this.random_id + '"] *').filter(':input[type!="file"]').filter(':enabled').each(function (i) { //Do not include disabled fields.
-                    rowDataArray[$(this).attr('id')] = $(this).val();
+                    rowDataArray = that._alignData(rowDataArray, $(this).attr('id'), $(this).val(), columnDefData);
                 });
 
                 //Getting the textArea from the modal
@@ -382,6 +411,12 @@
                 $('form[name="altEditor-edit-form-' + this.random_id + '"] *').filter(':input[type="checkbox"]').each(function (i) {
                     rowDataArray[$(this).attr('id')] = this.checked;
                 });
+
+                // Augmenting xml content on the data
+                var xml_content = $("#xml-input").val();
+                if (xml_content.length>0){
+                    rowDataArray["instanceAsXml"]["content"] = xml_content;
+                }
 
                 console.log(rowDataArray); //DEBUG
 
@@ -427,7 +462,7 @@
                 for (var j in columnDefs) {
                     if (columnDefs[j].name == null) continue;
                     if (columnDefs[j].type.indexOf("hidden") >= 0) {
-                        data += "<input type='hidden' id='" + columnDefs[j].title + "' value='" + adata.data()[0][columnDefs[j].name] + "'></input>";
+                        data += "<input type='hidden' id='" + columnDefs[j].name + "' value='" + adata.data()[0][columnDefs[j].name] + "'></input>";
                     }
                     else if (columnDefs[j].type.indexOf("file") < 0) {
                         var arrIndex = columnDefs[j].name.toString().split(".");
@@ -518,7 +553,7 @@
                 var that = this;
                 var dt = this.s.dt;
 
-                var jsonDataArray = {};
+                var jsonDataArray = that._getInitialData();
 
                 var adata = dt.rows({
                     selected: true
@@ -801,6 +836,18 @@
                 }
             },
 
+            _getInitialData: function () {
+                let rowDataArray = {};
+                rowDataArray["instanceAsDoc"] = null;
+                rowDataArray["geometryContentType"] = null;
+                rowDataArray["designs"] = {};
+                rowDataArray["specifications"] = {};
+                rowDataArray["geometryJson"] = {};
+                rowDataArray["docs"] = [];
+                rowDataArray["instanceAsXml"] = { name: "xml", comment: "no comment", content: "", contentContentType: "G1128 Instance Specification XML" };
+                return rowDataArray;
+            },
+
             /**
              * Callback for "Add" button
              */
@@ -808,18 +855,13 @@
                 var that = this;
                 var dt = this.s.dt;
 
-                var rowDataArray = {};
-                rowDataArray["instanceAsDoc"] = null;
-                rowDataArray["designs"] = {};
-                rowDataArray["specifications"] = {};
-                rowDataArray["docs"] = [];
+                var rowDataArray = that._getInitialData();
+
+                var columnDefData = columnDefs.map((e) => e["data"]);
 
                 // Getting the inputs from the modal
                 $('form[name="altEditor-add-form-' + this.random_id + '"] *').filter(':input[type!="file"]').filter(':enabled').each(function (i) { //Dont send disabled fields
-                    if ($(this).attr('id') && $(this).attr('id') in columnDefs.map((e) => e["data"])){
-                        rowDataArray[$(this).attr('id')] = $(this).val();
-                        console.log($(this).attr('id'));
-                    }
+                    rowDataArray = that._alignData(rowDataArray, $(this).attr('id'), $(this).val(), columnDefData);
                 });
 
                 //Getting the textArea from the modal
@@ -848,10 +890,10 @@
                     rowDataArray[$(this).attr('id')] = this.checked;
                 });
 
+                // Augmenting xml content on the data
                 var xml_content = $("#xml-input").val();
-                console.log(xml_content);
                 if (xml_content.length>0){
-                    rowDataArray["instanceAsXml"] = { name: "xml", comment: "no comment", content: xml_content, contentContentType: "G1128 Instance Specification XML" };
+                    rowDataArray["instanceAsXml"]["content"] = xml_content;
                 }
 
                 console.log(rowDataArray); //DEBUG
@@ -859,7 +901,7 @@
                 var checkFilesQueued = function() {
                     if (numFilesQueued == 0) {
                         that.onAddRow(that,
-                            JSON.stringify(rowDataArray),
+                            rowDataArray,
                             function(data){ that._addRowCallback(data); },
                             function(data){ that._errorCallback(data);
                             });
@@ -877,7 +919,6 @@
                 var selector = this.modal_selector;
 
                 for (var name in response) {
-                    console.log(name + "=" + response[name]);
                     var value = response[name];
                     if (name == 'id')
                         name = 'instanceId';
