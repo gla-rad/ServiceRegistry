@@ -82,12 +82,6 @@ var columnDefs = [{
     visible: false,
     searchable: false
 }, {
-    data: "geometryContentType",
-    type: "hidden",
-    readonly : true,
-    visible: false,
-    searchable: false
-}, {
     data: "unlocode",
     type: "hidden",
     readonly : true,
@@ -101,12 +95,6 @@ var columnDefs = [{
     searchable: false
 }, {
     data: "imo",
-    type: "hidden",
-    readonly : true,
-    visible: false,
-    searchable: false
-}, {
-    data: "geometryJson",
     type: "hidden",
     readonly : true,
     visible: false,
@@ -167,7 +155,7 @@ $(document).ready( function () {
                 type: 'POST',
                 contentType: 'application/json',
                 dataType: 'json',
-                data: rowdata,
+                data: JSON.stringify(rowdata),
                 success: success,
                 error: error
             });
@@ -176,7 +164,7 @@ $(document).ready( function () {
             $.ajax({
                 url: `/api/instances/${rowdata["id"]}`,
                 type: 'DELETE',
-                contentType: 'application/json; charset=utf-8',
+                contentType: 'application/json',
                 dataType: 'json',
                 data: JSON.stringify(rowdata),
                 success: success,
@@ -184,19 +172,13 @@ $(document).ready( function () {
             });
         },
         onEditRow: function (datatable, rowdata, success, error) {
+            console.log(rowdata);
             $.ajax({
                 url: `/api/instances/${rowdata["id"]}`,
                 type: 'PUT',
-                contentType: 'application/json; charset=utf-8',
+                contentType: 'application/json',
                 dataType: 'json',
-                data: JSON.stringify({
-                    id: rowdata["id"],
-                    model: rowdata["model"],
-                    manufacturer: rowdata["manufacturer"],
-                    type: rowdata["type"],
-                    nomPower: nullIfEmpty(rowdata["nomPower"]),
-                    notes: rowdata["notes"]
-                }),
+                data: JSON.stringify(rowdata),
                 success: success,
                 error: error
             });
