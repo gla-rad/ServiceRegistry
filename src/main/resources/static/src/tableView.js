@@ -165,8 +165,6 @@ $(document).ready( function () {
                 url: `/api/instances/${rowdata["id"]}`,
                 type: 'DELETE',
                 contentType: 'application/json',
-                dataType: 'json',
-                data: JSON.stringify(rowdata),
                 success: success,
                 error: error
             });
