@@ -7,6 +7,9 @@ therefore there might still be references to that in this project.
 
 This implementation is a reboot version of [Service registry from Efficiensea2](https://github.com/maritimeconnectivity/mc-serviceregistry) motivated by newly introduced requirements of MSR.
 
+## Background
+We are maintaining a Wiki page for explaining backgrounds and issues - please refer [[Home]].
+
 ## General
 The MCP Service Registry is built using the Java Sprinboot frameworks and
 required a PostgreSQL database with a PostGIS extension. More information 
