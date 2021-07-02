@@ -16,12 +16,24 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
+
 import javax.xml.bind.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.List;
 
 public class G1128Utils<T> {
+
+    // Create a public definition of all the G1128 sources
+    public static List<String> SOURCES_LIST = Arrays.asList(new String[]{
+            G1128Schemas.BASE.getPath(),
+            G1128Schemas.DESIGN.getPath(),
+            G1128Schemas.SERVICE.getPath(),
+            G1128Schemas.INSTANCE.getPath(),
+    });
 
     // Class Variables
     private Class<T> g1128Spec;

@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
 import org.xml.sax.SAXException;
@@ -26,28 +25,11 @@ import org.xml.sax.SAXParseException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class XmlUtilTest {
-
-    // Test Variables
-    List<String> sources;
-
-    /**
-     * Common setup for all the tests.
-     */
-    @BeforeEach
-    void setUp() {
-        this.sources = Arrays.asList(new String[] {
-                "xsd/ServiceBaseTypesSchema.xsd",
-                "xsd/ServiceDesignSchema.xsd",
-                "xsd/ServiceSpecificationSchema.xsd",
-                "xsd/ServiceInstanceSchema.xsd"
-        });
-    }
 
     /**
      * Test that we can correctly validate an XML if compared to a valid XSD
@@ -57,7 +39,7 @@ class XmlUtilTest {
     void testValidateXmlTrue() throws IOException, SAXException {
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
-        assertTrue(XmlUtil.validateXml(xml, this.sources));
+        assertTrue(XmlUtil.validateXml(xml, G1128Utils.SOURCES_LIST));
     }
 
     /**
@@ -75,7 +57,7 @@ class XmlUtilTest {
 
         // And  the exception
         assertThrows(SAXParseException.class, () ->
-            XmlUtil.validateXml(wrongXml, this.sources)
+            XmlUtil.validateXml(wrongXml, G1128Utils.SOURCES_LIST)
         );
     }
 
