@@ -1,13 +1,12 @@
 /**
- * @summary altEditor
- * @description Lightweight editor for DataTables
- * @version 2.0
- * @file dataTables.editor.free.js
+ * @summary MSReditor
+ * @description MSR-specific version of altEditor for DataTables
+ * @version 1.0
+ * @file dataTables.msrEditor.free.js
  * @author kingkode (www.kingkode.com)
- *  Modified by: Kasper Olesen (https://github.com/KasperOlesen), Luca Vercelli (https://github.com/luca-vercelli), Zack Hable (www.cobaltdevteam.com)
+ *  Modified by: Jinki Jung (https://github.com/JinkiJung), Kasper Olesen (https://github.com/KasperOlesen), Luca Vercelli (https://github.com/luca-vercelli), Zack Hable (www.cobaltdevteam.com)
  * @contact www.kingkode.com/contact
  * @contact zack@cobaltdevteam.com
- * @copyright Copyright 2016 Kingkode
  *
  * This source file is free software, available under the following license: MIT
  * license
@@ -116,6 +115,8 @@
                     that.onDeleteRow = dt.settings()[0].oInit.onDeleteRow;
                 if (dt.settings()[0].oInit.onEditRow)
                     that.onEditRow = dt.settings()[0].oInit.onEditRow;
+                if (dt.settings()[0].oInit.onValidateXml)
+                    that.onValidateXml = dt.settings()[0].oInit.onValidateXml;
 
                 that.closeModalOnSuccess = dt.settings()[0].oInit.closeModalOnSuccess;
                 if (that.closeModalOnSuccess === undefined) {
@@ -156,27 +157,27 @@
 
                 this.language.modalClose = this.language.modalClose || 'Close';
                 this.language.edit = this.language.edit || {};
-                this.language.edit = { title: this.language.edit.title || 'Edit record',
-                                       button: this.language.edit.button || 'Edit'
-                                     };
+                this.language.edit = { title: this.language.edit.title || 'Edit instance',
+                    button: this.language.edit.button || 'Edit'
+                };
                 this.language.delete = this.language.delete || {};
-                this.language.delete = { title: this.language.delete.title || 'Delete record',
-                                         button: this.language.delete.button || 'Delete' };
+                this.language.delete = { title: this.language.delete.title || 'Delete instance',
+                    button: this.language.delete.button || 'Delete' };
                 this.language.add = this.language.add || {};
-                this.language.add = { title: this.language.add.title || 'Add record',
-                                      button: this.language.add.button || 'Add'
-                                    };
+                this.language.add = { title: this.language.add.title || 'Add instance',
+                    button: this.language.add.button || 'Add'
+                };
                 this.language.success = this.language.success || 'Success!';
                 this.language.error = this.language.error || {};
                 this.language.error = { message: this.language.error.message || 'There was an unknown error!',
-                                        label: this.language.error.label || 'Error!',
-                                        responseCode: this.language.error.responseCode || 'Response code: ',
-                                        required: this.language.error.required || 'Field is required',
-                                        unique: this.language.error.unique || 'Duplicated field'
-                                      };
+                    label: this.language.error.label || 'Error!',
+                    responseCode: this.language.error.responseCode || 'Response code: ',
+                    required: this.language.error.required || 'Field is required',
+                    unique: this.language.error.unique || 'Duplicated field'
+                };
 
-                var modal = '<div class="modal fade altEditor-modal reveal" id="' + modal_id + '" tabindex="-1" role="dialog" data-reveal>' +
-                    '<div class="modal-dialog">' +
+                var modal = '<div class="modal fade altEditor-modal reveal bd-example-modal-lg" id="' + modal_id + '" tabindex="-1" role="dialog" data-reveal>' +
+                    '<div class="modal-dialog modal-lg">' +
                     '<div class="modal-content">' +
                     '<div class="modal-header">' +
                     '<h4 style="padding-top: 1rem;padding-left: 1rem;" class="modal-title"></h4>' +
@@ -200,12 +201,12 @@
                         that._openEditModal();
 
                         $('#altEditor-edit-form-' + that.random_id)
-                        .off('submit')
-                        .on('submit', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            that._editRowData();
-                        });
+                            .off('submit')
+                            .on('submit', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                that._editRowData();
+                            });
                     });
                 }
 
@@ -215,12 +216,12 @@
                         that._openDeleteModal();
 
                         $('#altEditor-delete-form-' + that.random_id)
-                        .off('submit')
-                        .on('submit', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            that._deleteRow();
-                        });
+                            .off('submit')
+                            .on('submit', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                that._deleteRow();
+                            });
                     });
                 }
 
@@ -230,12 +231,12 @@
                         that._openAddModal();
 
                         $('#altEditor-add-form-' + that.random_id)
-                        .off('submit')
-                        .on('submit', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            that._addRowData();
-                        });
+                            .off('submit')
+                            .on('submit', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                that._addRowData();
+                            });
                     });
                 }
 
@@ -290,7 +291,7 @@
              * @private
              */
             _openEditModal: function () {
-
+                var that = this;
                 var dt = this.s.dt;
                 var adata = dt.rows({
                     selected: true
@@ -312,7 +313,7 @@
                         var jquerySelector = "#" + columnDefs[j].name.toString().replace(/\./g, "\\.");
                         $(selector).find(jquerySelector).val(selectedValue!=null?selectedValue.toString().trim():null);    //Values in dropdowns were getting extra spaces, need to trim if not null // this._quoteattr or not? see #121
                         $(selector).find(jquerySelector).trigger("change"); // required by select2
-                         //added checkbox
+                        //added checkbox
                         if (columnDefs[j].type.indexOf("checkbox") >= 0) {
                             if (this._quoteattr(selectedValue) === "true" || this._quoteattr(selectedValue) == "1") { //MS SQL Databases use bits for booleans. 1 is equivlent to true, 0 is false
                                 $(selector).find(jquerySelector).prop("checked", this._quoteattr(selectedValue)); // required by checkbox
@@ -330,8 +331,33 @@
                     }
                 }
 
-                $(selector + ' input[0]').trigger('focus');
+                $(selector).find( '#xml-input' ).val(adata.data()[0]['instanceAsXml']['content']);
                 $(selector).trigger("alteditor:some_dialog_opened").trigger("alteditor:edit_dialog_opened");
+
+                // validation of XML
+                $('#validateXml').on('click', function (e) {
+                    var xmlContent = $( '#xml-input' ).val();
+                    that.onValidateXml(that,
+                        xmlContent,
+                        function(data){ that._validateXmlCallback(data); },
+                        function(data){ that._errorCallback(data);
+                        });
+                });
+            },
+
+            _alignData: function(rowDataArray, id, value, columnDefs){
+                if (id && columnDefs.includes(id)){
+                    if (id === 'geometryJson'){
+                        rowDataArray[id] = JSON.stringify(value);
+                    }
+                    else if (id === 'id'){
+                        rowDataArray[id] = parseInt(value);
+                    }
+                    else{
+                        rowDataArray[id] = value;
+                    }
+                }
+                return rowDataArray;
             },
 
             /**
@@ -342,18 +368,22 @@
                 var dt = this.s.dt;
 
                 // Complete new row data
-                var rowDataArray = {};
-                
+                var rowDataArray = that._getInitialData();
+
                 var adata = dt.rows({
                     selected: true
                 });
 
                 // Original row data
                 var orginalRowDataArray = adata.data()[0];
-                
+
+                rowDataArray["id"] = orginalRowDataArray["id"];
+
+                var columnDefData = columnDefs.map((e) => e["data"]);
+
                 // Getting the inputs from the edit-modal
-                $('form[name="altEditor-edit-form-' + this.random_id + '"] *').filter(':input[type!="file"]').filter(':enabled').each(function (i) { //Do not include disabled fields. 
-                    rowDataArray[$(this).attr('id')] = $(this).val();
+                $('form[name="altEditor-edit-form-' + this.random_id + '"] *').filter(':input[type!="file"]').filter(':enabled').each(function (i) { //Do not include disabled fields.
+                    rowDataArray = that._alignData(rowDataArray, $(this).attr('id'), $(this).val(), columnDefData);
                 });
 
                 //Getting the textArea from the modal
@@ -382,15 +412,21 @@
                     rowDataArray[$(this).attr('id')] = this.checked;
                 });
 
+                // Augmenting xml content on the data
+                var xml_content = $("#xml-input").val();
+                if (xml_content.length>0){
+                    rowDataArray["instanceAsXml"]["content"] = xml_content;
+                }
+
                 console.log(rowDataArray); //DEBUG
 
                 var checkFilesQueued = function() {
                     if (numFilesQueued == 0) {
-                         that.onEditRow(that,
-                                rowDataArray,
-                                function(data,b,c,d,e){ that._editRowCallback(data,b,c,d,e); },
-                                function(data){ that._errorCallback(data);},
-                                orginalRowDataArray);
+                        that.onEditRow(that,
+                            rowDataArray,
+                            function(data,b,c,d,e){ that._editRowCallback(data,b,c,d,e); },
+                            function(data){ that._errorCallback(data);},
+                            orginalRowDataArray);
                     } else {
                         console.log("Waiting for file base64-decoding...");
                         setTimeout(checkFilesQueued, 1000);
@@ -426,7 +462,7 @@
                 for (var j in columnDefs) {
                     if (columnDefs[j].name == null) continue;
                     if (columnDefs[j].type.indexOf("hidden") >= 0) {
-                        data += "<input type='hidden' id='" + columnDefs[j].title + "' value='" + adata.data()[0][columnDefs[j].name] + "'></input>";
+                        data += "<input type='hidden' id='" + columnDefs[j].name + "' value='" + adata.data()[0][columnDefs[j].name] + "'></input>";
                     }
                     else if (columnDefs[j].type.indexOf("file") < 0) {
                         var arrIndex = columnDefs[j].name.toString().split(".");
@@ -517,7 +553,7 @@
                 var that = this;
                 var dt = this.s.dt;
 
-                var jsonDataArray = {};
+                var jsonDataArray = that._getInitialData();
 
                 var adata = dt.rows({
                     selected: true
@@ -527,7 +563,7 @@
                 for (var i = 0; i < dt.context[0].aoColumns.length; i++) {
                     // .data is the attribute name, if any; .idx is the column index, so it should always exists
                     var name = dt.context[0].aoColumns[i].data ? dt.context[0].aoColumns[i].data :
-                            dt.context[0].aoColumns[i].mData ? dt.context[0].aoColumns[i].mData :
+                        dt.context[0].aoColumns[i].mData ? dt.context[0].aoColumns[i].mData :
                             dt.context[0].aoColumns[i].idx;
                     jsonDataArray[name] = adata.data()[0][name];
                 }
@@ -535,7 +571,7 @@
                     jsonDataArray,
                     function(data){ that._deleteRowCallback(data); },
                     function(data){ that._errorCallback(data);
-                });
+                    });
             },
 
             /**
@@ -544,6 +580,7 @@
              * @private
              */
             _openAddModal: function () {
+                var that = this;
                 var dt = this.s.dt;
                 var columnDefs = this.completeColumnDefs();
                 var data = this.createDialog(columnDefs, this.language.add.title, this.language.add.button,
@@ -552,11 +589,21 @@
                 var selector = this.modal_selector;
                 $(selector + ' input[0]').trigger('focus');
                 $(selector).trigger("alteditor:some_dialog_opened").trigger("alteditor:add_dialog_opened");
+
+                // validation of XML
+                $('#validateXml').on('click', function (e) {
+                    var xmlContent = $( '#xml-input' ).val();
+                    that.onValidateXml(that,
+                        xmlContent,
+                        function(data){ that._validateXmlCallback(data); },
+                        function(data){ that._errorCallback(data);
+                        });
+                });
             },
 
             /**
-            * Complete DataTable.context[0].aoColumns with default values
-            */
+             * Complete DataTable.context[0].aoColumns with default values
+             */
             completeColumnDefs: function () {
                 var columnDefs = [];
                 var dt = this.s.dt;
@@ -589,22 +636,27 @@
                         dateFormat: (obj.dateFormat ? obj.dateFormat : ''),
                         optionsSortByLabel: (obj.optionsSortByLabel ? obj.optionsSortByLabel : false),
                         inline: (obj.inline ? obj.inline : false ), // Added for inline columns
-						step: (obj.step ? obj.step : null), //number fields
-						min: (obj.min ? obj.min : null), //number fields
-						max: (obj.max ? obj.max : null), //number fields
-						value: (obj.value ? obj.value : '') //allow a default value
+                        step: (obj.step ? obj.step : null), //number fields
+                        min: (obj.min ? obj.min : null), //number fields
+                        max: (obj.max ? obj.max : null), //number fields
+                        value: (obj.value ? obj.value : '') //allow a default value
                     }
                 }
                 return columnDefs;
             },
 
             /**
-            * Create both Edit and Add dialogs
-            * @param columnDefs as returned by completeColumnDefs()
-            */
+             * Create both Edit and Add dialogs
+             * @param columnDefs as returned by completeColumnDefs()
+             */
             createDialog: function(columnDefs, title, buttonCaption, closeCaption, buttonClass, formName) {
                 formName = [formName, this.random_id].join('-');
                 var data = "", count=0;
+                data += "<div ><div class='row'>"
+                data += "<div class='col'><small>Enter G1128 XML for service instance</small>";
+                data += "<div class='input-group input-group-sm'><textarea class='form-control input-sm' id='xml-input' rows=30></textarea></div><div class='input-group-btn'><button type='button' id='validateXml' class='btn btn-default btn-lg'>Validate</button></div>";
+                data += "</div>";
+                data += "<div class='col'>";
                 for (var j in columnDefs) {
                     //handle hidden fields
                     if (columnDefs[j].type.indexOf("hidden") >= 0) {
@@ -700,10 +752,10 @@
                                 + "' pattern='" + this._quoteattr(columnDefs[j].pattern)
                                 + "' title='" + this._quoteattr(columnDefs[j].hoverMsg)
                                 + "' name='" + this._quoteattr(columnDefs[j].title)
-								+ "' step='" + this._quoteattr(columnDefs[j].step)
-								+ "' min='" + this._quoteattr(columnDefs[j].min)
-								+ "' max='" + this._quoteattr(columnDefs[j].max)
-								+ "' value='" + this._quoteattr(columnDefs[j].value)
+                                + "' step='" + this._quoteattr(columnDefs[j].step)
+                                + "' min='" + this._quoteattr(columnDefs[j].min)
+                                + "' max='" + this._quoteattr(columnDefs[j].max)
+                                + "' value='" + this._quoteattr(columnDefs[j].value)
                                 + "' placeholder='" + this._quoteattr(columnDefs[j].placeholder ? columnDefs[j].placeholder : columnDefs[j].title)
                                 + "' data-special='" + this._quoteattr(columnDefs[j].special)
                                 + "' data-errorMsg='" + this._quoteattr(columnDefs[j].msg)
@@ -718,7 +770,7 @@
                                 + "' class='form-control  form-control-sm' value=''>";
                         }
                         data += "<label id='" + this._quoteattr(columnDefs[j].name) + "label"
-                                + "' class='errorLabel'></label>";
+                            + "' class='errorLabel'></label>";
                         if(!columnDefs[j].inline || (+j+1 < columnDefs.length && !columnDefs[+j+1].inline)) {
                             data += "</div><div style='clear:both;'></div></div>";
                         }
@@ -726,6 +778,7 @@
                             data += "</div>";
                     }
                 }
+                data += "</div></div></div>";
                 // data += "</form>";
 
                 var selector = this.modal_selector;
@@ -783,6 +836,18 @@
                 }
             },
 
+            _getInitialData: function () {
+                let rowDataArray = {};
+                rowDataArray["instanceAsDoc"] = null;
+                rowDataArray["geometryContentType"] = null;
+                rowDataArray["designs"] = {};
+                rowDataArray["specifications"] = {};
+                rowDataArray["geometryJson"] = {};
+                rowDataArray["docs"] = [];
+                rowDataArray["instanceAsXml"] = { name: "xml", comment: "no comment", content: "", contentContentType: "G1128 Instance Specification XML" };
+                return rowDataArray;
+            },
+
             /**
              * Callback for "Add" button
              */
@@ -790,11 +855,13 @@
                 var that = this;
                 var dt = this.s.dt;
 
-                var rowDataArray = {};
+                var rowDataArray = that._getInitialData();
+
+                var columnDefData = columnDefs.map((e) => e["data"]);
 
                 // Getting the inputs from the modal
                 $('form[name="altEditor-add-form-' + this.random_id + '"] *').filter(':input[type!="file"]').filter(':enabled').each(function (i) { //Dont send disabled fields
-                    rowDataArray[$(this).attr('id')] = $(this).val();
+                    rowDataArray = that._alignData(rowDataArray, $(this).attr('id'), $(this).val(), columnDefData);
                 });
 
                 //Getting the textArea from the modal
@@ -823,6 +890,12 @@
                     rowDataArray[$(this).attr('id')] = this.checked;
                 });
 
+                // Augmenting xml content on the data
+                var xml_content = $("#xml-input").val();
+                if (xml_content.length>0){
+                    rowDataArray["instanceAsXml"]["content"] = xml_content;
+                }
+
                 console.log(rowDataArray); //DEBUG
 
                 var checkFilesQueued = function() {
@@ -831,7 +904,7 @@
                             rowDataArray,
                             function(data){ that._addRowCallback(data); },
                             function(data){ that._errorCallback(data);
-                        });
+                            });
                     } else {
                         console.log("Waiting for file base64-decoding...");
                         setTimeout(checkFilesQueued, 1000);
@@ -842,31 +915,51 @@
 
             },
 
+            _validateXmlCallback: function (response, status, more) {
+                var selector = this.modal_selector;
+
+                for (var name in response) {
+                    var value = response[name];
+                    if (name == 'id')
+                        name = 'instanceId';
+                    else if(name == 'description')
+                        name = 'comment';
+                    else if(name == 'endpoint')
+                        name = 'endpointUri';
+                    else if(name == 'implementsServiceDesign'){
+                        name = 'designs';
+                        value = value['id'];
+                    }
+                    $("div"+selector).find("input#"+name).val(value);
+                }
+            },
+
             /**
              * Called after a row has been deleted on server
              */
             _deleteRowCallback: function (response, status, more) {
-                    var selector = this.modal_selector;
-                    $(selector + ' .modal-body .alert').remove();
+                var selector = this.modal_selector;
+                $(selector + ' .modal-body .alert').remove();
 
-                    if (this.closeModalOnSuccess) {
-                        this.internalCloseDialog(selector);
-                    } else {
-                        var message = '<div class="alert alert-success" role="alert">' +
-                            '<strong>' + this.language.success + '</strong>' +
-                            '</div>';
-                        $(selector + ' .modal-body').append(message);
-                    }
+                if (this.closeModalOnSuccess) {
+                    this.internalCloseDialog(selector);
+                } else {
+                    var message = '<div class="alert alert-success" role="alert">' +
+                        '<strong>' + this.language.success + '</strong>' +
+                        '</div>';
+                    $(selector + ' .modal-body').append(message);
+                }
 
-                    this.s.dt.row({
-                        selected : true
-                    }).remove();
-                    this.s.dt.draw('page');
+                this.s.dt.row({
+                    selected : true
+                }).remove();
+                this.s.dt.draw('page');
 
-                    // Disabling submit button
-                    $("div"+selector).find("button#addRowBtn").prop('disabled', true);
-                    $("div"+selector).find("button#editRowBtn").prop('disabled', true);
-                    $("div"+selector).find("button#deleteRowBtn").prop('disabled', true);
+                // Disabling submit button
+                $("div"+selector).find("button#addRowBtn").prop('disabled', true);
+                $("div"+selector).find("button#editRowBtn").prop('disabled', true);
+                $("div"+selector).find("button#deleteRowBtn").prop('disabled', true);
+                $("div"+selector).find("button#validateXml").prop('disabled', true);
             },
 
             /**
@@ -874,27 +967,28 @@
              */
             _addRowCallback: function (response, status, more) {
 
-                    //TODO should honor dt.ajax().dataSrc
+                //TODO should honor dt.ajax().dataSrc
 
-                    var data = (typeof response === "string") ? JSON.parse(response) : response;
-                    var selector = this.modal_selector;
-                    $(selector + ' .modal-body .alert').remove();
+                var data = (typeof response === "string") ? JSON.parse(response) : response;
+                var selector = this.modal_selector;
+                $(selector + ' .modal-body .alert').remove();
 
-                    if (this.closeModalOnSuccess) {
-                        this.internalCloseDialog(selector);
-                    } else {
-                        var message = '<div class="alert alert-success" role="alert">' +
-                            '<strong>' + this.language.success + '</strong>' +
-                            '</div>';
-                        $(selector + ' .modal-body').append(message);
-                    }
+                if (this.closeModalOnSuccess) {
+                    this.internalCloseDialog(selector);
+                } else {
+                    var message = '<div class="alert alert-success" role="alert">' +
+                        '<strong>' + this.language.success + '</strong>' +
+                        '</div>';
+                    $(selector + ' .modal-body').append(message);
+                }
 
-                    this.s.dt.row.add(data).draw(false);
+                this.s.dt.row.add(data).draw(false);
 
-                    // Disabling submit button
-                    $("div" + selector).find("button#addRowBtn").prop('disabled', true);
-                    $("div" + selector).find("button#editRowBtn").prop('disabled', true);
-                    $("div" + selector).find("button#deleteRowBtn").prop('disabled', true);
+                // Disabling submit button
+                $("div" + selector).find("button#addRowBtn").prop('disabled', true);
+                $("div" + selector).find("button#editRowBtn").prop('disabled', true);
+                $("div" + selector).find("button#deleteRowBtn").prop('disabled', true);
+                $("div"+selector).find("button#validateXml").prop('disabled', true);
             },
 
             /**
@@ -902,51 +996,52 @@
              */
             _editRowCallback: function (response, status, more) {
 
-                    //TODO should honor dt.ajax().dataSrc
+                //TODO should honor dt.ajax().dataSrc
 
-                    var data = (typeof response === "string") ? JSON.parse(response) : response;
-                    var selector = this.modal_selector;
-                    $(selector + ' .modal-body .alert').remove();
+                var data = (typeof response === "string") ? JSON.parse(response) : response;
+                var selector = this.modal_selector;
+                $(selector + ' .modal-body .alert').remove();
 
-                    if (this.closeModalOnSuccess) {
-                        this.internalCloseDialog(selector);
-                    } else {
-                        var message = '<div class="alert alert-success" role="alert">' +
-                            '<strong>' + this.language.success + '</strong>' +
-                            '</div>';
-                        $(selector + ' .modal-body').append(message);
-                    }
+                if (this.closeModalOnSuccess) {
+                    this.internalCloseDialog(selector);
+                } else {
+                    var message = '<div class="alert alert-success" role="alert">' +
+                        '<strong>' + this.language.success + '</strong>' +
+                        '</div>';
+                    $(selector + ' .modal-body').append(message);
+                }
 
-                    this.s.dt.row({
-                        selected : true
-                    }).data(data);
-                    this.s.dt.draw('page');
+                this.s.dt.row({
+                    selected : true
+                }).data(data);
+                this.s.dt.draw('page');
 
-                    // Disabling submit button
-                    $("div" + selector).find("button#addRowBtn").prop('disabled', true);
-                    $("div" + selector).find("button#editRowBtn").prop('disabled', true);
-                    $("div" + selector).find("button#deleteRowBtn").prop('disabled', true);
+                // Disabling submit button
+                $("div" + selector).find("button#addRowBtn").prop('disabled', true);
+                $("div" + selector).find("button#editRowBtn").prop('disabled', true);
+                $("div" + selector).find("button#deleteRowBtn").prop('disabled', true);
+                $("div"+selector).find("button#validateXml").prop('disabled', true);
             },
 
             /**
              * Called after AJAX server returned an error
              */
             _errorCallback: function (response, status, more) {
-                    var error = response;
-                    var selector = this.modal_selector;
-                    $(selector + ' .modal-body .alert').remove();
-                    var errstr = this.language.error.message;
-                    if (error.responseJSON && error.responseJSON.errors) {
-                        errstr = "";
-                        for (var key in error.responseJSON.errors) {
-                            errstr += error.responseJSON.errors[key][0];
-                        }
+                var error = response;
+                var selector = this.modal_selector;
+                $(selector + ' .modal-body .alert').remove();
+                var errstr = this.language.error.message;
+                if (error.responseJSON && error.responseJSON.errors) {
+                    errstr = "";
+                    for (var key in error.responseJSON.errors) {
+                        errstr += error.responseJSON.errors[key][0];
                     }
-                    var message = '<div class="alert alert-danger" role="alert">' +
-                        '<strong>' + this.language.error.label + '</strong> ' + (error.status == null ? "" : this.language.error.responseCode + error.status) + " " + errstr +
-                        '</div>';
+                }
+                var message = '<div class="alert alert-danger" role="alert">' +
+                    '<strong>' + this.language.error.label + '</strong> ' + (error.status == null ? "" : this.language.error.responseCode + error.status) + " " + errstr +
+                    '</div>';
 
-                    $(selector + ' .modal-body').append(message);
+                $(selector + ' .modal-body').append(message);
             },
 
             /**
@@ -970,6 +1065,14 @@
              */
             onDeleteRow: function(dt, rowdata, success, error) {
                 console.log("Missing AJAX configuration for DELETE");
+                success(rowdata);
+            },
+
+            /**
+             * Default callback for deletion: mock webservice, always success.
+             */
+            onValidateXml: function(dt, rowdata, success, error) {
+                console.log("Missing AJAX configuration for VALIDATE");
                 success(rowdata);
             },
 
@@ -1019,21 +1122,21 @@
 
             /**
              * Dinamically reload options in SELECT menu
-            */
+             */
             reloadOptions: function($select, options) {
                 var oldValue = $select.val();
                 $select.empty(); // remove old options
                 if (options.length > 0) {
                     // array-style select or select2
                     $.each(options, function(key, value) {
-                      $select.append($("<option></option>")
-                         .attr("value", value).text(value));
+                        $select.append($("<option></option>")
+                            .attr("value", value).text(value));
                     });
                 } else {
                     // object-style select or select2
                     $.each(options, function(key, value) {
-                      $select.append($("<option></option>")
-                         .attr("value", value).text(key));
+                        $select.append($("<option></option>")
+                            .attr("value", value).text(key));
                     });
                 }
                 $select.val(oldValue); // if still present, of course
@@ -1048,12 +1151,12 @@
                 var reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = function () {
-                        console.log(reader.result);
-                        if (onSuccess) onSuccess(reader.result);
+                    console.log(reader.result);
+                    if (onSuccess) onSuccess(reader.result);
                 };
                 reader.onerror = function (error) {
-                        console.log('Error: ', error);
-                        if (onError) onError(error);
+                    console.log('Error: ', error);
+                    if (onError) onError(error);
                 };
             },
 
