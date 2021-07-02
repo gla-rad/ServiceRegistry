@@ -17,89 +17,53 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>MCP Service Registry</title>
-    <link rel="stylesheet" th:href="@{/static/css/tableFont.css}" />
-    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
-    <link rel="stylesheet" th:href="@{webjars/font-awesome/5.11.2/css/all.min.css}"/>
-    <script th:src="@{/static/utils.js}"></script>
+    <th:block th:include="fragments/general.html :: headerfiles"></th:block>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.2/css/buttons.dataTables.css" />
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <span class="navbar-brand mb-0 h1">MCP Service Registry</span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/index.html">
-                        Home
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/instances">
-                        Instances
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/about">
-                        About
-                    </a>
-                </li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="nav-item" sec:authorize="!isAuthenticated()">
-                    <a class="nav-link" href="/login" th:href="@{/login}">
-                        <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                    </a>
-                </li>
-                <li sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/logout" th:href="@{/logout}">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <div id="main-content" class="w-100 mt-3">
-        <div class="card" sec:authorize="!isAuthenticated()">
-            <div class="card-header">
-                <h2>Welcome</h2>
-            </div>
-            <div class="card-body p-0">
-                <div class="row">
-                    <p class="m-2">Please sign-in to access the service facilities.</p>
+    <div class="d-flex flex-column vh-100">
+        <div th:replace="fragments/general.html :: navbar"></div>
+        <div class="flex-fill flex-grow-1 flex-shrink-0">
+            <div id="main-content" class="container-fluid mt-3">
+                <div class="card" sec:authorize="!isAuthenticated()">
+                    <div class="card-header">
+                        <h2>Welcome</h2>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="row">
+                            <p class="m-2">Please sign-in to access the service facilities.</p>
+                        </div>
+                        <div class="row d-flex justify-content-center">
+                            <div class="btn btn-primary" onclick="window.location.href='/login'">
+                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row d-flex justify-content-center">
-                    <div class="btn btn-primary" onclick="window.location.href='/login'">
-                        <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
+                <div class="card" sec:authorize="isAuthenticated()">
+                    <div class="card-header">
+                        <h2>Service registry management dashboard</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="col-12 m-1">
+                            <table id="table_id" class="table table-striped table-bordered table-sm row-border hover w-100">
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card" sec:authorize="isAuthenticated()">
-            <div class="card-header">
-                <h2>Service registry management dashboard</h2>
-            </div>
-            <div class="card-body">
-                <div class="row d-flex justify-content-center">
-                    <table id="table_id" class="display" style="width:100%;">
-                    </table>
-                </div>
-            </div>
-        </div>
+        <div th:replace="fragments/general.html :: footer"></div>
     </div>
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js" ></script>
     <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.js" ></script>
     <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.js" ></script>
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>
     <script th:src="@{/static/lib/dataTables.msrEditor.free.js}"></script>
     <script th:src="@{/static/src/tableView.js}"></script>
+    <script th:src="@{/static/utils.js}"></script>
 </body>
 </html>
