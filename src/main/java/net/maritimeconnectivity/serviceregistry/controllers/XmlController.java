@@ -19,24 +19,27 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceSpecification;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for managing Xml.
@@ -55,7 +58,7 @@ public class XmlController {
     private XmlService xmlService;
 
     /**
-     * GET  /xmls : get all the xmls.
+     * GET /xmls : get all the xmls.
      *
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of xmls in body
@@ -72,7 +75,7 @@ public class XmlController {
     }
 
     /**
-     * GET  /xmls/{id} : get the "ID" xml.
+     * GET /xmls/{id} : get the "ID" xml.
      *
      * @param id the ID of the xml to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the xml,
@@ -92,7 +95,7 @@ public class XmlController {
     }
 
     /**
-     * POST  /xmls : Create a new xml.
+     * POST /xmls : Create a new xml.
      *
      * @param xml the xml to create
      * @return the ResponseEntity with status 201 (Created) and with body the new xml,
@@ -114,7 +117,7 @@ public class XmlController {
     }
 
     /**
-     * PUT  /xmls/{id} : Updates an existing xml.
+     * PUT /xmls/{id} : Updates an existing xml.
      *
      * @param id the ID of the xml to be updated
      * @param xml the xml to update
@@ -133,7 +136,7 @@ public class XmlController {
     }
 
     /**
-     * DELETE  /xmls/{id} : delete the "id" xml.
+     * DELETE /xmls/{id} : delete the "id" xml.
      *
      * @param id the id of the xml to delete
      * @return the ResponseEntity with status 200 (OK)
@@ -153,63 +156,48 @@ public class XmlController {
     }
 
     /**
-     * POST  /xmls/validate/design : Validates the provided XML schema based
-     * on the G1128 design specification schema.
+     * GET /xmls/schemas/{schema} : Returns the requested G1128 schema
+     * specification, as it is loaded in the classpath.
+     *
+     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 schema specification,
+     * or with status 404 (Not Found) if the schema is not found
+     */
+    @GetMapping(value = "/xmls/schemas/{schema}", produces = MediaType.APPLICATION_XML_VALUE)
+    public ResponseEntity<String> getG1128Schema(@PathVariable G1128Schemas schema) {
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.add(HttpHeaders.CONTENT_TYPE, new MediaType(MediaType.APPLICATION_XML, StandardCharsets.UTF_8).toString());
+        return Optional.of(schema)
+                .map(sc -> getClass().getClassLoader().getResourceAsStream(sc.getPath()))
+                .map(is -> {
+                    try {
+                        return IOUtils.toString(is, StandardCharsets.UTF_8.name());
+                    } catch (IOException e) {
+                        return null;
+                    }
+                })
+                .map(xml -> ResponseEntity.ok().headers(responseHeaders).body(xml))
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * POST /xmls/validate/{schema{}} : Validates the provided XML input based
+     * on the specified G1128 schema specification.
      *
      * @param content the xml content to be validated
-     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 design specification,
+     * @return the ResponseEntity with status 200 (OK) and with body of the parsed G1128-compliant object,
      * or with status 400 (Bad Request) if the content is invalid
      */
-    @PostMapping(value = "/xmls/validate/design", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> validateDesignXml(@Valid @RequestBody String content) {
+    @PostMapping(value = "/xmls/validate/{schema}", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Object> validateXmlWithG1128Schema(@PathVariable G1128Schemas schema, @Valid @RequestBody String content) {
         log.debug("REST request to validate design xml : {}", content);
         try {
             return ResponseEntity.ok()
-                    .body(this.xmlService.validate(content, ServiceDesign.class));
-        } catch (JAXBException ex) {
+                    .body(this.xmlService.validate(content, schema));
+        } catch (JAXBException | DataNotFoundException ex) {
             return ResponseEntity.badRequest()
                     .build();
         }
     }
 
-    /**
-     * POST  /xmls/validate/service : Validates the provided XML schema based
-     * on the G1128 service specification schema.
-     *
-     * @param content the xml content to be validated
-     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 service specification,
-     * or with status 400 (Bad Request) if the content is invalid
-     */
-    @PostMapping(value = "/xmls/validate/service", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> validateServiceXml(@Valid @RequestBody String content) {
-        log.debug("REST request to validate service xml : {}", content);
-        try {
-            return ResponseEntity.ok()
-                    .body(this.xmlService.validate(content, ServiceSpecification.class));
-        } catch (JAXBException ex) {
-            return ResponseEntity.badRequest()
-                    .build();
-        }
-    }
-
-    /**
-     * POST  /xmls/validate/instance : Validates the provided XML schema based
-     * on the G1128 instance specification schema.
-     *
-     * @param content the xml content to be validated
-     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 instance specification,
-     * or with status 400 (Bad Request) if the content is invalid
-     */
-    @PostMapping(value = "/xmls/validate/instance", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> validateInstanceXml(@RequestBody String content) {
-        log.debug("REST request to validate instance xml : {}", content);
-        try {
-            return ResponseEntity.ok()
-                    .body(this.xmlService.validate(content, ServiceInstance.class));
-        } catch (JAXBException ex) {
-            return ResponseEntity.badRequest()
-                    .build();
-        }
-    }
 
 }

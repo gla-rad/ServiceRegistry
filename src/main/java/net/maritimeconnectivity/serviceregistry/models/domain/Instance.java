@@ -92,7 +92,7 @@ public class Instance implements Serializable {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "varchar(30) default 'Pending Validation'")
+    @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
     @Column(name = "organization_id")

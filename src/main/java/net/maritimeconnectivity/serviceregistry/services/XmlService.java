@@ -19,9 +19,9 @@ package net.maritimeconnectivity.serviceregistry.services;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
 import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +30,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.xml.bind.JAXBException;
+import java.util.Optional;
 
 /**
  * Service Implementation for managing Xml.
@@ -105,11 +106,16 @@ public class XmlService {
      * correct.
      *
      * @param content the XML content
-     * @param g1128Schema the class of the G1128 schema to validate the content with
+     * @param schema the G1128 schema to validate the content with
      * @return the generated G1128 specification object
      */
-    public Object validate(String content, Class<?> g1128Schema) throws JAXBException {
-        return new G1128Utils<>(g1128Schema).unmarshallG1128(content);
+    public Object validate(String content, G1128Schemas schema) throws JAXBException, DataNotFoundException {
+        // Make sure we have a valid G1128 schema class to work with
+        Class schemaClass = Optional.of(schema)
+                .map(G1128Schemas::getSchemaClass)
+                .orElseThrow(() -> new DataNotFoundException("Invalid G1128 schema selection", null));
+        // And validate the content
+        return new G1128Utils<>(schemaClass).unmarshallG1128(content);
     }
 
 }

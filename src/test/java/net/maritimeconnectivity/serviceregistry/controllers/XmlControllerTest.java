@@ -19,7 +19,9 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
+import org.apache.commons.io.IOUtils;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceSpecification;
@@ -42,6 +44,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import javax.xml.bind.JAXBException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -256,15 +260,90 @@ class XmlControllerTest {
     }
 
     /**
+     * Test that we can retrieve the G1128 Design Specification schema
+     * correctly.
+     */
+    @Test
+    void testGetG1128SchemaDesign() throws Exception {
+        // Get the G1128 Design schema to test with
+        G1128Schemas schema = G1128Schemas.DESIGN;
+        InputStream is = getClass().getClassLoader().getResourceAsStream(schema.getPath());
+        String schemaXml = IOUtils.toString(is, StandardCharsets.UTF_8.name());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/xmls/schemas/{schema}", schema.getName()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(new MediaType(MediaType.APPLICATION_XML, StandardCharsets.UTF_8)))
+                .andReturn();
+
+        // Make sure the retrieved schema is correct
+        assertEquals(schemaXml, mvcResult.getResponse().getContentAsString());
+    }
+
+    /**
+     * Test that we can retrieve the G1128 Service Specification schema
+     * correctly.
+     */
+    @Test
+    void testGetG1128SchemaService() throws Exception {
+        // Get the G1128 Design schema to test with
+        G1128Schemas schema = G1128Schemas.SERVICE;
+        InputStream is = getClass().getClassLoader().getResourceAsStream(schema.getPath());
+        String schemaXml = IOUtils.toString(is, StandardCharsets.UTF_8.name());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/xmls/schemas/{schema}", schema.getName()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(new MediaType(MediaType.APPLICATION_XML, StandardCharsets.UTF_8)))
+                .andReturn();
+
+        // Make sure the retrieved schema is correct
+        assertEquals(schemaXml, mvcResult.getResponse().getContentAsString());
+    }
+
+    /**
+     * Test that we can retrieve the G1128 Instance Specification schema
+     * correctly.
+     */
+    @Test
+    void testGetG1128SchemaInstance() throws Exception {
+        // Get the G1128 Design schema to test with
+        G1128Schemas schema = G1128Schemas.INSTANCE;
+        InputStream is = getClass().getClassLoader().getResourceAsStream(schema.getPath());
+        String schemaXml = IOUtils.toString(is, StandardCharsets.UTF_8.name());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/xmls/schemas/{schema}", schema.getName()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(new MediaType(MediaType.APPLICATION_XML, StandardCharsets.UTF_8)))
+                .andReturn();
+
+        // Make sure the retrieved schema is correct
+        assertEquals(schemaXml, mvcResult.getResponse().getContentAsString());
+    }
+
+    /**
+     * Test that when we request an invalid G1128 Specification schema, then a
+     * 500 (INTERNAL_SERVER_ERROR) response will be returned.
+     */
+    @Test
+    void testGetG1128SchemaInvalid() throws Exception {
+        // Perform the MVC request
+        this.mockMvc.perform(get("/api/xmls/schemas/{schema}", "invalid"))
+                .andExpect(status().isInternalServerError());
+    }
+
+    /**
      * Test that we can validate correctly a G1128 design specification XML.
      */
     @Test
     void testValidateXmlDesign() throws Exception {
-        doReturn(new ServiceDesign()).when(this.xmlService).validate(any(), eq(ServiceDesign.class));
+        doReturn(new ServiceDesign()).when(this.xmlService).validate(any(), eq(G1128Schemas.DESIGN));
         String xml = "<serviceDesign></serviceDesign>";
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/design")
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.DESIGN.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -280,11 +359,12 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlDesignFails() throws Exception {
-        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(ServiceDesign.class));
+        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(G1128Schemas.DESIGN));
         String xml = "<serviceDesign></serviceDesign>";
 
         // Perform the MVC request
-        this.mockMvc.perform(post("/api/xmls/validate/design")
+        this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.DESIGN.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isBadRequest());
     }
@@ -294,11 +374,12 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlService() throws Exception {
-        doReturn(new ServiceSpecification()).when(this.xmlService).validate(any(), eq(ServiceSpecification.class));
+        doReturn(new ServiceSpecification()).when(this.xmlService).validate(any(), eq(G1128Schemas.SERVICE));
         String xml = "<serviceSpecification></serviceSpecification>";
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/service")
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.SERVICE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -314,11 +395,12 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlServiceFails() throws Exception {
-        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(ServiceSpecification.class));
+        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(G1128Schemas.SERVICE));
         String xml = "<serviceSpecification></serviceSpecification>";
 
         // Perform the MVC request
-        this.mockMvc.perform(post("/api/xmls/validate/service")
+        this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.SERVICE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isBadRequest());
     }
@@ -328,11 +410,12 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlInstance() throws Exception {
-        doReturn(new ServiceDesign()).when(this.xmlService).validate(any(), eq(ServiceInstance.class));
+        doReturn(new ServiceDesign()).when(this.xmlService).validate(any(), eq(G1128Schemas.INSTANCE));
         String xml = "<serviceInstance></serviceInstance>";
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/instance")
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.INSTANCE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -348,11 +431,12 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlInstanceFails() throws Exception {
-        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(ServiceInstance.class));
+        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(G1128Schemas.INSTANCE));
         String xml = "<serviceInstance></serviceInstance>";
 
         // Perform the MVC request
-        this.mockMvc.perform(post("/api/xmls/validate/instance")
+        this.mockMvc.perform(post("/api/xmls/validate/{schema}", G1128Schemas.INSTANCE.getName())
+                .contentType(MediaType.APPLICATION_XML)
                 .content(xml))
                 .andExpect(status().isBadRequest());
     }
