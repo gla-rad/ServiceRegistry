@@ -37,8 +37,6 @@ import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -48,7 +46,6 @@ import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 /**
@@ -87,16 +84,6 @@ public class InstanceService {
      */
     @Autowired
     private UserContext userContext;
-
-    /**
-     * Definition of the G1128 Schema Sources.
-     */
-    List<String> g1128Sources = Arrays.asList(new String[] {
-            "xsd/ServiceBaseTypesSchema.xsd",
-            "xsd/ServiceDesignSchema.xsd",
-            "xsd/ServiceSpecificationSchema.xsd",
-            "xsd/ServiceInstanceSchema.xsd"
-    });
 
     /**
      * Definition of the whole world area in GeoJSON.
@@ -297,7 +284,7 @@ public class InstanceService {
         }
 
         try {
-            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), this.g1128Sources);
+            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), G1128Utils.SOURCES_LIST);
         } catch (SAXException e) {
             throw new XMLValidationException("Service Instance XML is not valid.", e);
         } catch (IOException e) {
