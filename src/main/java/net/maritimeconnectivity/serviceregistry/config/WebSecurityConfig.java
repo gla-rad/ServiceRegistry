@@ -150,7 +150,8 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                     "/webjars/**",  //bootstrap
                     "/css/**",                  //css files
                     "/js/**",                   //js files
-                    "/favicon.ico"              //the favicon
+                    "/favicon.ico",             //the favicon
+                    "/api/xmls/schemas/*"       //the G1128 schemas
                 );
     }
 
