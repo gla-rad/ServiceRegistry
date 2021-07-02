@@ -53,6 +53,12 @@ public class HomeViewController {
     @Value("${info.msr.operatorContact:Unknown}")
     private String operatorContact;
 
+    @Value("${info.msr.operatorUrl:}")
+    private String appOperatorUrl;
+
+    @Value("${info.msr.copyright:}")
+    private String appCopyright;
+
     /**
      * The management page of MSR.
      *
@@ -61,6 +67,8 @@ public class HomeViewController {
      */
     @GetMapping("/index.html")
     public String index(Model model) {
+        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
+        model.addAttribute("appCopyright", this.appCopyright);
         return "index";
     }
 
@@ -72,6 +80,8 @@ public class HomeViewController {
      */
     @GetMapping("/instances")
     public String instances(Model model) {
+        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
+        model.addAttribute("appCopyright", this.appCopyright);
         return "instances";
     }
 
@@ -89,6 +99,8 @@ public class HomeViewController {
         model.addAttribute("operatorName", operatorName);
         model.addAttribute("operatorMRN", operatorMrn);
         model.addAttribute("contact", operatorContact);
+        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
+        model.addAttribute("appCopyright", this.appCopyright);
         return "about";
     }
 
@@ -115,4 +127,5 @@ public class HomeViewController {
         request.logout();
         return new ModelAndView("redirect:" + "/");
     }
+
 }
