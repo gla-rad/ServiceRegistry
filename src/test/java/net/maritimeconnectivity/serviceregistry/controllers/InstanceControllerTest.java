@@ -192,7 +192,7 @@ class InstanceControllerTest {
 
     /**
      * Test that if we try to create an instance with an existing ID field,
-     * an HTTP BAR_REQUEST response will be returns, with a description of
+     * an HTTP BAD_REQUEST response will be returns, with a description of
      * the error in the header.
      */
     @Test

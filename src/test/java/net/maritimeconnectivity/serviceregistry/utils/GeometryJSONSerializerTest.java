@@ -51,7 +51,7 @@ class GeometryJSONSerializerTest {
         this.geometry = factory.createPoint(new Coordinate(52.001, 1.002));
 
         // Create the same thing as a JSON string
-        this.json = "\"{\\\"type\\\":\\\"Point\\\",\\\"coordinates\\\":[52.001,1.002],\\\"crs\\\":{\\\"type\\\":\\\"name\\\",\\\"properties\\\":{\\\"name\\\":\\\"EPSG:4326\\\"}}}\"";
+        this.json = "{\"type\":\"Point\",\"coordinates\":[52.001,1.002],\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:4326\"}}}";
     }
 
     /**
