@@ -1,0 +1,13 @@
+[
+  {"Change":"","Country":"AD","Location":"ALV","Name":"Andorra la Vella","NameWoDiacritics":"Andorra la Vella","Subdivision":"","Status":"AI","Function":"--34-6--","Date":"0601","IATA":"","Coordinates":"4230N 00131E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"CAN","Name":"Canillo","NameWoDiacritics":"Canillo","Subdivision":"","Status":"RL","Function":"--3-----","Date":"0307","IATA":"","Coordinates":"4234N 00135E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"ENC","Name":"Encamp","NameWoDiacritics":"Encamp","Subdivision":"","Status":"RL","Function":"--3-----","Date":"0307","IATA":"","Coordinates":"4232N 00134E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"ESC","Name":"Escaldes-Engordany","NameWoDiacritics":"Escaldes-Engordany","Subdivision":"","Status":"RL","Function":"--3-----","Date":"0307","IATA":"","Coordinates":"4231N 00133E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"EAC","Name":"Escàs","NameWoDiacritics":"Escas","Subdivision":"04","Status":"RL","Function":"--3-----","Date":"1407","IATA":"","Coordinates":"4233N 00131E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"FMO","Name":"La Farga de Moles","NameWoDiacritics":"La Farga de Moles","Subdivision":"","Status":"RQ","Function":"--3----B","Date":"0307","IATA":"","Coordinates":"","Remarks":""},
+  {"Change":"","Country":"AD","Location":"LMA","Name":"La Massana","NameWoDiacritics":"La Massana","Subdivision":"","Status":"RL","Function":"--3-----","Date":"0307","IATA":"","Coordinates":"4234N 00129E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"ORD","Name":"Ordino","NameWoDiacritics":"Ordino","Subdivision":"","Status":"RL","Function":"--3-----","Date":"0307","IATA":"","Coordinates":"4233N 00131E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"PAS","Name":"Pas de la Casa","NameWoDiacritics":"Pas de la Casa","Subdivision":"","Status":"RL","Function":"--3----B","Date":"0307","IATA":"","Coordinates":"4233N 00144E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"SJL","Name":"Sant Julià de Lòria","NameWoDiacritics":"Sant Julia de Loria","Subdivision":"","Status":"RL","Function":"--3-----","Date":"1101","IATA":"","Coordinates":"4228N 00130E","Remarks":""},
+  {"Change":"","Country":"AD","Location":"SCO","Name":"Santa Coloma","NameWoDiacritics":"Santa Coloma","Subdivision":"","Status":"RL","Function":"--3-----","Date":"0307","IATA":"","Coordinates":"4230N 00130E","Remarks":""}
+]
