@@ -35,22 +35,22 @@ import javax.servlet.http.HttpServletRequest;
 @Controller
 public class HomeViewController {
 
-    @Value("${info.msr.name}")
+    @Value("${info.msr.name:Unknown}")
     private String msrName;
 
-    @Value("${info.msr.mrn}")
+    @Value("${info.msr.mrn:Unknown}")
     private String msrMrn;
 
-    @Value("${info.msr.url}")
+    @Value("${info.msr.url:Unknown}")
     private String msrUrl;
 
-    @Value("${info.msr.operatorName}")
+    @Value("${info.msr.operatorName:Unknown}")
     private String operatorName;
 
-    @Value("${info.msr.operatorMrn}")
+    @Value("${info.msr.operatorMrn:Unknown}")
     private String operatorMrn;
 
-    @Value("${info.msr.operatorContact}")
+    @Value("${info.msr.operatorContact:Unknown}")
     private String operatorContact;
 
     /**
