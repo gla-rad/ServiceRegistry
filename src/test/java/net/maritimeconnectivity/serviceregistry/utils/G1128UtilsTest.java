@@ -85,7 +85,7 @@ class G1128UtilsTest {
      * @throws JAXBException a JAXB exception thrown during the unmarshalling operation
      */
     @Test
-    void testUnmarchallG1128() throws IOException, JAXBException {
+    void testUnmarshallG1128() throws IOException, JAXBException {
         // Read a test service instance specification
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
@@ -94,6 +94,7 @@ class G1128UtilsTest {
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(this.serviceInstanceXml);
 
         // Assert all information is correct
+        assertNotNull(serviceInstance);
         assertEquals(this.serviceInstance.getName(), serviceInstance.getName());
         assertEquals(this.serviceInstance.getVersion(), serviceInstance.getVersion());
         assertEquals(this.serviceInstance.getId(), serviceInstance.getId());
