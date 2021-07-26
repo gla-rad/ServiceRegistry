@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.datatables;
 
 /**
- * The type Order.
+ * The type DtOrder.
  *
  * The Datatables Order Class definition.
  *

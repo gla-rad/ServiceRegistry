@@ -536,6 +536,7 @@ class InstanceServiceTest {
                 "lastUpdatedAt",
                 "instanceId",
                 "keywords",
+                "status",
                 "organizationId",
                 "endpointUri",
                 "mmsi",
