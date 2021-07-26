@@ -8,10 +8,12 @@ import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationExceptio
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.UserContext;
 import org.apache.commons.io.IOUtils;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.hibernate.search.jpa.FullTextQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,8 +38,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -511,6 +515,63 @@ class InstanceServiceTest {
         assertThrows(GeometryParseException.class, () ->
                 this.instanceService.validateInstanceForSave(this.newInstance)
         );
+    }
+
+    /**
+     * Test that we can retrieve the paged list of instances for a Datatables
+     * pagination request (which by the way also includes search and sorting
+     * definitions).
+     */
+    @Test
+    void testHandleDatatablesPagingRequests() {
+        // First create the pagination request
+        DtPagingRequest dtPagingRequest = new DtPagingRequest();
+        dtPagingRequest.setStart(0);
+        dtPagingRequest.setLength(5);
+
+        // Set the pagination request columns
+        dtPagingRequest.setColumns(new ArrayList());
+        Stream.of("name",
+                "version",
+                "lastUpdatedAt",
+                "instanceId",
+                "keywords",
+                "status",
+                "organizationId",
+                "endpointUri",
+                "mmsi",
+                "imo",
+                "serviceType")
+                .map(DtColumn::new)
+                .forEach(dtPagingRequest.getColumns()::add);
+
+        // Set the pagination request ordering
+        DtOrder dtOrder = new DtOrder();
+        dtOrder.setColumn(0);
+        dtOrder.setDir(DtDirection.asc);
+        dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
+
+        // Set the pagination search
+        DtSearch dtSearch = new DtSearch();
+        dtSearch.setValue("search-term");
+        dtPagingRequest.setSearch(dtSearch);
+
+        // Mock the full text query
+        FullTextQuery mockedQuery = mock(FullTextQuery.class);
+        doReturn(this.instances.subList(0, 5)).when(mockedQuery).getResultList();
+        doReturn(mockedQuery).when(this.instanceService).searchInstanceQuery(any());
+
+        // Perform the service call
+        DtPage<Instance> result = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
+
+        // Validate the result
+        assertNotNull(result);
+        assertEquals(5, result.getRecordsFiltered());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getRecordsFiltered(); i++){
+            assertEquals(this.instances.get(i), result.getData().get(i));
+        }
     }
 
 }
