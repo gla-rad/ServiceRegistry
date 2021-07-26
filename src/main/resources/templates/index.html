@@ -17,79 +17,84 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>MCP Service Registry</title>
-    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
-    <link rel="stylesheet" th:href="@{webjars/font-awesome/5.11.2/css/all.min.css}"/>
-    <script th:src="@{/static/utils.js}"></script>
+    <th:block th:include="fragments/general.html :: headerfiles"></th:block>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
-        <span class="navbar-brand mb-0 h1">MCP Service Registry</span>
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
-                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarNavDropdown">
-            <ul class="navbar-nav mr-auto">
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/index.html">
-                        Home
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/instances">
-                        Instances
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/about">
-                        About
-                    </a>
-                </li>
-            </ul>
-            <ul class="nav navbar-nav navbar-right">
-                <li class="nav-item" sec:authorize="!isAuthenticated()">
-                    <a class="nav-link" href="/login" th:href="@{/login}">
-                        <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                    </a>
-                </li>
-                <li sec:authorize="isAuthenticated()">
-                    <a class="nav-link" href="/logout" th:href="@{/logout}">
-                        <i class="fas fa-sign-out-alt"></i> Logout
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
-    <div id="main-content" class="container mt-3">
-        <div class="card" sec:authorize="!isAuthenticated()">
-            <div class="card-header">
-                <h2>Welcome</h2>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <p class="m-2">Please sign-in to access the service facilities.</p>
+    <div class="d-flex flex-column vh-100">
+        <div th:replace="fragments/general.html :: navbar"></div>
+        <div class="flex-fill flex-grow-1 flex-shrink-0">
+            <div id="main-content" class="container mt-3">
+                <div class="card shadow" sec:authorize="!isAuthenticated()">
+                    <div class="card-header">
+                        <h2>Welcome to the MCP Service Registry</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <p class="m-2">Please sign-in to access the service facilities.</p>
+                        </div>
+                        <div class="row d-flex justify-content-center">
+                            <div class="btn btn-primary" onclick="window.location.href='/login'">
+                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="row d-flex justify-content-center">
-                    <div class="btn btn-primary" onclick="window.location.href='/login'">
-                        <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
+                <div class="card shadow" sec:authorize="isAuthenticated()">
+                    <div class="card-header">
+                        <h2>Welcome to the MCP Service Registry</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-6">
+                                <h3>Core components of the MCP</h3>
+                                <img class="w-100" th:src="@{static/images/mc-core-components.png}" alt="">
+                            </div>
+                            <div class="col-6">
+                                <h3>The MCP</h3>
+                                <p>
+                                    The MCP is a decentralised platform that facilitates
+                                    secure and reliable information exchange within the
+                                    maritime domain and beyond. "Beyond", because the
+                                    maritime world isn’t isolated, but needs to exchange
+                                    information with other domains - for instance with
+                                    other transport domains. The information exchanged
+                                    can be of almost any nature, ranging from private
+                                    confidential information between a vessel and the
+                                    shore office of the shipowner, to public information
+                                    provided by authorities, such as the provision of
+                                    navigational warnings.
+                                </p>
+                                <p>
+                                    As a decentralised platform, there is no single entity
+                                    operating this. Several organisations are MCP service
+                                    providers, and collectively they form the "Maritime
+                                    Connectivity Platform".
+                                </p>
+                                <h4>Maritime Service Registry</h4>
+                                <p>
+                                    The MSR can be used for registering, discovering and using
+                                    all relevant e-Navigation and e-Maritime services, commercial
+                                    and non-commercial, authorised and non-authorised, for free
+                                    and against payment. It can be seen as a sophisticated yellow
+                                    pages phone book.
+                                </p>
+                                <p>
+                                    Project Location:
+                                    <a th:href="@{${projectLocation}}" target="_blank">
+                                        [[${projectLocation}]]
+                                    </a>
+                                </p>
+
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="card" sec:authorize="isAuthenticated()">
-            <div class="card-header">
-                <h2>Welcome</h2>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <p class="m-2">Hello!!! You are logged in!!!</p>
-                </div>
-            </div>
-        </div>
+        <div th:replace="fragments/general.html :: footer"></div>
     </div>
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <script th:src="@{/static/utils.js}"></script>
 </body>
 </html>
