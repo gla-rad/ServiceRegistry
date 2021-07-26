@@ -119,6 +119,9 @@ public class Instance implements Serializable {
 
     @NotNull
     @Enumerated(EnumType.STRING)
+    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class))
+    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class), name = "status_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "status_sort")
     @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
