@@ -27,7 +27,7 @@
 <body>
     <div th:fragment="navbar">
         <div th:if="${appProfile != ''}" class="ribbon dev">
-            <a href="" translate="global.ribbon.dev" class="ng-scope ng-binding">[[${appProfile}]]</a>
+            <a href="" translate="global.ribbon.dev" class="ng-scope ng-binding">[[${profile}]]</a>
         </div>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
             <span class="navbar-brand mb-0 h1">MCP Service Registry</span>
@@ -73,12 +73,12 @@
         <footer class="footer bg-dark">
             <div class="row">
                 <div class="col-sm-4 footer-left">
-                    <a th:href="@{${appOperatorUrl}}" target="_blank">
-                        [[${appCopyright}]]
+                    <a th:href="@{${operatorUrl}}" target="_blank">
+                        [[${copyright}]]
                     </a>
                 </div>
                 <div class="col-sm-4 footer-center">
-                    <a th:href="@{${appOperatorUrl}}" target="_blank">
+                    <a th:href="@{${operatorUrl}}" target="_blank">
                         <img th:src="@{static/images/company_logo.svg}" height="34"/>
                     </a>
                 </div>

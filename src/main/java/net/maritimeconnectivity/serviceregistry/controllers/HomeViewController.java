@@ -54,16 +54,16 @@ public class HomeViewController {
     private String operatorContact;
 
     @Value("${info.msr.operatorUrl:}")
-    private String appOperatorUrl;
+    private String operatorUrl;
 
     @Value("${info.msr.copyright:}")
-    private String appCopyright;
+    private String copyright;
 
     @Value("${info.msr.profile:}")
-    private String appProfile;
+    private String profile;
 
     @Value("${info.msr.projectLocation:}")
-    private String appProjectLocation;
+    private String projectLocation;
 
     /**
      * The management page of MSR.
@@ -73,10 +73,10 @@ public class HomeViewController {
      */
     @GetMapping("/index.html")
     public String index(Model model) {
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
-        model.addAttribute("appProfile", this.appProfile);
-        model.addAttribute("appProjectLocation", this.appProjectLocation);
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
+        model.addAttribute("projectLocation", this.projectLocation);
         return "index";
     }
 
@@ -88,10 +88,9 @@ public class HomeViewController {
      */
     @GetMapping("/instances")
     public String instances(Model model) {
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
-        model.addAttribute("appProfile", this.appProfile);
-        model.addAttribute("appProjectLocation", this.appProjectLocation);
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
         return "instances";
     }
 
@@ -109,10 +108,9 @@ public class HomeViewController {
         model.addAttribute("operatorName", operatorName);
         model.addAttribute("operatorMRN", operatorMrn);
         model.addAttribute("contact", operatorContact);
-        model.addAttribute("appOperatorUrl", this.appOperatorUrl);
-        model.addAttribute("appCopyright", this.appCopyright);
-        model.addAttribute("appProfile", this.appProfile);
-        model.addAttribute("appProjectLocation", this.appProjectLocation);
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
         return "about";
     }
 
