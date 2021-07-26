@@ -26,24 +26,33 @@ import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationExceptio
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
+import org.apache.lucene.search.Query;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.hibernate.search.jpa.FullTextEntityManager;
+import org.hibernate.search.jpa.FullTextQuery;
+import org.hibernate.search.jpa.Search;
+import org.hibernate.search.query.dsl.QueryBuilder;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
+import javax.persistence.EntityManager;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
@@ -57,6 +66,12 @@ import java.util.*;
 @Slf4j
 @Transactional
 public class InstanceService {
+
+    /**
+     * The Entity Manager.
+     */
+    @Autowired
+    EntityManager entityManager;
 
     /**
      * The Instance Repository.
@@ -84,6 +99,20 @@ public class InstanceService {
      */
     @Autowired
     private UserContext userContext;
+
+    // Service Variables
+    private final String[] searchFields = new String[] {
+            "name",
+            "version",
+            "lastUpdatedAt",
+            "instanceId",
+            "keywords",
+            "organizationId",
+            "endpointUri",
+            "mmsi",
+            "imo",
+            "serviceType"
+    };
 
     /**
      * Definition of the whole world area in GeoJSON.
@@ -305,13 +334,42 @@ public class InstanceService {
     }
 
     /**
+     * Handles a datatables pagination request and returns the results list in
+     * an appropriate format to be viewed by a datatables jQuery table.
+     *
+     * @param dtPagingRequest the Datatables pagination request
+     * @return the Datatables paged response
+     */
+    @Transactional(readOnly = true)
+    public DtPage<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+        // Create the search query
+        FullTextQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue());
+        searchQuery.setFirstResult(dtPagingRequest.getStart());
+        searchQuery.setMaxResults(dtPagingRequest.getLength());
+
+        // Add sorting if requested
+        Optional.of(dtPagingRequest)
+                .map(DtPagingRequest::getLucenceSort)
+                .filter(ls -> ls.getSort().length > 0)
+                .ifPresent(searchQuery::setSort);
+
+        // For some reason we need this casting otherwise JDK8 complains
+        return (DtPage<Instance>) Optional.of(searchQuery)
+                .map(FullTextQuery::getResultList)
+                .map(stations -> new PageImpl<>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .map(Page.class::cast)
+                .map(page -> new DtPage<>((Page<Instance>)page, dtPagingRequest))
+                .orElseGet(DtPage::new);
+    }
+
+    /**
      * Parse instance attributes from the xml payload for search/filtering
      *
      * @param instance the instance to parse
      * @return an instance with its attributes set
      * @throws JAXBException if the XML is invalid or required attributes not present
      */
-    private void parseInstanceAttributesFromXML(Instance instance) throws JAXBException {
+    protected void parseInstanceAttributesFromXML(Instance instance) throws JAXBException {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
@@ -336,14 +394,14 @@ public class InstanceService {
      * @return an instance with its attributes set
      * @throws Exception if the XML is invalid or attributes not present
      */
-    private void parseInstanceGeometryFromXML(Instance instance) throws JAXBException, ParseException {
+    protected void parseInstanceGeometryFromXML(Instance instance) throws JAXBException, ParseException {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
         String unLoCode = serviceInstance.getCoversAreas().getUnLoCode();
         List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas().getCoversAreas();
 
-        //UN/LOCODE and Coverage Geometry are supported simultaneously.
+        // UN/LOCODE and Coverage Geometry are supported simultaneously.
         // However, for geo-searches, Coverage takes precedence over UN/LOCODE.
         if (unLoCode != null && unLoCode.length() > 0) {
             instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
@@ -362,6 +420,40 @@ public class InstanceService {
         } else if (unLoCode != null && unLoCode.length() > 0) {
             unLoCodeService.applyUnLoCodeMapping(instance, unLoCode);
         }
+    }
+
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search test. This query will be based solely on the stations table and
+     * will include the following fields:
+     * - Name
+     * - Version
+     * - Last Updated At
+     * - Keywords
+     * - Organisation ID
+     * - Endpoint URI
+     * - MMSI
+     * - IMO
+     * - Service Type
+     *
+     * @param searchText the text to be searched
+     * @return the full text query
+     */
+    protected FullTextQuery searchInstanceQuery(String searchText) {
+        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
+        QueryBuilder queryBuilder = fullTextEntityManager.getSearchFactory()
+                .buildQueryBuilder()
+                .forEntity(Instance.class)
+                .get();
+
+        Query luceneQuery = queryBuilder
+                .keyword()
+                .wildcard()
+                .onFields(this.searchFields)
+                .matching(Optional.ofNullable(searchText).orElse("").toLowerCase() + "*")
+                .createQuery();
+
+        return fullTextEntityManager.createFullTextQuery(luceneQuery, Instance.class);
     }
 
 }
