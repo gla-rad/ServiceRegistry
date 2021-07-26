@@ -62,6 +62,9 @@ public class HomeViewController {
     @Value("${info.msr.profile:}")
     private String appProfile;
 
+    @Value("${info.msr.projectLocation:}")
+    private String appProjectLocation;
+
     /**
      * The management page of MSR.
      *
@@ -73,6 +76,7 @@ public class HomeViewController {
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
         model.addAttribute("appProfile", this.appProfile);
+        model.addAttribute("appProjectLocation", this.appProjectLocation);
         return "index";
     }
 
@@ -87,6 +91,7 @@ public class HomeViewController {
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
         model.addAttribute("appProfile", this.appProfile);
+        model.addAttribute("appProjectLocation", this.appProjectLocation);
         return "instances";
     }
 
@@ -107,6 +112,7 @@ public class HomeViewController {
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
         model.addAttribute("appProfile", this.appProfile);
+        model.addAttribute("appProjectLocation", this.appProjectLocation);
         return "about";
     }
 
