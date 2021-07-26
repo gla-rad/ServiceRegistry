@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.datatables;
 
 /**
- * The Direction Enum.
+ * The DtDirection Enum.
  * <p>
  * The Datatables Direction Enumeration definition.
  *

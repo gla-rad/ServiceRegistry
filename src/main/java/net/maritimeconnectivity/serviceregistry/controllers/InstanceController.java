@@ -88,7 +88,7 @@ public class InstanceController {
     }
 
     /**
-     * GET /instances/{id} : get the "ID" instance.
+     * GET /api/instances/{id} : get the "ID" instance.
      *
      * @param id the ID of the instance to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the instance,
@@ -206,7 +206,7 @@ public class InstanceController {
     }
 
     /**
-     * PUT  /api/instances/{id}/status : Updates an the "ID" instance status
+     * PUT /api/instances/{id}/status : Updates an the "ID" instance status
      *
      * @param id the ID of the instance to be updated
      * @param status the new status value

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain;
+package net.maritimeconnectivity.serviceregistry.utils;
 
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.hibernate.search.bridge.builtin.StringBridge;
@@ -31,8 +31,6 @@ import org.hibernate.search.bridge.builtin.StringBridge;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public class ServiceStatusBridge extends StringBridge {
-
-    private int PADDING = 5;
 
     /**
      * Implement a generic object to string translation, depending on whether

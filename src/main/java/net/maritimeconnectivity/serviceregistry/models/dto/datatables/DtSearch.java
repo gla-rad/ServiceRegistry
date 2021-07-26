@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.datatables;
 
 /**
- * The type Search.
+ * The type DtSearch.
  *
  * The Datatables Search Class definition.
  *
