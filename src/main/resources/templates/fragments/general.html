@@ -26,6 +26,9 @@
 </head>
 <body>
     <div th:fragment="navbar">
+        <div th:if="${appProfile != ''}" class="ribbon dev">
+            <a href="" translate="global.ribbon.dev" class="ng-scope ng-binding">[[${appProfile}]]</a>
+        </div>
         <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
             <span class="navbar-brand mb-0 h1">MCP Service Registry</span>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"

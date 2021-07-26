@@ -59,6 +59,9 @@ public class HomeViewController {
     @Value("${info.msr.copyright:}")
     private String appCopyright;
 
+    @Value("${info.msr.profile:}")
+    private String appProfile;
+
     /**
      * The management page of MSR.
      *
@@ -69,6 +72,7 @@ public class HomeViewController {
     public String index(Model model) {
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appProfile", this.appProfile);
         return "index";
     }
 
@@ -82,6 +86,7 @@ public class HomeViewController {
     public String instances(Model model) {
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appProfile", this.appProfile);
         return "instances";
     }
 
@@ -101,6 +106,7 @@ public class HomeViewController {
         model.addAttribute("contact", operatorContact);
         model.addAttribute("appOperatorUrl", this.appOperatorUrl);
         model.addAttribute("appCopyright", this.appCopyright);
+        model.addAttribute("appProfile", this.appProfile);
         return "about";
     }
 
