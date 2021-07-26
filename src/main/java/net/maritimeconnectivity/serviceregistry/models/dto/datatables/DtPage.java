@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The type Dt page.
+ * The type DtPage.
  *
  * @param <T> the type parameter
  */

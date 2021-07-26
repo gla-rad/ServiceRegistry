@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.datatables;
 
 /**
- * The type Column.
+ * The type DtColumn.
  *
  * The Datatables Column Class definition.
  *

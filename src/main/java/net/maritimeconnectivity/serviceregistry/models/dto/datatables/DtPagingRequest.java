@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * The type Paging Request.
+ * The type DtPagingRequest.
  *
  * The Datatables Paging Request Class definition.
  *
