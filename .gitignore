@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Lucence Index ###
+/net.maritimeconnectivity.serviceregistry.models.domain.Instance
+

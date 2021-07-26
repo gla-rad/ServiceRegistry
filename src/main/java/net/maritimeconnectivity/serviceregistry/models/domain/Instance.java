@@ -23,9 +23,11 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.annotations.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 
@@ -47,30 +49,49 @@ import java.util.*;
 @Entity
 @Table(name = "instance")
 @Cacheable
+@Indexed
+@NormalizerDef(name = "lowercase", filters = @TokenFilterDef(factory = LowerCaseFilterFactory.class))
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Instance implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
+    @Field(name = "id_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "id_sort")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
+    @Field()
+    @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "name_sort")
     @Column(name = "name", nullable = true)
     private String name;
 
     @NotNull
+    @Field()
+    @Field(name = "version_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "version_sort")
     @Column(name = "version", nullable = true)
     private String version;
 
+    @Field()
+    @Field(name = "publishedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "publishedAt_sort")
     @Column(name = "published_at", nullable = true)
     private String publishedAt;
 
+    @Field()
+    @Field(name = "lastUpdatedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "lastUpdatedAt_sort")
     @Column(name = "last_updated_at", nullable = true)
     private String lastUpdatedAt;
 
     @NotNull
+    @Field()
+    @Field(name = "comment_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "comment_sort")
     @Column(name = "comment", nullable = true)
     private String comment;
 
@@ -83,10 +104,16 @@ public class Instance implements Serializable {
     private String geometryContentType;
 
     @NotNull
+    @Field()
+    @Field(name = "instanceId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "instanceId_sort")
     @Column(name = "instance_id", nullable = true)
     @JsonProperty("instanceId")
     private String instanceId; //MRN
 
+    @Field()
+    @Field(name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "keywords_sort")
     @Column(name = "keywords")
     private String keywords;
 
@@ -95,6 +122,9 @@ public class Instance implements Serializable {
     @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
+    @Field()
+    @Field(name = "organizationId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "organizationId_sort")
     @Column(name = "organization_id")
     @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
@@ -102,20 +132,35 @@ public class Instance implements Serializable {
     @Column(name = "unlocode")
     private String unlocode;
 
+    @Field()
+    @Field(name = "endpointUri_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "endpointUri_sort")
     @Column(name = "endpoint_uri")
     @JsonProperty("endpointUri")
     private String endpointUri;
 
+    @Field()
+    @Field(name = "endpointType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "endpointType_sort")
     @Column(name = "endpoint_type")
     @JsonProperty("endpointType")
     private String endpointType;
 
+    @Field()
+    @Field(name = "mmsi_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "mmsi_sort")
     @Column(name = "mmsi")
     private String mmsi;
 
+    @Field()
+    @Field(name = "imo_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "imo_sort")
     @Column(name = "imo")
     private String imo;
 
+    @Field()
+    @Field(name = "serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "serviceType_sort")
     @Column(name = "service_type")
     @JsonProperty("serviceType")
     private String serviceType;

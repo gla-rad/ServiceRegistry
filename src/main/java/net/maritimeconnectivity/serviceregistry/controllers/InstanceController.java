@@ -21,6 +21,8 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
@@ -44,7 +46,7 @@ import java.util.List;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/instances")
 @Slf4j
 public class InstanceController {
 
@@ -55,14 +57,14 @@ public class InstanceController {
     private InstanceService instanceService;
 
     /**
-     * GET  /instances : get all the instances.
+     * GET /api/instances : get all the instances.
      *
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of instances in body
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
-    @GetMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Instance>> getAllInstances(Pageable pageable)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<Instance>> getInstances(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
         Page<Instance> page = this.instanceService.findAll(pageable);
@@ -72,13 +74,27 @@ public class InstanceController {
     }
 
     /**
-     * GET  /instances/{id} : get the "ID" instance.
+     * POST /api/instances/dt : Returns a paged list of all current instances.
+     *
+     * @param dtPagingRequest the datatables paging request
+     * @return the ResponseEntity with status 200 (OK) and the list of stations in body
+     */
+    @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DtPage<Instance>> getInstancesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
+        log.debug("REST request to get page of Instances for datatables");
+        DtPage<Instance> page = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
+        return ResponseEntity.ok()
+                .body(page);
+    }
+
+    /**
+     * GET /instances/{id} : get the "ID" instance.
      *
      * @param id the ID of the instance to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the instance,
      * or with status 404 (Not Found)
      */
-    @GetMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> getInstance(@PathVariable Long id) {
         log.debug("REST request to get Instance : {}", id);
         try {
@@ -92,14 +108,14 @@ public class InstanceController {
     }
 
     /**
-     * POST  /instances : Create a new instance.
+     * POST /api/instances : Create a new instance.
      *
      * @param instance the instance to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance,
      * or with status 400 (Bad Request) if the instance has already an ID, or coudln't be created
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> createInstance(@Valid @RequestBody Instance instance) throws URISyntaxException {
         log.debug("REST request to save Instance : {}", instance);
         if (instance.getId() != null) {
@@ -111,7 +127,7 @@ public class InstanceController {
     }
 
     /**
-     * PUT  /instances/{id} : Updates an existing "ID" instance.
+     * PUT /api/instances/{id} : Updates an existing "ID" instance.
      *
      * @param id the ID of the instance to be updated
      * @param instance the instance to update
@@ -119,7 +135,7 @@ public class InstanceController {
      * or with status 400 (Bad Request) if the instance is not valid or couldn't be updated,
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PutMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> updateInstance(@PathVariable Long id, @Valid @RequestBody Instance instance) throws URISyntaxException {
         log.debug("REST request to update Instance : {}", instance);
         instance.setId(id);
@@ -127,12 +143,12 @@ public class InstanceController {
     }
 
     /**
-     * DELETE  /instances/{id} : delete the "ID" instance.
+     * DELETE /api/instances/{id} : delete the "ID" instance.
      *
      * @param id the ID of the instance to delete
      * @return the ResponseEntity with status 200 (OK)
      */
-    @DeleteMapping(value = "/instances/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteInstance(@PathVariable Long id) {
         log.debug("REST request to delete Instance : {}", id);
         try {
@@ -190,7 +206,7 @@ public class InstanceController {
     }
 
     /**
-     * PUT  /instances/{id}/status : Updates an the "ID" instance status
+     * PUT  /api/instances/{id}/status : Updates an the "ID" instance status
      *
      * @param id the ID of the instance to be updated
      * @param status the new status value
@@ -198,7 +214,7 @@ public class InstanceController {
      * or with status 400 (Bad Request) if the instance status couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PutMapping(value = "/instances/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> updateInstanceStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") ServiceStatus status) {
         log.debug("REST request to update instance {} status : {}", id, status.value());
 

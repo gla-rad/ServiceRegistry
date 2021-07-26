@@ -47,7 +47,7 @@ import java.util.Optional;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/xmls")
 @Slf4j
 public class XmlController {
 
@@ -58,13 +58,13 @@ public class XmlController {
     private XmlService xmlService;
 
     /**
-     * GET /xmls : get all the xmls.
+     * GET /api/xmls : get all the xmls.
      *
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of xmls in body
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
-    @GetMapping(value = "/xmls", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Xml>> getAllXmls(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Xmls");
@@ -81,7 +81,7 @@ public class XmlController {
      * @return the ResponseEntity with status 200 (OK) and with body the xml,
      * or with status 404 (Not Found)
      */
-    @GetMapping(value = "/xmls/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> getXml(@PathVariable Long id) {
         log.debug("REST request to get Xml : {}", id);
         try {
@@ -102,7 +102,7 @@ public class XmlController {
      * or with status 400 (Bad Request) if the xml has already an ID, or couldn't be created
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(value = "/xmls", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> createXml(@Valid @RequestBody Xml xml) throws URISyntaxException {
         log.debug("REST request to save Xml : {}", xml);
         if (xml.getId() != null) {
@@ -125,7 +125,7 @@ public class XmlController {
      * or with status 400 (Bad Request) if the xml is not valid or couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PutMapping(value = "/xmls/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> updateXml(@PathVariable Long id, @Valid @RequestBody Xml xml) {
         log.debug("REST request to update Xml : {}", xml);
         xml.setId(id);
@@ -141,7 +141,7 @@ public class XmlController {
      * @param id the id of the xml to delete
      * @return the ResponseEntity with status 200 (OK)
      */
-    @DeleteMapping(value = "/xmls/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteXml(@PathVariable Long id) {
         log.debug("REST request to delete Xml : {}", id);
         try {
@@ -162,7 +162,7 @@ public class XmlController {
      * @return the ResponseEntity with status 200 (OK) and with body of the G1128 schema specification,
      * or with status 404 (Not Found) if the schema is not found
      */
-    @GetMapping(value = "/xmls/schemas/{schema}", produces = MediaType.APPLICATION_XML_VALUE)
+    @GetMapping(value = "/schemas/{schema}", produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> getG1128Schema(@PathVariable G1128Schemas schema) {
         HttpHeaders responseHeaders = new HttpHeaders();
         responseHeaders.add(HttpHeaders.CONTENT_TYPE, new MediaType(MediaType.APPLICATION_XML, StandardCharsets.UTF_8).toString());
@@ -187,7 +187,7 @@ public class XmlController {
      * @return the ResponseEntity with status 200 (OK) and with body of the parsed G1128-compliant object,
      * or with status 400 (Bad Request) if the content is invalid
      */
-    @PostMapping(value = "/xmls/validate/{schema}", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/validate/{schema}", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> validateXmlWithG1128Schema(@PathVariable G1128Schemas schema, @Valid @RequestBody String content) {
         log.debug("REST request to validate design xml : {}", content);
         try {
