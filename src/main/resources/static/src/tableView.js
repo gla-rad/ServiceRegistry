@@ -30,7 +30,6 @@ var columnDefs = [{
     data: "status",
     title: "Status",
     readonly : true,
-    orderable: false,
     hoverMsg: "Status of service",
     placeholder: "Status of the service"
 }, {

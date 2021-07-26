@@ -107,6 +107,7 @@ public class InstanceService {
             "lastUpdatedAt",
             "instanceId",
             "keywords",
+            "status",
             "organizationId",
             "endpointUri",
             "mmsi",
@@ -430,6 +431,7 @@ public class InstanceService {
      * - Version
      * - Last Updated At
      * - Keywords
+     * - Status
      * - Organisation ID
      * - Endpoint URI
      * - MMSI
