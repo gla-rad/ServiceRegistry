@@ -24,7 +24,7 @@
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container mt-3">
-                <div class="card" sec:authorize="!isAuthenticated()">
+                <div class="card shadow" sec:authorize="!isAuthenticated()">
                     <div class="card-header">
                         <h2>Welcome</h2>
                     </div>
@@ -39,28 +39,34 @@
                         </div>
                     </div>
                 </div>
-                <div class="card" sec:authorize="isAuthenticated()">
+                <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
-                        <h2>Maritime Service Registry information</h2>
+                        <h2>Maritime Service Registry Information</h2>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <h5>Name : </h5> <p>[[${MSRName}]] </p>
+                        <div class="row p-1">
+                            <h5>Name:</h5>
+                            <span>&nbsp;[[${MSRName}]] </span>
                         </div>
-                        <div class="row">
-                            <h5>End point (MRN) : </h5> <p>[[${MSRMRN}]] </p>
+                        <div class="row p-1">
+                            <h5>End point (MRN):</h5>
+                            <span>&nbsp;[[${MSRMRN}]] </span>
                         </div>
-                        <div class="row">
-                            <h5>End point (URL) : </h5> <p>[[${MSRURL}]] </p>
+                        <div class="row p-1">
+                            <h5>End point (URL):</h5>
+                            <span>&nbsp;[[${MSRURL}]] </span>
                         </div>
-                        <div class="row">
-                            <h5>Operator name : </h5> <p>[[${operatorName}]] </p>
+                        <div class="row p-1">
+                            <h5>Operator name:</h5>
+                            <span>&nbsp;[[${operatorName}]] </span>
                         </div>
-                        <div class="row">
-                            <h5>Operator MRN : </h5> <p>[[${operatorMRN}]] </p>
+                        <div class="row p-1">
+                            <h5>Operator MRN:</h5>
+                            <span>&nbsp;[[${operatorMRN}]] </span>
                         </div>
-                        <div class="row">
-                            <h5>Contact : </h5> <p>[[${contact}]] </p>
+                        <div class="row p-1">
+                            <h5>Contact:</h5>
+                            <span>&nbsp;[[${contact}]] </span>
                         </div>
                     </div>
                 </div>

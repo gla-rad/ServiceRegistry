@@ -26,7 +26,7 @@
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container-fluid mt-3">
-                <div class="card" sec:authorize="!isAuthenticated()">
+                <div class="card shadow" sec:authorize="!isAuthenticated()">
                     <div class="card-header">
                         <h2>Welcome</h2>
                     </div>
@@ -41,9 +41,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="card" sec:authorize="isAuthenticated()">
+                <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
-                        <h2>Service registry management dashboard</h2>
+                        <h2>Service Registry Management Dashboard</h2>
                     </div>
                     <div class="card-body">
                         <div class="col-12 m-1">
