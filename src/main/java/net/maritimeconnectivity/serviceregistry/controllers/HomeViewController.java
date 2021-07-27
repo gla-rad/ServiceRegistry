@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,15 +35,83 @@ import javax.servlet.http.HttpServletRequest;
 @Controller
 public class HomeViewController {
 
+    @Value("${info.msr.name:Unknown}")
+    private String msrName;
+
+    @Value("${info.msr.mrn:Unknown}")
+    private String msrMrn;
+
+    @Value("${info.msr.url:Unknown}")
+    private String msrUrl;
+
+    @Value("${info.msr.operatorName:Unknown}")
+    private String operatorName;
+
+    @Value("${info.msr.operatorMrn:Unknown}")
+    private String operatorMrn;
+
+    @Value("${info.msr.operatorContact:Unknown}")
+    private String operatorContact;
+
+    @Value("${info.msr.operatorUrl:}")
+    private String operatorUrl;
+
+    @Value("${info.msr.copyright:}")
+    private String copyright;
+
+    @Value("${info.msr.profile:}")
+    private String profile;
+
+    @Value("${info.msr.projectLocation:}")
+    private String projectLocation;
+
     /**
-     * The home page of the Message Broker Application.
+     * The management page of MSR.
      *
      * @param model The application UI model
      * @return The index page
      */
     @GetMapping("/index.html")
     public String index(Model model) {
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
+        model.addAttribute("projectLocation", this.projectLocation);
         return "index";
+    }
+
+    /**
+     * The instance page
+     *
+     * @param model The application UI model
+     * @return The index page
+     */
+    @GetMapping("/instances")
+    public String instances(Model model) {
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
+        return "instances";
+    }
+
+    /**
+     * The instance page
+     *
+     * @param model The application UI model
+     * @return The index page
+     */
+    @GetMapping("/about")
+    public String about(Model model) {
+        model.addAttribute("MSRName", msrName);
+        model.addAttribute("MSRMRN", msrMrn);
+        model.addAttribute("MSRURL", msrUrl);
+        model.addAttribute("operatorName", operatorName);
+        model.addAttribute("operatorMRN", operatorMrn);
+        model.addAttribute("contact", operatorContact);
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
+        return "about";
     }
 
     /**
@@ -68,4 +137,5 @@ public class HomeViewController {
         request.logout();
         return new ModelAndView("redirect:" + "/");
     }
+
 }
