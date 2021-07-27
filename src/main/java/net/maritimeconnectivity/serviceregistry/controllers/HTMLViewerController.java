@@ -26,14 +26,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * The Home View Controller.
+ * The HTML Viewer Controller.
  *
  * This is the home controller that allows user to view the main options.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Controller
-public class HomeViewController {
+public class HTMLViewerController {
 
     @Value("${info.msr.name:Unknown}")
     private String msrName;
