@@ -41,7 +41,7 @@ import java.util.List;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/docs")
 @Slf4j
 public class DocController {
 
@@ -58,13 +58,13 @@ public class DocController {
     private DocService docService;
 
     /**
-     * GET  /docs : get all the docs.
+     * GET /api/docs : get all the docs.
      *
      * @param pageable the pagination information
      * @return the ResponseEntity with status 200 (OK) and the list of docs in body
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
-    @GetMapping(value = "/docs", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Doc>> getAllDocs(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Docs");
@@ -75,13 +75,13 @@ public class DocController {
     }
 
     /**
-     * GET  /docs/:id : get the "ID" doc.
+     * GET /api/docs/:id : get the "ID" doc.
      *
      * @param id the ID of the doc to retrieve
      * @return the ResponseEntity with status 200 (OK) and with body the doc,
      * or with status 404 (Not Found)
      */
-    @GetMapping(value = "/docs/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Doc> getDoc(@PathVariable Long id) {
         log.debug("REST request to get Doc : {}", id);
         try {
@@ -95,14 +95,14 @@ public class DocController {
     }
 
     /**
-     * POST  /docs : Create a new doc.
+     * POST /api/docs : Create a new doc.
      *
      * @param doc the doc to create
      * @return the ResponseEntity with status 201 (Created) and with body the new doc,
      * or with status 400 (Bad Request) if the doc has already an ID, or couldn't be created
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PostMapping(value = "/docs", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Doc> createDoc(@Valid @RequestBody Doc doc) throws URISyntaxException {
         log.debug("REST request to save Doc : {}", doc);
         if (doc.getId() != null) {
@@ -122,7 +122,7 @@ public class DocController {
     }
 
     /**
-     * PUT  /docs/{id} : Updates an existing doc.
+     * PUT /api/docs/{id} : Updates an existing doc.
      *
      * @param id the ID of the doc to be updated
      * @param doc the doc to update
@@ -130,7 +130,7 @@ public class DocController {
      * or with status 400 (Bad Request) if the doc is not valid or couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
-    @PutMapping(value = "/docs/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Doc> updateDoc(@PathVariable Long id, @Valid @RequestBody Doc doc) {
         log.debug("REST request to update Doc : {}", doc);
         if (this.allowedContentTypes.stream().noneMatch(ft -> ft.equalsIgnoreCase(doc.getFilecontentContentType()))) {
@@ -146,12 +146,12 @@ public class DocController {
     }
 
     /**
-     * DELETE  /docs/{id} : delete the "ID" doc.
+     * DELETE /api/docs/{id} : delete the "ID" doc.
      *
      * @param id the ID of the doc to delete
      * @return the ResponseEntity with status 200 (OK)
      */
-    @DeleteMapping(value = "/docs/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDoc(@PathVariable Long id) {
         log.debug("REST request to delete Doc : {}", id);
         try {
