@@ -10,55 +10,55 @@ var columnDefs = [{
     searchable: false
 }, {
     data: "name",
-    title: "name",
+    title: "Name",
     readonly : true,
     hoverMsg: "Name of service",
     placeholder: "Name of the service"
 }, {
     data: "version",
-    title: "version",
+    title: "Version",
     readonly : true,
     hoverMsg: "Version of service",
     placeholder: "Version of the service"
 }, {
     data: "serviceType",
-    title: "serviceType",
+    title: "Service Type",
     readonly : true,
     hoverMsg: "Type of service",
     placeholder: "Type of the service"
 }, {
     data: "status",
-    title: "status",
+    title: "Status",
     readonly : true,
     hoverMsg: "Status of service",
     placeholder: "Status of the service"
 }, {
     data: "endpointUri",
-    title: "endpointUri",
+    title: "Endpoint URI",
     readonly : true,
     hoverMsg: "Access point of service",
     placeholder: "Access point of the service"
 }, {
     data: "organizationId",
-    title: "organizationId",
+    title: "Organization ID",
     readonly : true,
     hoverMsg: "MRN of service provider",
     placeholder: "MRN of the service provider (organization)"
 }, {
     data: "keywords",
-    title: "keywords",
+    title: "Keywords",
     readonly : true,
     hoverMsg: "Keywords of service",
     placeholder: "Keywords of the service"
 }, {
     data: "instanceId",
-    title: "instanceId",
+    title: "Instance ID",
     readonly : true,
     hoverMsg: "MRN of service instance description",
     placeholder: "MRN of the service instance description"
 }, {
     data: "lastUpdatedAt",
-    title: "lastUpdatedAt",
+    title: "Last Update",
     hoverMsg: "Recent updated date",
     readonly : true,
     searchable: false,
@@ -116,13 +116,17 @@ function nullIfEmpty(value){
 
 $(document).ready( function () {
     table = $('#table_id').DataTable({
+//        processing:: true,
+//        language: {
+//            processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+//        },
+        serverSide: true,
         ajax: {
-            "type": "GET",
-            "url": "/api/instances",
-            "dataType": "json",
-            "cache": false,
-            "dataSrc": function (json) {
-                return json;
+            "type": "POST",
+            "url": "/api/instances/dt",
+            "contentType": "application/json",
+            "data": function (d) {
+                return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
                 console.error(thrownError);
