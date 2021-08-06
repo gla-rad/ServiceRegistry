@@ -26,14 +26,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * The Home View Controller.
+ * The HTML Viewer Controller.
  *
  * This is the home controller that allows user to view the main options.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Controller
-public class HomeViewController {
+public class HTMLViewerController {
 
     @Value("${info.msr.name:Unknown}")
     private String msrName;
@@ -53,6 +53,18 @@ public class HomeViewController {
     @Value("${info.msr.operatorContact:Unknown}")
     private String operatorContact;
 
+    @Value("${info.msr.operatorUrl:}")
+    private String operatorUrl;
+
+    @Value("${info.msr.copyright:}")
+    private String copyright;
+
+    @Value("${info.msr.profile:}")
+    private String profile;
+
+    @Value("${info.msr.projectLocation:}")
+    private String projectLocation;
+
     /**
      * The management page of MSR.
      *
@@ -61,6 +73,10 @@ public class HomeViewController {
      */
     @GetMapping("/index.html")
     public String index(Model model) {
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
+        model.addAttribute("projectLocation", this.projectLocation);
         return "index";
     }
 
@@ -72,6 +88,9 @@ public class HomeViewController {
      */
     @GetMapping("/instances")
     public String instances(Model model) {
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
         return "instances";
     }
 
@@ -89,6 +108,9 @@ public class HomeViewController {
         model.addAttribute("operatorName", operatorName);
         model.addAttribute("operatorMRN", operatorMrn);
         model.addAttribute("contact", operatorContact);
+        model.addAttribute("operatorUrl", this.operatorUrl);
+        model.addAttribute("copyright", this.copyright);
+        model.addAttribute("profile", this.profile);
         return "about";
     }
 
@@ -115,4 +137,5 @@ public class HomeViewController {
         request.logout();
         return new ModelAndView("redirect:" + "/");
     }
+
 }

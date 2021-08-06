@@ -20,6 +20,7 @@
 		<java.version>11</java.version>
 		<spring-cloud.version>Hoxton.SR8</spring-cloud.version>
 		<hibernate.spatial.version>5.4.30.Final</hibernate.spatial.version>
+		<hibernate.search-orm.version>5.11.9.Final</hibernate.search-orm.version>
 		<keycloak.version>12.0.1</keycloak.version>
 		<swagger.version>3.0.0</swagger.version>
 		<bootstrap.version>4.5.2</bootstrap.version>
@@ -97,6 +98,11 @@
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-spatial</artifactId>
 			<version>${hibernate.spatial.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-search-orm</artifactId>
+			<version>${hibernate.search-orm.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -183,6 +189,13 @@
 
 	<dependencyManagement>
 		<dependencies>
+
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-devtools</artifactId>
+				<scope>runtime</scope>
+				<optional>true</optional>
+			</dependency>
 
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>

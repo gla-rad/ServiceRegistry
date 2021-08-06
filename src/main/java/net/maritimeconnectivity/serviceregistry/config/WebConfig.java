@@ -43,8 +43,10 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/static/**", "/webjars/**")
-                .addResourceLocations("classpath:/static/", "/webjars/")
+        registry.addResourceHandler("/webjars/**",
+                        "/static/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/",
+                        "classpath:/static/")
                 .resourceChain(false);
         registry.setOrder(1);
     }
