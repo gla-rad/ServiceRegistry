@@ -21,6 +21,7 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -44,6 +45,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,6 +137,49 @@ class InstanceControllerTest {
     }
 
     /**
+     * Test that the APi supports the jQuery Datatables server-side paging
+     * and search requests.
+     */
+    @Test
+    void testGetInstancesForDatatables() throws Exception {
+        // Create a test datatables paging request
+        DtColumn dtColumn = new DtColumn("id");
+        dtColumn.setName("ID");
+        dtColumn.setOrderable(true);
+        DtOrder dtOrder = new DtOrder();
+        dtOrder.setColumn(0);
+        dtOrder.setDir(DtDirection.asc);
+        DtPagingRequest dtPagingRequest = new DtPagingRequest();
+        dtPagingRequest.setStart(0);
+        dtPagingRequest.setLength(this.instances.size());
+        dtPagingRequest.setDraw(1);
+        dtPagingRequest.setSearch(new DtSearch());
+        dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
+        dtPagingRequest.setColumns(Collections.singletonList(dtColumn));
+
+        // Create a mocked datatables paging response
+        DtPage<Instance> dtPage = new DtPage<>();
+        dtPage.setData(this.instances);
+        dtPage.setDraw(1);
+        dtPage.setRecordsFiltered(this.instances.size());
+        dtPage.setRecordsTotal(this.instances.size());
+
+        // Mock the service call for creating a new instance
+        doReturn(dtPage).when(this.instanceService).handleDatatablesPagingRequest(any());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/instances/dt")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(this.objectMapper.writeValueAsString(dtPagingRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse and validate the response
+        DtPage<Instance> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
+        assertEquals(this.instances.size(), result.getData().size());
+    }
+
+    /**
      * Test that we can correctly retrieve a single instance based on the
      * provided entry ID.
      */
@@ -192,7 +237,7 @@ class InstanceControllerTest {
 
     /**
      * Test that if we try to create an instance with an existing ID field,
-     * an HTTP BAR_REQUEST response will be returns, with a description of
+     * an HTTP BAD_REQUEST response will be returns, with a description of
      * the error in the header.
      */
     @Test
