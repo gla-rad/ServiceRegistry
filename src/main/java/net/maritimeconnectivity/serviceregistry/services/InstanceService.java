@@ -175,11 +175,17 @@ public class InstanceService {
             instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
         }
         // If the publication date is missing
-        if(instance.getPublishedAt() == null) {
+        if(instance.getPublishedAt() == null || instance.getPublishedAt().length() == 0) {
             instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         }
+
         // And don't forget the last update
-        instance.setLastUpdatedAt(instance.getPublishedAt());
+        if(instance.getLastUpdatedAt() == null || instance.getLastUpdatedAt().length() == 0) {
+            instance.setLastUpdatedAt(instance.getPublishedAt());
+        }
+        else{
+            instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
+        }
 
         // The save and return
         return this.instanceRepo.save(instance);
