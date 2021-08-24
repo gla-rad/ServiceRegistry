@@ -13,18 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.maritimeconnectivity.serviceregistry.repos;
 
-import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+package net.maritimeconnectivity.serviceregistry.models.data;
 
-/**
- * Spring Data JPA repository for the Doc entity.
- *
- * @author Jinki Jung (email: jinki@dmc.international)
- */
-@Repository
-public interface MSRLedgerRepo extends JpaRepository<Doc, Long> {
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+public class ExceptionModel  implements JsonSerializable {
+    private long timestamp;
+    private int status;
+    private String error;
+    private String message;
+    private String path;
 }
