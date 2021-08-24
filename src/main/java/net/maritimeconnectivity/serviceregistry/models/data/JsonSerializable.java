@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain.enums;
+package net.maritimeconnectivity.serviceregistry.models.data;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
 /**
- * The SpecificationTemplateType enumeration.
+ * Should be implemented by value objects that will be serialized as JSON.
+ * <p/>
+ * To allow for a more compact JSON serialization, the VO's do not serialize null properties.
  */
-public enum SpecificationTemplateType {
-    SPECIFICATION,
-    DESIGN,
-    INSTANCE
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(value = JsonInclude.Include.NON_NULL)
+public interface JsonSerializable {
 }
