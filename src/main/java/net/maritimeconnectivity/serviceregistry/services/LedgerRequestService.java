@@ -26,6 +26,7 @@ import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
 import net.maritimeconnectivity.serviceregistry.utils.MsrErrorConstant;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -53,6 +54,7 @@ import java.util.List;
 @Service
 @Slf4j
 @Transactional
+@ConditionalOnProperty(value = "ledger.enabled", matchIfMissing = true)
 public class LedgerRequestService {
 
     @Value("${info.msr.name:Unknown}")
