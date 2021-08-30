@@ -27,6 +27,7 @@ import net.maritimeconnectivity.serviceregistry.services.LedgerRequestService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -49,6 +50,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/ledgerrequests")
 @Slf4j
+@ConditionalOnProperty(value = "ledger.enabled", matchIfMissing = true)
 public class LedgerRequestController {
 
     @Autowired
