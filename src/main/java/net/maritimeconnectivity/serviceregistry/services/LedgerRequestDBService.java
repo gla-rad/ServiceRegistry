@@ -8,6 +8,7 @@ import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.repos.LedgerRequestRepo;
 import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.Optional;
 @Service
 @Slf4j
 @Transactional
+@ConditionalOnProperty(value = "ledger.enabled", matchIfMissing = true)
 public class LedgerRequestDBService {
 
     @Autowired
