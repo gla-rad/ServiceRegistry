@@ -48,7 +48,7 @@ import java.util.*;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
-@Table(name = "instance")
+@Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
 @Cacheable
 @Indexed
 @NormalizerDef(name = "lowercase", filters = @TokenFilterDef(factory = LowerCaseFilterFactory.class))
@@ -67,33 +67,33 @@ public class Instance implements Serializable {
     @Field()
     @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "name_sort")
-    @Column(name = "name", nullable = true)
+    @Column(name = "name")
     private String name;
 
     @NotNull
     @Field()
     @Field(name = "version_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "version_sort")
-    @Column(name = "version", nullable = true)
+    @Column(name = "version", updatable = false)
     private String version;
 
     @Field()
     @Field(name = "publishedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "publishedAt_sort")
-    @Column(name = "published_at", nullable = true)
+    @Column(name = "published_at")
     private String publishedAt;
 
     @Field()
     @Field(name = "lastUpdatedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "lastUpdatedAt_sort")
-    @Column(name = "last_updated_at", nullable = true)
+    @Column(name = "last_updated_at")
     private String lastUpdatedAt;
 
     @NotNull
     @Field()
     @Field(name = "comment_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "comment_sort")
-    @Column(name = "comment", nullable = true)
+    @Column(name = "comment")
     private String comment;
 
     @JsonSerialize(using = GeometryJSONSerializer.class)
@@ -108,7 +108,7 @@ public class Instance implements Serializable {
     @Field()
     @Field(name = "instanceId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "instanceId_sort")
-    @Column(name = "instance_id", nullable = true)
+    @Column(name = "instance_id", updatable = false)
     @JsonProperty("instanceId")
     private String instanceId; //MRN
 
