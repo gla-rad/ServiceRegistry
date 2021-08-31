@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -214,6 +215,24 @@ class InstanceServiceTest {
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
+                this.instanceService.save(this.existingInstance)
+        );
+
+        // And also that no saving calls took place in the repository
+        verify(this.instanceRepo, never()).save(any());
+    }
+
+    /**
+     * Test that when we are trying to register an instance with existing mrn and version
+     * a DuplicationKeyException will be thrown.
+     */
+    @Test
+    void testSaveWithDuplicatedMRNVersion() {
+        doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+        doReturn(new Instance()).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships(this.existingInstance.getInstanceId(), this.existingInstance.getVersion());
+
+        // Perform the service call
+        assertThrows(DuplicateKeyException.class, () ->
                 this.instanceService.save(this.existingInstance)
         );
 
