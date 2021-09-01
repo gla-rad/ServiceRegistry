@@ -87,6 +87,12 @@ public class InstanceService {
     private XmlService xmlService;
 
     /**
+     * The LedgerRequest Service.
+     */
+    @Autowired
+    private LedgerRequestService ledgerRequestService;
+
+    /**
      * The UnLoCode Service.
      *
      * Lazy load to avoid loading it every time.
@@ -200,7 +206,11 @@ public class InstanceService {
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
-        if(this.instanceRepo.existsById(id)) {
+        Instance instance = findOne(id);
+        if(instance != null) {
+            // remove the corresponding ledger requests before instance removal
+            this.ledgerRequestService.deleteByInstanceId(instance.getInstanceId());
+
             this.instanceRepo.deleteById(id);
         } else {
             throw new DataNotFoundException("No instance found for the provided ID", null);

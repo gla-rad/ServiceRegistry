@@ -50,7 +50,7 @@ public class LedgerRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
+    @OneToOne(cascade = {CascadeType.PERSIST})
     @JoinColumn(unique = true)
     private Instance serviceInstance;
 
