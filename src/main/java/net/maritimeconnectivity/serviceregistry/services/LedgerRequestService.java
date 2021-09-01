@@ -188,7 +188,22 @@ public class LedgerRequestService {
      */
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
-        log.debug("Request to delete Instance : {}", id);
+        log.debug("Request to delete LedgerRequest : {}", id);
         this.ledgerRequestDBService.delete(id);
+    }
+
+    /**
+     * Delete the  instance by id.
+     *
+     * @param instanceId the id of the entity
+     */
+    public void deleteByInstanceId(String instanceId) throws DataNotFoundException {
+        log.debug("Request to delete LedgerRequest related to instance ID : {}", instanceId);
+        List<LedgerRequest> requests = this.ledgerRequestDBService.getAllRequestsByDomainID(instanceId);
+        if (requests != null) {
+            for (LedgerRequest lr : requests) {
+                this.ledgerRequestDBService.delete(lr.getId());
+            }
+        }
     }
 }
