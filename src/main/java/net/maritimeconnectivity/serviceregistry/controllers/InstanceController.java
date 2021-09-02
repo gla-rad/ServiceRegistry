@@ -190,12 +190,8 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
-        } catch (DuplicateKeyException ex) {
-            log.error("Duplicated instance with the same MRN and version found: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
         } catch (Exception ex) {
-            log.error("Unknown error: ", ex);
+            log.error("Saving error: ", ex);
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
@@ -237,12 +233,8 @@ public class InstanceController {
             log.error("Error parsing geometry: ", ex);
             return ResponseEntity.badRequest()
                     .build();
-        } catch (DuplicateKeyException ex) {
-            log.error("Duplicated instance with the same MRN and version found: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
         } catch (Exception ex) {
-            log.error("Unknown error: ", ex);
+            log.error("Update status error: ", ex);
             return ResponseEntity.badRequest()
                     .build();
         }
