@@ -148,8 +148,8 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .ignoring()
                 .antMatchers(
                     "/webjars/**",  //bootstrap
+                    "/static/src/**",            //js files
                     "/static/css/**",           //css files
-                    "/static/js/**",            //js files
                     "/static/images/**",        //the images
                     "/api/xmls/schemas/*"       //the G1128 schemas
                 );
@@ -172,7 +172,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(
                         "/webjars/**",   //bootstrap
-                        "/static/js/**", 		     //js files
+                        "/static/src/**", 		     //js files
                         "/static/css/**", 			 //css files
                         "/static/images/**"          //the images
                 ).permitAll()
