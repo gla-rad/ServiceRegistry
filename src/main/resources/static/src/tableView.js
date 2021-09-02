@@ -1,4 +1,9 @@
 /**
+ * Global variables
+ */
+var instancesTable = undefined;
+
+/**
  * The Loads Table Column Definitions
  * @type {Array}
  */
@@ -107,19 +112,12 @@ var columnDefs = [{
     searchable: false
 }];
 
-function nullIfEmpty(value){
-    if (value !== null && value === "")
-        return undefined;
-    else
-        return value;
-}
-
 $(document).ready( function () {
-    table = $('#table_id').DataTable({
-//        processing:: true,
-//        language: {
-//            processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
-//        },
+    instancesTable = $('#table_id').DataTable({
+        processing: true,
+        language: {
+            processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
+        },
         serverSide: true,
         ajax: {
             "type": "POST",
@@ -141,12 +139,20 @@ $(document).ready( function () {
         buttons: [{
             text: '<i class="fas fa-plus-circle"></i>',
             titleAttr: 'Add Instance',
-            name: 'add' // do not change name
+            className: 'instance-edit-panel-toggle',
+            name: 'add-instance', // do not change name
+            action: (e, dt, node, config) => {
+                clearInstanceEditPanel();
+            }
         }, {
             extend: 'selected', // Bind to Selected row
             text: '<i class="fas fa-edit"></i>',
             titleAttr: 'Edit Instance',
-            name: 'edit' // do not change name
+            className: 'instance-edit-panel-toggle',
+            name: 'edit-instance', // do not change name
+            action: (e, dt, node, config) => {
+                loadInstanceEditPanel();
+            }
         }, {
             extend: 'selected', // Bind to Selected row
             text: '<i class="fas fa-trash-alt"></i>',
@@ -174,7 +180,7 @@ $(document).ready( function () {
             });
         },
         onEditRow: function (datatable, rowdata, success, error) {
-            console.log(rowdata);
+            console.log($.fn.dataTable);
             $.ajax({
                 url: `/api/instances/${rowdata["id"]}`,
                 type: 'PUT',
@@ -197,4 +203,162 @@ $(document).ready( function () {
             });
         },
     });
-} );
+
+    // We also need to link the station areas toggle button with the the modal
+    // panel so that by clicking the button the panel pops up. It's easier done with
+    // jQuery.
+    instancesTable.buttons('.instance-edit-panel-toggle')
+        .nodes()
+        .attr({ "data-toggle": "modal", "data-target": "#instanceEditPanel" });
+
+    // On confirmation of the XML validation, we need to make an AJAX
+    // call back to the service to perform the G-1128 compliance validation.
+    $('#instanceEditPanel').on('click', '.btn-validate-xml', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        $modalDiv.addClass('loading');
+        onValidateXml($modalDiv);
+    });
+
+    // On confirmation of the instance saving, we need to make an AJAX
+    // call back to the service to save the entry.
+    $('#instanceEditPanel').on('click', '.btn-ok', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        var rowData = {}
+        var create = true;
+
+        // Load the column definitions
+        var columnDefData = columnDefs.map((e) => e["data"]);
+
+        // Initialise some of the row data fields with empty values
+        rowData["comment"] = "";
+        rowData["instanceAsDoc"] = null;
+        rowData["geometryContentType"] = null;
+        rowData["designs"] = {};
+        rowData["specifications"] = {};
+        rowData["geometryJson"] = {};
+        rowData["docs"] = [];
+        rowData["instanceAsXml"] = { name: "xml", comment: "no comment", content: "", contentContentType: "G1128 Instance Specification XML" };
+
+        // If a row has been selected load the data for an update
+        if(instancesTable.row({selected : true}).length != 0) {
+            rowData = instancesTable.row({selected : true}).data();
+            create = false;
+        }
+
+        // Getting the inputs from the modal
+        $('form[name="instanceEditPanelForm"] :input').each(function() {
+            rowData = alignData(rowData, $(this).attr('id'), $(this).val(), columnDefData);
+        });
+
+        // Augmenting xml content on the data
+        var xmlContent = $modalDiv.find("#xml-input").val();
+        if (xmlContent.length>0){
+            rowData["instanceAsXml"]["content"] = xmlContent;
+        } else {
+            rowData["instanceAsXml"]["content"] = {
+                name: "xml",
+                comment: "no comment",
+                content: "", contentContentType: "G1128 Instance Specification XML"
+            };
+        }
+
+        // And call back to the datatables to handle the create/update
+        if(create) {
+            instancesTable.context[0].oInit.onAddRow(instancesTable,
+                    rowData,
+                    (data) => { instancesTable.row.add(data).draw(false); },
+                    (data) => { showError(data.responseJSON.message) });
+        } else {
+            instancesTable.context[0].oInit.onEditRow(instancesTable,
+                    rowData,
+                    (data,b,c,d,e) => { instancesTable.row({selected : true}).data(data); instancesTable.draw('page'); },
+                    (data) => { showError(data.responseJSON.message) });
+        }
+    });
+});
+
+/**
+ * Using an AJAX call we ask the server to validate the provided XML and if
+ * proven correct we can use the returned JSON object to populate the instance
+ * editor field values. Note that some of the G-1128 field do not correspond
+ * to the names of the fields used here so we need to translate them.
+ */
+function onValidateXml($modalDiv) {
+    $.ajax({
+        url: `api/xmls/validate/INSTANCE`,
+        type: 'POST',
+        contentType: 'application/xml',
+        dataType: 'json',
+        data: $modalDiv.find("#xml-input").val(),
+        success: (response, status, more) => {
+            for (var field in response) {
+                var name = field;
+                var value = response[name];
+                // Translate the G1128 field names to the current model
+                if (name == 'id')
+                   name = 'instanceId';
+                else if(name == 'description')
+                   name = 'comment';
+                else if(name == 'endpoint')
+                   name = 'endpointUri';
+                else if(name == 'implementsServiceDesign') {
+                   name = 'designs';
+                   value = value['id'];
+                }
+                $modalDiv.find("input#"+name).val(value);
+            }
+            $modalDiv.removeClass('loading');
+        },
+        error: (response, status, more) => {
+            $modalDiv.removeClass('loading');
+            showError("The provided XML does not seems to be G-1128 compliant!");
+        }
+    });
+}
+
+/**
+ * The instances edit dialog form should be clear every time before it is used
+ * so that new entries are not polluted by old data.
+ */
+function clearInstanceEditPanel() {
+    $('form[name="instanceEditPanelForm"]').trigger("reset");
+}
+
+/**
+ * This helper function loads the XML and field data from the selected inctance
+ * in the instance table onto the edit dialog.
+ */
+function loadInstanceEditPanel() {
+    // First always clear to be sure
+    clearInstanceEditPanel();
+
+    // If a row has been selected load the data into the form
+    if(instancesTable.row({selected : true})) {
+        rowData = instancesTable.row({selected : true}).data();
+        $('form[name="instanceEditPanelForm"] :input').each(function() {
+             $(this).val(rowData[$(this).attr('id')]);
+        });
+
+        // Augmenting xml content on the data
+        $("#instanceEditPanel").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
+    }
+}
+
+/**
+ * This helper function corrects the type of data being read from the instance
+ * dialog form since most of it comes back as a string.
+ */
+function alignData(rowDataArray, id, value, columnDefs){
+    if (id && columnDefs.includes(id)){
+        if (id === 'geometryJson'){
+            rowDataArray[id] = JSON.stringify(value);
+        }
+        else if (id === 'id'){
+            rowDataArray[id] = parseInt(value);
+        }
+        else{
+            rowDataArray[id] = value;
+        }
+    }
+    return rowDataArray;
+}

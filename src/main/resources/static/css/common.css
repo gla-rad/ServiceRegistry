@@ -114,6 +114,21 @@
     float: left;
 }
 
+.modal.loading .modal-content:before {
+    content: 'Please Wait...';
+    text-align: center;
+    line-height: 155px;
+    font-size: 20px;
+    background: rgba(0, 0, 0, .8);
+    position: absolute;
+    top: 55px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    color: #EEE;
+    z-index: 1000;
+}
+
 /*****************************
  *           Maps            *
  *****************************/
