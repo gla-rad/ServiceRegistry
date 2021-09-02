@@ -325,9 +325,8 @@ public class InstanceService {
                     .filter(Boolean.TRUE::equals)
                     .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
         }
-
-        // Check the instance exists or not
-        if(instance.getInstanceId() != null && instance.getVersion() != null) {
+        // Else check the instance exists or not
+        else if(instance.getInstanceId() != null && instance.getVersion() != null) {
             this.instanceRepo.findByDomainIdAndVersion(instance.getInstanceId(), instance.getVersion())
                     .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found: ", null); });
         }

@@ -22,7 +22,7 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.2/css/buttons.dataTables.css" />
 </head>
 <body>
-    <div class="d-flex flex-column vh-100">
+    <div class="sky-bg d-flex flex-column vh-100">
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container-fluid mt-3">
@@ -54,6 +54,246 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="instanceEditPanel" tabindex="-1" role="dialog" aria-labelledby="instanceEditPanelHeader"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceEditPanelHeader">Station Area</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form name="instanceEditPanelForm" id="instanceEditPanelForm" role='form'>
+                        <div class='row'>
+                            <div class='col'>
+                                <div>
+                                    <label for="xml-input" class="col-form-label col-form-label-sm">Please enter the G1128-compliant XML for service instance</label>
+                                </div>
+                                <div class='input-group input-group-sm'>
+                                    <textarea class='form-control input-sm' id='xml-input' rows=30></textarea>
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div class='d-flex justify-content-center'>
+                                    <button type='button' id='validateXml' class='btn btn-primary btn-sm m-1 btn-validate-xml'>Validate</button>
+                                </div>
+                            </div>
+                            <div class='col'>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-name">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right" style="padding-top:4px;">
+                                        <label for="name" class="col-form-label col-form-label-sm">Name:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text" id="name"
+                                               pattern=".*"
+                                               title="Name of service"
+                                               name="Name" step="" min="" max=""
+                                               value=""
+                                               placeholder="Name of the service"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-version">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right" style="padding-top:4px;">
+                                        <label for="version" class="col-form-label col-form-label-sm">Version:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text" id="version"
+                                               pattern=".*"
+                                               title="Version of service"
+                                               name="Version" step="" min=""
+                                               max="" value=""
+                                               placeholder="Version of the service"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-serviceType">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="serviceType" class="col-form-label col-form-label-sm">Service Type:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text" id="serviceType"
+                                               pattern=".*"
+                                               title="Type of service"
+                                               name="Service Type" step=""
+                                               min="" max="" value=""
+                                               placeholder="Type of the service"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-status">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="status" class="col-form-label col-form-label-sm">Status:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text" id="status"
+                                               pattern=".*"
+                                               title="Status of service"
+                                               name="Status" step="" min=""
+                                               max="" value=""
+                                               placeholder="Status of the service"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-endpointUri">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="endpointUri" class="col-form-label col-form-label-sm">Endpoint URI:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text"
+                                               id="endpointUri" pattern=".*"
+                                               title="Access point of service"
+                                               name="Endpoint URI" step=""
+                                               min="" max="" value=""
+                                               placeholder="Access point of the service"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-organizationId">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="organizationId" class="col-form-label col-form-label-sm">Organization ID:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text"
+                                               id="organizationId" pattern=".*"
+                                               title="MRN of service provider"
+                                               name="Organization ID" step=""
+                                               min="" max="" value=""
+                                               placeholder="MRN of the service provider (organization)"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-keywords">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="keywords" class="col-form-label col-form-label-sm">Keywords:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text"
+                                               id="keywords" pattern=".*"
+                                               title="Keywords of service"
+                                               name="Keywords" step="" min=""
+                                               max="" value=""
+                                               placeholder="Keywords of the service"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-instanceId">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="instanceId" class="col-form-label col-form-label-sm">Instance ID:</label>
+                                    </div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text"
+                                               id="instanceId" pattern=".*"
+                                               title="MRN of service instance description"
+                                               name="Instance ID" step="" min=""
+                                               max="" value=""
+                                               placeholder="MRN of the service instance description"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-lastUpdatedAt">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="lastUpdatedAt" class="col-form-label col-form-label-sm">Last Update:</label></div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm"
+                                               type="text"
+                                               id="lastUpdatedAt" pattern=".*"
+                                               title="Recent updated date"
+                                               name="Last Update" step="" min=""
+                                               max="" value=""
+                                               placeholder="Last Update"
+                                               data-special="" data-errormsg=""
+                                               data-uniquemsg=""
+                                               data-unique="false" readonly=""
+                                               style="overflow:hidden;">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-primary btn-ok" data-dismiss="modal" title="Save Changes">
+                                <i class="fas fa-save"></i>
+                                <span class="btn-label"> Save</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" title="Cancel Changes">
+                                <i class="fas">&times</i>
+                                <span class="btn-label"> Close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:replace="fragments/general.html :: error-dialog"></div>
         <div th:replace="fragments/general.html :: footer"></div>
     </div>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
@@ -63,7 +303,7 @@
     <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.js" ></script>
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>
     <script th:src="@{/static/lib/dataTables.msrEditor.free.js}"></script>
+    <script th:src="@{/static/src/common.js}"></script>
     <script th:src="@{/static/src/tableView.js}"></script>
-    <script th:src="@{/static/utils.js}"></script>
 </body>
 </html>

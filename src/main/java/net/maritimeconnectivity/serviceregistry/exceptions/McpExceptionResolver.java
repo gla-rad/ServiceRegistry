@@ -34,4 +34,5 @@ public class McpExceptionResolver {
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
         return new ResponseEntity<>(exp, httpHeaders, ex.getStatus());
     }
+
 }
