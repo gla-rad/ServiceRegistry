@@ -44,6 +44,7 @@ import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +85,12 @@ public class InstanceService {
      */
     @Autowired
     private XmlService xmlService;
+
+    /**
+     * The LedgerRequest Service.
+     */
+    @Autowired
+    private LedgerRequestService ledgerRequestService;
 
     /**
      * The UnLoCode Service.
@@ -157,7 +164,7 @@ public class InstanceService {
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException, DuplicateKeyException {
         log.debug("Request to save Instance : {}", instance);
 
         // First of all validate the object
@@ -175,11 +182,17 @@ public class InstanceService {
             instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
         }
         // If the publication date is missing
-        if(instance.getPublishedAt() == null) {
+        if(instance.getPublishedAt() == null || instance.getPublishedAt().length() == 0) {
             instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         }
+
         // And don't forget the last update
-        instance.setLastUpdatedAt(instance.getPublishedAt());
+        if(instance.getLastUpdatedAt() == null || instance.getLastUpdatedAt().length() == 0) {
+            instance.setLastUpdatedAt(instance.getPublishedAt());
+        }
+        else{
+            instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
+        }
 
         // The save and return
         return this.instanceRepo.save(instance);
@@ -193,7 +206,11 @@ public class InstanceService {
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
-        if(this.instanceRepo.existsById(id)) {
+        Instance instance = findOne(id);
+        if(instance != null) {
+            // remove the corresponding ledger requests before instance removal
+            this.ledgerRequestService.deleteByInstanceId(instance.getInstanceId());
+
             this.instanceRepo.deleteById(id);
         } else {
             throw new DataNotFoundException("No instance found for the provided ID", null);
@@ -208,7 +225,7 @@ public class InstanceService {
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
-    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException {
+    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException, DuplicateKeyException {
         log.debug("Request to update status of Instance : {}", id);
 
         // Try to find if the instance does indeed exist
@@ -230,7 +247,7 @@ public class InstanceService {
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException e) {
+        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException e) {
             log.error("Problem during instance status update.", e);
             throw e;
         }
@@ -311,6 +328,13 @@ public class InstanceService {
                     .map(instanceRepo::existsById)
                     .filter(Boolean.TRUE::equals)
                     .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+        }
+
+        // Check the instance exists or not
+        if(instance.getInstanceId() != null && instance.getVersion() != null) {
+            if (this.instanceRepo.findByDomainIdAndVersionEagerRelationships(instance.getInstanceId(), instance.getVersion()) != null){
+                throw new DuplicateKeyException("Duplicated instance with the same MRN and version found: ", null);
+            }
         }
 
         try {

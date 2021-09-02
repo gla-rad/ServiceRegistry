@@ -28,6 +28,7 @@ import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -189,6 +190,10 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
+        } catch (DuplicateKeyException ex) {
+            log.error("Duplicated instance with the same MRN and version found: ", ex);
+            return ResponseEntity.badRequest()
+                    .build();
         } catch (Exception ex) {
             log.error("Unknown error: ", ex);
             return ResponseEntity.badRequest()
@@ -230,6 +235,10 @@ public class InstanceController {
                     .build();
         } catch (GeometryParseException ex) {
             log.error("Error parsing geometry: ", ex);
+            return ResponseEntity.badRequest()
+                    .build();
+        } catch (DuplicateKeyException ex) {
+            log.error("Duplicated instance with the same MRN and version found: ", ex);
             return ResponseEntity.badRequest()
                     .build();
         } catch (Exception ex) {
