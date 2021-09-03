@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
-import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.repos.LedgerRequestRepo;
 import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,20 +29,34 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 import java.util.Optional;
 
+/**
+ * Service Implementation for managing Ledger Requests in the database.
+ *
+ * This service is optional:
+ *  To disable add the "ledger.enabled=false" in the application properties.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
 @Service
 @Slf4j
 @Transactional
 @ConditionalOnProperty(value = "ledger.enabled", matchIfMissing = true)
 public class LedgerRequestDBService {
 
+    /**
+     * The Instance Service.
+     */
+    @Autowired
+    InstanceService instanceService;
+
+    /**
+     * The Ledger Request Repo.
+     */
     @Autowired
     LedgerRequestRepo ledgerRequestRepo;
-
-    @Autowired
-    InstanceRepo instanceRepo;
 
     /**
      * Get all the LedgerRequests.
@@ -53,19 +66,34 @@ public class LedgerRequestDBService {
      */
     @Transactional(readOnly = true)
     public Page<LedgerRequest> findAll(Pageable pageable) {
+        log.debug("Request to get all LedgerRequests");
         return this.ledgerRequestRepo.findAll(pageable);
     }
 
     /**
-     * Get one LedgerRequest by id.
+     * Get one LedgerRequest by ID.
      *
      * @param id the id of the entity
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public LedgerRequest findOne(Long id) throws DataNotFoundException {
-        return Optional.ofNullable(id).map(this.ledgerRequestRepo::findOne)
-                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+    public LedgerRequest findOne(@NotNull Long id) throws DataNotFoundException {
+        log.debug("Request to delete LedgerRequest : {}", id);
+        return this.ledgerRequestRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("No ledger request found for the provided ID", null));
+    }
+
+    /**
+     * Get all the requests by instance domain ID.
+     *
+     * @param domainId the pagination information
+     * @return the list of entities
+     */
+    @Transactional(readOnly = true)
+    public LedgerRequest findOneByDomainID(@NotNull String domainId){
+        log.debug("Request to delete LedgerRequest related to Instance domain ID : {}", domainId);
+        return this.ledgerRequestRepo.findByDomainId(domainId)
+                .orElseThrow(() -> new DataNotFoundException("No ledger request found for the provided domain ID", null));
     }
 
     /**
@@ -75,8 +103,8 @@ public class LedgerRequestDBService {
      * @return the persisted entity
      */
     @Transactional
-    public LedgerRequest save(LedgerRequest request) throws DataNotFoundException {
-        // First of all validate the object
+    public LedgerRequest save(@NotNull LedgerRequest request) throws DataNotFoundException {
+        // First validate the object
         this.validateRequestForSave(request);
 
         // If the submission date is missing
@@ -102,11 +130,11 @@ public class LedgerRequestDBService {
      * @param id the id of the entity
      */
     @Transactional
-    public void delete(Long id) throws DataNotFoundException {
+    public void delete(@NotNull Long id) throws DataNotFoundException {
         if(this.ledgerRequestRepo.existsById(id)) {
             this.ledgerRequestRepo.deleteById(id);
         } else {
-            throw new DataNotFoundException("No ledger request found for the provided ID", null);
+            throw new DataNotFoundException("No LedgerRequest found for the provided ID", null);
         }
     }
 
@@ -118,7 +146,7 @@ public class LedgerRequestDBService {
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
-    public LedgerRequest updateStatus(Long id, LedgerRequestStatus status) throws DataNotFoundException{
+    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status) throws DataNotFoundException{
         return updateStatus(id, status, null);
     }
 
@@ -130,12 +158,11 @@ public class LedgerRequestDBService {
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
-    public LedgerRequest updateStatus(Long id, LedgerRequestStatus status, String reason) throws DataNotFoundException{
-        log.debug("Request to update status of Instance : {}", id);
+    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) throws DataNotFoundException{
+        log.debug("Request to update status of LedgerRequest : {}", id);
 
         // Try to find if the instance does indeed exist
-        LedgerRequest request = Optional.of(id)
-                .map(this.ledgerRequestRepo::findOne)
+        LedgerRequest request = this.ledgerRequestRepo.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("No ledger request found for the provided ID", null));
 
         // Update the instance status
@@ -157,7 +184,7 @@ public class LedgerRequestDBService {
      * @param request the ledger request to be saved
      * @throws DataNotFoundException If fails first phase (Validating existence of instance)
      */
-    public void validateRequestForSave(LedgerRequest request) throws DataNotFoundException {
+    protected void validateRequestForSave(LedgerRequest request) throws DataNotFoundException {
         if(request == null) {
             return;
         }
@@ -165,35 +192,10 @@ public class LedgerRequestDBService {
         // Try to find the instance if an ID of instance is provided
         if(request.getServiceInstance() != null) {
             Optional.of(request.getServiceInstance().getId())
-                    .map(instanceRepo::existsById)
-                    .filter(Boolean.TRUE::equals)
+                    .map(instanceService::findOne)
                     .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+        } else {
+            return;
         }
-        else{
-            return ;
-        }
-    }
-
-    /**
-     * Get all active requests by domain ID.
-     *
-     * @param domainId the pagination information
-     * @return the list of entities
-     */
-    @Transactional(readOnly = true)
-    public List<LedgerRequest> getActiveRequestsByDomainID(String domainId){
-        return this.getAllRequestsByDomainID(domainId);
-    }
-
-    /**
-     * Get all the requests by domain ID.
-     *
-     * @param domainId the pagination information
-     * @return the list of entities
-     */
-    @Transactional(readOnly = true)
-    public List<LedgerRequest> getAllRequestsByDomainID(String domainId){
-        log.debug("Request to get all requests");
-        return this.ledgerRequestRepo.findByDomainId(domainId);
     }
 }
