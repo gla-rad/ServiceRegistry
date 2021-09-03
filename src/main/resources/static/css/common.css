@@ -135,3 +135,14 @@
 .map {
     height: 500px;
 }
+
+/*****************************
+ *        Datatables         *
+ *****************************/
+table.dataTable tbody tr.odd.selected {
+ background-color:#acbad4
+}
+
+table.dataTable tbody tr.even.selected {
+ background-color:#acbad5
+}
