@@ -113,7 +113,7 @@ var columnDefs = [{
 }];
 
 $(document).ready( function () {
-    instancesTable = $('#table_id').DataTable({
+    instancesTable = $('#instancesTable').DataTable({
         processing: true,
         language: {
             processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
@@ -131,7 +131,7 @@ $(document).ready( function () {
             }
         },
         columns: columnDefs,
-        dom: 'Bfrltip',
+        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4 pt-1'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
