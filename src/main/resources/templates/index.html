@@ -24,21 +24,7 @@
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container mt-3">
-                <div class="card shadow" sec:authorize="!isAuthenticated()">
-                    <div class="card-header">
-                        <h2>Welcome to the MCP Service Registry</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <p class="m-2">Please sign-in to access the service facilities.</p>
-                        </div>
-                        <div class="row d-flex justify-content-center">
-                            <div class="btn btn-primary" onclick="window.location.href='/login'">
-                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div th:replace="fragments/general.html :: login-card"></div>
                 <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
                         <h2>Welcome to the MCP Service Registry</h2>
