@@ -250,12 +250,11 @@ class InstanceServiceTest {
      */
     @Test
     void testSaveWithDuplicatedMRNVersion() {
-        doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
-        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findByDomainIdAndVersion(this.existingInstance.getInstanceId(), this.existingInstance.getVersion());
+        doReturn(Optional.of(this.newInstance)).when(this.instanceRepo).findByDomainIdAndVersion(this.newInstance.getInstanceId(), this.newInstance.getVersion());
 
         // Perform the service call
         assertThrows(DuplicateDataException.class, () ->
-                this.instanceService.save(this.existingInstance)
+                this.instanceService.save(this.newInstance)
         );
 
         // And also that no saving calls took place in the repository
