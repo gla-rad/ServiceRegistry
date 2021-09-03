@@ -44,10 +44,14 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Optional;
 
 /**
- * MSR ledger service implementation for interaction between MSR and the MSR ledger
+ * MSR ledger service implementation for interaction between MSR and the MSR
+ * ledger.
+ *
+ * This service is optional:
+ *  To disable add the "ledger.enabled=false" in the application properties.
  *
  * @author Jinki Jung (email: jinki@dmc.international)
  */
@@ -63,14 +67,15 @@ public class LedgerRequestService {
     @Value("${info.msr.url:Unknown}")
     private String msrUrl;
 
-    private Web3j web3j;
-
-    private MsrContract msrContract;
-
-    private boolean isLedgerConnected = false;
-
+    /**
+     * The Ledger Request Database Service.
+     */
     @Autowired
     private LedgerRequestDBService ledgerRequestDBService;
+
+    // MSR Ledger Smart Contract
+    protected Web3j web3j;
+    protected MsrContract msrContract;
 
     @PostConstruct
     public void init() throws Exception {
@@ -89,7 +94,6 @@ public class LedgerRequestService {
         String clientVersion = web3ClientVersion.getWeb3ClientVersion();
         if (msrContract != null) {
             log.info("Web3j "+ clientVersion + ": successfully connected to the ledger");
-            isLedgerConnected = true;
         }
     }
 
@@ -98,16 +102,10 @@ public class LedgerRequestService {
         web3j.shutdown();
     }
 
-    public Page<LedgerRequest> findAll(Pageable pageable) {
-        log.debug("Request to get all requests");
-
-        return ledgerRequestDBService.findAll(pageable);
-    }
-
     public LedgerRequest registerInstanceToLedger(Long id) throws DataNotFoundException, MethodNotAllowedException, McpBasicRestException {
         LedgerRequest ledgerRequest = ledgerRequestDBService.findOne(id);
 
-        if (!isLedgerConnected) {
+        if (!this.isMsrLedgerConnected()) {
             throw new McpBasicRestException(HttpStatus.NOT_FOUND, MsrErrorConstant.LEDGER_NOT_CONNECTED, null);
         }
 
@@ -157,16 +155,15 @@ public class LedgerRequestService {
     }
 
     /**
-     * Save a LedgerRequest.
+     * Get all the LedgerRequests.
      *
-     * @param request the entity to save
-     * @return the persisted entity
+     * @param pageable the pagination information
+     * @return the list of entities
      */
-    @Transactional
-    public LedgerRequest save(LedgerRequest request) throws DataNotFoundException {
-        log.debug("Request to save LedgerRequest : {}", request);
-
-        return ledgerRequestDBService.save(request);
+    @Transactional(readOnly = true)
+    public Page<LedgerRequest> findAll(Pageable pageable) {
+        log.debug("Request to get all LedgerRequests");
+        return ledgerRequestDBService.findAll(pageable);
     }
 
     /**
@@ -175,10 +172,22 @@ public class LedgerRequestService {
      * @param id the id of the entity
      * @return the entity
      */
+    @Transactional(readOnly = true)
     public LedgerRequest findOne(Long id) throws DataNotFoundException {
         log.debug("Request to get a LedgerRequest : {}", id);
-
         return ledgerRequestDBService.findOne(id);
+    }
+
+    /**
+     * Save a LedgerRequest.
+     *
+     * @param request the entity to save
+     * @return the persisted entity
+     */
+    @Transactional
+    public LedgerRequest save(LedgerRequest request) throws DataNotFoundException {
+        log.debug("Request to save LedgerRequest : {}", request);
+        return ledgerRequestDBService.save(request);
     }
 
     /**
@@ -187,7 +196,7 @@ public class LedgerRequestService {
      * @param id the id of the entity
      */
     @Transactional(propagation = Propagation.NESTED)
-    public void delete(Long id) throws DataNotFoundException {
+    public void delete(Long id) {
         log.debug("Request to delete LedgerRequest : {}", id);
         this.ledgerRequestDBService.delete(id);
     }
@@ -197,13 +206,25 @@ public class LedgerRequestService {
      *
      * @param instanceId the id of the entity
      */
-    public void deleteByInstanceId(String instanceId) throws DataNotFoundException {
+    @Transactional(propagation = Propagation.NESTED)
+    public void deleteByInstanceId(String instanceId) {
         log.debug("Request to delete LedgerRequest related to instance ID : {}", instanceId);
-        List<LedgerRequest> requests = this.ledgerRequestDBService.getAllRequestsByDomainID(instanceId);
-        if (requests != null) {
-            for (LedgerRequest lr : requests) {
-                this.ledgerRequestDBService.delete(lr.getId());
-            }
+        Optional.of(instanceId)
+                .map(this.ledgerRequestDBService::findOneByDomainID)
+                .map(LedgerRequest::getId)
+                .ifPresent(this::delete);
+    }
+
+    /**
+     * Returns whether there is a valid connection to the MSR ledger.
+     *
+     * @return whether there is a valid connection to the MSR led
+     */
+    protected boolean isMsrLedgerConnected() {
+        try {
+            return this.msrContract != null && this.msrContract.isValid();
+        } catch (IOException e) {
+            return false;
         }
     }
 }
