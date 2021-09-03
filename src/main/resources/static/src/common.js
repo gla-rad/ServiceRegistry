@@ -13,6 +13,8 @@ $(() => {
 function showError(errorMsg) {
     if(!errorMsg || errorMsg.length === 0) {
         errorMsg = "An unknown error occurred!";
+    } else {
+        errorMsg = errorMsg.replace(/^(error\.)/,"");
     }
     $('#error-dialog').modal('show');
     $('#error-dialog .modal-body').html(`<p class="text-danger">${errorMsg}</p>`);
