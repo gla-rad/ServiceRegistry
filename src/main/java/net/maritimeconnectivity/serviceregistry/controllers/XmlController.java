@@ -193,8 +193,13 @@ public class XmlController {
         try {
             return ResponseEntity.ok()
                     .body(this.xmlService.validate(content, schema));
-        } catch (JAXBException | DataNotFoundException ex) {
+        } catch (DataNotFoundException ex) {
             return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("xml", ex.getMessage(), ex.toString()))
+                    .build();
+        }  catch (JAXBException ex) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("xml", ex.getCause().getMessage(), ex.toString()))
                     .build();
         }
     }

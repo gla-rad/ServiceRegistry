@@ -2,6 +2,7 @@
  * Global variables
  */
 var instancesTable = undefined;
+var newInstance = true;
 
 /**
  * The Loads Table Column Definitions
@@ -190,18 +191,7 @@ $(document).ready( function () {
                 success: success,
                 error: error
             });
-        },
-        onValidateXml: function (datatable, rowdata, success, error) {
-            $.ajax({
-                url: `api/xmls/validate/INSTANCE`,
-                type: 'POST',
-                contentType: 'application/xml',
-                dataType: 'json',
-                data: rowdata,
-                success: success,
-                error: error
-            });
-        },
+        }
     });
 
     // We also need to link the station areas toggle button with the the modal
@@ -223,26 +213,12 @@ $(document).ready( function () {
     // call back to the service to save the entry.
     $('#instanceEditPanel').on('click', '.btn-ok', (e) => {
         var $modalDiv = $(e.delegateTarget);
-        var rowData = {}
-        var create = true;
-
-        // Load the column definitions
         var columnDefData = columnDefs.map((e) => e["data"]);
+        var rowData = initialiseData();
 
-        // Initialise some of the row data fields with empty values
-        rowData["comment"] = "";
-        rowData["instanceAsDoc"] = null;
-        rowData["geometryContentType"] = null;
-        rowData["designs"] = {};
-        rowData["specifications"] = {};
-        rowData["geometryJson"] = {};
-        rowData["docs"] = [];
-        rowData["instanceAsXml"] = { name: "xml", comment: "no comment", content: "", contentContentType: "G1128 Instance Specification XML" };
-
-        // If a row has been selected load the data for an update
-        if(instancesTable.row({selected : true}).length != 0) {
-            rowData = instancesTable.row({selected : true}).data();
-            create = false;
+        // If an existing row has been selected, copy the data for an update
+        if(!newInstance && instancesTable.row({selected : true}).length != 0) {
+            rowData = {...instancesTable.row({selected : true}).data()};
         }
 
         // Getting the inputs from the modal
@@ -252,27 +228,21 @@ $(document).ready( function () {
 
         // Augmenting xml content on the data
         var xmlContent = $modalDiv.find("#xml-input").val();
-        if (xmlContent.length>0){
+        if (xmlContent && xmlContent.length>0) {
             rowData["instanceAsXml"]["content"] = xmlContent;
-        } else {
-            rowData["instanceAsXml"]["content"] = {
-                name: "xml",
-                comment: "no comment",
-                content: "", contentContentType: "G1128 Instance Specification XML"
-            };
         }
 
         // And call back to the datatables to handle the create/update
-        if(create) {
+        if(newInstance) {
             instancesTable.context[0].oInit.onAddRow(instancesTable,
                     rowData,
                     (data) => { instancesTable.row.add(data).draw(false); },
-                    (data) => { showError(data.responseJSON.message) });
+                    (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); });
         } else {
             instancesTable.context[0].oInit.onEditRow(instancesTable,
                     rowData,
                     (data,b,c,d,e) => { instancesTable.row({selected : true}).data(data); instancesTable.draw('page'); },
-                    (data) => { showError(data.responseJSON.message) });
+                    (data) => { showError(data.getResponseHeader('X-mcsrApp-error')) });
         }
     });
 });
@@ -311,7 +281,10 @@ function onValidateXml($modalDiv) {
         },
         error: (response, status, more) => {
             $modalDiv.removeClass('loading');
-            showError("The provided XML does not seems to be G-1128 compliant!");
+            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
+                response.getResponseHeader('X-mcsrApp-error') :
+                "Error while trying to validate whether the XML is G-1128 compliant!";
+            showError(errorMsg);
         }
     });
 }
@@ -321,7 +294,14 @@ function onValidateXml($modalDiv) {
  * so that new entries are not polluted by old data.
  */
 function clearInstanceEditPanel() {
+    // Do the form
     $('form[name="instanceEditPanelForm"]').trigger("reset");
+
+    // Don't forget the XML content
+    $("#instanceEditPanel").find("#xml-input").val(null);
+
+    // Mark the a new instance can be created through the edit dialog
+    newInstance = true;
 }
 
 /**
@@ -334,6 +314,7 @@ function loadInstanceEditPanel() {
 
     // If a row has been selected load the data into the form
     if(instancesTable.row({selected : true})) {
+        // Do the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
              $(this).val(rowData[$(this).attr('id')]);
@@ -342,23 +323,51 @@ function loadInstanceEditPanel() {
         // Augmenting xml content on the data
         $("#instanceEditPanel").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
     }
+
+    // Make that an existing instance has been loaded
+    newInstance = false;
+}
+
+/**
+ * This helper function returns a band new blank instance object to be used
+ * for generating new entries.
+ */
+function initialiseData() {
+    // Create the new object
+    var newRowData = {}
+
+    // Initialise some of the row data fields with empty values
+    newRowData["comment"] = "";
+    newRowData["instanceAsDoc"] = null;
+    newRowData["geometryContentType"] = null;
+    newRowData["designs"] = {};
+    newRowData["specifications"] = {};
+    newRowData["geometryJson"] = {};
+    newRowData["docs"] = [];
+    newRowData["instanceAsXml"] = {
+        name: "xml",
+        comment: "no comment", content: "",
+        contentContentType: "G1128 Instance Specification XML"
+    };
+
+    // Return the object
+    return newRowData;
 }
 
 /**
  * This helper function corrects the type of data being read from the instance
  * dialog form since most of it comes back as a string.
  */
-function alignData(rowDataArray, id, value, columnDefs){
-    if (id && columnDefs.includes(id)){
-        if (id === 'geometryJson'){
-            rowDataArray[id] = JSON.stringify(value);
+function alignData(rowData, field, value, columnDefs){
+    if (field && columnDefs.includes(field)){
+        if (field === 'id'){
+            rowData[field] = parseInt(value);
         }
-        else if (id === 'id'){
-            rowDataArray[id] = parseInt(value);
-        }
-        else{
-            rowDataArray[id] = value;
+        else if(field.toUpperCase().endsWith("JSON")) {
+            rowData[field] = JSON.stringify(value);
+        } else{
+            rowData[field] = value;
         }
     }
-    return rowDataArray;
+    return rowData;
 }

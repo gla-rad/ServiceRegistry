@@ -328,7 +328,7 @@ public class InstanceService {
         // Else check the instance exists or not
         else if(instance.getInstanceId() != null && instance.getVersion() != null) {
             this.instanceRepo.findByDomainIdAndVersion(instance.getInstanceId(), instance.getVersion())
-                    .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found: ", null); });
+                    .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found.", null); });
         }
 
         try {
