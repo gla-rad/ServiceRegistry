@@ -2,6 +2,7 @@
  * Global variables
  */
 var instancesTable = undefined;
+var instanceMap = undefined;
 var newInstance = true;
 
 /**
@@ -113,7 +114,7 @@ var columnDefs = [{
     searchable: false
 }];
 
-$(document).ready( function () {
+$(() => {
     instancesTable = $('#instancesTable').DataTable({
         processing: true,
         language: {
@@ -159,7 +160,16 @@ $(document).ready( function () {
             text: '<i class="fas fa-trash-alt"></i>',
             titleAttr: 'Delete Instance',
             name: 'delete' // do not change name
-        }],
+        }, {
+            extend: 'selected', // Bind to Selected row
+            text: '<i class="fas fa-map-marked-alt"></i>',
+            titleAttr: 'Instance Coverage',
+            name: 'instance-coverage', // do not change name
+            className: 'instance-coverage-toggle',
+            action: (e, dt, node, config) => {
+                loadInstanceCoverage(e, dt, node, config);
+            }
+         }],
         onAddRow: function (datatable, rowdata, success, error) {
             $.ajax({
                 url: '/api/instances',
@@ -194,9 +204,9 @@ $(document).ready( function () {
         }
     });
 
-    // We also need to link the station areas toggle button with the the modal
-    // panel so that by clicking the button the panel pops up. It's easier done with
-    // jQuery.
+    // We also need to link the instance create/edit toggle buttons with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
     instancesTable.buttons('.instance-edit-panel-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceEditPanel" });
@@ -244,6 +254,55 @@ $(document).ready( function () {
                     (data,b,c,d,e) => { instancesTable.row({selected : true}).data(data); instancesTable.draw('page'); },
                     (data) => { showError(data.getResponseHeader('X-mcsrApp-error')) });
         }
+    });
+
+    // We also need to link the instance coverage toggle button with the the modal
+    // panel so that by clicking the button the panel pops up. It's easier done with
+    // jQuery.
+    instancesTable.buttons('.instance-coverage-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceCoveragePanel" });
+
+    // Now also initialise the instance map before we need it
+    instanceMap = L.map('instanceMap').setView([54.910, -3.432], 5);
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(instanceMap);
+
+    // FeatureGroup is to store editable layers
+    drawnItems = new L.FeatureGroup();
+    instanceMap.addLayer(drawnItems);
+
+    // Initialise the draw toolbar
+    drawControl = new L.Control.Draw({
+        draw: {
+            marker: false,
+            polyline: false,
+            polygon: true,
+            rectangle: true,
+            circle: false,
+            circlemarker: false,
+        },
+        edit: {
+            featureGroup: drawnItems,
+            remove: true
+        }
+    });
+
+    // Handle the leaflet draw create events
+    instanceMap.on('draw:created', function (e) {
+        var type = e.layerType;
+        var layer = e.layer;
+
+        // Do whatever else you need to. (save to db, add to map etc)
+        drawnItems.addLayer(layer);
+    });
+
+    // Invalidate the map size on show to fix the presentation
+    $('#instanceCoveragePanel').on('shown.bs.modal', function() {
+        setTimeout(function() {
+            instanceMap.invalidateSize();
+        }, 10);
     });
 });
 
@@ -326,6 +385,44 @@ function loadInstanceEditPanel() {
 
     // Make that an existing instance has been loaded
     newInstance = false;
+}
+
+/**
+ * This function will load the station geometry onto the drawnItems variable
+ * so that it is shown in the station maps layers.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The AtoN type table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function loadInstanceCoverage(event, table, button, config) {
+    var idx = table.cell('.selected', 0).index();
+    var data = instancesTable.row({selected : true}).data();
+    var geometry = data.geometry;
+
+    // Refresh the stations map control - For now leave disabled
+    //instanceMap.removeControl(drawControl);
+    //instanceMap.addControl(drawControl);
+
+    // Recreate the drawn items feature group
+    drawnItems.clearLayers();
+    if(geometry) {
+        var geomLayer = L.geoJson(geometry);
+        addNonGroupLayers(geomLayer, drawnItems);
+        instanceMap.setView(geomLayer.getBounds().getCenter(), 5);
+    }
+}
+
+// Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
+function addNonGroupLayers(sourceLayer, targetGroup) {
+    if (sourceLayer instanceof L.LayerGroup) {
+        sourceLayer.eachLayer(function(layer) {
+            addNonGroupLayers(layer, targetGroup);
+        });
+    } else {
+        targetGroup.addLayer(sourceLayer);
+    }
 }
 
 /**

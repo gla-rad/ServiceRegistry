@@ -2,6 +2,15 @@ body {
     font-size: medium;
 }
 
+.search-overlay {
+    position: absolute;
+    top: 80px;
+    right: 20px;
+    z-index: 2;
+    max-height: 80%;
+    overflow: auto;
+}
+
 /** Ribbon **/
 .ribbon {
     background-color: #a00;
@@ -136,7 +145,14 @@ body {
  *           Maps            *
  *****************************/
 .map {
-    height: 500px;
+    height: 650px;
+}
+
+.map-container {
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    position: relative;
 }
 
 /*****************************
