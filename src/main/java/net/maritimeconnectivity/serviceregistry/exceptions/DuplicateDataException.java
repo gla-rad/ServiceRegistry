@@ -17,25 +17,26 @@
 package net.maritimeconnectivity.serviceregistry.exceptions;
 
 /**
- * The Data Not Found Exception.
- *
- * A generic runtime exception to be thrown whenever some necessary data is not
- * detected.
+ * The Duplicate Data Exception.
+ * <p>
+ * A generic runtime exception to be thrown whenever important data is about
+ * to be duplicated.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class DataNotFoundException extends RuntimeException {
+public class DuplicateDataException extends RuntimeException {
 
-    private static final long serialVersionUID = -2171229941490315103L;
+    private static final long serialVersionUID = -2171229941490315104L;
 
     /**
-     * Instantiates a new Data Not Found exception.
+     * Instantiates a new Duplicate data exception.
      *
      * @param message the message
      * @param t       the t
      */
-    public DataNotFoundException(String message, Throwable t) {
+    public DuplicateDataException(String message, Throwable t) {
         super(message, t);
     }
 
 }
+

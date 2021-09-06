@@ -28,7 +28,6 @@ import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
@@ -113,7 +112,7 @@ public class InstanceController {
      *
      * @param instance the instance to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance,
-     * or with status 400 (Bad Request) if the instance has already an ID, or coudln't be created
+     * or with status 400 (Bad Request) if the instance has already an ID, or couldn't be created
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -190,12 +189,8 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
-        } catch (DuplicateKeyException ex) {
-            log.error("Duplicated instance with the same MRN and version found: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
         } catch (Exception ex) {
-            log.error("Unknown error: ", ex);
+            log.error("Saving error: ", ex);
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
@@ -237,12 +232,8 @@ public class InstanceController {
             log.error("Error parsing geometry: ", ex);
             return ResponseEntity.badRequest()
                     .build();
-        } catch (DuplicateKeyException ex) {
-            log.error("Duplicated instance with the same MRN and version found: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
         } catch (Exception ex) {
-            log.error("Unknown error: ", ex);
+            log.error("Update status error: ", ex);
             return ResponseEntity.badRequest()
                     .build();
         }

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
+import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -30,6 +31,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.Query;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
@@ -89,7 +91,7 @@ public class InstanceService {
     /**
      * The LedgerRequest Service.
      */
-    @Autowired
+    @Autowired(required = false)
     private LedgerRequestService ledgerRequestService;
 
     /**
@@ -164,7 +166,7 @@ public class InstanceService {
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException, DuplicateKeyException {
+    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
         // First of all validate the object
@@ -181,16 +183,16 @@ public class InstanceService {
         if(instance.getId() == null) {
             instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
         }
+
         // If the publication date is missing
-        if(instance.getPublishedAt() == null || instance.getPublishedAt().length() == 0) {
+        if(StringUtils.isBlank(instance.getPublishedAt())) {
             instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         }
 
         // And don't forget the last update
-        if(instance.getLastUpdatedAt() == null || instance.getLastUpdatedAt().length() == 0) {
+        if(StringUtils.isBlank(instance.getLastUpdatedAt())) {
             instance.setLastUpdatedAt(instance.getPublishedAt());
-        }
-        else{
+        } else {
             instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
         }
 
@@ -206,15 +208,14 @@ public class InstanceService {
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
-        Instance instance = findOne(id);
-        if(instance != null) {
-            // remove the corresponding ledger requests before instance removal
-            this.ledgerRequestService.deleteByInstanceId(instance.getInstanceId());
-
-            this.instanceRepo.deleteById(id);
-        } else {
-            throw new DataNotFoundException("No instance found for the provided ID", null);
-        }
+        this.instanceRepo.findById(id)
+                .ifPresentOrElse(i -> {
+                    Optional.ofNullable(this.ledgerRequestService)
+                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getInstanceId()));
+                    this.instanceRepo.deleteById(i.getId());
+                }, () -> {
+                    throw new DataNotFoundException("No instance found for the provided ID", null);
+                });
     }
 
     /**
@@ -242,7 +243,7 @@ public class InstanceService {
                 serviceInstance.setStatus(status);
                 instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
                 // Save XML
-                xmlService.save(instanceXml);
+                this.xmlService.save(instanceXml);
             }
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
@@ -275,13 +276,11 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Instance findByDomainIdAndVersion(String domainId, String version) {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
-        try {
-            return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version);
-        } catch (Exception e) {
-            log.debug("Could not find instance for domain id {} and version {}", domainId, version);
-            log.error(e.getMessage());
-        }
-        return null;
+        return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version)
+                .orElseGet(() -> {
+                    log.debug("Could not find instance for domain id {} and version {}", domainId, version);
+                    return null;
+                });
     }
 
     /**
@@ -293,15 +292,12 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Instance findLatestVersionByDomainId(String domainId) {
         log.debug("Request to get Instance by domain id {}", domainId);
-        try {
-            return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
+        return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
                 .max(Comparator.comparing(i -> new DefaultArtifactVersion(i.getVersion())))
-                .orElseThrow(() -> new DataNotFoundException("No instance found!", null));
-        } catch (Exception e) {
-            log.debug("Could not find a live instance for domain id {}", domainId);
-            log.error(e.getMessage());
-        }
-        return null;
+                .orElseGet(() -> {
+                    log.debug("Could not find a live instance for domain id {}", domainId);
+                    return null;
+                });
     }
 
     /**
@@ -317,7 +313,7 @@ public class InstanceService {
      * @throws XMLValidationException If fails first phase (Validating and parsing XML)
      * @throws GeometryParseException If fails second phase (Parsing geo data)
      */
-    public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException, DataNotFoundException {
+    public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException {
         if(instance == null) {
             return;
         }
@@ -329,12 +325,10 @@ public class InstanceService {
                     .filter(Boolean.TRUE::equals)
                     .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
         }
-
-        // Check the instance exists or not
-        if(instance.getInstanceId() != null && instance.getVersion() != null) {
-            if (this.instanceRepo.findByDomainIdAndVersionEagerRelationships(instance.getInstanceId(), instance.getVersion()) != null){
-                throw new DuplicateKeyException("Duplicated instance with the same MRN and version found: ", null);
-            }
+        // Else check the instance exists or not
+        else if(instance.getInstanceId() != null && instance.getVersion() != null) {
+            this.instanceRepo.findByDomainIdAndVersion(instance.getInstanceId(), instance.getVersion())
+                    .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found.", null); });
         }
 
         try {
