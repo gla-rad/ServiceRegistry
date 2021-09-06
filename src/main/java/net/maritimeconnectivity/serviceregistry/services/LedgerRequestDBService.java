@@ -30,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -90,10 +91,9 @@ public class LedgerRequestDBService {
      * @return the list of entities
      */
     @Transactional(readOnly = true)
-    public LedgerRequest findOneByDomainID(@NotNull String domainId){
+    public List<LedgerRequest> findByDomainID(@NotNull String domainId){
         log.debug("Request to delete LedgerRequest related to Instance domain ID : {}", domainId);
-        return this.ledgerRequestRepo.findByDomainId(domainId)
-                .orElseThrow(() -> new DataNotFoundException("No ledger request found for the provided domain ID", null));
+        return this.ledgerRequestRepo.findByDomainId(domainId);
     }
 
     /**
