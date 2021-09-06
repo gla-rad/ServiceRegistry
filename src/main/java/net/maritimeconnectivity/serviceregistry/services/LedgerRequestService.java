@@ -44,6 +44,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -210,9 +211,10 @@ public class LedgerRequestService {
     public void deleteByInstanceId(String instanceId) {
         log.debug("Request to delete LedgerRequest related to instance ID : {}", instanceId);
         Optional.of(instanceId)
-                .map(this.ledgerRequestDBService::findOneByDomainID)
-                .map(LedgerRequest::getId)
-                .ifPresent(this::delete);
+                .map(this.ledgerRequestDBService::findByDomainID)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(LedgerRequest::getId);
     }
 
     /**
