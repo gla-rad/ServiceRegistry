@@ -38,8 +38,8 @@ public interface LedgerRequestRepo extends JpaRepository<LedgerRequest, Long> {
      */
     @Query("select distinct request " +
             "from LedgerRequest request " +
-            "left join fetch request.serviceInstance serviceInstance" +
-            "where serviceInstance.instanceId = :instanceId")
-    Optional<LedgerRequest> findByDomainId(@Param("domainId") String domainId);
+            "left join fetch request.serviceInstance serviceInstance " +
+            "where serviceInstance.instanceId = :domainId")
+    List<LedgerRequest> findByDomainId(@Param("domainId") String domainId);
 
 }
