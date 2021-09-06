@@ -19,35 +19,21 @@
 <head>
     <th:block th:include="fragments/general.html :: headerfiles"></th:block>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.0/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.bootstrap4.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.bootstrap5.min.css" />
 </head>
 <body>
     <div class="sky-bg d-flex flex-column vh-100">
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container-fluid mt-3">
-                <div class="card shadow" sec:authorize="!isAuthenticated()">
-                    <div class="card-header">
-                        <h2>Welcome</h2>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="row">
-                            <p class="m-2">Please sign-in to access the service facilities.</p>
-                        </div>
-                        <div class="row d-flex justify-content-center">
-                            <div class="btn btn-primary" onclick="window.location.href='/login'">
-                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div th:replace="fragments/general.html :: login-card"></div>
                 <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
                         <h2>Service Registry Management Dashboard</h2>
                     </div>
                     <div class="card-body">
                         <div class="col-12 m-1">
-                            <table id="instancesTable" class="table table-striped table-bordered table-sm row-border hover w-100">
+                            <table id="instancesTable" class="table table-sm table-striped row-border hover w-100">
                             </table>
                         </div>
                     </div>
@@ -60,9 +46,7 @@
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title" id="instanceEditPanelHeader">G-1128 Instance Definition</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times</span>
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <form name="instanceEditPanelForm" id="instanceEditPanelForm" role='form'>
@@ -280,13 +264,13 @@
                     </div>
                     <div class="modal-footer">
                         <div class="float-right">
-                            <button type="button" class="btn btn-primary btn-ok" data-dismiss="modal" title="Save Changes">
-                                <i class="fas fa-save"></i>
-                                <span class="btn-label"> Save</span>
-                            </button>
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal" title="Cancel Changes">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Cancel Changes">
                                 <i class="fas">&times</i>
                                 <span class="btn-label"> Close</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Changes">
+                                <i class="fas fa-save"></i>
+                                <span class="btn-label"> Save</span>
                             </button>
                         </div>
                     </div>
@@ -299,9 +283,9 @@
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <script src="https://cdn.datatables.net/1.11.0/js/jquery.dataTables.js" ></script>
-    <script src="https://cdn.datatables.net/1.11.0/js/dataTables.bootstrap4.min.js" ></script>
+    <script src="https://cdn.datatables.net/1.11.0/js/dataTables.bootstrap5.min.js" ></script>
     <script src="https://cdn.datatables.net/buttons/2.0.0/js/dataTables.buttons.min.js" ></script>
-    <script src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.bootstrap4.min.js" ></script>
+    <script src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.bootstrap5.min.js" ></script>
     <script src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.html5.min.js" ></script>
     <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.js" ></script>
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>

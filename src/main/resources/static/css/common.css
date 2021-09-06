@@ -1,5 +1,8 @@
-/** Ribbon **/
+body {
+    font-size: medium;
+}
 
+/** Ribbon **/
 .ribbon {
     background-color: #a00;
     box-shadow: 0 0 10px #888;
