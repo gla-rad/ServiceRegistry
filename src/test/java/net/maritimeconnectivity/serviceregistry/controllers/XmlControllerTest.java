@@ -359,7 +359,7 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlDesignFails() throws Exception {
-        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(G1128Schemas.DESIGN));
+        doThrow(new JAXBException("JAXBException", new Exception("With a cause"))).when(this.xmlService).validate(any(), eq(G1128Schemas.DESIGN));
         String xml = "<serviceDesign></serviceDesign>";
 
         // Perform the MVC request
@@ -395,7 +395,7 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlServiceFails() throws Exception {
-        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(G1128Schemas.SERVICE));
+        doThrow(new JAXBException("JAXBException", new Exception("With a cause"))).when(this.xmlService).validate(any(), eq(G1128Schemas.SERVICE));
         String xml = "<serviceSpecification></serviceSpecification>";
 
         // Perform the MVC request
@@ -431,7 +431,7 @@ class XmlControllerTest {
      */
     @Test
     void testValidateXmlInstanceFails() throws Exception {
-        doThrow(JAXBException.class).when(this.xmlService).validate(any(), eq(G1128Schemas.INSTANCE));
+        doThrow(new JAXBException("JAXBException", new Exception("With a cause"))).when(this.xmlService).validate(any(), eq(G1128Schemas.INSTANCE));
         String xml = "<serviceInstance></serviceInstance>";
 
         // Perform the MVC request
