@@ -169,7 +169,7 @@ public class InstanceService {
     public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
-        // First of all validate the object
+        // First, validate the object
         this.validateInstanceForSave(instance);
 
         // Don't accept empty geometry value, set whole earth coverage
@@ -201,7 +201,7 @@ public class InstanceService {
     }
 
     /**
-     * Delete the  instance by id.
+     * Delete the instance by id.
      *
      * @param id the id of the entity
      */
@@ -211,7 +211,7 @@ public class InstanceService {
         this.instanceRepo.findById(id)
                 .ifPresentOrElse(i -> {
                     Optional.ofNullable(this.ledgerRequestService)
-                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getInstanceId()));
+                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getId()));
                     this.instanceRepo.deleteById(i.getId());
                 }, () -> {
                     throw new DataNotFoundException("No instance found for the provided ID", null);
