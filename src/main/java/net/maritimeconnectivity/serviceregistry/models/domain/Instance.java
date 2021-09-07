@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -640,7 +641,7 @@ public class Instance implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Instance)) return false;
         Instance instance = (Instance) o;
-        return id.equals(instance.id);
+        return Objects.equals(id, instance.id);
     }
 
     /**
@@ -680,6 +681,20 @@ public class Instance implements Serializable {
                 ", imo='" + imo + '\'' +
                 ", serviceType='" + serviceType + '\'' +
                 '}';
+    }
+
+    /**
+     * Returns the comma separated keywords of the instance as a list of
+     * strings.
+     *
+     * @return The list of keywords
+     */
+    @JsonIgnore
+    public List<String> getKeywordsList() {
+        return Optional.ofNullable(this.keywords)
+                .map(keywords -> keywords.split(" "))
+                .map(Arrays::asList)
+                .orElse(Collections.emptyList());
     }
 
 }

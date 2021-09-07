@@ -20,7 +20,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -31,15 +30,14 @@ import java.util.Optional;
 public interface LedgerRequestRepo extends JpaRepository<LedgerRequest, Long> {
 
     /**
-     * Find by domain ID.
+     * Find by instance ID.
      *
-     * @param domainId the domain ID
+     * @param instanceId the instance ID
      * @return the list
      */
     @Query("select distinct request " +
             "from LedgerRequest request " +
-            "left join fetch request.serviceInstance serviceInstance " +
-            "where serviceInstance.instanceId = :domainId")
-    List<LedgerRequest> findByDomainId(@Param("domainId") String domainId);
+            "where request.serviceInstance.id = :instanceId")
+    Optional<LedgerRequest> findByInstanceId(@Param("instanceId") Long instanceId);
 
 }

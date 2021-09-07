@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.McpBasicRestException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -27,6 +28,7 @@ import net.maritimeconnectivity.serviceregistry.services.LedgerRequestService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,12 +44,18 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/ledgerrequests")
 @Slf4j
-@ConditionalOnProperty(value = "ledger.enabled", matchIfMissing = true)
+@ConditionalOnBean(SmartContractProvider.class)
 public class LedgerRequestController {
 
+    /**
+     * The Ledger Request Service.
+     */
     @Autowired
     private LedgerRequestService ledgerRequestService;
 
+    /**
+     * The Instance Service.
+     */
     @Autowired
     private InstanceService instanceService;
 
