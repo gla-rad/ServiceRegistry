@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.data;
+package net.maritimeconnectivity.serviceregistry.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -24,7 +24,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * <p/>
  * To allow for a more compact JSON serialization, the VO's do not serialize null properties.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(value = "stackTrace", ignoreUnknown = true)
 @JsonInclude(value = JsonInclude.Include.NON_NULL)
 public interface JsonSerializable {
+
 }

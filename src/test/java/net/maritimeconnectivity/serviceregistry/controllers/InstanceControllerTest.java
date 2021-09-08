@@ -31,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,13 +47,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
@@ -205,7 +201,7 @@ class InstanceControllerTest {
     @Test
     void testGetInstanceNotFound() throws Exception {
         Long id = 0L;
-        doThrow(DataNotFoundException.class).when(this.instanceService).findOne(any());
+        doThrow(new DataNotFoundException()).when(this.instanceService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/instances/{id}", id))
@@ -353,7 +349,7 @@ class InstanceControllerTest {
      */
     @Test
     void testDeleteInstanceNotFound() throws Exception {
-        doThrow(DataNotFoundException.class).when(this.instanceService).delete(any());
+        doThrow(new DataNotFoundException()).when(this.instanceService).delete(any());
 
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/instances/{id}", this.existingInstance.getId()))

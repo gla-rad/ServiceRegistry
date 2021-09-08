@@ -109,7 +109,7 @@ public class XmlService {
      * @param schema the G1128 schema to validate the content with
      * @return the generated G1128 specification object
      */
-    public Object validate(String content, G1128Schemas schema) throws JAXBException, DataNotFoundException {
+    public Object validate(String content, G1128Schemas schema) throws JAXBException {
         // Make sure we have a valid G1128 schema class to work with
         Class schemaClass = Optional.of(schema)
                 .map(G1128Schemas::getSchemaClass)

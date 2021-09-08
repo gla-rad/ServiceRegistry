@@ -19,27 +19,30 @@ package net.maritimeconnectivity.serviceregistry.services;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.exceptions.McpBasicRestException;
+import net.maritimeconnectivity.serviceregistry.exceptions.LedgerConnectionException;
+import net.maritimeconnectivity.serviceregistry.exceptions.LedgerRegistrationError;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.repos.LedgerRequestRepo;
 import net.maritimeconnectivity.serviceregistry.utils.EntityUtils;
+import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
 import net.maritimeconnectivity.serviceregistry.utils.MsrErrorConstant;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.server.MethodNotAllowedException;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 import java.util.Optional;
+
+import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.peek;
 
 /**
  * Service Implementation for managing Ledger Requests in the database.
@@ -92,9 +95,8 @@ public class LedgerRequestService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public LedgerRequest findOne(@NotNull Long id) throws DataNotFoundException {
+    public LedgerRequest findOne(@NotNull Long id) {
         log.debug("Request to delete LedgerRequest : {}", id);
-        log.info(this.smartContractProvider.isMsrContractConnected()+ "");
         return this.ledgerRequestRepo.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID {}", id), null));
     }
@@ -119,7 +121,7 @@ public class LedgerRequestService {
      * @return the persisted entity
      */
     @Transactional
-    public LedgerRequest save(@NotNull LedgerRequest request) throws DataNotFoundException {
+    public LedgerRequest save(@NotNull LedgerRequest request) {
         // First validate the object
         this.validateRequestForSave(request);
 
@@ -178,7 +180,19 @@ public class LedgerRequestService {
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
-    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) throws DataNotFoundException{
+    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status) {
+        return updateStatus(id, status, null);
+    }
+
+    /**
+     * Update the status of LedgerRequest by id.
+     *
+     * @param id     the id of the entity
+     * @param status the status of the entity
+     * @throws Exception any exceptions thrown while updating the status
+     */
+    @Transactional
+    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) {
         log.debug("Request to update status of LedgerRequest : {}", id);
 
         // Try to find if the instance does indeed exist
@@ -196,19 +210,6 @@ public class LedgerRequestService {
     }
 
     /**
-     * Update the status of LedgerRequest by id.
-     *
-     * @param id     the id of the entity
-     * @param status the status of the entity
-     * @throws Exception any exceptions thrown while updating the status
-     */
-    @Transactional
-    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status) throws DataNotFoundException{
-        return updateStatus(id, status, null);
-    }
-
-
-    /**
      * Performs the registration of a local service instance to the global MSR
      * ledger if that is currently activates and connected. Note that this is
      * the primary goal of this service, and without the smart contract that
@@ -216,54 +217,30 @@ public class LedgerRequestService {
      *
      * @param id    The ID of the entity
      * @return The updated ledger request pending the result
-     * @throws MethodNotAllowedException
-     * @throws McpBasicRestException
      */
-    public LedgerRequest registerInstanceToLedger(Long id) throws MethodNotAllowedException, McpBasicRestException {
-        LedgerRequest ledgerRequest = this.findOne(id);
+    public LedgerRequest registerInstanceToLedger(Long id) {
+        // Make sure we actually have a valid connection to
+        final MsrContract msrContract = Optional.ofNullable(this.smartContractProvider)
+                .filter(SmartContractProvider::isMsrContractConnected)
+                .map(SmartContractProvider::getMsrContract)
+                .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
 
-        if (!Optional.ofNullable(this.smartContractProvider).map(SmartContractProvider::isMsrContractConnected).orElse(Boolean.FALSE)) {
-            throw new McpBasicRestException(HttpStatus.NOT_FOUND, MsrErrorConstant.LEDGER_NOT_CONNECTED, null);
-        }
-
-        if (ledgerRequest == null) {
-            throw new McpBasicRestException(HttpStatus.NOT_FOUND, MsrErrorConstant.LEDGER_REQUEST_NOT_FOUND + " - given request ID: " + id.toString(), null);
-        }
-
-        // Try to find the instance if an ID of instance is provided
-        // TODO: validation of instance should be in place here
-        Instance instance = ledgerRequest.getServiceInstance();
-        if(instance == null) {
-            throw new McpBasicRestException(HttpStatus.NOT_FOUND, MsrErrorConstant.LEDGER_REQUEST_INSTANCE_NOT_FOUND + " - given request ID: " + id.toString(), null);
-        }
-
-        if(ledgerRequest.getStatus() != LedgerRequestStatus.VETTED){
-            throw new McpBasicRestException(HttpStatus.UNPROCESSABLE_ENTITY, MsrErrorConstant.LEDGER_REQUEST_STATUS_NOT_FULFILLED + "- current status: " + ledgerRequest.getStatus(), null);
-        }
-
-        this.updateStatus(id, LedgerRequestStatus.REQUESTING);
-
-        // Perform the ledger update call asynchronously
-        this.smartContractProvider.getMsrContract()
-                .registerServiceInstance(this.smartContractProvider.newServiceInstance(instance), instance.getKeywordsList())
-                .sendAsync()
-                .whenComplete((receipt, ex) -> {
-                    if(Objects.isNull(ex)) {
-                        if (receipt.getStatus().equals("0x1")) {
-                            log.info("Instance is successfully registered to the ledger - instance name: " + instance.getName());
-                            this.updateStatus(id, LedgerRequestStatus.SUCCEEDED);
-                        } else {
-                            log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - instance name: " + instance.getName());
-                            this.updateStatus(id, LedgerRequestStatus.FAILED);
-                        }
-                    } else {
-                        log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - ", ex.getMessage(), ex);
-                        this.updateStatus(id, LedgerRequestStatus.FAILED);
-                    }
-        });
-
-        // And return the updated ledger request pending
-        return ledgerRequest;
+        // Now get the ledger request, update it and contact the MSR ledger
+        return Optional.of(id)
+                .map(this::findOne)
+                .map(peek(l -> Optional.of(l)
+                        .map(LedgerRequest::getStatus)
+                        .filter(LedgerRequestStatus.VETTED::equals)
+                        .orElseThrow(() -> new LedgerRegistrationError(MsrErrorConstant.LEDGER_REQUEST_STATUS_NOT_FULFILLED + "- current status: " + l.getStatus(), null))))
+                .map(peek(l -> this.updateStatus(l.getId(), LedgerRequestStatus.REQUESTING)))
+                .map(this::save)
+                .map(peek(l -> {
+                    msrContract.registerServiceInstance(this.smartContractProvider.createNewServiceInstance(l.getServiceInstance()),
+                                    l.getServiceInstance().getKeywordsList())
+                            .sendAsync()
+                            .whenComplete((receipt, ex) -> this.handleLedgerRegistrationResponse(l, receipt, ex));
+                }))
+                .orElseThrow(() -> new DataNotFoundException(MsrErrorConstant.LEDGER_REQUEST_NOT_FOUND, null));
     }
 
     /**
@@ -276,7 +253,7 @@ public class LedgerRequestService {
      * @param request the ledger request to be saved
      * @throws DataNotFoundException If the ledger request or the referenced instance is invalid
      */
-    protected void validateRequestForSave(LedgerRequest request) throws DataNotFoundException {
+    protected void validateRequestForSave(LedgerRequest request) {
         // Validate the ledger request ID
         if(Objects.nonNull(request.getId())) {
             Optional.of(request)
@@ -291,6 +268,31 @@ public class LedgerRequestService {
                 .map(Instance::getId)
                 .map(instanceService::findOne)
                 .orElseThrow(() -> new DataNotFoundException("No valid Instance for the provided LedgerRequest", null));
+    }
+
+    /**
+     * This helper function handles the ledger registration operation
+     * responses. It is designed as a BiConsumer that handles the response
+     * of a asynchronous call completion, hence a throwable is also present
+     * in the input argument list.
+     *
+     * @param transactionReceipt    The ledger transaction receipt
+     * @param ex                    Any exception that might have been thrown during the transaction
+     */
+    protected void handleLedgerRegistrationResponse(LedgerRequest ledgerRequest, TransactionReceipt transactionReceipt, Throwable ex) {
+        if (Objects.isNull(ex)) {
+            final Instance instance = ledgerRequest.getServiceInstance();
+            if (transactionReceipt.getStatus().equals("0x1")) {
+                log.info("Instance is successfully registered to the ledger - instance name: " + instance.getName());
+                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.SUCCEEDED);
+            } else {
+                log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - instance name: " + instance.getName());
+                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED);
+            }
+        } else {
+            log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - ", ex.getMessage(), ex);
+            this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED);
+        }
     }
 
 }

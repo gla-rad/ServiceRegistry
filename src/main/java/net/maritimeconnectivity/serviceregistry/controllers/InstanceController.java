@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -67,7 +66,7 @@ public class InstanceController {
     public ResponseEntity<List<Instance>> getInstances(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
-        Page<Instance> page = this.instanceService.findAll(pageable);
+        final Page<Instance> page = this.instanceService.findAll(pageable);
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/instances"))
                 .body(page.getContent());
@@ -82,7 +81,7 @@ public class InstanceController {
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<Instance>> getInstancesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of Instances for datatables");
-        DtPage<Instance> page = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
+        final DtPage<Instance> page = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
         return ResponseEntity.ok()
                 .body(page);
     }
@@ -91,28 +90,21 @@ public class InstanceController {
      * GET /api/instances/{id} : get the "ID" instance.
      *
      * @param id the ID of the instance to retrieve
-     * @return the ResponseEntity with status 200 (OK) and with body the instance,
-     * or with status 404 (Not Found)
+     * @return the ResponseEntity with status 200 (OK) and with body the instance
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Instance> getInstance(@PathVariable Long id) {
         log.debug("REST request to get Instance : {}", id);
-        try {
-            Instance result = this.instanceService.findOne(id);
-            return ResponseEntity.ok()
-                    .body(result);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.notFound()
-                    .build();
-        }
+        final Instance result = this.instanceService.findOne(id);
+        return ResponseEntity.ok()
+                .body(result);
     }
 
     /**
      * POST /api/instances : Create a new instance.
      *
      * @param instance the instance to create
-     * @return the ResponseEntity with status 201 (Created) and with body the new instance,
-     * or with status 400 (Bad Request) if the instance has already an ID, or couldn't be created
+     * @return the ResponseEntity with status 201 (Created) and with body the new instance, or with status 400 (Bad Request) if the instance has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -131,8 +123,7 @@ public class InstanceController {
      *
      * @param id the ID of the instance to be updated
      * @param instance the instance to update
-     * @return the ResponseEntity with status 200 (OK) and with body the updated instance,
-     * or with status 400 (Bad Request) if the instance is not valid or couldn't be updated,
+     * @return the ResponseEntity with status 200 (OK) and with body the updated instance
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -151,14 +142,43 @@ public class InstanceController {
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteInstance(@PathVariable Long id) {
         log.debug("REST request to delete Instance : {}", id);
-        try {
-            this.instanceService.delete(id);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.notFound()
-                    .build();
-        }
+        this.instanceService.delete(id);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString()))
+                .build();
+    }
+
+    /**
+     * PUT /api/instances/{id}/status : Updates an the "ID" instance status
+     *
+     * @param id the ID of the instance to be updated
+     * @param status the new status value
+     * @return the ResponseEntity with status 200 (OK), or with status 400 (Bad Request) if the instance status couldn't be updated
+     * @throws URISyntaxException if the Location URI syntax is incorrect
+     */
+    @PutMapping(value = "/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> updateInstanceStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") ServiceStatus status) {
+        log.debug("REST request to update instance {} status : {}", id, status.value());
+
+        try {
+            this.instanceService.updateStatus(id, status);
+        } catch (XMLValidationException ex) {
+            log.error("Error parsing xml: ", ex);
+            return ResponseEntity.badRequest()
+                    .build();
+        } catch (GeometryParseException ex) {
+            log.error("Error parsing geometry: ", ex);
+            return ResponseEntity.badRequest()
+                    .build();
+        } catch (Exception ex) {
+            log.error("Update status error: ", ex);
+            return ResponseEntity.badRequest()
+                    .build();
+        }
+
+        // Return an OK response
+        return ResponseEntity.ok()
+                .headers(HeaderUtil.createEntityStatusUpdateAlert("instance", id.toString()))
                 .build();
     }
 
@@ -168,17 +188,12 @@ public class InstanceController {
      *
      * @param instance the instance to be save
      * @param newInstance Whether this is a new instance
-     * @return the save instance
+     * @return the saved instance
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     private ResponseEntity<Instance> saveInstance(Instance instance, boolean newInstance) throws URISyntaxException {
         try {
             instance = this.instanceService.save(instance);
-        } catch (DataNotFoundException ex) {
-            log.error("Instance not found: ", ex);
-            return ResponseEntity.notFound()
-                    .headers(HeaderUtil.createFailureAlert("status", ex.getMessage(), ex.toString()))
-                    .build();
         } catch (XMLValidationException ex) {
             log.error("Error parsing xml: ", ex);
             return ResponseEntity.badRequest()
@@ -203,45 +218,6 @@ public class InstanceController {
                 ResponseEntity.ok()
                         .headers(HeaderUtil.createEntityUpdateAlert("instance", instance.getId().toString()))
                         .body(instance);
-    }
-
-    /**
-     * PUT /api/instances/{id}/status : Updates an the "ID" instance status
-     *
-     * @param id the ID of the instance to be updated
-     * @param status the new status value
-     * @return the ResponseEntity with status 200 (OK),
-     * or with status 400 (Bad Request) if the instance status couldn't be updated
-     * @throws URISyntaxException if the Location URI syntax is incorrect
-     */
-    @PutMapping(value = "/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") ServiceStatus status) {
-        log.debug("REST request to update instance {} status : {}", id, status.value());
-
-        try {
-            this.instanceService.updateStatus(id, status);
-        } catch (DataNotFoundException ex) {
-            log.error("Instance not found: ", ex);
-            return ResponseEntity.notFound()
-                    .build();
-        } catch (XMLValidationException ex) {
-            log.error("Error parsing xml: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
-        } catch (GeometryParseException ex) {
-            log.error("Error parsing geometry: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
-        } catch (Exception ex) {
-            log.error("Update status error: ", ex);
-            return ResponseEntity.badRequest()
-                    .build();
-        }
-
-        // Return an OK response
-        return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityStatusUpdateAlert("instance", id.toString()))
-                .build();
     }
 
 }

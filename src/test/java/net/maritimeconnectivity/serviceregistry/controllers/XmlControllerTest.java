@@ -164,7 +164,7 @@ class XmlControllerTest {
     @Test
     void testGetXmlNotFound() throws Exception {
         Long id = 0L;
-        doThrow(DataNotFoundException.class).when(this.xmlService).findOne(any());
+        doThrow(new DataNotFoundException()).when(this.xmlService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/xmls/{id}", id))
@@ -252,7 +252,7 @@ class XmlControllerTest {
      */
     @Test
     void testDeleteXmlNotFound() throws Exception {
-        doThrow(DataNotFoundException.class).when(this.xmlService).delete(any());
+        doThrow(new DataNotFoundException()).when(this.xmlService).delete(any());
 
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/xmls/{id}", this.existingXml.getId()))
