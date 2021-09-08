@@ -21,8 +21,13 @@ import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import javax.servlet.ServletRequest;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
 /**
  * The MSR Base Exception Resolver Class.
@@ -37,7 +42,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 public class MSRBaseExceptionResolver extends ResponseEntityExceptionHandler {
 
     /**
-     * Implementation of the confict handling.
+     * Implementation of the conflict handling.
      *
      * @param ex        The exception that took place
      * @param request   The request that causes the exception
@@ -45,8 +50,24 @@ public class MSRBaseExceptionResolver extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(MSRBaseException.class)
     protected ResponseEntity<Object> handleConflict(MSRBaseException ex, WebRequest request) {
+        final String entityName = Optional.of(request)
+                .filter(ServletWebRequest.class::isInstance)
+                .map(ServletWebRequest.class::cast)
+                .map(ServletWebRequest::getRequest)
+                .map(HttpServletRequest::getRequestURI)
+                .map(uri -> uri.split("/"))
+                .filter(array -> array.length > 2)
+                .map(array -> array[2])
+                .map(s -> s.replaceAll("s$", ""))
+                .orElse("general-entity");
+        final String errorKey = Optional.of(request)
+                .filter(ServletWebRequest.class::isInstance)
+                .map(ServletWebRequest.class::cast)
+                .map(ServletWebRequest::getRequest)
+                .map(HttpServletRequest::getMethod)
+                .orElse("general-error");
         return handleExceptionInternal(ex, ex,
-                HeaderUtil.createFailureAlert("entity", "error", ex.getMessage()),
+                HeaderUtil.createFailureAlert(entityName, errorKey, ex.getMessage()),
                 ex.getHttpStatus(),
                 request);
     }
