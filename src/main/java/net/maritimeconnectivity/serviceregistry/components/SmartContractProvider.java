@@ -19,8 +19,10 @@ package net.maritimeconnectivity.serviceregistry.components;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.SessionScope;
 import org.web3j.crypto.Credentials;
@@ -33,6 +35,8 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.UnknownHostException;
+import java.util.Optional;
 
 /**
  * The Smart Contract Provider Component.
@@ -51,19 +55,19 @@ import java.net.ConnectException;
 public class SmartContractProvider {
 
     @Value("${info.msr.name:Unknown}")
-    private String msrName;
+    protected String msrName;
 
     @Value("${info.msr.url:Unknown}")
-    private String msrUrl;
+    protected String msrUrl;
 
     @Value("${net.maritimeconnectivity.serviceregistry.ledger.server-url:ws://localhost:8546}")
-    private String ledgerServerUrl;
+    protected String ledgerServerUrl;
 
     @Value("${net.maritimeconnectivity.serviceregistry.ledger.credentials:}")
-    private String ledgerCredentials;
+    protected String ledgerCredentials;
 
     @Value("${net.maritimeconnectivity.serviceregistry.ledger.contract-address:}")
-    private String ledgerContractAddress;
+    protected String ledgerContractAddress;
 
     // MSR Ledger Smart Contract
     protected WebSocketService webSocketService;
@@ -80,10 +84,8 @@ public class SmartContractProvider {
     @PostConstruct
     public void init() throws ConnectException {
         // Connect asynchronously to the ledger through a web-socket
-        this.webSocketService = new WebSocketService(this.ledgerServerUrl, true);
-        this.webSocketService.connect();
-        this.web3j = Web3j.build(webSocketService);
-        this.msrContract = MsrContract.load(this.ledgerContractAddress,
+        this.web3j = this.createWeb3j(this.ledgerServerUrl);
+        final MsrContract loadedContract = MsrContract.load(this.ledgerContractAddress,
                 web3j,
                 Credentials.create(this.ledgerCredentials),
                 new DefaultGasProvider());
@@ -91,11 +93,13 @@ public class SmartContractProvider {
         // Perform a test call
         try {
             final Web3ClientVersion web3ClientVersion = web3j.web3ClientVersion().send();
-            if (msrContract != null) {
-                log.info(String.format("Web3j {}: successfully connected to the ledger", web3ClientVersion.getWeb3ClientVersion()));
-            }
-        } catch (IOException e) {
-            this.log.error(e.getMessage());
+            Optional.of(loadedContract)
+                    .ifPresent(contract -> {
+                        log.info(String.format("Web3j {}: successfully connected to the ledger", web3ClientVersion.getWeb3ClientVersion()));
+                        this.msrContract = contract;
+                    });
+        } catch (Exception ex) {
+            this.log.error(ex.getMessage());
         }
     }
 
@@ -103,7 +107,7 @@ public class SmartContractProvider {
      * We need to always close the web-socket connection when we are done.
      */
     @PreDestroy
-    public void shutdown() {
+    public void destroy() {
         web3j.shutdown();
     }
 
@@ -136,7 +140,7 @@ public class SmartContractProvider {
      * @param instance the instance to generate the ledger MSR service instance entry for
      * @return the new ledger MSR service instance entry
      */
-    public MsrContract.ServiceInstance newServiceInstance(Instance instance) {
+    public MsrContract.ServiceInstance createNewServiceInstance(Instance instance) {
         return new MsrContract.ServiceInstance(instance.getName(),
                 instance.getInstanceId(),
                 instance.getVersion(),
@@ -146,6 +150,18 @@ public class SmartContractProvider {
                 "designVersion",
                 new MsrContract.Msr(msrName, msrUrl)
         );
+    }
+
+    /**
+     * A helper function that creates a new web3j web-socket connections and
+     * allows us to easily unit-test the rest of the component.
+     *
+     * @return a new web-socket service
+     */
+    protected Web3j createWeb3j(String url) throws ConnectException {
+        final WebSocketService webSocketService =  new WebSocketService(url, true);
+        this.webSocketService.connect();
+        return Web3j.build(webSocketService);
     }
 
 }

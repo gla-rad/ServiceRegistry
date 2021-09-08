@@ -51,7 +51,7 @@ public class LedgerRequest {
 
     @NotNull
     @OneToOne(cascade = {CascadeType.REMOVE})
-    @JoinColumn(unique = true)
+    @JoinColumn(name = "id")
     private Instance serviceInstance;
 
     @Enumerated(EnumType.STRING)
