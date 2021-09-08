@@ -124,6 +124,23 @@
 			<artifactId>jjwt</artifactId>
 			<version>0.9.0</version>
 		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.18.1</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>net.maritimeconnectivity.eNav</groupId>
+			<artifactId>g1128-schemas</artifactId>
+			<version>0.0.5</version>
+			<classifier>jdk11</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.web3j</groupId>
+			<artifactId>core</artifactId>
+			<version>4.8.4</version>
+		</dependency>
 
 		<!-- Swagger -->
 		<dependency>
@@ -163,6 +180,7 @@
 			<version>1.0.4</version>
 		</dependency>
 
+		<!-- Testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -178,23 +196,13 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>3.18.1</version>
-            <scope>compile</scope>
-        </dependency>
 		<dependency>
-			<groupId>net.maritimeconnectivity.eNav</groupId>
-			<artifactId>g1128-schemas</artifactId>
-			<version>0.0.5</version>
-			<classifier>jdk11</classifier>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-inline</artifactId>
+			<version>3.8.0</version>
+			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.web3j</groupId>
-			<artifactId>core</artifactId>
-			<version>4.8.4</version>
-		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>

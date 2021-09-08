@@ -17,9 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.controllers.advices.MSRBaseExceptionResolver;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -37,6 +40,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -157,7 +161,7 @@ class DocControllerTest {
     @Test
     void testGetDocNotFound() throws Exception {
         Long id = 0L;
-        doThrow(DataNotFoundException.class).when(this.docService).findOne(any());
+        doThrow(new DataNotFoundException()).when(this.docService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/docs/{id}", id))
@@ -283,10 +287,10 @@ class DocControllerTest {
      */
     @Test
     void testDeleteDocNotFound() throws Exception {
-        doThrow(DataNotFoundException.class).when(this.docService).delete(any());
+        doThrow(new DataNotFoundException()).when(this.docService).delete(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(delete("/api/xmls/{id}", this.existingDoc.getId()))
+        this.mockMvc.perform(delete("/api/docs/{id}", this.existingDoc.getId()))
                 .andExpect(status().isNotFound());
     }
 

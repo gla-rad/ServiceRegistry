@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
@@ -68,7 +67,7 @@ public class DocController {
     public ResponseEntity<List<Doc>> getAllDocs(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Docs");
-        Page<Doc> page = this.docService.findAll(pageable);
+        final Page<Doc> page = this.docService.findAll(pageable);
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/docs"))
                 .body(page.getContent());
@@ -84,14 +83,9 @@ public class DocController {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Doc> getDoc(@PathVariable Long id) {
         log.debug("REST request to get Doc : {}", id);
-        try {
-            Doc result = this.docService.findOne(id);
-            return ResponseEntity.ok()
-                    .body(result);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.notFound()
-                    .build();
-        }
+        final Doc result = this.docService.findOne(id);
+        return ResponseEntity.ok()
+                .body(result);
     }
 
     /**
@@ -115,7 +109,7 @@ public class DocController {
                     .headers(HeaderUtil.createFailureAlert("doc", "formaterror", "Unsupported document format. Only PDF, ODT or DOCX are allowed."))
                     .build();
         }
-        Doc result = this.docService.save(doc);
+        final Doc result = this.docService.save(doc);
         return ResponseEntity.created(new URI("/api/docs/" + result.getId()))
                 .headers(HeaderUtil.createEntityCreationAlert("doc", result.getId().toString()))
                 .body(result);
@@ -139,7 +133,7 @@ public class DocController {
                     .build();
         }
         doc.setId(id);
-        Doc result = this.docService.save(doc);
+        final Doc result = this.docService.save(doc);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert("doc", doc.getId().toString()))
                 .body(result);
@@ -154,12 +148,7 @@ public class DocController {
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteDoc(@PathVariable Long id) {
         log.debug("REST request to delete Doc : {}", id);
-        try {
-            this.docService.delete(id);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.notFound()
-                    .build();
-        }
+        this.docService.delete(id);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("doc", id.toString()))
                 .build();

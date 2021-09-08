@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
@@ -68,7 +67,7 @@ public class XmlController {
     public ResponseEntity<List<Xml>> getAllXmls(Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Xmls");
-        Page<Xml> page = this.xmlService.findAll(pageable);
+        final Page<Xml> page = this.xmlService.findAll(pageable);
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/xmls"))
                 .body(page.getContent());
@@ -84,22 +83,17 @@ public class XmlController {
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> getXml(@PathVariable Long id) {
         log.debug("REST request to get Xml : {}", id);
-        try {
-            Xml result = this.xmlService.findOne(id);
-            return ResponseEntity.ok()
-                    .body(result);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.notFound()
-                    .build();
-        }
+        final Xml result = this.xmlService.findOne(id);
+        return ResponseEntity.ok()
+                .body(result);
     }
 
     /**
      * POST /xmls : Create a new xml.
      *
      * @param xml the xml to create
-     * @return the ResponseEntity with status 201 (Created) and with body the new xml,
-     * or with status 400 (Bad Request) if the xml has already an ID, or couldn't be created
+     * @return the ResponseEntity with status 201 (Created) and with body the
+     * new xml, or with status 400 (Bad Request) if the xml has already an ID
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -110,7 +104,7 @@ public class XmlController {
                     .headers(HeaderUtil.createFailureAlert("xml", "idexists", "A new xml cannot already have an ID"))
                     .build();
         }
-        Xml result = this.xmlService.save(xml);
+        final Xml result = this.xmlService.save(xml);
         return ResponseEntity.created(new URI("/api/xmls/" + result.getId()))
                 .headers(HeaderUtil.createEntityCreationAlert("xml", result.getId().toString()))
                 .body(result);
@@ -121,15 +115,14 @@ public class XmlController {
      *
      * @param id the ID of the xml to be updated
      * @param xml the xml to update
-     * @return the ResponseEntity with status 200 (OK) and with body the updated xml,
-     * or with status 400 (Bad Request) if the xml is not valid or couldn't be updated
+     * @return the ResponseEntity with status 200 (OK) and with body the updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Xml> updateXml(@PathVariable Long id, @Valid @RequestBody Xml xml) {
         log.debug("REST request to update Xml : {}", xml);
         xml.setId(id);
-        Xml result = this.xmlService.save(xml);
+        final Xml result = this.xmlService.save(xml);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityUpdateAlert("xml", xml.getId().toString()))
                 .body(result);
@@ -144,12 +137,7 @@ public class XmlController {
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteXml(@PathVariable Long id) {
         log.debug("REST request to delete Xml : {}", id);
-        try {
-            this.xmlService.delete(id);
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.notFound()
-                    .build();
-        }
+        this.xmlService.delete(id);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("xml", id.toString()))
                 .build();
@@ -159,8 +147,7 @@ public class XmlController {
      * GET /xmls/schemas/{schema} : Returns the requested G1128 schema
      * specification, as it is loaded in the classpath.
      *
-     * @return the ResponseEntity with status 200 (OK) and with body of the G1128 schema specification,
-     * or with status 404 (Not Found) if the schema is not found
+     * @return the ResponseEntity with status 200 (OK) and with body of theG1128 schema specification, or with status 404 (Not Found) if the schema is not found
      */
     @GetMapping(value = "/schemas/{schema}", produces = MediaType.APPLICATION_XML_VALUE)
     public ResponseEntity<String> getG1128Schema(@PathVariable G1128Schemas schema) {
@@ -184,8 +171,7 @@ public class XmlController {
      * on the specified G1128 schema specification.
      *
      * @param content the xml content to be validated
-     * @return the ResponseEntity with status 200 (OK) and with body of the parsed G1128-compliant object,
-     * or with status 400 (Bad Request) if the content is invalid
+     * @return the ResponseEntity with status 200 (OK) and with body of the parsed G1128-compliant object, or with status 400 (Bad Request) if the content is invalid
      */
     @PostMapping(value = "/validate/{schema}", consumes = MediaType.APPLICATION_XML_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Object> validateXmlWithG1128Schema(@PathVariable G1128Schemas schema, @Valid @RequestBody String content) {
@@ -193,11 +179,7 @@ public class XmlController {
         try {
             return ResponseEntity.ok()
                     .body(this.xmlService.validate(content, schema));
-        } catch (DataNotFoundException ex) {
-            return ResponseEntity.badRequest()
-                    .headers(HeaderUtil.createFailureAlert("xml", ex.getMessage(), ex.toString()))
-                    .build();
-        }  catch (JAXBException ex) {
+        } catch (JAXBException ex) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("xml", ex.getCause().getMessage(), ex.toString()))
                     .build();
