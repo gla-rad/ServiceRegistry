@@ -17,11 +17,12 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
+import net.maritimeconnectivity.serviceregistry.models.dto.LedgerRequestDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.services.LedgerRequestService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
@@ -59,6 +60,18 @@ public class LedgerRequestController {
     private InstanceService instanceService;
 
     /**
+     * Object Mapper from Domain to DTO.
+     */
+    @Autowired
+    DomainDtoMapper<LedgerRequest, LedgerRequestDto> ledgerRequestDomainToDtoMapper;
+
+    /**
+     * Object Mapper from DTO to Domain.
+     */
+    @Autowired
+    DomainDtoMapper<LedgerRequestDto, LedgerRequest> ledgerRequestDtoToDomainMapper;
+
+    /**
      * GET /api/ledgerrequests : get all the ledger requests.
      *
      * @param pageable the pagination information
@@ -66,12 +79,12 @@ public class LedgerRequestController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<LedgerRequest>> getLedgerRequests(Pageable pageable) throws URISyntaxException {
+    public ResponseEntity<List<LedgerRequestDto>> getLedgerRequests(Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of LedgerRequests");
         final Page<LedgerRequest> page = this.ledgerRequestService.findAll(pageable);
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/ledgerrequest"))
-                .body(page.getContent());
+                .body(this.ledgerRequestDomainToDtoMapper.convertToList(page.getContent(), LedgerRequestDto.class));
     }
 
     /**
@@ -81,32 +94,32 @@ public class LedgerRequestController {
      * @return the ResponseEntity with status 200 (OK) and with body the ledger request
      */
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<LedgerRequest> getLedgerRequest(@PathVariable Long id) {
+    public ResponseEntity<LedgerRequestDto> getLedgerRequest(@PathVariable Long id) {
         log.debug("REST request to get LedgerRequest : {}", id);
-        final LedgerRequest result = this.ledgerRequestService.findOne(id);
+        final LedgerRequest request = this.ledgerRequestService.findOne(id);
         return ResponseEntity.ok()
-                .body(result);
+                .body(this.ledgerRequestDomainToDtoMapper.convertTo(request, LedgerRequestDto.class));
     }
 
     /**
      * POST /api/ledgerrequests : Create a new ledger request.
      *
-     * @param request the ledger request to be created
+     * @param requestDto the ledger request to be created
      * @return the ResponseEntity with status 201 (Created) and with body the new ledger request
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<LedgerRequest> createLedgerRequest(@Valid @RequestBody LedgerRequest request) throws URISyntaxException {
-        log.info("REST request to create a LedgerRequest for instance ID : {}", request);
-        if (request.getId() != null) {
+    public ResponseEntity<LedgerRequestDto> createLedgerRequest(@Valid @RequestBody LedgerRequestDto requestDto) throws URISyntaxException {
+        log.info("REST request to create a LedgerRequest for instance ID : {}", requestDto);
+        if (requestDto.getId() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("ledgerrequest", "idexists", "A new ledger request cannot already have an ID"))
                     .build();
         }
-        final LedgerRequest receivedRequest = this.ledgerRequestService.save(request);
-        return ResponseEntity.created(new URI("/api/ledgerrequest/" + receivedRequest.getId()))
-                .headers(HeaderUtil.createEntityCreationAlert("ledgerrequest", receivedRequest.getId().toString()))
-                .body(receivedRequest);
+        final LedgerRequest savedRequest = this.ledgerRequestService.save(this.ledgerRequestDtoToDomainMapper.convertTo(requestDto, LedgerRequest.class));
+        return ResponseEntity.created(new URI("/api/ledgerrequest/" + savedRequest.getId()))
+                .headers(HeaderUtil.createEntityCreationAlert("ledgerrequest", savedRequest.getId().toString()))
+                .body(this.ledgerRequestDomainToDtoMapper.convertTo(savedRequest, LedgerRequestDto.class));
     }
 
     /**
@@ -118,12 +131,12 @@ public class LedgerRequestController {
      * @return the ResponseEntity with status 200 (OK) and with body the updated ledger request
      */
     @PutMapping(value = "/{id}/status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<LedgerRequest> updateRequestStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") LedgerRequestStatus status) throws DataNotFoundException {
+    public ResponseEntity<LedgerRequestDto> updateRequestStatus(@PathVariable Long id, @NotNull @RequestParam(name="status") LedgerRequestStatus status) throws DataNotFoundException {
         log.debug("REST request to update request {} status : {}", id, status.value());
-        final LedgerRequest ledgerRequest = this.ledgerRequestService.updateStatus(id, status);
+        final LedgerRequest request = this.ledgerRequestService.updateStatus(id, status);
         return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityStatusUpdateAlert("ledgerrequest", ledgerRequest.getId().toString()))
-                .body(ledgerRequest);
+                .headers(HeaderUtil.createEntityStatusUpdateAlert("ledgerrequest", request.getId().toString()))
+                .body(this.ledgerRequestDomainToDtoMapper.convertTo(request, LedgerRequestDto.class));
     }
 
     /**
@@ -153,7 +166,7 @@ public class LedgerRequestController {
         log.debug("REST request to register to the MSR ledger the request : {}", id);
         final LedgerRequest request = ledgerRequestService.registerInstanceToLedger(id);
         return ResponseEntity.accepted()
-                .body(request);
+                .body(this.ledgerRequestDomainToDtoMapper.convertTo(request, LedgerRequestDto.class));
     }
 
 }
