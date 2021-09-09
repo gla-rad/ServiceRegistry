@@ -112,7 +112,19 @@ var columnDefs = [{
     readonly : true,
     visible: false,
     searchable: false
-}];
+}, {
+    data: "ledgerRequestId",
+    type: "hidden",
+    readonly : true,
+    visible: false,
+    searchable: false
+}, {
+     data: "ledgerRequestStatus",
+     type: "hidden",
+     readonly : true,
+     visible: false,
+     searchable: false
+ }];
 
 $(() => {
     instancesTable = $('#instancesTable').DataTable({
@@ -185,7 +197,7 @@ $(() => {
             name: 'instance-ledger-status', // do not change name
             className: 'instance-ledger-toggle',
             action: (e, dt, node, config) => {
-                loadInstanceStatus(e, dt, node, config);
+                loadInstanceLedgerStatus(e, dt, node, config);
             }
         }],
         onAddRow: function (datatable, rowdata, success, error) {
@@ -304,9 +316,9 @@ $(() => {
         var $modalDiv = $(e.delegateTarget);
         $modalDiv.addClass('loading');
         console.log(instancesTable.row({selected : true}).data());
-//        onLedgerRequestUpdate($modalDiv,
-//            instancesTable.row({selected : true}).data()["id"],
-//            $("#instanceStatusPanel").find("#instanceStatusSelect").val());
+        onLedgerRequestUpdate($modalDiv,
+            instancesTable.row({selected : true}).data()["id"],
+            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
     });
 
     // We also need to link the instance coverage toggle button with the the modal
@@ -422,10 +434,7 @@ function onStatusUpdate($modalDiv, id, status) {
         },
         error: (response, status, more) => {
             $modalDiv.removeClass('loading');
-            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
-                response.getResponseHeader('X-mcsrApp-error') :
-                "Error while trying to update the instance status!";
-            showError(errorMsg);
+            showError(response.responseJSON["message"]);
         }
     });
 }
@@ -441,7 +450,7 @@ function onStatusUpdate($modalDiv, id, status) {
  */
 function onLedgerRequestUpdate($modalDiv, id, status) {
     $.ajax({
-        url: `/api/ledgerrequests/${id}/status?status=${status}`,
+        url: `/api/instances/${id}/ledger-status?ledgerStatus=${status}`,
         type: 'PUT',
         contentType: 'application/xml',
         success: (response, status, more) => {
@@ -450,10 +459,7 @@ function onLedgerRequestUpdate($modalDiv, id, status) {
         },
         error: (response, status, more) => {
             $modalDiv.removeClass('loading');
-            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
-                response.getResponseHeader('X-mcsrApp-error') :
-                "Error while trying to update the instance status!";
-            showError(errorMsg);
+            showError(response.responseJSON["message"]);
         }
     });
 }
@@ -474,7 +480,7 @@ function clearInstanceEditPanel() {
 }
 
 /**
- * This helper function loads the XML and field data from the selected inctance
+ * This helper function loads the XML and field data from the selected instance
  * in the instance table onto the edit dialog.
  */
 function loadInstanceEditPanel() {
@@ -538,8 +544,8 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
 }
 
 /**
- * This function will load the station geometry onto the drawnItems variable
- * so that it is shown in the station maps layers.
+ * This function will load the instance status onto the instance status select
+ * input of the DOM.
  *
  * @param {Event}         event         The event that took place
  * @param {DataTable}     table         The AtoN type table
@@ -549,9 +555,42 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
 function loadInstanceStatus(event, table, button, config) {
     // If a row has been selected load the data into the form
     if(instancesTable.row({selected : true})) {
-        // Do the form
         rowData = instancesTable.row({selected : true}).data();
         $("#instanceStatusPanel").find("#instanceStatusSelect").val(rowData["status"]);
+    }
+}
+
+/**
+ * This function will load the instance ledger status onto the instance ledger
+ * status select input of the DOM. Always read the ledger status value from
+ * the server to pick up successes and failures.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The AtoN type table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function loadInstanceLedgerStatus(event, table, button, config) {
+    // If a row has been selected load the data into the form
+    if(instancesTable.row({selected : true})) {
+        rowdata = instancesTable.row({selected : true}).data();
+        id = rowdata["id"];
+        ledgerRequestId = rowdata["ledgerRequestId"];
+        ledgerRequestStatus = rowdata["ledgerRequestStatus"];
+        // First always start with the last known value
+        $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
+        // And then query the server for an update
+        $.ajax({
+            url: `/api/ledgerrequests/${ledgerRequestId}`,
+            type: 'GET',
+            contentType: 'application/json',
+            success: (request, status, more) => {
+                $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(request["status"]);
+            },
+            error: (response, status, more) => {
+                console.error(response);
+            }
+        });
     }
 }
 

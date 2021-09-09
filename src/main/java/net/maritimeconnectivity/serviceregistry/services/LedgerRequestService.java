@@ -189,24 +189,44 @@ public class LedgerRequestService {
      *
      * @param id     the id of the entity
      * @param status the status of the entity
-     * @throws Exception any exceptions thrown while updating the status
+     * @param reason the reason for updating the status
+     */
+    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) {
+        return this.updateStatus(id, status, reason, false);
+    }
+
+    /**
+     * This is an internal update operation for the status of LedgerRequest by
+     * ID, that allows the service to force an update on restricted statuses.
+     *
+     * @param id     the id of the entity
+     * @param status the status of the entity
+     * @param reason the reason for updating the status
+     * @param force  whether to force restricted statuses
      */
     @Transactional
-    public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) {
+    protected LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason, boolean force) {
         log.debug("Request to update status of LedgerRequest : {}", id);
 
         // Try to find if the instance does indeed exist
         LedgerRequest request = this.ledgerRequestRepo.findById(id)
                 .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID {}", id), null));
 
-        // Update the instance status and reason if applicable
-        request.setStatus(status);
-        Optional.ofNullable(reason)
-                .filter(StringUtils::isNotBlank)
-                .ifPresent(request::setReason);
+        // For restricted statuses, leave it up to the registration process
+        if(status.isRestricted() && !force) {
+            return this.registerInstanceToLedger(request.getId());
+        }
+        // Otherwise, set the status, save and return the updated entity
+        else {
+            // Update the instance status and reason if applicable
+            request.setStatus(status);
+            Optional.ofNullable(reason)
+                    .filter(StringUtils::isNotBlank)
+                    .ifPresent(request::setReason);
 
-        // Finally, save and return
-        return save(request);
+            // Return the update request
+            return save(request);
+        }
     }
 
     /**
@@ -218,10 +238,12 @@ public class LedgerRequestService {
      * @param id    The ID of the entity
      * @return The updated ledger request pending the result
      */
-    public LedgerRequest registerInstanceToLedger(Long id) {
+    public LedgerRequest registerInstanceToLedger(@NotNull Long id) {
         // Make sure we actually have a valid connection to
         final MsrContract msrContract = Optional.ofNullable(this.smartContractProvider)
-                .filter(SmartContractProvider::isMsrContractConnected)
+                // TODO: For some reason our smart contract seems invalid!!!
+                //.filter(SmartContractProvider::isMsrContractConnected)
+                .filter(sp -> Objects.nonNull(sp.getMsrContract()))
                 .map(SmartContractProvider::getMsrContract)
                 .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
 
@@ -232,8 +254,7 @@ public class LedgerRequestService {
                         .map(LedgerRequest::getStatus)
                         .filter(LedgerRequestStatus.VETTED::equals)
                         .orElseThrow(() -> new LedgerRegistrationError(MsrErrorConstant.LEDGER_REQUEST_STATUS_NOT_FULFILLED + "- current status: " + l.getStatus(), null))))
-                .map(peek(l -> this.updateStatus(l.getId(), LedgerRequestStatus.REQUESTING)))
-                .map(this::save)
+                .map(l -> this.updateStatus(l.getId(), LedgerRequestStatus.REQUESTING, null,true))
                 .map(peek(l -> {
                     msrContract.registerServiceInstance(this.smartContractProvider.createNewServiceInstance(l.getServiceInstance()),
                                     l.getServiceInstance().getKeywordsList())
@@ -283,15 +304,15 @@ public class LedgerRequestService {
         if (Objects.isNull(ex)) {
             final Instance instance = ledgerRequest.getServiceInstance();
             if (transactionReceipt.getStatus().equals("0x1")) {
-                log.info("Instance is successfully registered to the ledger - instance name: " + instance.getName());
+                log.info("Instance is successfully registered to the ledger - instance name: " + instance.getName(), true);
                 this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.SUCCEEDED);
             } else {
                 log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - instance name: " + instance.getName());
-                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED);
+                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, ex.getMessage(), true);
             }
         } else {
-            log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - ", ex.getMessage(), ex);
-            this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED);
+            log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED, ex.getMessage(), ex);
+            this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, ex.getMessage(), true);
         }
     }
 

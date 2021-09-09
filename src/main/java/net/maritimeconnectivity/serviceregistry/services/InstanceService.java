@@ -20,13 +20,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
-import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
-import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
+import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
@@ -56,6 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
@@ -201,7 +201,7 @@ public class InstanceService {
     }
 
     /**
-     * Delete the instance by id.
+     * Delete the instance by ID.
      *
      * @param id the id of the entity
      */
@@ -219,10 +219,10 @@ public class InstanceService {
     }
 
     /**
-     * Update the status of an instance by id.
+     * Update the status of an instance by ID.
      *
-     * @param id     the id of the entity
-     * @param status the status of the entity
+     * @param id            The ID of the entity
+     * @param status        The status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
@@ -252,6 +252,36 @@ public class InstanceService {
             log.error("Problem during instance status update.", e);
             throw e;
         }
+    }
+
+    /**
+     * Update the ledger status of an instance by ID.
+     *
+     * @param id            The ID of the entity
+     * @param ledgerStatus  The ledger status of the entity
+     */
+    @Transactional
+    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
+        return Optional.ofNullable(this.ledgerRequestService)
+                .map(lss -> {
+                    // First make sure the instance is valid
+                    final Instance instance = this.findOne(id);
+
+                    // Get a ledger request and if it does not exist create one
+                    final LedgerRequest request = Optional.of(instance)
+                            .filter(i -> Objects.nonNull(i.getLedgerRequest()))
+                            .map(Instance::getLedgerRequest)
+                            .orElseGet(() ->  {
+                                final LedgerRequest newRequest = new LedgerRequest();
+                                newRequest.setServiceInstance(instance);
+                                newRequest.setStatus(LedgerRequestStatus.CREATED);
+                                return this.ledgerRequestService.save(newRequest);
+                            });
+
+                    // Finally, update the status
+                    return lss.updateStatus(request.getId(), ledgerStatus, reason);
+                })
+                .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
     }
 
     /**
