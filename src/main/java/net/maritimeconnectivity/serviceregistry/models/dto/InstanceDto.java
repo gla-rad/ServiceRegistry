@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
@@ -71,6 +72,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private Xml instanceAsXml;
     private Doc instanceAsDoc;
     private Long ledgerRequestId;
+    private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
     private Map<String, String> designs = new HashMap<>();
     private Map<String, String> specifications = new HashMap<>();
@@ -513,4 +515,23 @@ public class InstanceDto implements Serializable, JsonSerializable {
     public void setSpecifications(Map<String, String> specifications) {
         this.specifications = specifications;
     }
+
+    /**
+     * Gets ledger request status.
+     *
+     * @return the ledger request status
+     */
+    public LedgerRequestStatus getLedgerRequestStatus() {
+        return ledgerRequestStatus;
+    }
+
+    /**
+     * Sets ledger request status.
+     *
+     * @param ledgerRequestStatus the ledger request status
+     */
+    public void setLedgerRequestStatus(LedgerRequestStatus ledgerRequestStatus) {
+        this.ledgerRequestStatus = ledgerRequestStatus;
+    }
+
 }

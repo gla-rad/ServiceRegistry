@@ -17,10 +17,8 @@
 package net.maritimeconnectivity.serviceregistry.models.dto;
 
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
@@ -34,8 +32,8 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
     // Class Variables
     private Long id;
     @NotNull
-    private Instance serviceInstance;
-    private LedgerRequestStatus status = LedgerRequestStatus.CREATED;
+    private Long serviceInstanceId;
+    private LedgerRequestStatus status;
     private String reason;
     private String createdAt;
     private String lastUpdatedAt;
@@ -66,21 +64,21 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets service instance.
+     * Gets service instance id.
      *
-     * @return the service instance
+     * @return the service instance id
      */
-    public Instance getServiceInstance() {
-        return serviceInstance;
+    public Long getServiceInstanceId() {
+        return serviceInstanceId;
     }
 
     /**
-     * Sets service instance.
+     * Sets service instance id.
      *
-     * @param serviceInstance the service instance
+     * @param serviceInstanceId the service instance id
      */
-    public void setServiceInstance(Instance serviceInstance) {
-        this.serviceInstance = serviceInstance;
+    public void setServiceInstanceId(Long serviceInstanceId) {
+        this.serviceInstanceId = serviceInstanceId;
     }
 
     /**
