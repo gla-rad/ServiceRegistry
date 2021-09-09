@@ -14,195 +14,73 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain;
+package net.maritimeconnectivity.serviceregistry.models.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
+import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
+import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
-import net.maritimeconnectivity.serviceregistry.utils.ServiceStatusBridge;
-import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.search.annotations.*;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * The type Instance.
- * <p>
- * Holds a description of an service instance.An instance can be compatible to
- * one or more specification templates. It has at least a technical
- * representation of the description in form of an XML and a filled out
- * template as e.g. word document.
- * </p>
+ * The Instance DTO Class.
+ *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Entity
-@Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
-@Cacheable
-@Indexed
-@NormalizerDef(name = "lowercase", filters = @TokenFilterDef(factory = LowerCaseFilterFactory.class))
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class Instance implements Serializable, JsonSerializable {
+public class InstanceDto implements Serializable, JsonSerializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -1173956383783083179L;
 
-    @Id
-    @Field(name = "id_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "id_sort")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // Class Variables
     private Long id;
-
     @NotNull
-    @Field()
-    @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "name_sort")
-    @Column(name = "name")
     private String name;
-
     @NotNull
-    @Field()
-    @Field(name = "version_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "version_sort")
-    @Column(name = "version")
     private String version;
-
-    @Field()
-    @Field(name = "publishedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "publishedAt_sort")
-    @Column(name = "published_at")
     private String publishedAt;
-
-    @Field()
-    @Field(name = "lastUpdatedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "lastUpdatedAt_sort")
-    @Column(name = "last_updated_at")
     private String lastUpdatedAt;
-
     @NotNull
-    @Field()
-    @Field(name = "comment_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "comment_sort")
-    @Column(name = "comment")
     private String comment;
-
     @JsonSerialize(using = GeometryJSONSerializer.class)
     @JsonDeserialize(using = GeometryJSONDeserializer.class)
-    @Column(name = "geometry")
     private Geometry geometry;
-
-    @Column(name = "geometry_content_type")
     private String geometryContentType;
-
     @NotNull
-    @Field()
-    @Field(name = "instanceId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "instanceId_sort")
-    @Column(name = "instance_id", updatable = false)
-    @JsonProperty("instanceId")
     private String instanceId; //MRN
-
-    @Field()
-    @Field(name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "keywords_sort")
-    @Column(name = "keywords")
     private String keywords;
-
     @NotNull
-    @Enumerated(EnumType.STRING)
-    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class))
-    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class), name = "status_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "status_sort")
-    @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
-
-    @Field()
-    @Field(name = "organizationId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "organizationId_sort")
-    @Column(name = "organization_id")
-    @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
-
-    @Column(name = "unlocode")
     private String unlocode;
-
-    @Field()
-    @Field(name = "endpointUri_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "endpointUri_sort")
-    @Column(name = "endpoint_uri")
-    @JsonProperty("endpointUri")
     private String endpointUri;
-
-    @Field()
-    @Field(name = "endpointType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "endpointType_sort")
-    @Column(name = "endpoint_type")
-    @JsonProperty("endpointType")
     private String endpointType;
-
-    @Field()
-    @Field(name = "mmsi_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "mmsi_sort")
-    @Column(name = "mmsi")
     private String mmsi;
-
-    @Field()
-    @Field(name = "imo_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "imo_sort")
-    @Column(name = "imo")
     private String imo;
-
-    @Field()
-    @Field(name = "serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "serviceType_sort")
-    @Column(name = "service_type")
-    @JsonProperty("serviceType")
     private String serviceType;
-
-    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
-    @JoinColumn(unique = true)
     private Xml instanceAsXml;
-
-    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
-    @JoinColumn(unique = true)
     private Doc instanceAsDoc;
-
-    @ManyToMany(fetch=FetchType.LAZY)
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_docs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
-    private Set<Doc> docs = new HashSet<>();
+    private Long ledgerRequestId;
+    private Set<Long> docIds = new HashSet<>();
+    private Map<String, String> designs = new HashMap<>();
+    private Map<String, String> specifications = new HashMap<>();
 
     /**
-     * The Ledger Request.
+     * Instantiates a new Instance dto.
      */
-    @OneToOne(mappedBy = "serviceInstance")
-    private LedgerRequest ledgerRequest;
+    public InstanceDto() {
 
-    /**
-     * The Designs.
-     */
-    @ElementCollection
-    Map<String, String> designs = new HashMap<>();
-
-    /**
-     * The Specifications.
-     */
-    @ElementCollection
-    Map<String, String> specifications = new HashMap<>();
+    }
 
     /**
      * Gets id.
@@ -565,39 +443,39 @@ public class Instance implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets ledger request.
+     * Gets ledger request id.
      *
-     * @return the ledger request
+     * @return the ledger request id
      */
-    public LedgerRequest getLedgerRequest() {
-        return ledgerRequest;
+    public Long getLedgerRequestId() {
+        return ledgerRequestId;
     }
 
     /**
-     * Sets ledger request.
+     * Sets ledger request id.
      *
-     * @param ledgerRequest the ledger request
+     * @param ledgerRequestId the ledger request id
      */
-    public void setLedgerRequest(LedgerRequest ledgerRequest) {
-        this.ledgerRequest = ledgerRequest;
+    public void setLedgerRequestId(Long ledgerRequestId) {
+        this.ledgerRequestId = ledgerRequestId;
     }
 
     /**
-     * Gets docs.
+     * Gets doc ids.
      *
-     * @return the docs
+     * @return the doc ids
      */
-    public Set<Doc> getDocs() {
-        return docs;
+    public Set<Long> getDocIds() {
+        return docIds;
     }
 
     /**
-     * Sets docs.
+     * Sets doc ids.
      *
-     * @param docs the docs
+     * @param docIds the doc idss
      */
-    public void setDocs(Set<Doc> docs) {
-        this.docs = docs;
+    public void setDocIds(Set<Long> docIds) {
+        this.docIds = docIds;
     }
 
     /**
@@ -635,91 +513,4 @@ public class Instance implements Serializable, JsonSerializable {
     public void setSpecifications(Map<String, String> specifications) {
         this.specifications = specifications;
     }
-
-    /**
-     * Gets the geometry as a JSON node object.
-     *
-     * @return the geometry in JSON format
-     */
-    public JsonNode getGeometryJson() {
-        return GeometryJSONConverter.convertFromGeometry(this.geometry);
-    }
-
-    /**
-     * Sets the geometry from a JSON node object.
-     *
-     * @param geometry the geometry in a JSON format
-     * @throws ParseException the parse exception
-     */
-    public void setGeometryJson(JsonNode geometry) throws ParseException {
-        this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
-    }
-
-    /**
-     * Overrides the equality operator of the class.
-     *
-     * @param o the object to check the equality
-     * @return whether the two objects are equal
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Instance)) return false;
-        Instance instance = (Instance) o;
-        return Objects.equals(id, instance.id);
-    }
-
-    /**
-     * Overrides the hashcode generation of the object.
-     *
-     * @return the generated hashcode
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    /**
-     * Overrides the string representation of the object.
-     *
-     * @return the string representation
-     */
-    @Override
-    public String toString() {
-        return "Instance{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", version='" + version + '\'' +
-                ", publishedAt='" + publishedAt + '\'' +
-                ", lastUpdatedAt='" + lastUpdatedAt + '\'' +
-                ", comment='" + comment + '\'' +
-                ", geometry=" + geometry +
-                ", geometryContentType='" + geometryContentType + '\'' +
-                ", instanceId='" + instanceId + '\'' +
-                ", keywords='" + keywords + '\'' +
-                ", status='" + status + '\'' +
-                ", organizationId='" + organizationId + '\'' +
-                ", unlocode='" + unlocode + '\'' +
-                ", endpointUri='" + endpointUri + '\'' +
-                ", endpointType='" + endpointType + '\'' +
-                ", mmsi='" + mmsi + '\'' +
-                ", imo='" + imo + '\'' +
-                ", serviceType='" + serviceType + '\'' +
-                '}';
-    }
-
-    /**
-     * Returns the comma separated keywords of the instance as a list of
-     * strings.
-     *
-     * @return The list of keywords
-     */
-    @JsonIgnore
-    public List<String> getKeywordsList() {
-        return Optional.ofNullable(this.keywords)
-                .map(keywords -> keywords.split(" "))
-                .map(Arrays::asList)
-                .orElse(Collections.emptyList());
-    }
-
 }

@@ -14,52 +14,33 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain;
+package net.maritimeconnectivity.serviceregistry.models.dto;
 
-import org.hibernate.annotations.CacheConcurrencyStrategy;
+import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
-import java.util.Objects;
+import java.io.Serializable;
 
 /**
- * The type Xml.
- * <p>
- * A technical way to describe aspects if a service.The Xml should validate
- * against a XSD from a SpecificationTemplate.
- * </p>
+ * The Xml DTO Class.
+ *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Entity
-@Table(name = "xml")
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class Xml {
+public class XmlDto implements Serializable, JsonSerializable {
 
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // Class Variables
     private Long id;
-
     @NotNull
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "comment")
     private String comment;
-
     @NotNull
-    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
-
-    @Column(name = "content_content_type", nullable = false)
     private String contentContentType;
 
     /**
-     * Instantiates a new Xml.
+     * Instantiates a new Xml dto.
      */
-    public Xml() {
+    public XmlDto() {
 
     }
 
@@ -153,43 +134,4 @@ public class Xml {
         this.contentContentType = contentContentType;
     }
 
-    /**
-     * Overrides the equality operator of the class.
-     *
-     * @param o the object to check the equality
-     * @return whether the two objects are equal
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Xml)) return false;
-        Xml xml = (Xml) o;
-        return Objects.equals(id, xml.id);
-    }
-
-    /**
-     * Overrides the hashcode generation of the object.
-     *
-     * @return the generated hashcode
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    /**
-     * Overrides the string representation of the object.
-     *
-     * @return the string representation
-     */
-    @Override
-    public String toString() {
-        return "Xml{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", comment='" + comment + '\'' +
-                ", content='" + content + '\'' +
-                ", contentContentType='" + contentContentType + '\'' +
-                '}';
-    }
 }

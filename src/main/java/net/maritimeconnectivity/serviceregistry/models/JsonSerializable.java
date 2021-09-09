@@ -25,7 +25,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * To allow for a more compact JSON serialization, the VO's do not serialize null properties.
  */
 @JsonIgnoreProperties(value = "stackTrace", ignoreUnknown = true)
-@JsonInclude(value = JsonInclude.Include.NON_NULL)
 public interface JsonSerializable {
 
 }

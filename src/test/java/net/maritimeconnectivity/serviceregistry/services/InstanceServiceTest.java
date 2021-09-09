@@ -601,15 +601,15 @@ class InstanceServiceTest {
         doReturn(mockedQuery).when(this.instanceService).searchInstanceQuery(any());
 
         // Perform the service call
-        DtPage<Instance> result = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
+        Page<Instance> result = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
 
         // Validate the result
         assertNotNull(result);
-        assertEquals(5, result.getRecordsFiltered());
+        assertEquals(5, result.getSize());
 
         // Test each of the result entries
-        for(int i=0; i < result.getRecordsFiltered(); i++){
-            assertEquals(this.instances.get(i), result.getData().get(i));
+        for(int i=0; i < result.getContent().size(); i++){
+            assertEquals(this.instances.get(i), result.getContent().get(i));
         }
     }
 

@@ -91,7 +91,6 @@ class SmartContractProviderTest {
         this.instance.setComment("No comment");
         this.instance.setStatus(ServiceStatus.RELEASED);
         this.instance.setGeometry(point);
-
     }
 
     /**
