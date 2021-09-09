@@ -70,7 +70,6 @@ public class SmartContractProvider {
     protected String ledgerContractAddress;
 
     // MSR Ledger Smart Contract
-    protected WebSocketService webSocketService;
     protected Web3j web3j;
     protected MsrContract msrContract;
 
@@ -160,7 +159,7 @@ public class SmartContractProvider {
      */
     protected Web3j createWeb3j(String url) throws ConnectException {
         final WebSocketService webSocketService =  new WebSocketService(url, true);
-        this.webSocketService.connect();
+        webSocketService.connect();
         return Web3j.build(webSocketService);
     }
 

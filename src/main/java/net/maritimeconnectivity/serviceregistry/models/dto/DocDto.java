@@ -14,69 +14,35 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain;
+package net.maritimeconnectivity.serviceregistry.models.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.hibernate.annotations.Cache;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
+import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 /**
- * The type Doc.
- * <p>
- * A doc represents a human readable document that can be attached to various
- * objects.This could be an office document containing guidelines linked,to a
- * service specification, or a Getting Started PDF attached to a service
- * instance.
- * </p>
+ * The Doc DTO Class.
+ *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Entity
-@Table(name = "document")
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class Doc implements Serializable {
+public class DocDto implements Serializable, JsonSerializable  {
 
-    private static final long serialVersionUID = 1L;
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // Class Variables
     private Long id;
-
     @NotNull
-    @Column(name = "name", nullable = false)
     private String name;
-
-    @Column(name = "comment")
     private String comment;
-
     @NotNull
-    @Column(name = "mimetype", nullable = false)
     private String mimetype;
-
     @NotNull
-    @Lob
-    @Column(name = "filecontent", nullable = false)
     private byte[] filecontent;
-
-    @Column(name = "filecontent_content_type", nullable = false)
     private String filecontentContentType;
 
-    @ManyToMany(mappedBy = "docs")
-    @JsonIgnore
-    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    private Set<Instance> instances = new HashSet<>();
-
     /**
-     * Instantiates a new Doc.
+     * Instantiates a new Doc dto.
      */
-    public Doc() {
+    public DocDto() {
 
     }
 
@@ -188,44 +154,4 @@ public class Doc implements Serializable {
         this.filecontentContentType = filecontentContentType;
     }
 
-    /**
-     * Gets instances.
-     *
-     * @return the instances
-     */
-    public Set<Instance> getInstances() {
-        return instances;
-    }
-
-    /**
-     * Sets instances.
-     *
-     * @param instances the instances
-     */
-    public void setInstances(Set<Instance> instances) {
-        this.instances = instances;
-    }
-
-    /**
-     * Overrides the hashcode generation of the object.
-     *
-     * @return the generated hashcode
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Doc)) return false;
-        Doc doc = (Doc) o;
-        return id.equals(doc.id);
-    }
-
-    /**
-     * Overrides the string representation of the object.
-     *
-     * @return the string representation
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
 }

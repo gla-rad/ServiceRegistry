@@ -17,11 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.controllers.advices.MSRBaseExceptionResolver;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
+import net.maritimeconnectivity.serviceregistry.models.dto.DocDto;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -40,7 +40,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -52,11 +51,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = DocController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class DocControllerTest {
 
     @Autowired
@@ -131,7 +130,7 @@ class DocControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Doc[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc[].class);
+        DocDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto[].class);
         assertEquals(5, Arrays.asList(result).size());
     }
 
@@ -150,8 +149,14 @@ class DocControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Doc result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc.class);
-        assertEquals(this.existingDoc, result);
+        DocDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDoc.getId(), result.getId());
+        assertEquals(this.existingDoc.getName(), result.getName());
+        assertEquals(this.existingDoc.getMimetype(), result.getMimetype());
+        assertEquals(this.existingDoc.getComment(), result.getComment());
+        assertEquals(this.existingDoc.getFilecontentContentType(), result.getFilecontentContentType());
+        assertTrue(Arrays.equals(this.existingDoc.getFilecontent(), result.getFilecontent()));
     }
 
     /**
@@ -187,8 +192,14 @@ class DocControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Doc result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc.class);
-        assertEquals(this.existingDoc, result);
+        DocDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDoc.getId(), result.getId());
+        assertEquals(this.existingDoc.getName(), result.getName());
+        assertEquals(this.existingDoc.getMimetype(), result.getMimetype());
+        assertEquals(this.existingDoc.getComment(), result.getComment());
+        assertEquals(this.existingDoc.getFilecontentContentType(), result.getFilecontentContentType());
+        assertTrue(Arrays.equals(this.existingDoc.getFilecontent(), result.getFilecontent()));
     }
 
     /**
@@ -245,8 +256,14 @@ class DocControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Doc result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc.class);
-        assertEquals(this.existingDoc, result);
+        DocDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDoc.getId(), result.getId());
+        assertEquals(this.existingDoc.getName(), result.getName());
+        assertEquals(this.existingDoc.getMimetype(), result.getMimetype());
+        assertEquals(this.existingDoc.getComment(), result.getComment());
+        assertEquals(this.existingDoc.getFilecontentContentType(), result.getFilecontentContentType());
+        assertTrue(Arrays.equals(this.existingDoc.getFilecontent(), result.getFilecontent()));
     }
 
     /**

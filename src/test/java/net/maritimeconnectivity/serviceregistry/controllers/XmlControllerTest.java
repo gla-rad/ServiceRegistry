@@ -17,9 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
+import net.maritimeconnectivity.serviceregistry.models.dto.XmlDto;
 import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import org.apache.commons.io.IOUtils;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
@@ -32,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -62,6 +65,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = XmlController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class XmlControllerTest {
 
     @Autowired
@@ -153,8 +157,13 @@ class XmlControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Xml result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Xml.class);
-        assertEquals(this.existingXml, result);
+        XmlDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), XmlDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingXml.getId(), result.getId());
+        assertEquals(this.existingXml.getName(), result.getName());
+        assertEquals(this.existingXml.getComment(), result.getComment());
+        assertEquals(this.existingXml.getContentContentType(), result.getContentContentType());
+        assertEquals(this.existingXml.getContent(), result.getContent());
     }
 
     /**
@@ -173,7 +182,7 @@ class XmlControllerTest {
 
     /**
      * Test that we can create a new xml correctly through a POST request.
-     * The incoming instance should NOT has an ID, while the returned
+     * The incoming instance should NOT have an ID, while the returned
      * value will have the ID field populated.
      */
     @Test
@@ -190,8 +199,13 @@ class XmlControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Xml result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Xml.class);
-        assertEquals(this.existingXml, result);
+        XmlDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), XmlDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingXml.getId(), result.getId());
+        assertEquals(this.existingXml.getName(), result.getName());
+        assertEquals(this.existingXml.getComment(), result.getComment());
+        assertEquals(this.existingXml.getContentContentType(), result.getContentContentType());
+        assertEquals(this.existingXml.getContent(), result.getContent());
     }
 
     /**
@@ -230,7 +244,12 @@ class XmlControllerTest {
 
         // Parse and validate the response
         Xml result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Xml.class);
-        assertEquals(this.existingXml, result);
+        assertNotNull(result);
+        assertEquals(this.existingXml.getId(), result.getId());
+        assertEquals(this.existingXml.getName(), result.getName());
+        assertEquals(this.existingXml.getComment(), result.getComment());
+        assertEquals(this.existingXml.getContentContentType(), result.getContentContentType());
+        assertEquals(this.existingXml.getContent(), result.getContent());
     }
 
     /**

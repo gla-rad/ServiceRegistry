@@ -17,10 +17,12 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
@@ -31,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -56,6 +60,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = InstanceController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class InstanceControllerTest {
 
     @Autowired
@@ -128,7 +133,7 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Instance[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance[].class);
+        InstanceDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto[].class);
         assertEquals(5, Arrays.asList(result).size());
     }
 
@@ -153,15 +158,11 @@ class InstanceControllerTest {
         dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
         dtPagingRequest.setColumns(Collections.singletonList(dtColumn));
 
-        // Create a mocked datatables paging response
-        DtPage<Instance> dtPage = new DtPage<>();
-        dtPage.setData(this.instances);
-        dtPage.setDraw(1);
-        dtPage.setRecordsFiltered(this.instances.size());
-        dtPage.setRecordsTotal(this.instances.size());
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(dtPage).when(this.instanceService).handleDatatablesPagingRequest(any());
+        doReturn(page).when(this.instanceService).handleDatatablesPagingRequest(any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/instances/dt")
@@ -171,7 +172,7 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        DtPage<Instance> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
+        DtPage<InstanceDto> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
         assertEquals(this.instances.size(), result.getData().size());
     }
 
@@ -190,8 +191,14 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.existingInstance, result);
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**
@@ -227,8 +234,14 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.existingInstance, result);
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**
@@ -266,8 +279,14 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.existingInstance, result);
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**

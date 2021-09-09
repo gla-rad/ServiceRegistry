@@ -14,60 +14,38 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain;
+package net.maritimeconnectivity.serviceregistry.models.dto;
 
+import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
+import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Objects;
 
 /**
- * The type for request to ledger.
- * <p>
- * An service instance can make a request to the MSR ledger by a service provider.
- * The type takes place to describe a status in such process of interaction with
- * the ledger, e.g., registration. It is assumed that there exists a vetting
- * procedure for instance registration to the ledger.
- * </p>
- * @author Jinki Jung (email: jinki@dmc.international)
+ * The Ledger Request DTO Class.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Entity
-@Table(name = "ledgerrequest")
-public class LedgerRequest implements Serializable {
+public class LedgerRequestDto implements Serializable, JsonSerializable {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // Class Variables
     private Long id;
-
     @NotNull
-    @OneToOne(cascade = {CascadeType.REMOVE})
-    @JoinColumn(name = "id")
     private Instance serviceInstance;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "varchar(30) default 'created'")
     private LedgerRequestStatus status = LedgerRequestStatus.CREATED;
-
-    @Column(name = "reason", nullable = true)
     private String reason;
-
-    @Column(name = "created_at", updatable = false, nullable = true)
     private String createdAt;
-
-    @Column(name = "last_updated_at", nullable = true)
     private String lastUpdatedAt;
+
+    /**
+     * Instantiates a new Ledger request dto.
+     */
+    public LedgerRequestDto() {
+
+    }
 
     /**
      * Gets id.
@@ -153,10 +131,10 @@ public class LedgerRequest implements Serializable {
     /**
      * Sets created at.
      *
-     * @param submittedAt the submitted at
+     * @param createdAt the created at
      */
-    public void setCreatedAt(String submittedAt) {
-        this.createdAt = submittedAt;
+    public void setCreatedAt(String createdAt) {
+        this.createdAt = createdAt;
     }
 
     /**
@@ -175,30 +153,6 @@ public class LedgerRequest implements Serializable {
      */
     public void setLastUpdatedAt(String lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
-    }
-
-    /**
-     * Overrides the equality operator of the class.
-     *
-     * @param o the object to check the equality
-     * @return whether the two objects are equal
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof LedgerRequest)) return false;
-        LedgerRequest that = (LedgerRequest) o;
-        return Objects.equals(id, that.id) && serviceInstance.equals(that.serviceInstance);
-    }
-
-    /**
-     * Overrides the hashcode generation of the object.
-     *
-     * @return the generated hashcode
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, serviceInstance);
     }
 
 }

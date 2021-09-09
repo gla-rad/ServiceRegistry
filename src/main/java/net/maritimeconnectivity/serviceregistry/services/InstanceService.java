@@ -360,7 +360,7 @@ public class InstanceService {
      * @return the Datatables paged response
      */
     @Transactional(readOnly = true)
-    public DtPage<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+    public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
         FullTextQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue());
         searchQuery.setFirstResult(dtPagingRequest.getStart());
@@ -373,12 +373,11 @@ public class InstanceService {
                 .ifPresent(searchQuery::setSort);
 
         // For some reason we need this casting otherwise JDK8 complains
-        return (DtPage<Instance>) Optional.of(searchQuery)
+        return Optional.of(searchQuery)
                 .map(FullTextQuery::getResultList)
                 .map(stations -> new PageImpl<>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
                 .map(Page.class::cast)
-                .map(page -> new DtPage<>((Page<Instance>)page, dtPagingRequest))
-                .orElseGet(DtPage::new);
+                .orElseGet(Page::empty);
     }
 
     /**
