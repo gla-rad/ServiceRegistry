@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.dto.DocDto;
@@ -63,6 +64,9 @@ class DocControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    public DomainDtoMapper docDomainToDtoMapper;
 
     @MockBean
     private DocService docService;
@@ -186,7 +190,7 @@ class DocControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.newDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.newDoc, DocDto.class))))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -212,7 +216,7 @@ class DocControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -231,7 +235,7 @@ class DocControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -240,7 +244,7 @@ class DocControllerTest {
 
     /**
      * Test that we can update an existing doc correctly through a PUT
-     * request. The incoming instance should always have an ID.
+     * request. The incoming doc should always have an ID.
      */
     @Test
     void testPutDoc() throws Exception {
@@ -250,7 +254,7 @@ class DocControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(put("/api/docs/{id}", this.existingDoc.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -267,7 +271,7 @@ class DocControllerTest {
     }
 
     /**
-     * Test that if we try to update an doc with th wrong format, a bad
+     * Test that if we try to update a doc with th wrong format, a bad
      * request will be returned.
      */
     @Test
@@ -278,7 +282,7 @@ class DocControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/docs/{id}", this.existingDoc.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
