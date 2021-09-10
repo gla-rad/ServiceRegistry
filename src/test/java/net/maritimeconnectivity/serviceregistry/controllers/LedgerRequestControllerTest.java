@@ -139,7 +139,6 @@ class LedgerRequestControllerTest {
         this.existingLedgerRequest.setLastUpdatedAt(objectMapper.writeValueAsString(new Date()));
         this.existingLedgerRequest.setCreatedAt(objectMapper.writeValueAsString(new Date()));
         this.existingLedgerRequest.setServiceInstance(instance);
-
     }
 
     /**

@@ -61,9 +61,9 @@ public class XmlService {
     }
 
     /**
-     *  Get one xml by id.
+     *  Get one xml by ID.
      *
-     *  @param id the id of the entity
+     *  @param id       the ID of the entity
      *  @return the entity
      */
     @Transactional(readOnly = true)
@@ -76,7 +76,7 @@ public class XmlService {
     /**
      * Save a xml.
      *
-     * @param xml the entity to save
+     * @param xml       the entity to save
      * @return the persisted entity
      */
     @Transactional
@@ -86,9 +86,9 @@ public class XmlService {
     }
 
     /**
-     *  Delete the  xml by id.
+     *  Delete the  xml by ID.
      *
-     *  @param id the id of the entity
+     *  @param id       the ID of the entity
      */
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
@@ -105,8 +105,8 @@ public class XmlService {
      * specification schema, in order to validate whether the input is actually
      * correct.
      *
-     * @param content the XML content
-     * @param schema the G1128 schema to validate the content with
+     * @param content   the XML content
+     * @param schema    the G1128 schema to validate the content with
      * @return the generated G1128 specification object
      */
     public Object validate(String content, G1128Schemas schema) throws JAXBException {

@@ -147,9 +147,9 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by id.
+     * Get one instance by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -162,7 +162,7 @@ public class InstanceService {
     /**
      * Save a instance.
      *
-     * @param instance the entity to save
+     * @param instance  the entity to save
      * @return the persisted entity
      */
     @Transactional
@@ -203,7 +203,7 @@ public class InstanceService {
     /**
      * Delete the instance by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      */
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
@@ -221,8 +221,8 @@ public class InstanceService {
     /**
      * Update the status of an instance by ID.
      *
-     * @param id            The ID of the entity
-     * @param status        The status of the entity
+     * @param id        the ID of the entity
+     * @param status    the status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
@@ -257,8 +257,8 @@ public class InstanceService {
     /**
      * Update the ledger status of an instance by ID.
      *
-     * @param id            The ID of the entity
-     * @param ledgerStatus  The ledger status of the entity
+     * @param id            the ID of the entity
+     * @param ledgerStatus  the ledger status of the entity
      */
     @Transactional
     public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
@@ -286,9 +286,9 @@ public class InstanceService {
 
     /**
      * Get all the instances that match a domain specific ID (for example,
-     * maritime id), regardless of their version.
+     * maritime ID), regardless of their version.
      *
-     * @param domainId          the domain specific id of the instance
+     * @param domainId      the domain specific ID of the instance
      * @return the list of matching entities
      */
     public List<Instance> findAllByDomainId(String domainId) {
@@ -297,10 +297,11 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by domain specific id (for example, maritime id) and version.
+     * Get one instance by domain specific id (for example, maritime id) and
+     * version.
      *
-     * @param domainId            the domain specific id of the instance
-     * @param version             the version identifier of the instance
+     * @param domainId      the domain specific id of the instance
+     * @param version       the version identifier of the instance
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -314,9 +315,10 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by domain specific id (for example, maritime id), only return the latest version.
+     * Get one instance by domain specific ID (for example, maritime ID), only
+     * return the latest version.
      *
-     * @param domainId            the domain specific id of the instance
+     * @param domainId      the domain specific id of the instance
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -339,7 +341,7 @@ public class InstanceService {
      *    <li>Parsing GeoData (GeometryParseException if fails)</li>
      * </ul>
      *
-     * @param instance the instance to be saved
+     * @param instance      the instance to be saved
      * @throws XMLValidationException If fails first phase (Validating and parsing XML)
      * @throws GeometryParseException If fails second phase (Parsing geo data)
      */
@@ -412,7 +414,7 @@ public class InstanceService {
     /**
      * Parse instance attributes from the xml payload for search/filtering
      *
-     * @param instance the instance to parse
+     * @param instance      the instance to parse
      * @return an instance with its attributes set
      * @throws JAXBException if the XML is invalid or required attributes not present
      */
@@ -437,7 +439,7 @@ public class InstanceService {
     /**
      * Parse instance geometry from the xml payload for search/filtering
      *
-     * @param instance the instance to parse
+     * @param instance      the instance to parse
      * @return an instance with its attributes set
      * @throws Exception if the XML is invalid or attributes not present
      */
@@ -473,18 +475,20 @@ public class InstanceService {
      * Constructs a hibernate search query using Lucene based on the provided
      * search test. This query will be based solely on the stations table and
      * will include the following fields:
-     * - Name
-     * - Version
-     * - Last Updated At
-     * - Keywords
-     * - Status
-     * - Organisation ID
-     * - Endpoint URI
-     * - MMSI
-     * - IMO
-     * - Service Type
+     * <ul>
+     *  <li>Version</li>Name
+     *  <li>Version</li>
+     *  <li>Last Updated At</li>
+     *  <li>Status</li>
+     *  <li>Status</li>
+     *  <li>Organization ID</li>
+     *  <li>ndpoint URI</li>
+     *  <li>MMSI</li>
+     *  <li>IMO</li>
+     *  <li>Service Type</li>
+     * </ul>
      *
-     * @param searchText the text to be searched
+     * @param searchText    the text to be searched
      * @return the full text query
      */
     protected FullTextQuery searchInstanceQuery(String searchText) {

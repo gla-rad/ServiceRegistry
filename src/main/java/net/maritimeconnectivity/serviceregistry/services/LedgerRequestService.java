@@ -46,10 +46,14 @@ import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.peek;
 
 /**
  * Service Implementation for managing Ledger Requests in the database.
- *
+ * <p>
  * This service is optional:
- *  To disable add the "ledger.enabled=false" in the application properties.
- *
+ * <ul>
+ *     <li>
+ *         To disable add the "ledger.enabled=false" in the application properties.
+ *     </li>
+ * </ul>
+ * </p>
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Service
@@ -59,10 +63,10 @@ import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.peek;
 public class LedgerRequestService {
 
     /**
-     * The Ledger Request Repo.
+     * The Ledger Smart Component Provider.
      */
     @Autowired
-    LedgerRequestRepo ledgerRequestRepo;
+    SmartContractProvider smartContractProvider;
 
     /**
      * The Instance Service.
@@ -71,15 +75,15 @@ public class LedgerRequestService {
     InstanceService instanceService;
 
     /**
-     * The Ledger Smart Component Provider.
+     * The Ledger Request Repo.
      */
     @Autowired
-    SmartContractProvider smartContractProvider;
+    LedgerRequestRepo ledgerRequestRepo;
 
     /**
      * Get all the ledger requests.
      *
-     * @param pageable the pagination information
+     * @param pageable      the pagination information
      * @return the list of entities
      */
     @Transactional(readOnly = true)
@@ -91,7 +95,7 @@ public class LedgerRequestService {
     /**
      * Get one ledger request by ID.
      *
-     * @param id the id of the entity
+     * @param id            the ID of the entity
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -104,7 +108,7 @@ public class LedgerRequestService {
     /**
      * Get all the ledger requests by instance ID.
      *
-     * @param instanceId the ID of the instance to find the ledger request for
+     * @param instanceId    the ID of the instance to find the ledger request for
      * @return the list of entities
      */
     @Transactional(readOnly = true)
@@ -117,7 +121,7 @@ public class LedgerRequestService {
     /**
      * Save a ledger request.
      *
-     * @param request the entity to save
+     * @param request       the entity to save
      * @return the persisted entity
      */
     @Transactional
@@ -145,7 +149,7 @@ public class LedgerRequestService {
     /**
      * Delete ledger request by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      */
     @Transactional
     public void delete(@NotNull Long id) {
@@ -175,9 +179,8 @@ public class LedgerRequestService {
     /**
      * Update the status of LedgerRequest by id.
      *
-     * @param id     the id of the entity
-     * @param status the status of the entity
-     * @throws Exception any exceptions thrown while updating the status
+     * @param id        the ID of the entity
+     * @param status    the status of the entity
      */
     @Transactional
     public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status) {
@@ -187,9 +190,9 @@ public class LedgerRequestService {
     /**
      * Update the status of LedgerRequest by id.
      *
-     * @param id     the id of the entity
-     * @param status the status of the entity
-     * @param reason the reason for updating the status
+     * @param id        the ID of the entity
+     * @param status    the status of the entity
+     * @param reason    the reason for updating the status
      */
     public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) {
         return this.updateStatus(id, status, reason, false);
@@ -199,10 +202,10 @@ public class LedgerRequestService {
      * This is an internal update operation for the status of LedgerRequest by
      * ID, that allows the service to force an update on restricted statuses.
      *
-     * @param id     the id of the entity
-     * @param status the status of the entity
-     * @param reason the reason for updating the status
-     * @param force  whether to force restricted statuses
+     * @param id        the ID of the entity
+     * @param status    the status of the entity
+     * @param reason    the reason for updating the status
+     * @param force     whether to force restricted statuses
      */
     @Transactional
     protected LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason, boolean force) {
@@ -235,7 +238,7 @@ public class LedgerRequestService {
      * the primary goal of this service, and without the smart contract that
      * connects us to the ledger, this service doesn't event initialise.
      *
-     * @param id    The ID of the entity
+     * @param id        The ID of the entity
      * @return The updated ledger request pending the result
      */
     protected LedgerRequest registerInstanceToLedger(@NotNull Long id) {
@@ -271,7 +274,7 @@ public class LedgerRequestService {
      * provided ledger request object conforms to all the standards for being
      * persisted in the database.
      *
-     * @param request the ledger request to be saved
+     * @param request       the ledger request to be saved
      * @throws DataNotFoundException If the ledger request or the referenced instance is invalid
      */
     protected void validateRequestForSave(LedgerRequest request) {
@@ -294,16 +297,16 @@ public class LedgerRequestService {
     /**
      * This helper function handles the ledger registration operation
      * responses. It is designed as a BiConsumer that handles the response
-     * of a asynchronous call completion, hence a throwable is also present
+     * of an asynchronous call completion, hence a throwable is also present
      * in the input argument list.
      *
-     * @param transactionReceipt    The ledger transaction receipt
-     * @param ex                    Any exception that might have been thrown during the transaction
+     * @param receipt       The ledger transaction receipt
+     * @param ex            Any exception that might have been thrown during the transaction
      */
-    protected void handleLedgerRegistrationResponse(LedgerRequest ledgerRequest, TransactionReceipt transactionReceipt, Throwable ex) {
+    protected void handleLedgerRegistrationResponse(LedgerRequest ledgerRequest, TransactionReceipt receipt, Throwable ex) {
         if (Objects.isNull(ex)) {
             final Instance instance = ledgerRequest.getServiceInstance();
-            if (transactionReceipt.getStatus().equals("0x1")) {
+            if (receipt.getStatus().equals("0x1")) {
                 log.info("Instance is successfully registered to the ledger - instance name: " + instance.getName(), true);
                 this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.SUCCEEDED);
             } else {
