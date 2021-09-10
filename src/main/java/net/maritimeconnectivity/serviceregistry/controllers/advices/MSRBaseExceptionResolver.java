@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers.advices;
 
 import net.maritimeconnectivity.serviceregistry.exceptions.MSRBaseException;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
+import net.maritimeconnectivity.serviceregistry.utils.StreamUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -27,7 +28,14 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.catchExceptionToNull;
 
 /**
  * The MSR Base Exception Resolver Class.
@@ -60,14 +68,17 @@ public class MSRBaseExceptionResolver extends ResponseEntityExceptionHandler {
                 .map(array -> array[2])
                 .map(s -> s.replaceAll("s$", ""))
                 .orElse("general-entity");
-        final String errorKey = Optional.of(request)
+        final String requestBody = Optional.of(request)
                 .filter(ServletWebRequest.class::isInstance)
                 .map(ServletWebRequest.class::cast)
                 .map(ServletWebRequest::getRequest)
-                .map(HttpServletRequest::getMethod)
-                .orElse("general-error");
-        return handleExceptionInternal(ex, ex,
-                HeaderUtil.createFailureAlert(entityName, errorKey, ex.getMessage()),
+                .map(r -> { try { return r.getReader(); } catch (IOException e) { return null; } })
+                .map(BufferedReader::lines)
+                .orElseGet(Stream::empty)
+                .collect(Collectors.joining(System.lineSeparator()));
+        return handleExceptionInternal(ex,
+                requestBody,
+                HeaderUtil.createFailureAlert(entityName, ex.getMessage(), ex.toString()),
                 ex.getHttpStatus(),
                 request);
     }

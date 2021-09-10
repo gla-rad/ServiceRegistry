@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
@@ -73,6 +74,9 @@ class XmlControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    public DomainDtoMapper xmlDomainToDtoMapper;
 
     @MockBean
     private XmlService xmlService;
@@ -138,7 +142,7 @@ class XmlControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Xml[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Xml[].class);
+        XmlDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), XmlDto[].class);
         assertEquals(5, Arrays.asList(result).size());
     }
 
@@ -193,7 +197,7 @@ class XmlControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/xmls")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.newXml)))
+                .content(this.objectMapper.writeValueAsString(this.xmlDomainToDtoMapper.convertTo(this.newXml, XmlDto.class))))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -218,7 +222,7 @@ class XmlControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/xmls")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingXml)))
+                .content(this.objectMapper.writeValueAsString(this.xmlDomainToDtoMapper.convertTo(this.existingXml, XmlDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -227,7 +231,7 @@ class XmlControllerTest {
 
     /**
      * Test that we can update an existing xml correctly through a PUT
-     * request. The incoming instance should always have an ID.
+     * request. The incoming xml should always have an ID.
      */
     @Test
     void testPutXml() throws Exception {
@@ -237,13 +241,13 @@ class XmlControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(put("/api/xmls/{id}", this.existingXml.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingXml)))
+                .content(this.objectMapper.writeValueAsString(this.xmlDomainToDtoMapper.convertTo(this.existingXml, XmlDto.class))))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
-        Xml result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Xml.class);
+        XmlDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), XmlDto.class);
         assertNotNull(result);
         assertEquals(this.existingXml.getId(), result.getId());
         assertEquals(this.existingXml.getName(), result.getName());
