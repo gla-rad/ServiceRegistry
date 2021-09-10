@@ -23,7 +23,6 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.LedgerRequestDto;
-import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.services.LedgerRequestService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
@@ -52,12 +51,6 @@ public class LedgerRequestController {
      */
     @Autowired
     private LedgerRequestService ledgerRequestService;
-
-    /**
-     * The Instance Service.
-     */
-    @Autowired
-    private InstanceService instanceService;
 
     /**
      * Object Mapper from Domain to DTO.
@@ -152,21 +145,6 @@ public class LedgerRequestController {
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("ledgerrequest", id.toString()))
                 .build();
-    }
-
-    /**
-     * PUT /api/ledgerrequest/{id}/register : Proceed to register the "ID"
-     * ledger request to the MSR ledger.
-     *
-     * @param id id of request
-     * @return the ResponseEntity with status 202 (Accepted) when there is no problem
-     */
-    @PutMapping(value = "/{id}/register")
-    public ResponseEntity registerToLedger(@PathVariable Long id) {
-        log.debug("REST request to register to the MSR ledger the request : {}", id);
-        final LedgerRequest request = ledgerRequestService.registerInstanceToLedger(id);
-        return ResponseEntity.accepted()
-                .body(this.ledgerRequestDomainToDtoMapper.convertTo(request, LedgerRequestDto.class));
     }
 
 }

@@ -238,7 +238,7 @@ public class LedgerRequestService {
      * @param id    The ID of the entity
      * @return The updated ledger request pending the result
      */
-    public LedgerRequest registerInstanceToLedger(@NotNull Long id) {
+    protected LedgerRequest registerInstanceToLedger(@NotNull Long id) {
         // Make sure we actually have a valid connection to
         final MsrContract msrContract = Optional.ofNullable(this.smartContractProvider)
                 // TODO: For some reason our smart contract seems invalid!!!

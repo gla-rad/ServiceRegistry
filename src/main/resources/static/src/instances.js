@@ -434,7 +434,10 @@ function onStatusUpdate($modalDiv, id, status) {
         },
         error: (response, status, more) => {
             $modalDiv.removeClass('loading');
-            showError(response.responseJSON["message"]);
+            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
+                    response.getResponseHeader('X-mcsrApp-error') :
+                    "Error while trying to update the instance status!";
+            showError(errorMsg);
         }
     });
 }
@@ -459,7 +462,10 @@ function onLedgerRequestUpdate($modalDiv, id, status) {
         },
         error: (response, status, more) => {
             $modalDiv.removeClass('loading');
-            showError(response.responseJSON["message"]);
+            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
+                    response.getResponseHeader('X-mcsrApp-error') :
+                    "Error while trying to update the instance ledger status!";
+            showError(errorMsg);
         }
     });
 }

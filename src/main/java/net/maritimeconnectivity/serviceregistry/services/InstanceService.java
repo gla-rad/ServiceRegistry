@@ -248,9 +248,9 @@ public class InstanceService {
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException e) {
-            log.error("Problem during instance status update.", e);
-            throw e;
+        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException ex) {
+            log.error("Problem during instance status update.", ex);
+            throw ex;
         }
     }
 
@@ -405,9 +405,8 @@ public class InstanceService {
         // For some reason we need this casting otherwise JDK8 complains
         return Optional.of(searchQuery)
                 .map(FullTextQuery::getResultList)
-                .map(stations -> new PageImpl<>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
-                .map(Page.class::cast)
-                .orElseGet(Page::empty);
+                .map(stations -> new PageImpl<Instance>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
     /**

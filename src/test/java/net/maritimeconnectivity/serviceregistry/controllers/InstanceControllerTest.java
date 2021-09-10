@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
@@ -68,6 +69,9 @@ class InstanceControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    public DomainDtoMapper instanceDomainToDtoMapper;
 
     @MockBean
     private InstanceService instanceService;
@@ -217,7 +221,7 @@ class InstanceControllerTest {
 
     /**
      * Test that we can create a new instance correctly through a POST request.
-     * The incoming instance should NOT has an ID, while the returned
+     * The incoming instance should NOT have an ID, while the returned
      * value will have the ID field populated.
      */
     @Test
@@ -228,7 +232,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/instances")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.newInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.newInstance, InstanceDto.class))))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -254,7 +258,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/instances")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -273,7 +277,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -302,7 +306,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -322,7 +326,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -342,7 +346,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
