@@ -16,8 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain.enums;
 
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
-
 /**
  * The Ledger Request Status Enumeration.
  * <p>
@@ -27,36 +25,66 @@ import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecifications
  */
 
 public enum LedgerRequestStatus {
-    INACTIVE("inactive"), // idle state
-    CREATED("created"), // submitted to MSR but vetting procedure not initiated
-    VETTING("vetting"), // vetting in progress
-    VETTED("vetted"), // passed vetting
-    REQUESTING("requesting"), // request being sent to the ledger
-    SUCCEEDED("succeeded"), // request being settled successfully
-    FAILED("failed"), // request being failed with reason
-    REJECTED("rejected"); // request being rejected with reason
+    INACTIVE("inactive", false), // idle state
+    CREATED("created", false), // submitted to MSR but vetting procedure not initiated
+    VETTING("vetting", false), // vetting in progress
+    VETTED("vetted", false), // passed vetting
+    REQUESTING("requesting", true), // request being sent to the ledger
+    SUCCEEDED("succeeded", true), // request being settled successfully
+    FAILED("failed", true), // request being failed with reason
+    REJECTED("rejected", true); // request being rejected with reason
 
+    // Enum Variables
     private final String value;
+    private final boolean restricted;
 
-    private LedgerRequestStatus(String v) {
-        this.value = v;
+    /**
+     * The LedgerRequestStatus constructor.
+     *
+     * @param value     The string value of the enum
+     * @param restricted   Whether local assignment is allowed
+     */
+    LedgerRequestStatus(String value, boolean restricted) {
+        this.value = value;
+        this.restricted = restricted;
     }
 
+    /**
+     * Value string.
+     *
+     * @return the string
+     */
     public String value() {
         return this.value;
     }
 
-    public static LedgerRequestStatus fromValue(String v) {
+    /**
+     * Is restricted boolean.
+     *
+     * @return the boolean
+     */
+    public boolean isRestricted() {
+        return restricted;
+    }
+
+    /**
+     * Retrieves the enum entry from a string representation.
+     *
+     * @param value     The string representation of the enum
+     * @return the matching enum entry
+     */
+    public static LedgerRequestStatus fromValue(String value) {
         LedgerRequestStatus[] var1 = values();
         int var2 = var1.length;
 
         for(int var3 = 0; var3 < var2; ++var3) {
             LedgerRequestStatus c = var1[var3];
-            if (c.value.equals(v)) {
+            if (c.value.equals(value)) {
                 return c;
             }
         }
 
-        throw new IllegalArgumentException(v);
+        throw new IllegalArgumentException(value);
     }
+
 }
