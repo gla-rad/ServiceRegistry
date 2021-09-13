@@ -84,7 +84,7 @@ class LedgerRequestServiceTest {
     private LedgerRequest existingLedgerRequest;
     private MsrContract msrContract;
 
-    // The We3j transaction calls
+    // For the We3j transaction calls
     private RemoteFunctionCall remoteFunctionCall;
     private CompletableFuture completableFuture;
     private CompletableFuture completableFutureWithEx;
@@ -144,7 +144,7 @@ class LedgerRequestServiceTest {
         // Mock an MSR smart contract
         this.msrContract = mock(MsrContract.class);
 
-        // Mock the Web3j remove function call and response
+        // Mock the Web3j remote function call and response
         this.remoteFunctionCall = mock(RemoteFunctionCall.class);
         this.transactionReceipt = mock(TransactionReceipt.class);
 
@@ -576,7 +576,7 @@ class LedgerRequestServiceTest {
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
 
         // Make sure we updated the ledger request status twice, once with
-        // requesting and once with succeeded after the ledger Web3j call.
+        // requesting and once with failure after the ledger Web3j call.
         verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
         verify(this.ledgerRequestService, times(1)).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
     }
@@ -607,7 +607,7 @@ class LedgerRequestServiceTest {
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
 
         // Make sure we updated the ledger request status twice, once with
-        // requesting and once with succeeded after the ledger Web3j call.
+        // requesting and once with failure after the ledger Web3j call.
         verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
         verify(this.ledgerRequestService, times(1)).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
     }
