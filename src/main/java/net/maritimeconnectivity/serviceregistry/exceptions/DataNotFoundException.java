@@ -16,6 +16,8 @@
 
 package net.maritimeconnectivity.serviceregistry.exceptions;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * The Data Not Found Exception.
  *
@@ -24,18 +26,30 @@ package net.maritimeconnectivity.serviceregistry.exceptions;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class DataNotFoundException extends RuntimeException {
+public class DataNotFoundException extends MSRBaseException {
 
-    private static final long serialVersionUID = -2171229941490315103L;
+    private static final long serialVersionUID = -7568214025054434706L;
+
+    /**
+     * The Exception HTTP Status Code.
+     */
+    private static HttpStatus httpStatus = HttpStatus.NOT_FOUND;
+
+    /**
+     * Instantiates an empty Data Not Found exception.
+     */
+    public DataNotFoundException() {
+        super("The requested data was not found", null, httpStatus);
+    }
 
     /**
      * Instantiates a new Data Not Found exception.
      *
      * @param message the message
-     * @param t       the t
+     * @param t       the throwable
      */
     public DataNotFoundException(String message, Throwable t) {
-        super(message, t);
+        super(message, t, httpStatus);
     }
 
 }
