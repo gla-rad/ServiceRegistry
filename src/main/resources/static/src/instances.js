@@ -112,7 +112,19 @@ var columnDefs = [{
     readonly : true,
     visible: false,
     searchable: false
-}];
+}, {
+    data: "ledgerRequestId",
+    type: "hidden",
+    readonly : true,
+    visible: false,
+    searchable: false
+}, {
+     data: "ledgerRequestStatus",
+     type: "hidden",
+     readonly : true,
+     visible: false,
+     searchable: false
+ }];
 
 $(() => {
     instancesTable = $('#instancesTable').DataTable({
@@ -169,7 +181,25 @@ $(() => {
             action: (e, dt, node, config) => {
                 loadInstanceCoverage(e, dt, node, config);
             }
-         }],
+        }, {
+            extend: 'selected', // Bind to Selected row
+            text: '<i class="fas fa-clipboard-check"></i>',
+            titleAttr: 'Instance Status',
+            name: 'instance-status', // do not change name
+            className: 'instance-status-toggle',
+            action: (e, dt, node, config) => {
+                loadInstanceStatus(e, dt, node, config);
+            }
+        }, {
+            extend: 'selected', // Bind to Selected row
+            text: '<i class="fas fa-cloud-upload-alt"></i>',
+            titleAttr: 'Instance Global Ledger Status',
+            name: 'instance-ledger-status', // do not change name
+            className: 'instance-ledger-toggle',
+            action: (e, dt, node, config) => {
+                loadInstanceLedgerStatus(e, dt, node, config);
+            }
+        }],
         onAddRow: function (datatable, rowdata, success, error) {
             $.ajax({
                 url: '/api/instances',
@@ -256,6 +286,41 @@ $(() => {
         }
     });
 
+    // We also need to link the instance status toggle button with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
+    instancesTable.buttons('.instance-status-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceStatusPanel" });
+
+    // On confirmation of the instance saving, we need to make an AJAX
+    // call back to the service to save the entry.
+    $('#instanceStatusPanel').on('click', '.btn-ok', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        $modalDiv.addClass('loading');
+        onStatusUpdate($modalDiv,
+            instancesTable.row({selected : true}).data()["id"],
+            $("#instanceStatusPanel").find("#instanceStatusSelect").val());
+    });
+
+    // We also need to link the instance ledger toggle button with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
+    instancesTable.buttons('.instance-ledger-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceLedgerPanel" });
+
+    // On confirmation of the instance saving, we need to make an AJAX
+    // call back to the service to save the entry.
+    $('#instanceLedgerPanel').on('click', '.btn-ok', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        $modalDiv.addClass('loading');
+        console.log(instancesTable.row({selected : true}).data());
+        onLedgerRequestUpdate($modalDiv,
+            instancesTable.row({selected : true}).data()["id"],
+            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
+    });
+
     // We also need to link the instance coverage toggle button with the the modal
     // panel so that by clicking the button the panel pops up. It's easier done with
     // jQuery.
@@ -311,6 +376,8 @@ $(() => {
  * proven correct we can use the returned JSON object to populate the instance
  * editor field values. Note that some of the G-1128 field do not correspond
  * to the names of the fields used here so we need to translate them.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the validation
  */
 function onValidateXml($modalDiv) {
     $.ajax({
@@ -349,6 +416,61 @@ function onValidateXml($modalDiv) {
 }
 
 /**
+ * Using an AJAX call we ask the server to update the instance status and if
+ * proven successful, we can request the instances datatables to reload.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the update
+ * @param {number}      id          The ID of the instance to be updated
+ * @param {String}      status      The new status value
+ */
+function onStatusUpdate($modalDiv, id, status) {
+    $.ajax({
+        url: `/api/instances/${id}/status?status=${status}`,
+        type: 'PUT',
+        contentType: 'application/xml',
+        success: (response, status, more) => {
+            $modalDiv.removeClass('loading');
+            instancesTable.draw('page');
+        },
+        error: (response, status, more) => {
+            $modalDiv.removeClass('loading');
+            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
+                    response.getResponseHeader('X-mcsrApp-error') :
+                    "Error while trying to update the instance status!";
+            showError(errorMsg);
+        }
+    });
+}
+
+/**
+ * Using an AJAX call we ask the server to update the instance ledger request
+ * status and if proven successful, we can request the instances datatables to
+ * reload.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the update
+ * @param {number}      id          The ID of the ledger request to be updated
+ * @param {String}      status      The new status value
+ */
+function onLedgerRequestUpdate($modalDiv, id, status) {
+    $.ajax({
+        url: `/api/instances/${id}/ledger-status?ledgerStatus=${status}`,
+        type: 'PUT',
+        contentType: 'application/xml',
+        success: (response, status, more) => {
+            $modalDiv.removeClass('loading');
+            instancesTable.draw('page');
+        },
+        error: (response, status, more) => {
+            $modalDiv.removeClass('loading');
+            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
+                    response.getResponseHeader('X-mcsrApp-error') :
+                    "Error while trying to update the instance ledger status!";
+            showError(errorMsg);
+        }
+    });
+}
+
+/**
  * The instances edit dialog form should be clear every time before it is used
  * so that new entries are not polluted by old data.
  */
@@ -364,7 +486,7 @@ function clearInstanceEditPanel() {
 }
 
 /**
- * This helper function loads the XML and field data from the selected inctance
+ * This helper function loads the XML and field data from the selected instance
  * in the instance table onto the edit dialog.
  */
 function loadInstanceEditPanel() {
@@ -414,7 +536,9 @@ function loadInstanceCoverage(event, table, button, config) {
     }
 }
 
-// Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
+/**
+ * Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
+ */
 function addNonGroupLayers(sourceLayer, targetGroup) {
     if (sourceLayer instanceof L.LayerGroup) {
         sourceLayer.eachLayer(function(layer) {
@@ -422,6 +546,57 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
         });
     } else {
         targetGroup.addLayer(sourceLayer);
+    }
+}
+
+/**
+ * This function will load the instance status onto the instance status select
+ * input of the DOM.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The AtoN type table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function loadInstanceStatus(event, table, button, config) {
+    // If a row has been selected load the data into the form
+    if(instancesTable.row({selected : true})) {
+        rowData = instancesTable.row({selected : true}).data();
+        $("#instanceStatusPanel").find("#instanceStatusSelect").val(rowData["status"]);
+    }
+}
+
+/**
+ * This function will load the instance ledger status onto the instance ledger
+ * status select input of the DOM. Always read the ledger status value from
+ * the server to pick up successes and failures.
+ *
+ * @param {Event}         event         The event that took place
+ * @param {DataTable}     table         The AtoN type table
+ * @param {Node}          button        The button node that was pressed
+ * @param {Configuration} config        The table configuration
+ */
+function loadInstanceLedgerStatus(event, table, button, config) {
+    // If a row has been selected load the data into the form
+    if(instancesTable.row({selected : true})) {
+        rowdata = instancesTable.row({selected : true}).data();
+        id = rowdata["id"];
+        ledgerRequestId = rowdata["ledgerRequestId"];
+        ledgerRequestStatus = rowdata["ledgerRequestStatus"];
+        // First always start with the last known value
+        $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
+        // And then query the server for an update
+        $.ajax({
+            url: `/api/ledgerrequests/${ledgerRequestId}`,
+            type: 'GET',
+            contentType: 'application/json',
+            success: (request, status, more) => {
+                $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(request["status"]);
+            },
+            error: (response, status, more) => {
+                console.error(response);
+            }
+        });
     }
 }
 
@@ -454,6 +629,11 @@ function initialiseData() {
 /**
  * This helper function corrects the type of data being read from the instance
  * dialog form since most of it comes back as a string.
+ *
+ * @param {Array}       rowData         The row data
+ * @param {String}      field           The field to be parsed
+ * @param {String}      value           The value of the field
+ * @param {Array}       columnDefs      The definitions of the column data
  */
 function alignData(rowData, field, value, columnDefs){
     if (field && columnDefs.includes(field)){

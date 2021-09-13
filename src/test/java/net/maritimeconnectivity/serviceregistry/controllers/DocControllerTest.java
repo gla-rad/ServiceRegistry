@@ -17,8 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
+import net.maritimeconnectivity.serviceregistry.models.dto.DocDto;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -48,11 +52,11 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 @ActiveProfiles("test")
 @RunWith(SpringRunner.class)
 @WebMvcTest(controllers = DocController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class DocControllerTest {
 
     @Autowired
@@ -60,6 +64,9 @@ class DocControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    public DomainDtoMapper docDomainToDtoMapper;
 
     @MockBean
     private DocService docService;
@@ -127,7 +134,7 @@ class DocControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Doc[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc[].class);
+        DocDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto[].class);
         assertEquals(5, Arrays.asList(result).size());
     }
 
@@ -146,8 +153,14 @@ class DocControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Doc result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc.class);
-        assertEquals(this.existingDoc, result);
+        DocDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDoc.getId(), result.getId());
+        assertEquals(this.existingDoc.getName(), result.getName());
+        assertEquals(this.existingDoc.getMimetype(), result.getMimetype());
+        assertEquals(this.existingDoc.getComment(), result.getComment());
+        assertEquals(this.existingDoc.getFilecontentContentType(), result.getFilecontentContentType());
+        assertTrue(Arrays.equals(this.existingDoc.getFilecontent(), result.getFilecontent()));
     }
 
     /**
@@ -157,7 +170,7 @@ class DocControllerTest {
     @Test
     void testGetDocNotFound() throws Exception {
         Long id = 0L;
-        doThrow(DataNotFoundException.class).when(this.docService).findOne(any());
+        doThrow(new DataNotFoundException()).when(this.docService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/docs/{id}", id))
@@ -177,14 +190,20 @@ class DocControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.newDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.newDoc, DocDto.class))))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
-        Doc result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc.class);
-        assertEquals(this.existingDoc, result);
+        DocDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDoc.getId(), result.getId());
+        assertEquals(this.existingDoc.getName(), result.getName());
+        assertEquals(this.existingDoc.getMimetype(), result.getMimetype());
+        assertEquals(this.existingDoc.getComment(), result.getComment());
+        assertEquals(this.existingDoc.getFilecontentContentType(), result.getFilecontentContentType());
+        assertTrue(Arrays.equals(this.existingDoc.getFilecontent(), result.getFilecontent()));
     }
 
     /**
@@ -197,7 +216,7 @@ class DocControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -216,7 +235,7 @@ class DocControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/docs")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -225,7 +244,7 @@ class DocControllerTest {
 
     /**
      * Test that we can update an existing doc correctly through a PUT
-     * request. The incoming instance should always have an ID.
+     * request. The incoming doc should always have an ID.
      */
     @Test
     void testPutDoc() throws Exception {
@@ -235,18 +254,24 @@ class DocControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(put("/api/docs/{id}", this.existingDoc.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
-        Doc result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Doc.class);
-        assertEquals(this.existingDoc, result);
+        DocDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingDoc.getId(), result.getId());
+        assertEquals(this.existingDoc.getName(), result.getName());
+        assertEquals(this.existingDoc.getMimetype(), result.getMimetype());
+        assertEquals(this.existingDoc.getComment(), result.getComment());
+        assertEquals(this.existingDoc.getFilecontentContentType(), result.getFilecontentContentType());
+        assertTrue(Arrays.equals(this.existingDoc.getFilecontent(), result.getFilecontent()));
     }
 
     /**
-     * Test that if we try to update an doc with th wrong format, a bad
+     * Test that if we try to update a doc with th wrong format, a bad
      * request will be returned.
      */
     @Test
@@ -257,7 +282,7 @@ class DocControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/docs/{id}", this.existingDoc.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingDoc)))
+                .content(this.objectMapper.writeValueAsString(this.docDomainToDtoMapper.convertTo(this.existingDoc, DocDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -283,10 +308,10 @@ class DocControllerTest {
      */
     @Test
     void testDeleteDocNotFound() throws Exception {
-        doThrow(DataNotFoundException.class).when(this.docService).delete(any());
+        doThrow(new DataNotFoundException()).when(this.docService).delete(any());
 
         // Perform the MVC request
-        this.mockMvc.perform(delete("/api/xmls/{id}", this.existingDoc.getId()))
+        this.mockMvc.perform(delete("/api/docs/{id}", this.existingDoc.getId()))
                 .andExpect(status().isNotFound());
     }
 

@@ -19,38 +19,37 @@ package net.maritimeconnectivity.serviceregistry.exceptions;
 import org.springframework.http.HttpStatus;
 
 /**
- * The Duplicate Data Exception.
- * <p>
- * A generic runtime exception to be thrown whenever important data is about
- * to be duplicated.
+ * The Ledger Registration Exception.
+ *
+ * An exception designed to be thrown whenever requests to the ledger
+ * registration service fail for any reason.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class DuplicateDataException extends MSRBaseException {
+public class LedgerRegistrationError extends MSRBaseException {
 
-    private static final long serialVersionUID = -3189233115083685487L;
+    private static final long serialVersionUID = 6333861764563739849L;
 
     /**
      * The Exception HTTP Status Code.
      */
-    private static HttpStatus httpStatus = HttpStatus.CONFLICT;
+    private static HttpStatus httpStatus = HttpStatus.BAD_GATEWAY;
 
     /**
-     * Instantiates an empty Duplicate Data exception.
+     * Instantiates an empty Ledger Registration exception.
      */
-    public DuplicateDataException() {
-        super("Duplicate data detected", null, httpStatus);
+    public LedgerRegistrationError() {
+        super("Error while registering instance to the ledger", null, httpStatus);
     }
 
     /**
-     * Instantiates a new Duplicate Data exception.
+     * Instantiates a new Ledger Registration exception.
      *
-     * @param message the message
-     * @param t       the throwable
+     * @param message    the message
+     * @param t          the t
      */
-    public DuplicateDataException(String message, Throwable t) {
+    public LedgerRegistrationError(String message, Throwable t) {
         super(message, t, httpStatus);
     }
 
 }
-

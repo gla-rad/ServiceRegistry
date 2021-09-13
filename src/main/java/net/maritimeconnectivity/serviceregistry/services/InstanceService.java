@@ -20,13 +20,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
-import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
-import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
+import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
@@ -56,6 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
@@ -147,9 +147,9 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by id.
+     * Get one instance by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -162,14 +162,14 @@ public class InstanceService {
     /**
      * Save a instance.
      *
-     * @param instance the entity to save
+     * @param instance  the entity to save
      * @return the persisted entity
      */
     @Transactional
     public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
-        // First of all validate the object
+        // First, validate the object
         this.validateInstanceForSave(instance);
 
         // Don't accept empty geometry value, set whole earth coverage
@@ -201,9 +201,9 @@ public class InstanceService {
     }
 
     /**
-     * Delete the  instance by id.
+     * Delete the instance by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      */
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
@@ -211,7 +211,7 @@ public class InstanceService {
         this.instanceRepo.findById(id)
                 .ifPresentOrElse(i -> {
                     Optional.ofNullable(this.ledgerRequestService)
-                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getInstanceId()));
+                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getId()));
                     this.instanceRepo.deleteById(i.getId());
                 }, () -> {
                     throw new DataNotFoundException("No instance found for the provided ID", null);
@@ -219,10 +219,10 @@ public class InstanceService {
     }
 
     /**
-     * Update the status of an instance by id.
+     * Update the status of an instance by ID.
      *
-     * @param id     the id of the entity
-     * @param status the status of the entity
+     * @param id        the ID of the entity
+     * @param status    the status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
@@ -248,17 +248,47 @@ public class InstanceService {
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException e) {
-            log.error("Problem during instance status update.", e);
-            throw e;
+        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException ex) {
+            log.error("Problem during instance status update.", ex);
+            throw ex;
         }
     }
 
     /**
-     * Get all the instances that match a domain specific ID (for example,
-     * maritime id), regardless of their version.
+     * Update the ledger status of an instance by ID.
      *
-     * @param domainId          the domain specific id of the instance
+     * @param id            the ID of the entity
+     * @param ledgerStatus  the ledger status of the entity
+     */
+    @Transactional
+    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
+        return Optional.ofNullable(this.ledgerRequestService)
+                .map(lss -> {
+                    // First make sure the instance is valid
+                    final Instance instance = this.findOne(id);
+
+                    // Get a ledger request and if it does not exist create one
+                    final LedgerRequest request = Optional.of(instance)
+                            .filter(i -> Objects.nonNull(i.getLedgerRequest()))
+                            .map(Instance::getLedgerRequest)
+                            .orElseGet(() ->  {
+                                final LedgerRequest newRequest = new LedgerRequest();
+                                newRequest.setServiceInstance(instance);
+                                newRequest.setStatus(LedgerRequestStatus.CREATED);
+                                return this.ledgerRequestService.save(newRequest);
+                            });
+
+                    // Finally, update the status
+                    return lss.updateStatus(request.getId(), ledgerStatus, reason);
+                })
+                .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
+    }
+
+    /**
+     * Get all the instances that match a domain specific ID (for example,
+     * maritime ID), regardless of their version.
+     *
+     * @param domainId      the domain specific ID of the instance
      * @return the list of matching entities
      */
     public List<Instance> findAllByDomainId(String domainId) {
@@ -267,10 +297,11 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by domain specific id (for example, maritime id) and version.
+     * Get one instance by domain specific id (for example, maritime id) and
+     * version.
      *
-     * @param domainId            the domain specific id of the instance
-     * @param version             the version identifier of the instance
+     * @param domainId      the domain specific id of the instance
+     * @param version       the version identifier of the instance
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -284,9 +315,10 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by domain specific id (for example, maritime id), only return the latest version.
+     * Get one instance by domain specific ID (for example, maritime ID), only
+     * return the latest version.
      *
-     * @param domainId            the domain specific id of the instance
+     * @param domainId      the domain specific id of the instance
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -309,7 +341,7 @@ public class InstanceService {
      *    <li>Parsing GeoData (GeometryParseException if fails)</li>
      * </ul>
      *
-     * @param instance the instance to be saved
+     * @param instance      the instance to be saved
      * @throws XMLValidationException If fails first phase (Validating and parsing XML)
      * @throws GeometryParseException If fails second phase (Parsing geo data)
      */
@@ -360,7 +392,7 @@ public class InstanceService {
      * @return the Datatables paged response
      */
     @Transactional(readOnly = true)
-    public DtPage<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+    public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
         FullTextQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue());
         searchQuery.setFirstResult(dtPagingRequest.getStart());
@@ -373,18 +405,16 @@ public class InstanceService {
                 .ifPresent(searchQuery::setSort);
 
         // For some reason we need this casting otherwise JDK8 complains
-        return (DtPage<Instance>) Optional.of(searchQuery)
+        return Optional.of(searchQuery)
                 .map(FullTextQuery::getResultList)
-                .map(stations -> new PageImpl<>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
-                .map(Page.class::cast)
-                .map(page -> new DtPage<>((Page<Instance>)page, dtPagingRequest))
-                .orElseGet(DtPage::new);
+                .map(stations -> new PageImpl<Instance>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
     /**
      * Parse instance attributes from the xml payload for search/filtering
      *
-     * @param instance the instance to parse
+     * @param instance      the instance to parse
      * @return an instance with its attributes set
      * @throws JAXBException if the XML is invalid or required attributes not present
      */
@@ -409,7 +439,7 @@ public class InstanceService {
     /**
      * Parse instance geometry from the xml payload for search/filtering
      *
-     * @param instance the instance to parse
+     * @param instance      the instance to parse
      * @return an instance with its attributes set
      * @throws Exception if the XML is invalid or attributes not present
      */
@@ -445,18 +475,20 @@ public class InstanceService {
      * Constructs a hibernate search query using Lucene based on the provided
      * search test. This query will be based solely on the stations table and
      * will include the following fields:
-     * - Name
-     * - Version
-     * - Last Updated At
-     * - Keywords
-     * - Status
-     * - Organisation ID
-     * - Endpoint URI
-     * - MMSI
-     * - IMO
-     * - Service Type
+     * <ul>
+     *  <li>Version</li>Name
+     *  <li>Version</li>
+     *  <li>Last Updated At</li>
+     *  <li>Status</li>
+     *  <li>Status</li>
+     *  <li>Organization ID</li>
+     *  <li>ndpoint URI</li>
+     *  <li>MMSI</li>
+     *  <li>IMO</li>
+     *  <li>Service Type</li>
+     * </ul>
      *
-     * @param searchText the text to be searched
+     * @param searchText    the text to be searched
      * @return the full text query
      */
     protected FullTextQuery searchInstanceQuery(String searchText) {

@@ -16,21 +16,40 @@
 
 package net.maritimeconnectivity.serviceregistry.exceptions;
 
+import org.springframework.http.HttpStatus;
+
 /**
- * The type Xml Validation exception.
+ * The Ledger Connection Exception.
+ *
+ * An exception that is designed to be thrown whenever the connection to the
+ * ledger fails.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class XMLValidationException extends Exception {
+public class LedgerConnectionException extends MSRBaseException {
+
+    private static final long serialVersionUID = -4001242965130326029L;
 
     /**
-     * Instantiates a new Xml validation exception.
+     * The Exception HTTP Status Code.
+     */
+    private static HttpStatus httpStatus = HttpStatus.SERVICE_UNAVAILABLE;
+
+    /**
+     * Instantiates an empty Ledger Connection exception.
+     */
+    public LedgerConnectionException() {
+        super("Error while connecting to the MSR ledger", null, httpStatus);
+    }
+
+    /**
+     * Instantiates a new Ledger Connection exception.
      *
      * @param message the message
      * @param t       the t
      */
-    public XMLValidationException(String message, Throwable t) {
-        super(message, t);
+    public LedgerConnectionException(String message, Throwable t) {
+        super(message, t, httpStatus);
     }
 
 }

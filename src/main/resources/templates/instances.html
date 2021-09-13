@@ -267,12 +267,12 @@
                     <div class="modal-footer">
                         <div class="float-right">
                             <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Cancel Changes">
-                                <i class="fas">&times</i>
-                                <span class="btn-label"> Close</span>
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
                             </button>
                             <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Changes">
-                                <i class="fas fa-save"></i>
-                                <span class="btn-label"> Save</span>
+                                <i class="fas fa-save"></i>&nbsp;
+                                <span class="btn-label">Save</span>
                             </button>
                         </div>
                     </div>
@@ -293,9 +293,89 @@
                     </div>
                     <div class="modal-footer">
                         <div class="float-right">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" title="Close Dialog">
-                                <i class="fas">&times</i>
-                                <span class="btn-label"> Close</span>
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="instanceStatusPanel" tabindex="-1" role="dialog" aria-labelledby="instanceStatusPanelLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceStatusPanelLabel">Instance Status</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="mr-sm-2" for="instanceStatusSelect">Instance Status:</label>&nbsp;
+                                    <select class="custom-select mr-sm-2" id="instanceStatusSelect">
+                                        <option value="PROVISIONAL">Provisional</option>
+                                        <option value="RELEASED">Released</option>
+                                        <option value="DEPRECATED">Deprecated</option>
+                                        <option value="DELETED">Deleted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Status">
+                                <i class="fas fa-save"></i>&nbsp;
+                                <span class="btn-label">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="instanceLedgerPanel" tabindex="-1" role="dialog" aria-labelledby="instanceLedgerPanelLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceLedgerPanelLabel">Instance Ledger Request Status</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="mr-sm-2" for="instanceLedgerStatusSelect">Ledger Request Status:</label>&nbsp;
+                                    <select class="custom-select mr-sm-2" id="instanceLedgerStatusSelect">
+                                        <option value="INACTIVE">Inactive</option>
+                                        <option value="CREATED">Created</option>
+                                        <option value="VETTING">Vetting</option>
+                                        <option value="VETTED">Vetted</option>
+                                        <option value="REQUESTING">Requesting</option>
+                                        <option value="SUCCEEDED">Succeeded</option>
+                                        <option value="FAILED">Failed</option>
+                                        <option value="REJECTED">Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Status">
+                                <i class="fas fa-save"></i>&nbsp;
+                                <span class="btn-label">Save</span>
                             </button>
                         </div>
                     </div>
