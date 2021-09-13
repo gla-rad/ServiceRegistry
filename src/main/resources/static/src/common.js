@@ -7,6 +7,15 @@ $(() => {
 });
 
 /**
+ * A helper function that parses the response's and and returns the value
+ * from the 'X-mcsrApp-error' header if it exists, or the selected default
+ * message if not.
+ */
+function getErrorFromHeader(response, defaultMessage) {
+    return response.getResponseHeader('X-mcsrApp-error') ? response.getResponseHeader('X-mcsrApp-error') : defaultMessage;
+}
+
+/**
  * A helper function that shows the error boostrap error dialog and displays
  * the provided error message in it.
  */
