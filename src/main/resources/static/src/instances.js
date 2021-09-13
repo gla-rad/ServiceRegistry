@@ -1,4 +1,11 @@
 /**
+ * The API Call Libraries
+ */
+var instancesApi;
+var xmlsApi;
+var ledgerRequestsApi;
+
+/**
  * Global variables
  */
 var instancesTable = undefined;
@@ -127,6 +134,12 @@ var columnDefs = [{
  }];
 
 $(() => {
+    // First link the API libs
+    this.instancesApi = new InstancesApi();
+    this.xmlsApi = new XmlsApi();
+    this.ledgerRequestsApi = new LedgerRequestsApi();
+
+    // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         processing: true,
         language: {
@@ -200,37 +213,14 @@ $(() => {
                 loadInstanceLedgerStatus(e, dt, node, config);
             }
         }],
-        onAddRow: function (datatable, rowdata, success, error) {
-            $.ajax({
-                url: '/api/instances',
-                type: 'POST',
-                contentType: 'application/json',
-                dataType: 'json',
-                data: JSON.stringify(rowdata),
-                success: success,
-                error: error
-            });
+        onAddRow: (datatable, rowdata, success, error) => {
+            this.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
         },
-        onDeleteRow: function (datatable, rowdata, success, error) {
-            $.ajax({
-                url: `/api/instances/${rowdata["id"]}`,
-                type: 'DELETE',
-                contentType: 'application/json',
-                success: success,
-                error: error
-            });
+        onDeleteRow: (datatable, rowdata, success, error) => {
+            this.instancesApi.deleteInstance(rowdata["id"], success, error);
         },
-        onEditRow: function (datatable, rowdata, success, error) {
-            console.log($.fn.dataTable);
-            $.ajax({
-                url: `/api/instances/${rowdata["id"]}`,
-                type: 'PUT',
-                contentType: 'application/json',
-                dataType: 'json',
-                data: JSON.stringify(rowdata),
-                success: success,
-                error: error
-            });
+        onEditRow: (datatable, rowdata, success, error) => {
+            this.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
         }
     });
 
@@ -271,6 +261,10 @@ $(() => {
         if (xmlContent && xmlContent.length>0) {
             rowData["instanceAsXml"]["content"] = xmlContent;
         }
+
+        // Adding the attached documents
+        var uploadFiles = $modalDiv.find("#docs").prop('files');
+        console.log(uploadFiles);
 
         // And call back to the datatables to handle the create/update
         if(newInstance) {
@@ -315,7 +309,6 @@ $(() => {
     $('#instanceLedgerPanel').on('click', '.btn-ok', (e) => {
         var $modalDiv = $(e.delegateTarget);
         $modalDiv.addClass('loading');
-        console.log(instancesTable.row({selected : true}).data());
         onLedgerRequestUpdate($modalDiv,
             instancesTable.row({selected : true}).data()["id"],
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
@@ -380,38 +373,14 @@ $(() => {
  * @param {Component}   $modalDiv   The modal component performing the validation
  */
 function onValidateXml($modalDiv) {
-    $.ajax({
-        url: `api/xmls/validate/INSTANCE`,
-        type: 'POST',
-        contentType: 'application/xml',
-        dataType: 'json',
-        data: $modalDiv.find("#xml-input").val(),
-        success: (response, status, more) => {
-            for (var field in response) {
-                var name = field;
-                var value = response[name];
-                // Translate the G1128 field names to the current model
-                if (name == 'id')
-                   name = 'instanceId';
-                else if(name == 'description')
-                   name = 'comment';
-                else if(name == 'endpoint')
-                   name = 'endpointUri';
-                else if(name == 'implementsServiceDesign') {
-                   name = 'designs';
-                   value = value['id'];
-                }
-                $modalDiv.find("input#"+name).val(value);
-            }
-            $modalDiv.removeClass('loading');
-        },
-        error: (response, status, more) => {
-            $modalDiv.removeClass('loading');
-            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
-                response.getResponseHeader('X-mcsrApp-error') :
-                "Error while trying to validate whether the XML is G-1128 compliant!";
-            showError(errorMsg);
+    this.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
+        for (var field in response) {
+            $modalDiv.find("input#"+field).val(response[field]);
         }
+        $modalDiv.removeClass('loading');
+    }, (response, status, more) => {
+        $modalDiv.removeClass('loading');
+        showError(getErrorFromHeader(response, "Error while trying to validate whether the XML is G-1128 compliant!"));
     });
 }
 
@@ -424,21 +393,12 @@ function onValidateXml($modalDiv) {
  * @param {String}      status      The new status value
  */
 function onStatusUpdate($modalDiv, id, status) {
-    $.ajax({
-        url: `/api/instances/${id}/status?status=${status}`,
-        type: 'PUT',
-        contentType: 'application/xml',
-        success: (response, status, more) => {
-            $modalDiv.removeClass('loading');
-            instancesTable.draw('page');
-        },
-        error: (response, status, more) => {
-            $modalDiv.removeClass('loading');
-            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
-                    response.getResponseHeader('X-mcsrApp-error') :
-                    "Error while trying to update the instance status!";
-            showError(errorMsg);
-        }
+    this.instancesApi.setStatus(id, status, () => {
+        $modalDiv.removeClass('loading');
+        instancesTable.draw('page');
+    }, (response, status, more) => {
+        $modalDiv.removeClass('loading');
+        showError(getErrorFromHeader(response, "Error while trying to update the instance status!"));
     });
 }
 
@@ -452,21 +412,12 @@ function onStatusUpdate($modalDiv, id, status) {
  * @param {String}      status      The new status value
  */
 function onLedgerRequestUpdate($modalDiv, id, status) {
-    $.ajax({
-        url: `/api/instances/${id}/ledger-status?ledgerStatus=${status}`,
-        type: 'PUT',
-        contentType: 'application/xml',
-        success: (response, status, more) => {
-            $modalDiv.removeClass('loading');
-            instancesTable.draw('page');
-        },
-        error: (response, status, more) => {
-            $modalDiv.removeClass('loading');
-            var errorMsg = response.getResponseHeader('X-mcsrApp-error') ?
-                    response.getResponseHeader('X-mcsrApp-error') :
-                    "Error while trying to update the instance ledger status!";
-            showError(errorMsg);
-        }
+    this.instancesApi.setLedgerStatus(id, status, () => {
+        $modalDiv.removeClass('loading');
+        instancesTable.draw('page');
+    }, (response, status, more) => {
+        $modalDiv.removeClass('loading');
+        showError(getErrorFromHeader(response, "Error while trying to update the instance global ledger status!"));
     });
 }
 
@@ -586,16 +537,8 @@ function loadInstanceLedgerStatus(event, table, button, config) {
         // First always start with the last known value
         $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
         // And then query the server for an update
-        $.ajax({
-            url: `/api/ledgerrequests/${ledgerRequestId}`,
-            type: 'GET',
-            contentType: 'application/json',
-            success: (request, status, more) => {
-                $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(request["status"]);
-            },
-            error: (response, status, more) => {
-                console.error(response);
-            }
+        this.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
+            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
         });
     }
 }
