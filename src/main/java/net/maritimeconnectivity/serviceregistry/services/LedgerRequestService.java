@@ -194,6 +194,7 @@ public class LedgerRequestService {
      * @param status    the status of the entity
      * @param reason    the reason for updating the status
      */
+    @Transactional
     public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason) {
         return this.updateStatus(id, status, reason, false);
     }
@@ -207,7 +208,6 @@ public class LedgerRequestService {
      * @param reason    the reason for updating the status
      * @param force     whether to force restricted statuses
      */
-    @Transactional
     protected LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status, String reason, boolean force) {
         log.debug("Request to update status of LedgerRequest : {}", id);
 
@@ -308,7 +308,7 @@ public class LedgerRequestService {
             final Instance instance = ledgerRequest.getServiceInstance();
             if (receipt.getStatus().equals("0x1")) {
                 log.info("Instance is successfully registered to the ledger - instance name: " + instance.getName(), true);
-                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.SUCCEEDED);
+                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.SUCCEEDED, "Successful registration", true);
             } else {
                 log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - instance name: " + instance.getName());
                 this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, ex.getMessage(), true);
