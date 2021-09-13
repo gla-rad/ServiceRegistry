@@ -344,7 +344,7 @@ class InstanceServiceTest {
      * Test that we can successfully delete an existing instance.
      */
     @Test
-    void testDelete() throws DataNotFoundException {
+    void testDelete() {
         doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
         doNothing().when(this.ledgerRequestService).deleteByInstanceId(this.existingInstance.getId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
