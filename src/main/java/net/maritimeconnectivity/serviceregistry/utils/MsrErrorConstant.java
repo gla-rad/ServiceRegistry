@@ -17,8 +17,8 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 public class MsrErrorConstant {
-    public static final String LEDGER_NOT_CONNECTED = "The MSR Ledger is not able to connect";
-    public static final String LEDGER_REQUEST_STATUS_NOT_FULFILLED = "MSR ledger request status should be set as 'VETTED'";
-    public static final String LEDGER_REQUEST_NOT_FOUND = "No ledger request is found";
-    public static final String LEDGER_REGISTRATION_FAILED = "Instance registration to the MSR ledger has failed";
+    public static final String LEDGER_NOT_CONNECTED = "Unable to connect to the MSR global ledger.";
+    public static final String LEDGER_REQUEST_STATUS_NOT_FULFILLED = "Registration to the global MSR ledger requires the request status to be set to 'VETTED'.";
+    public static final String LEDGER_REQUEST_NOT_FOUND = "No requested ledger request was not found.";
+    public static final String LEDGER_REGISTRATION_FAILED = "Instance registration to the MSR ledger has failed.";
 }

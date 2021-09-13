@@ -260,6 +260,16 @@
                                                style="overflow:hidden;">
                                     </div>
                                 </div>
+                                <div style="margin-left: initial;margin-right: initial;"
+                                     class="form-group row"
+                                     id="editor-row-files">
+                                    <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                                         style="padding-top:4px;">
+                                        <label for="docs" class="col-form-label col-form-label-sm">Docs:</label></div>
+                                    <div class="col-sm-8 col-md-8 col-lg-8">
+                                        <input class="form-control form-control-sm" type="file" id="docs" multiple />
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         </form>
@@ -398,6 +408,9 @@
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>
     <script th:src="@{/static/lib/dataTables.msrEditor.free.js}"></script>
     <script th:src="@{/static/src/common.js}"></script>
+    <script th:src="@{/static/src/instances-api.js}"></script>
+    <script th:src="@{/static/src/xmls-api.js}"></script>
+    <script th:src="@{/static/src/ledger-requests-api.js}"></script>
     <script th:src="@{/static/src/instances.js}"></script>
 </body>
 </html>
