@@ -19,10 +19,12 @@ package net.maritimeconnectivity.serviceregistry.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
+import net.maritimeconnectivity.serviceregistry.exceptions.LedgerRegistrationError;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.repos.LedgerRequestRepo;
+import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,10 +36,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.web3j.protocol.core.RemoteFunctionCall;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -76,6 +82,13 @@ class LedgerRequestServiceTest {
     private Instance instance;
     private LedgerRequest newLedgerRequest;
     private LedgerRequest existingLedgerRequest;
+    private MsrContract msrContract;
+
+    // The We3j transaction calls
+    private RemoteFunctionCall remoteFunctionCall;
+    private CompletableFuture completableFuture;
+    private CompletableFuture completableFutureWithEx;
+    private TransactionReceipt transactionReceipt;
 
     /**
      * Common setup for all the tests.
@@ -108,6 +121,7 @@ class LedgerRequestServiceTest {
 
         // Create an instance to link to the ledger requests
         this.instance = new Instance();
+        this.instance.setName("Test Instance");
         this.instance.setId(123456L);
         this.instance.setVersion("1.0.0");
         this.instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", instance.getId()));
@@ -116,8 +130,6 @@ class LedgerRequestServiceTest {
         this.newLedgerRequest = new LedgerRequest();
         this.newLedgerRequest.setStatus(LedgerRequestStatus.CREATED);
         this.newLedgerRequest.setReason("Some reason");
-        this.newLedgerRequest.setLastUpdatedAt("02/01/2001");
-        this.newLedgerRequest.setCreatedAt("01/01/2001");
         this.newLedgerRequest.setServiceInstance(instance);
 
         // Create an existing ledger request
@@ -128,6 +140,19 @@ class LedgerRequestServiceTest {
         this.existingLedgerRequest.setLastUpdatedAt("02/01/2001");
         this.existingLedgerRequest.setCreatedAt("01/01/2001");
         this.existingLedgerRequest.setServiceInstance(instance);
+
+        // Mock an MSR smart contract
+        this.msrContract = mock(MsrContract.class);
+
+        // Mock the Web3j remove function call and response
+        this.remoteFunctionCall = mock(RemoteFunctionCall.class);
+        this.transactionReceipt = mock(TransactionReceipt.class);
+
+        // Create a couple of completable future tasks to mimic the ledger response
+        this.completableFuture = new CompletableFuture<>();
+        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
+        this.completableFutureWithEx = new CompletableFuture<>();
+        Executors.newCachedThreadPool().submit(() -> completableFutureWithEx.completeExceptionally(new RuntimeException("Something went wrong")));
     }
 
     /**
@@ -163,7 +188,7 @@ class LedgerRequestServiceTest {
         // Perform the service call
         LedgerRequest result = this.ledgerRequestService.findOne(this.existingLedgerRequest.getId());
 
-        // Make sure the eager relationships repo call was called
+        // Make sure the eager relationships' repo call was called
         verify(this.ledgerRequestRepo, times(1)).findById(this.existingLedgerRequest.getId());
 
         // Test the result
@@ -190,4 +215,400 @@ class LedgerRequestServiceTest {
         );
     }
 
+    /**
+     * Test that we can retrieve a single ledger request entry based on the
+     * ledger request instance ID and all the eager relationships are loaded.
+     */
+    @Test
+    void testFindByInstanceId() {
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findByInstanceId(this.existingLedgerRequest.getServiceInstance().getId());
+
+        // Perform the service call
+        LedgerRequest result = this.ledgerRequestService.findByInstanceId(this.existingLedgerRequest.getServiceInstance().getId());
+
+        // Make sure the eager relationships' repo call was called
+        verify(this.ledgerRequestRepo, times(1)).findByInstanceId(this.existingLedgerRequest.getServiceInstance().getId());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingLedgerRequest.getId(), result.getId());
+        assertEquals(this.existingLedgerRequest.getStatus(), result.getStatus());
+        assertEquals(this.existingLedgerRequest.getReason(), result.getReason());
+        assertEquals(this.existingLedgerRequest.getLastUpdatedAt(), result.getLastUpdatedAt());
+        assertEquals(this.existingLedgerRequest.getCreatedAt(), result.getCreatedAt());
+        assertEquals(this.existingLedgerRequest.getServiceInstance().getId(), result.getServiceInstance().getId());
+    }
+
+    /**
+     * Test that if we do not find the ledger request by the instance ID, a
+     * DataNotFoundException will be thrown.
+     */
+    @Test
+    void testFindByInstanceIdNotFound() {
+        doReturn(Optional.empty()).when(this.ledgerRequestRepo).findByInstanceId(this.existingLedgerRequest.getServiceInstance().getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.findByInstanceId(this.existingLedgerRequest.getServiceInstance().getId())
+        );
+    }
+
+    /**
+     * Test that we can correctly save a new ledger request when the provided
+     * information is valid.
+     */
+    @Test
+    void testSaveNew() {
+        doReturn(this.instance).when(this.instanceService).findOne(this.newLedgerRequest.getServiceInstance().getId());
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestRepo).save(this.newLedgerRequest);
+
+        // Perform the service call
+        LedgerRequest result = this.ledgerRequestService.save(this.newLedgerRequest);
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingLedgerRequest.getId(), result.getId());
+        assertEquals(this.existingLedgerRequest.getStatus(), result.getStatus());
+        assertEquals(this.existingLedgerRequest.getReason(), result.getReason());
+        assertEquals(this.existingLedgerRequest.getLastUpdatedAt(), result.getLastUpdatedAt());
+        assertEquals(this.existingLedgerRequest.getCreatedAt(), result.getCreatedAt());
+        assertEquals(this.existingLedgerRequest.getServiceInstance().getId(), result.getServiceInstance().getId());
+    }
+
+    /**
+     * Test that we can correctly save a new ledger request when the provided
+     * information is valid.
+     */
+    @Test
+    void testSaveExisting() {
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+        doReturn(this.instance).when(this.instanceService).findOne(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestRepo).save(this.existingLedgerRequest);
+
+        // Perform the service call
+        LedgerRequest result = this.ledgerRequestService.save(this.existingLedgerRequest);
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(this.existingLedgerRequest.getId(), result.getId());
+        assertEquals(this.existingLedgerRequest.getStatus(), result.getStatus());
+        assertEquals(this.existingLedgerRequest.getReason(), result.getReason());
+        assertEquals(this.existingLedgerRequest.getLastUpdatedAt(), result.getLastUpdatedAt());
+        assertEquals(this.existingLedgerRequest.getCreatedAt(), result.getCreatedAt());
+        assertEquals(this.existingLedgerRequest.getServiceInstance().getId(), result.getServiceInstance().getId());
+    }
+
+    /**
+     * Test that if we are trying to save an existing ledger request with an
+     * invalid ID, a DataNotFoundException will be thrown.
+     */
+    @Test
+    void testSaveNoValidId() {
+        doReturn(Boolean.FALSE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.save(this.existingLedgerRequest)
+        );
+    }
+
+    /**
+     * Test that if we are trying to save an existing ledger request with an
+     * invalid instance ID, a DataNotFoundException will be thrown.
+     */
+    @Test
+    void testSaveNoValidInstanceId() {
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.save(this.existingLedgerRequest)
+        );
+    }
+
+    /**
+     * Test that we can successfully delete an existing ledger request.
+     */
+    @Test
+    void testDelete() throws DataNotFoundException {
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+
+        // Perform the service call
+        this.ledgerRequestService.delete(this.existingLedgerRequest.getId());
+
+        // Verify that a deletion call took place in the repository
+        verify(this.ledgerRequestRepo, times(1)).deleteById(this.existingLedgerRequest.getId());
+    }
+
+    /**
+     * Test that if we try to delete a non-existing ledger request, then a
+     * DataNotFoundException will be thrown.
+     */
+    @Test
+    void testDeleteNotFound() {
+        doReturn(Boolean.FALSE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.delete(this.existingLedgerRequest.getId())
+        );
+    }
+
+    /**
+     * Test that we can successfully delete an existing ledger request by its
+     * instance ID.
+     */
+    @Test
+    void testDeleteByInstanceId() {
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestService).findByInstanceId(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+
+        // Perform the service call
+        this.ledgerRequestService.deleteByInstanceId(this.existingLedgerRequest.getServiceInstance().getId());
+
+        // Verify that a deletion call took place in the repository
+        verify(this.ledgerRequestRepo, times(1)).deleteById(this.existingLedgerRequest.getId());
+    }
+
+    /**
+     * Test that if we try to delete a non-existing ledger request by its
+     * instance ID, then a DataNotFoundException will be thrown.
+     */
+    @Test
+    void testDeleteByInstanceIdNotFound() {
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.deleteByInstanceId(this.existingLedgerRequest.getServiceInstance().getId())
+        );
+    }
+
+    /**
+     * Test that we can update the ledger status of a ledger request, at least
+     * for all the non-restricted values.
+     */
+    @Test
+    void testStatusUpdate() {
+        // Create a ledger request with the updated status
+        LedgerRequest savedLedgerRequest = new LedgerRequest();
+        savedLedgerRequest.setId(this.existingLedgerRequest.getId());
+        savedLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
+        savedLedgerRequest.setReason("Testing the status update");
+        savedLedgerRequest.setLastUpdatedAt(this.existingLedgerRequest.getLastUpdatedAt());
+        savedLedgerRequest.setCreatedAt(this.existingLedgerRequest.getCreatedAt());
+        savedLedgerRequest.setServiceInstance(this.existingLedgerRequest.getServiceInstance());
+
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+        doReturn(this.instance).when(this.instanceService).findOne(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(savedLedgerRequest).when(this.ledgerRequestRepo).save(this.existingLedgerRequest);
+
+        // Perform the service call
+        LedgerRequest result = this.ledgerRequestService.updateStatus(savedLedgerRequest.getId(), savedLedgerRequest.getStatus());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(savedLedgerRequest.getId(), result.getId());
+        assertEquals(savedLedgerRequest.getStatus(), result.getStatus());
+        assertEquals(savedLedgerRequest.getReason(), result.getReason());
+        assertEquals(savedLedgerRequest.getLastUpdatedAt(), result.getLastUpdatedAt());
+        assertEquals(savedLedgerRequest.getCreatedAt(), result.getCreatedAt());
+        assertEquals(savedLedgerRequest.getServiceInstance().getId(), result.getServiceInstance().getId());
+    }
+
+    /**
+     * Test that we can update the ledger status of a ledger request with a
+     * reason explanation as well, at least for all the non-restricted values.
+     */
+    @Test
+    void testStatusUpdateWithReason() {
+        // Create a ledger request with the updated status
+        LedgerRequest savedLedgerRequest = new LedgerRequest();
+        savedLedgerRequest.setId(this.existingLedgerRequest.getId());
+        savedLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
+        savedLedgerRequest.setReason("Testing the status update");
+        savedLedgerRequest.setLastUpdatedAt(this.existingLedgerRequest.getLastUpdatedAt());
+        savedLedgerRequest.setCreatedAt(this.existingLedgerRequest.getCreatedAt());
+        savedLedgerRequest.setServiceInstance(this.existingLedgerRequest.getServiceInstance());
+
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+        doReturn(this.instance).when(this.instanceService).findOne(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(savedLedgerRequest).when(this.ledgerRequestRepo).save(this.existingLedgerRequest);
+
+        // Perform the service call
+        LedgerRequest result = this.ledgerRequestService.updateStatus(savedLedgerRequest.getId(), savedLedgerRequest.getStatus(), savedLedgerRequest.getReason());
+
+        // Test the result
+        assertNotNull(result);
+        assertEquals(savedLedgerRequest.getId(), result.getId());
+        assertEquals(savedLedgerRequest.getStatus(), result.getStatus());
+        assertEquals(savedLedgerRequest.getReason(), result.getReason());
+        assertEquals(savedLedgerRequest.getLastUpdatedAt(), result.getLastUpdatedAt());
+        assertEquals(savedLedgerRequest.getCreatedAt(), result.getCreatedAt());
+        assertEquals(savedLedgerRequest.getServiceInstance().getId(), result.getServiceInstance().getId());
+    }
+
+    /**
+     * Test that we do not allow updates of restricted ledger status values
+     * directly from all publicly available class functions.
+     */
+    @Test
+    void testStatusUpdateRestricted() {
+        // Create a ledger request with the updated status
+        LedgerRequest savedLedgerRequest = new LedgerRequest();
+        savedLedgerRequest.setId(this.existingLedgerRequest.getId());
+        savedLedgerRequest.setStatus(LedgerRequestStatus.REQUESTING);
+        savedLedgerRequest.setReason("Testing the status update");
+        savedLedgerRequest.setLastUpdatedAt(this.existingLedgerRequest.getLastUpdatedAt());
+        savedLedgerRequest.setCreatedAt(this.existingLedgerRequest.getCreatedAt());
+        savedLedgerRequest.setServiceInstance(this.existingLedgerRequest.getServiceInstance());
+
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+        doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
+
+        // Perform the service calls
+        assertThrows(LedgerRegistrationError.class, () ->
+                this.ledgerRequestService.updateStatus(savedLedgerRequest.getId(), savedLedgerRequest.getStatus())
+        );
+        assertThrows(LedgerRegistrationError.class, () ->
+                this.ledgerRequestService.updateStatus(savedLedgerRequest.getId(), savedLedgerRequest.getStatus(), savedLedgerRequest.getReason())
+        );
+    }
+
+    /**
+     * Test that internally we can try to update the ledger status of a ledger
+     * request with a restricted status value.
+     */
+    @Test
+    void testStatusUpdateForce() {
+        // Create a ledger request with the updated status
+        LedgerRequest savedLedgerRequest = new LedgerRequest();
+        savedLedgerRequest.setId(this.existingLedgerRequest.getId());
+        savedLedgerRequest.setStatus(LedgerRequestStatus.REQUESTING);
+        savedLedgerRequest.setReason("Testing the status update");
+        savedLedgerRequest.setLastUpdatedAt(this.existingLedgerRequest.getLastUpdatedAt());
+        savedLedgerRequest.setCreatedAt(this.existingLedgerRequest.getCreatedAt());
+        savedLedgerRequest.setServiceInstance(this.existingLedgerRequest.getServiceInstance());
+
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.updateStatus(savedLedgerRequest.getId(), savedLedgerRequest.getStatus(), savedLedgerRequest.getReason(), true)
+        );
+    }
+
+    /**
+     * Test that if we try to update the ledger status of a ledger request with
+     * an invalid ledger request ID, a DataNotFoundException will be thrown.
+     */
+    @Test
+    void testStatusUpdateNoValidId() {
+        // Create a ledger request with the updated status
+        LedgerRequest savedLedgerRequest = new LedgerRequest();
+        savedLedgerRequest.setId(this.existingLedgerRequest.getId());
+        savedLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
+        savedLedgerRequest.setReason("Testing the status update");
+        savedLedgerRequest.setLastUpdatedAt(this.existingLedgerRequest.getLastUpdatedAt());
+        savedLedgerRequest.setCreatedAt(this.existingLedgerRequest.getCreatedAt());
+        savedLedgerRequest.setServiceInstance(this.existingLedgerRequest.getServiceInstance());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.ledgerRequestService.updateStatus(this.existingLedgerRequest.getId(), this.newLedgerRequest.getStatus(), this.newLedgerRequest.getReason(), false)
+        );
+    }
+
+    /**
+     * Test that we can successfully register an instance to the ledger and
+     * the response will distance the new ledger request status.
+     */
+    @Test
+    void testRegisterInstanceToLedger() {
+        // Set the status to REQUESTING
+        this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
+
+        doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestService).findOne(this.existingLedgerRequest.getId());
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+        doReturn(this.instance).when(this.instanceService).findOne(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestRepo).save(this.existingLedgerRequest);
+        doCallRealMethod().when(this.smartContractProvider).createNewServiceInstance(any());
+
+        // Mock the We3j transaction calls
+        doReturn(this.remoteFunctionCall).when(this.msrContract).registerServiceInstance(any(), any());
+        doReturn(this.completableFuture).when(this.remoteFunctionCall).sendAsync();
+        doReturn("0x1").when(this.transactionReceipt).getStatus();
+
+        // Perform the service call
+        this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Make sure we updated the ledger request status twice, once with
+        // requesting and once with succeeded after the ledger Web3j call.
+        verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
+        verify(this.ledgerRequestService, times(1)).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.SUCCEEDED), any(String.class), eq(Boolean.TRUE));
+    }
+
+    /**
+     * Test that we if we fail to successfully register an instance to the
+     * ledger, the final status of the ledger request will be set to failed.
+     */
+    @Test
+    void testRegisterInstanceToLedgerFailed() {
+        // Set the status to REQUESTING
+        this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
+
+        doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestService).findOne(this.existingLedgerRequest.getId());
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+        doReturn(this.instance).when(this.instanceService).findOne(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestRepo).save(this.existingLedgerRequest);
+        doCallRealMethod().when(this.smartContractProvider).createNewServiceInstance(any());
+
+        // Mock the We3j transaction calls
+        doReturn(this.remoteFunctionCall).when(this.msrContract).registerServiceInstance(any(), any());
+        doReturn(this.completableFuture).when(this.remoteFunctionCall).sendAsync();
+        doReturn("0x2").when(this.transactionReceipt).getStatus();
+
+        // Perform the service call
+        this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Make sure we updated the ledger request status twice, once with
+        // requesting and once with succeeded after the ledger Web3j call.
+        verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
+        verify(this.ledgerRequestService, times(1)).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
+    }
+
+    /**
+     * Test that we if we fail to successfully register an instance to the
+     * ledger with an exception, the final status of the ledger request will be
+     * set to failed.
+     */
+    @Test
+    void testRegisterInstanceToLedgerWithException() {
+        // Set the status to REQUESTING
+        this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
+
+        doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestService).findOne(this.existingLedgerRequest.getId());
+        doReturn(Boolean.TRUE).when(this.ledgerRequestRepo).existsById(this.existingLedgerRequest.getId());
+        doReturn(Optional.of(this.existingLedgerRequest)).when(this.ledgerRequestRepo).findById(this.existingLedgerRequest.getId());
+        doReturn(this.instance).when(this.instanceService).findOne(this.existingLedgerRequest.getServiceInstance().getId());
+        doReturn(this.existingLedgerRequest).when(this.ledgerRequestRepo).save(this.existingLedgerRequest);
+        doCallRealMethod().when(this.smartContractProvider).createNewServiceInstance(any());
+
+        // Mock the We3j transaction calls
+        doReturn(this.remoteFunctionCall).when(this.msrContract).registerServiceInstance(any(), any());
+        doReturn(this.completableFutureWithEx).when(this.remoteFunctionCall).sendAsync();
+
+        // Perform the service call
+        this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Make sure we updated the ledger request status twice, once with
+        // requesting and once with succeeded after the ledger Web3j call.
+        verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
+        verify(this.ledgerRequestService, times(1)).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
+    }
 }
