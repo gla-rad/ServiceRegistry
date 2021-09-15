@@ -7,6 +7,26 @@ $(() => {
 });
 
 /**
+ * A helper function that displays the loader spinner.
+ */
+function showLoader(overlay = true) {
+    if(!overlay) {
+        $('#pageLoaderBackground').hide();
+    } else {
+        $('#pageLoaderBackground').show();
+    }
+    $('#pageLoader').show();
+}
+
+/**
+ * A helper function that hides the loader spinner.
+ */
+function hideLoader() {
+
+    $('#pageLoader').hide();
+}
+
+/**
  * A helper function that parses the response's and and returns the value
  * from the 'X-mcsrApp-error' header if it exists, or the selected default
  * message if not.
