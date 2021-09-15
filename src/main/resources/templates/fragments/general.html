@@ -146,5 +146,13 @@
             </div>
         </footer>
     </div>
+    <div th:fragment="loader" id="pageLoader" class="loader-overlay">
+        <div id="pageLoaderBackground" class="loader-overlay-background"></div>
+        <div id="pageLoaderSpinner" class="loader-overlay-spinner">
+            <div class="spinner-border text-dark" role="status" style="width: 5rem; height: 5rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

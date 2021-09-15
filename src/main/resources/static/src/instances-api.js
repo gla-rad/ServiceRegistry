@@ -25,7 +25,13 @@ class InstancesApi {
             dataType: 'json',
             data: instance,
             success: callback,
-            error: errorCallback
+            error: (response, status, more) => {
+               if(errorCallback) {
+                   errorCallback(response, status, more);
+               } else {
+                   console.error(response)
+               }
+           }
         });
     }
 

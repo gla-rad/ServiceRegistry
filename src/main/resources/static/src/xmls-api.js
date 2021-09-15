@@ -9,6 +9,29 @@ class XmlsApi {
     constructor() {
 
     }
+    
+    /**
+     * API Instance XML reading function.
+     *
+     * @param  {number} xmlId           The ID of the xml to be retrieved
+     * @param  {Function} callback      The callback to be used after the AJAX call
+     * @param  {Function} errorCallback The error callback to be used if the AJAX call fails
+     */
+    getXml(xmlId, callback, errorCallback) {
+        $.ajax({
+            url: `api/xmls/${xmlId}`,
+            type: 'GET',
+            contentType: 'application/json',
+            success: callback,
+            error: (response, status, more) => {
+                if(errorCallback) {
+                    errorCallback(response, status, more);
+                } else {
+                    console.error(response)
+                }
+            }
+        });
+    }
 
     /**
      * API Instance XML validation function.
@@ -42,7 +65,7 @@ class XmlsApi {
                     }
                     instance[name] = value
                 }
-                callback(instance, callback, errorCallback)
+                callback(instance)
             },
             error: (response, status, more) => {
                 if(errorCallback) {
