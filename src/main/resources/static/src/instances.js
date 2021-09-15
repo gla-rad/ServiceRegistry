@@ -1,8 +1,10 @@
 /**
  * The API Call Libraries
  */
+var fileUtils;
 var instancesApi;
 var xmlsApi;
+var docsApi;
 var ledgerRequestsApi;
 
 /**
@@ -126,25 +128,34 @@ var columnDefs = [{
     visible: false,
     searchable: false
 }, {
-     data: "ledgerRequestStatus",
-     type: "hidden",
-     readonly : true,
-     visible: false,
-     searchable: false
+    data: "ledgerRequestStatus",
+    type: "hidden",
+    readonly : true,
+    visible: false,
+    searchable: false
+ }, {
+    data: "instanceAsDocId",
+    title: "Instance Doc",
+    type: "file",
+    readonly : true,
+    visible: true,
+    searchable: false,
+    className: 'dt-body-center',
+    render: function ( data, type, row ) {
+        return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="openInstanceAsDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
+    },
  }];
 
 $(() => {
     // First link the API libs
+    this.fileUtils = new FileUtils();
     this.instancesApi = new InstancesApi();
     this.xmlsApi = new XmlsApi();
+    this.docsApi = new DocsApi();
     this.ledgerRequestsApi = new LedgerRequestsApi();
 
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
-        processing: true,
-        language: {
-            processing: '<i class="fa fa-spinner fa-spin fa-3x fa-fw"></i><span class="sr-only">Loading...</span>',
-        },
         serverSide: true,
         ajax: {
             "type": "POST",
@@ -158,7 +169,7 @@ $(() => {
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -221,7 +232,15 @@ $(() => {
         },
         onEditRow: (datatable, rowdata, success, error) => {
             this.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
+        },
+        initComplete: (settings, json) => {
+            hideLoader();
         }
+    });
+
+    // Show the loader on processing
+    instancesTable.on( 'processing.dt', function(e, settings, processing) {
+        processing ? showLoader(false) : hideLoader();;
     });
 
     // We also need to link the instance create/edit toggle buttons with the the
@@ -263,21 +282,44 @@ $(() => {
         }
 
         // Adding the attached documents
-        var uploadFiles = $modalDiv.find("#docs").prop('files');
-        console.log(uploadFiles);
+        var uploadFiles = $modalDiv.find("#instanceAsDoc").prop('files');
 
-        // And call back to the datatables to handle the create/update
-        if(newInstance) {
-            instancesTable.context[0].oInit.onAddRow(instancesTable,
-                    rowData,
-                    (data) => { instancesTable.row.add(data).draw(false); },
-                    (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); });
-        } else {
-            instancesTable.context[0].oInit.onEditRow(instancesTable,
-                    rowData,
-                    (data,b,c,d,e) => { instancesTable.row({selected : true}).data(data); instancesTable.draw('page'); },
-                    (data) => { showError(data.getResponseHeader('X-mcsrApp-error')) });
+        // If we have any documents attached, first read them and then save
+        if(uploadFiles && uploadFiles.length == 1) {
+            showLoader();
+            // Initialise the File Reader
+            fileUtils.encodeFileToBase64(uploadFiles[0], (base64Data) => {
+                rowData["instanceAsDoc"] = {};
+                rowData["instanceAsDoc"]["id"] = null;
+                rowData["instanceAsDoc"]["name"] = uploadFiles[0].name;
+                rowData["instanceAsDoc"]["mimetype"] = uploadFiles[0].type;
+                rowData["instanceAsDoc"]["filecontent"] = base64Data;
+                rowData["instanceAsDoc"]["filecontentContentType"] = uploadFiles[0].type;
+                saveInstanceThroughDatatables(rowData);
+            });
         }
+        // Otherwise save directly using the datatables
+        else {
+            // Make sure we don't delete any existing instance as doc files
+            // To dot his, we need to translate between the InstanceDtDto and
+            // the InstanceDto objects.
+            if($modalDiv.find("#instanceAsDocWithValue").is(":visible")) {
+                rowData["instanceAsDoc"] = {};
+                rowData["instanceAsDoc"]["id"] = rowData["instanceAsDocId"];
+            }
+            saveInstanceThroughDatatables(rowData);
+        }
+    });
+
+    // Link the clear instance doc button functionality
+    $('#instanceEditPanel').on('click', '.btn-clear-instance-doc', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        clearInstanceDoc($modalDiv);
+    });
+
+    // Link the download instance doc button functionality
+    $('#instanceEditPanel').on('click', '.btn-download-instance-doc', (e) => {
+        downloadInstanceDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
     });
 
     // We also need to link the instance status toggle button with the the
@@ -365,6 +407,25 @@ $(() => {
 });
 
 /**
+ * Performs the instance saving operation through the instances datatables
+ * structure so that it table will also be updated on success.
+ */
+function saveInstanceThroughDatatables(instance) {
+    // And call back to the datatables to handle the create/update
+    if(newInstance) {
+        instancesTable.context[0].oInit.onAddRow(instancesTable,
+                instance,
+                (data) => { instancesTable.row.add(data).draw(false); },
+                (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); hideLoader(); });
+    } else {
+        instancesTable.context[0].oInit.onEditRow(instancesTable,
+                instance,
+                (data,b,c,d,e) => { instancesTable.ajax.reload(); },
+                (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); hideLoader(); });
+    }
+}
+
+/**
  * Using an AJAX call we ask the server to validate the provided XML and if
  * proven correct we can use the returned JSON object to populate the instance
  * editor field values. Note that some of the G-1128 field do not correspond
@@ -444,9 +505,12 @@ function loadInstanceEditPanel() {
     // First always clear to be sure
     clearInstanceEditPanel();
 
+    // Get the instance edit panel modal dialog
+    let $modalDiv = $("#instanceEditPanel");
+
     // If a row has been selected load the data into the form
     if(instancesTable.row({selected : true})) {
-        // Do the form
+        // Populate the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
              $(this).val(rowData[$(this).attr('id')]);
@@ -454,6 +518,11 @@ function loadInstanceEditPanel() {
 
         // Augmenting xml content on the data
         $("#instanceEditPanel").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
+
+        // Handle the instance doc field if populated or not
+        rowData.instanceAsDocId ? showInstanceDoc($modalDiv) : clearInstanceDoc($modalDiv);
+    } else {
+        clearInstanceDoc($modalDiv);
     }
 
     // Make that an existing instance has been loaded
@@ -558,7 +627,7 @@ function initialiseData() {
     newRowData["designs"] = {};
     newRowData["specifications"] = {};
     newRowData["geometryJson"] = {};
-    newRowData["docs"] = [];
+    newRowData["instanceAsDoc"] = null;
     newRowData["instanceAsXml"] = {
         name: "xml",
         comment: "no comment", content: "",
@@ -590,4 +659,61 @@ function alignData(rowData, field, value, columnDefs){
         }
     }
     return rowData;
+}
+
+/**
+ * Displays the instance doc file selection field in the instance edit dialogs
+ * and hides the doc name field.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the operation
+ */
+function showInstanceDoc($modalDiv) {
+    $modalDiv.find("#instanceAsDoc").hide();
+    $modalDiv.find("#instanceAsDocWithValue").show();
+}
+
+/**
+ * Clear the instance doc name field from the instance edit dialogs and
+ * shows back the file selection field.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the operation
+ */
+function clearInstanceDoc($modalDiv) {
+    $modalDiv.find("#instanceAsDocWithValue").hide();
+    $modalDiv.find("#instanceAsDocWithValue").find("#instanceAsDocName").val("");
+    $modalDiv.find("#instanceAsDoc").show();
+}
+
+/**
+ * Download the selected document ID from the server, decode the data from
+ * the provided Base64 format and open's it in the browser.
+ *
+ * @param {number}      docId           The ID of the document to be opened
+ */
+function openInstanceAsDoc(docId) {
+    showLoader();
+    this.docsApi.getDoc(docId, (doc) => {
+        fileUtils.openFileWindow(doc.filecontentContentType, doc.filecontent);
+        hideLoader();
+    }, (response, status, more) => {
+         hideLoader();
+         showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
+    })
+}
+
+/**
+ * Download the selected document ID from the server, decode the data from
+ * the provided Base64 format.
+ *
+ * @param {number}      docId           The ID of the document to be opened
+ */
+function downloadInstanceDoc(docId) {
+    showLoader();
+    this.docsApi.getDoc(docId, (doc) => {
+        fileUtils.downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
+        hideLoader();
+    }, (response, status, more) => {
+        hideLoader();
+        showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
+    });
 }

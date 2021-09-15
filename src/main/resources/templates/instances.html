@@ -28,6 +28,7 @@
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container-fluid mt-3">
+                <div th:replace="fragments/general.html :: loader"></div>
                 <div th:replace="fragments/general.html :: login-card"></div>
                 <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
@@ -265,9 +266,18 @@
                                      id="editor-row-files">
                                     <div class="col-sm-3 col-md-3 col-lg-3 text-right"
                                          style="padding-top:4px;">
-                                        <label for="docs" class="col-form-label col-form-label-sm">Docs:</label></div>
+                                        <label for="instanceAsDoc" class="col-form-label col-form-label-sm">Instance Doc:</label></div>
                                     <div class="col-sm-8 col-md-8 col-lg-8">
-                                        <input class="form-control form-control-sm" type="file" id="docs" multiple />
+                                        <input class="form-control form-control-sm" type="file" id="instanceAsDoc" style="display: none;"/>
+                                        <div class="input-group" id="instanceAsDocWithValue">
+                                            <input class="form-control form-control-sm" type="text" id="instanceAsDocName" disabled/>
+                                            <button class="btn btn-secondary btn-sm btn-clear-instance-doc" type="button">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                            <button class="btn btn-secondary btn-sm btn-download-instance-doc" type="button">
+                                                <i class="fas fa-download"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -408,8 +418,10 @@
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>
     <script th:src="@{/static/lib/dataTables.msrEditor.free.js}"></script>
     <script th:src="@{/static/src/common.js}"></script>
+    <script th:src="@{/static/src/file-utils.js}"></script>
     <script th:src="@{/static/src/instances-api.js}"></script>
     <script th:src="@{/static/src/xmls-api.js}"></script>
+    <script th:src="@{/static/src/docs-api.js}"></script>
     <script th:src="@{/static/src/ledger-requests-api.js}"></script>
     <script th:src="@{/static/src/instances.js}"></script>
 </body>

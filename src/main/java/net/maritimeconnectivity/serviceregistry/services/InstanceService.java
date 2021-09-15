@@ -21,10 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
-import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
@@ -59,6 +56,9 @@ import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.peek;
 
 /**
  * Service Implementation for managing Instance.
@@ -87,6 +87,12 @@ public class InstanceService {
      */
     @Autowired
     private XmlService xmlService;
+
+    /**
+     * The Doc Service.
+     */
+    @Autowired
+    private DocService docService;
 
     /**
      * The LedgerRequest Service.
@@ -352,12 +358,27 @@ public class InstanceService {
 
         // Try to find the instance if an ID is provided
         if(instance.getId() != null) {
-            Optional.of(instance.getId())
-                    .map(instanceRepo::existsById)
-                    .filter(Boolean.TRUE::equals)
-                    .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+            this.instanceRepo.findById(instance.getId())
+                    .ifPresentOrElse(existingInstance -> {
+                        // We need to be able to update instances with providing
+                        // the whole instance doc every time. Therefore, if
+                        // we just have an ID but not file, we can try to load
+                        // the saved doc from the database into the input
+                        // instance. Note that we don't actually throw an error
+                        // for invalid docs... it's just an ID anyway right?
+                        if(Objects.nonNull(instance.getInstanceAsDoc()) && Objects.isNull(instance.getInstanceAsDoc().getFilecontent())) {
+                            Optional.of(instance.getInstanceAsDoc())
+                                    .map(Doc::getId)
+                                    .filter(docId -> Objects.nonNull(existingInstance.getInstanceAsDoc()))
+                                    .filter(docId -> docId.equals(existingInstance.getInstanceAsDoc().getId()))
+                                    .map(this.docService::findOne)
+                                    .ifPresent(doc -> instance.setInstanceAsDoc(doc));
+                        }
+                    }, () -> {
+                        throw new DataNotFoundException("No instance found for the provided ID", null);
+                    });
         }
-        // Else check the instance exists or not
+        // Else check for MRN and version conflicts with other instances
         else if(instance.getInstanceId() != null && instance.getVersion() != null) {
             this.instanceRepo.findByDomainIdAndVersion(instance.getInstanceId(), instance.getVersion())
                     .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found.", null); });
