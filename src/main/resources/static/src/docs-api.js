@@ -22,6 +22,7 @@ class DocsApi {
             url: `api/docs/${docId}`,
             type: 'GET',
             contentType: 'application/json',
+            crossDomain: true,
             success: callback,
             error: (response, status, more) => {
                 if(errorCallback) {

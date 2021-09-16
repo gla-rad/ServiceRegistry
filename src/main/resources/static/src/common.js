@@ -22,7 +22,6 @@ function showLoader(overlay = true) {
  * A helper function that hides the loader spinner.
  */
 function hideLoader() {
-
     $('#pageLoader').hide();
 }
 
