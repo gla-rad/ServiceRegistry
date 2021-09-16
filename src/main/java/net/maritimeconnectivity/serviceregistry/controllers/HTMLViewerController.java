@@ -84,7 +84,7 @@ public class HTMLViewerController {
      * The instance page
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The instance page
      */
     @GetMapping("/instances")
     public String instances(Model model) {
@@ -95,10 +95,10 @@ public class HTMLViewerController {
     }
 
     /**
-     * The instance page
+     * The about page
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The about page
      */
     @GetMapping("/about")
     public String about(Model model) {
@@ -112,17 +112,6 @@ public class HTMLViewerController {
         model.addAttribute("copyright", this.copyright);
         model.addAttribute("profile", this.profile);
         return "about";
-    }
-
-    /**
-     * Logs the user in an authenticated session and redirect to the home page.
-     *
-     * @param request The logout request
-     * @return The home page
-     */
-    @GetMapping(path = "/login")
-    public ModelAndView login(HttpServletRequest request) {
-        return new ModelAndView("redirect:" + "/");
     }
 
     /**

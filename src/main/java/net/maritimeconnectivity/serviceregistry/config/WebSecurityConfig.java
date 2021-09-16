@@ -162,7 +162,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
      * and login endpoints without any authorisation requirements.
      *
      * @param httpSecurity The HTTP security
-     * @throws Exception Exception thrown while configuring the security
+     * @throws Exception thrown while configuring the security
      */
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
