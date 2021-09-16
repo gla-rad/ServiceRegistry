@@ -22,6 +22,7 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
+import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
@@ -84,6 +85,12 @@ class InstanceServiceTest {
      */
     @Mock
     private XmlService xmlService;
+
+    /**
+     * The Doc Service Mock.
+     */
+    @Mock
+    private DocService docService;
 
     /**
      * The LedgerRequest Service Mock.
@@ -233,7 +240,7 @@ class InstanceServiceTest {
      */
     @Test
     void testSaveNoValidId() {
-        doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+        doReturn(Optional.empty()).when(this.instanceRepo).findById(this.existingInstance.getId());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
@@ -537,7 +544,7 @@ class InstanceServiceTest {
     }
 
     /**
-     * That that we can detect geometry errors when validating an incoming instance
+     * Test that we can detect geometry errors when validating an incoming instance
      * saving request.
      */
     @Test
@@ -553,6 +560,33 @@ class InstanceServiceTest {
         // Perform the service call
         assertThrows(GeometryParseException.class, () ->
                 this.instanceService.validateInstanceForSave(this.newInstance)
+        );
+    }
+
+    /**
+     * Test that we can detect when we receive an invalid document when
+     * validating an incoming  instance saving request.
+     */
+    @Test
+    void testValidateInstanceForSaveDocError() throws IOException {
+        // Load a valid test XML for our instance
+        InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
+        String xmlContent = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+
+        // Set the content in a new instance to be validated
+        this.existingInstance.getInstanceAsXml().setContent(xmlContent);
+
+        // Set the doc in a new instance to be validated
+        Doc doc = new Doc();
+        doc.setId(666L);
+        this.existingInstance.setInstanceAsDoc(doc);
+
+        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
+        doThrow(DataNotFoundException.class).when(this.docService).findOne(doc.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.instanceService.validateInstanceForSave(this.existingInstance)
         );
     }
 

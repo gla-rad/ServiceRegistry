@@ -22,6 +22,7 @@ import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseExceptio
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
+import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
@@ -71,6 +72,12 @@ public class InstanceController {
     DomainDtoMapper<InstanceDto, Instance> instanceDtoToDomainMapper;
 
     /**
+     * Object Mapper from Domain to Datatable DTO.
+     */
+    @Autowired
+    DomainDtoMapper<Instance, InstanceDtDto> instanceDomainToDtDtoMapper;
+
+    /**
      * GET /api/instances : get all the instances.
      *
      * @param pageable the pagination information
@@ -94,11 +101,11 @@ public class InstanceController {
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<DtPage<InstanceDto>> getInstancesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
+    public ResponseEntity<DtPage<InstanceDtDto>> getInstancesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of Instances for datatables");
         final Page<Instance> page = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
         return ResponseEntity.ok()
-                .body(this.instanceDomainToDtoMapper.convertToDtPage(page, dtPagingRequest, InstanceDto.class));
+                .body(this.instanceDomainToDtDtoMapper.convertToDtPage(page, dtPagingRequest, InstanceDtDto.class));
     }
 
     /**

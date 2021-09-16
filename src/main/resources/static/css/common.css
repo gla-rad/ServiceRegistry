@@ -2,6 +2,31 @@ body {
     font-size: medium;
 }
 
+/* The Overlay (background) */
+.loader-overlay {
+    height: 100%;
+    width: 100%;
+    position: fixed; /* Stay in place */
+    z-index: 99999; /* Sit on top */
+    left: 0;
+    top: 0;
+    overflow-x: hidden; /* Disable horizontal scroll */
+}
+
+.loader-overlay-background {
+    height: 100%;
+    width: 100%;
+    background-color: rgba(0,0,0, 0.3); /* Black w/opacity */
+}
+
+.loader-overlay-spinner {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* The map search overlay card */
 .search-overlay {
     position: absolute;
     top: 80px;

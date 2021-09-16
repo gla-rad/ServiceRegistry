@@ -175,7 +175,7 @@ public class Instance implements Serializable, JsonSerializable {
     @JoinColumn(unique = true)
     private Xml instanceAsXml;
 
-    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true, fetch=FetchType.LAZY)
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
 
