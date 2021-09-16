@@ -22,6 +22,7 @@ class LedgerRequestsApi {
             url: `/api/ledgerrequests/${id}`,
             type: 'GET',
             contentType: 'application/json',
+            crossDomain: true,
             success: callback,
             error: (response, status, more) => {
                 if(errorCallback) {

@@ -22,6 +22,7 @@ class XmlsApi {
             url: `api/xmls/${xmlId}`,
             type: 'GET',
             contentType: 'application/json',
+            crossDomain: true,
             success: callback,
             error: (response, status, more) => {
                 if(errorCallback) {
@@ -45,6 +46,7 @@ class XmlsApi {
             url: `api/xmls/validate/INSTANCE`,
             type: 'POST',
             contentType: 'application/xml',
+            crossDomain: true,
             dataType: 'json',
             data: xml,
             success: (response, status, more) => {

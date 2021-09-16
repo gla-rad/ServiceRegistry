@@ -158,10 +158,11 @@ $(() => {
     instancesTable = $('#instancesTable').DataTable({
         serverSide: true,
         ajax: {
-            "type": "POST",
-            "url": "/api/instances/dt",
-            "contentType": "application/json",
-            "data": function (d) {
+            type: "POST",
+            url: "/api/instances/dt",
+            contentType: "application/json",
+            crossDomain: true,
+            data: function (d) {
                 return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
