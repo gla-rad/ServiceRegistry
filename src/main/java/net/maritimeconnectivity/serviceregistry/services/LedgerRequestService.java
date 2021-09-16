@@ -184,7 +184,7 @@ public class LedgerRequestService {
      */
     @Transactional
     public LedgerRequest updateStatus(@NotNull Long id, @NotNull LedgerRequestStatus status) {
-        return updateStatus(id, status, null);
+        return updateStatus(id, status, null, false);
     }
 
     /**
@@ -238,7 +238,7 @@ public class LedgerRequestService {
      * the primary goal of this service, and without the smart contract that
      * connects us to the ledger, this service doesn't event initialise.
      *
-     * @param id        The ID of the entity
+     * @param id        the ID of the entity
      * @return The updated ledger request pending the result
      */
     protected LedgerRequest registerInstanceToLedger(@NotNull Long id) {
@@ -253,18 +253,18 @@ public class LedgerRequestService {
         // Now get the ledger request, update it and contact the MSR ledger
         return Optional.of(id)
                 .map(this::findOne)
+                .filter(l -> Objects.nonNull(l.getServiceInstance()))
                 .map(peek(l -> Optional.of(l)
                         .map(LedgerRequest::getStatus)
                         .filter(LedgerRequestStatus.VETTED::equals)
                         .orElseThrow(() -> new LedgerRegistrationError(MsrErrorConstant.LEDGER_REQUEST_STATUS_NOT_FULFILLED + "- current status: " + l.getStatus(), null))))
                 .map(l -> this.updateStatus(l.getId(), LedgerRequestStatus.REQUESTING, null,true))
                 .map(peek(l -> {
-                    msrContract.registerServiceInstance(this.smartContractProvider.createNewServiceInstance(l.getServiceInstance()),
-                                    l.getServiceInstance().getKeywordsList())
+                    msrContract.registerServiceInstance(this.smartContractProvider.createNewServiceInstance(l.getServiceInstance()), l.getServiceInstance().getKeywordsList())
                             .sendAsync()
                             .whenComplete((receipt, ex) -> this.handleLedgerRegistrationResponse(l, receipt, ex));
                 }))
-                .orElseThrow(() -> new DataNotFoundException(MsrErrorConstant.LEDGER_REQUEST_NOT_FOUND, null));
+                .orElseThrow(() -> new LedgerRegistrationError(MsrErrorConstant.LEDGER_REQUEST_NOT_FOUND, null));
     }
 
     /**
@@ -300,8 +300,8 @@ public class LedgerRequestService {
      * of an asynchronous call completion, hence a throwable is also present
      * in the input argument list.
      *
-     * @param receipt       The ledger transaction receipt
-     * @param ex            Any exception that might have been thrown during the transaction
+     * @param receipt       the ledger transaction receipt
+     * @param ex            any exception that might have been thrown during the transaction
      */
     protected void handleLedgerRegistrationResponse(LedgerRequest ledgerRequest, TransactionReceipt receipt, Throwable ex) {
         if (Objects.isNull(ex)) {
@@ -311,7 +311,7 @@ public class LedgerRequestService {
                 this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.SUCCEEDED, "Successful registration", true);
             } else {
                 log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED + " - instance name: " + instance.getName());
-                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, ex.getMessage(), true);
+                this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, "Failed registration", true);
             }
         } else {
             log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED, ex.getMessage(), ex);
