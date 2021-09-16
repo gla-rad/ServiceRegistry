@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 
+import java.util.Optional;
+
 /**
  * Utility class for HTTP headers creation.
  *
@@ -98,8 +100,12 @@ public class HeaderUtil {
     public static HttpHeaders createFailureAlert(String entityName, String errorKey, String defaultMessage) {
         log.error("Entity creation failed, {}", defaultMessage);
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-mcsrApp-error", "error." + errorKey);
-        headers.add("X-mcsrApp-params", entityName);
+        headers.add("X-mcsrApp-error", "error." + Optional.ofNullable(errorKey)
+                .map(e -> e.replaceAll("(\\r|\\n)", ""))
+                .orElse("Unknown Error"));
+        headers.add("X-mcsrApp-params", Optional.ofNullable(entityName)
+                .map(e -> e.replaceAll("(\\r|\\n)", ""))
+                .orElse("Unknown Entity"));
         return headers;
     }
 

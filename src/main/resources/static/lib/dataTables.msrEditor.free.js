@@ -522,16 +522,16 @@
                             }
                         }
 
-                        data += "<div style='margin-left: initial; margin-right: initial;' class='form-group row'>"
-                            + "<label for='" + that._quoteattr(columnDefs[j].name) + "'>" + title + ":&nbsp</label>"
-                            + "<input type='hidden' "
+                        data += "<div style='margin-left: initial; margin-right: initial;' class='row'>"
+                            + "<div class='col-4'><label for='" + that._quoteattr(columnDefs[j].name) + "'>" + title + ":&nbsp</label></div>"
+                            + "<div class='col-8'><input type='hidden' "
                                 + "id='" + that._quoteattr(title) + "' "
                                 + "name='" + that._quoteattr(title) + "' "
                                 + "placeholder='" + that._quoteattr(title) + "' "
                                 + "style='overflow: hidden;' class='form-control' "
                                 + "value='" + that._quoteattr(fvalue) + "' >"
                                 + fvalue
-                            + "</input></div>";
+                            + "</input></div></div>";
                     }
                 }
 
