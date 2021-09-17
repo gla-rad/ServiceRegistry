@@ -132,7 +132,7 @@ $(document).ready( function () {
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4 pt-1'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -199,7 +199,7 @@ $(document).ready( function () {
     // jQuery.
     instancesTable.buttons('.instance-edit-panel-toggle')
         .nodes()
-        .attr({ "data-toggle": "modal", "data-target": "#instanceEditPanel" });
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceEditPanel" });
 
     // On confirmation of the XML validation, we need to make an AJAX
     // call back to the service to perform the G-1128 compliance validation.
