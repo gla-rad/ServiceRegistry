@@ -18,68 +18,85 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <th:block th:include="fragments/general.html :: headerfiles"></th:block>
+    <link rel="stylesheet" th:href="@{/webjars/leaflet/dist/leaflet.css}" />
 </head>
 <body>
     <div class="sky-bg d-flex flex-column vh-100">
         <div th:replace="fragments/general.html :: navbar"></div>
-        <div class="flex-fill flex-grow-1 flex-shrink-0">
-            <div id="main-content" class="container mt-3">
+        <div class="flex-fill">
+            <div sec:authorize="!isAuthenticated()" class="position-absolute start-50 translate-middle-x mt-5" style="z-index: 2">
                 <div th:replace="fragments/general.html :: login-card"></div>
-                <div class="card shadow" sec:authorize="isAuthenticated()">
-                    <div class="card-header">
-                        <h2>Welcome to the MCP Service Registry</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-6">
-                                <h3>Core components of the MCP</h3>
-                                <img class="w-100" th:src="@{static/images/mc-core-components.png}" alt="">
-                            </div>
-                            <div class="col-6">
-                                <h3>The MCP</h3>
-                                <p>
-                                    The MCP is a decentralised platform that facilitates
-                                    secure and reliable information exchange within the
-                                    maritime domain and beyond. "Beyond", because the
-                                    maritime world isn’t isolated, but needs to exchange
-                                    information with other domains - for instance with
-                                    other transport domains. The information exchanged
-                                    can be of almost any nature, ranging from private
-                                    confidential information between a vessel and the
-                                    shore office of the shipowner, to public information
-                                    provided by authorities, such as the provision of
-                                    navigational warnings.
-                                </p>
-                                <p>
-                                    As a decentralised platform, there is no single entity
-                                    operating this. Several organisations are MCP service
-                                    providers, and collectively they form the "Maritime
-                                    Connectivity Platform".
-                                </p>
-                                <h4>Maritime Service Registry</h4>
-                                <p>
-                                    The MSR can be used for registering, discovering and using
-                                    all relevant e-Navigation and e-Maritime services, commercial
-                                    and non-commercial, authorised and non-authorised, for free
-                                    and against payment. It can be seen as a sophisticated yellow
-                                    pages phone book.
-                                </p>
-                                <p>
-                                    Project Location:
-                                    <a th:href="@{${projectLocation}}" target="_blank">
-                                        [[${projectLocation}]]
-                                    </a>
-                                </p>
+            </div>
+            <div sec:authorize="isAuthenticated()" class="search-overlay position-absolute" style="z-index: 2; width: 45%;">
+                <div id="accordion">
+                    <div class="accordion-item shadow">
+                        <div class="accordion-header" id="collapseHead">
+                            <h2 class="mb-0">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseBody" aria-expanded="true" aria-controls="collapseBody">
+                                    Welcome to the MCP Service Registry
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="collapseBody" class="accordion-collapse collapse show" aria-labelledby="collapseHead" data-bs-parent="#accordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <h3>Core components of the MCP</h3>
+                                        <img class="w-100" th:src="@{static/images/mc-core-components.png}" alt="">
+                                    </div>
+                                    <div class="col-6">
+                                        <h3>The MCP</h3>
+                                        <p>
+                                            The MCP is a decentralised platform that facilitates
+                                            secure and reliable information exchange within the
+                                            maritime domain and beyond. "Beyond", because the
+                                            maritime world isn’t isolated, but needs to exchange
+                                            information with other domains - for instance with
+                                            other transport domains. The information exchanged
+                                            can be of almost any nature, ranging from private
+                                            confidential information between a vessel and the
+                                            shore office of the shipowner, to public information
+                                            provided by authorities, such as the provision of
+                                            navigational warnings.
+                                        </p>
+                                        <p>
+                                            As a decentralised platform, there is no single entity
+                                            operating this. Several organisations are MCP service
+                                            providers, and collectively they form the "Maritime
+                                            Connectivity Platform".
+                                        </p>
+                                        <h4>Maritime Service Registry</h4>
+                                        <p>
+                                            The MSR can be used for registering, discovering and using
+                                            all relevant e-Navigation and e-Maritime services, commercial
+                                            and non-commercial, authorised and non-authorised, for free
+                                            and against payment. It can be seen as a sophisticated yellow
+                                            pages phone book.
+                                        </p>
+                                        <p>
+                                            Project Location:
+                                            <a th:href="@{${projectLocation}}" target="_blank">
+                                                [[${projectLocation}]]
+                                            </a>
+                                        </p>
 
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="map-container">
+            <div id="searchMap" class="h-100 border shadow"></div>
+        </div>
         <div th:replace="fragments/general.html :: footer"></div>
     </div>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <script th:src="@{/webjars/leaflet/dist/leaflet.js}"></script>
+    <script th:src="@{/static/src/common.js}"></script>
+    <script th:src="@{/static/src/search.js}"></script>
 </body>
 </html>
