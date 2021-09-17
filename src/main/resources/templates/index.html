@@ -20,7 +20,7 @@
     <th:block th:include="fragments/general.html :: headerfiles"></th:block>
 </head>
 <body>
-    <div class="d-flex flex-column vh-100">
+    <div class="sky-bg d-flex flex-column vh-100">
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container mt-3">
@@ -95,6 +95,5 @@
     </div>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <script th:src="@{/static/utils.js}"></script>
 </body>
 </html>

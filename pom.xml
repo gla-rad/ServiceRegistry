@@ -24,7 +24,7 @@
 		<keycloak.version>12.0.1</keycloak.version>
 		<swagger.version>3.0.0</swagger.version>
 		<bootstrap.version>4.5.2</bootstrap.version>
-		<jquery.version>3.1.1-1</jquery.version>
+		<jquery.version>3.5.1</jquery.version>
 		<fa.version>5.11.2</fa.version>
 	</properties>
 
@@ -184,6 +184,11 @@
 			<artifactId>g1128-schemas</artifactId>
 			<version>0.0.5</version>
 			<classifier>jdk11</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.web3j</groupId>
+			<artifactId>core</artifactId>
+			<version>4.8.4</version>
 		</dependency>
 	</dependencies>
 
