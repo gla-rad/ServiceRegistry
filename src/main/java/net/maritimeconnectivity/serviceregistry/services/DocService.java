@@ -65,9 +65,9 @@ public class DocService {
     }
 
     /**
-     *  Get one doc by id.
+     *  Get one doc by ID.
      *
-     *  @param id the id of the entity
+     *  @param id       the ID of the entity
      *  @return the entity
      */
     @Transactional(readOnly = true)
@@ -80,7 +80,7 @@ public class DocService {
     /**
      * Save a doc.
      *
-     * @param doc the entity to save
+     * @param doc       the entity to save
      * @return the persisted entity
      */
     @Transactional
@@ -103,9 +103,9 @@ public class DocService {
     }
 
     /**
-     *  Delete the  doc by id.
+     *  Delete the doc by ID.
      *
-     *  @param id the id of the entity
+     *  @param id       the ID of the entity
      */
     @Transactional
     public void delete(Long id) throws DataNotFoundException {

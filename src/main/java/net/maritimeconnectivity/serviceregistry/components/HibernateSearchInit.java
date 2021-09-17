@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.maritimeconnectivity.serviceregistry.config;
+package net.maritimeconnectivity.serviceregistry.components;
 
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.search.jpa.FullTextEntityManager;
