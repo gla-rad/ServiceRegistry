@@ -19,10 +19,9 @@ package net.maritimeconnectivity.serviceregistry.components;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.SessionScope;
 import org.web3j.crypto.Credentials;
@@ -35,7 +34,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.UnknownHostException;
 import java.util.Optional;
 
 /**
@@ -144,7 +142,7 @@ public class SmartContractProvider {
                 instance.getInstanceId(),
                 instance.getVersion(),
                 instance.getKeywords(),
-                instance.getGeometry().toString(),
+                Optional.ofNullable(instance.getGeometry()).map(Geometry::toString).orElse(null),
                 "designMrn",
                 "designVersion",
                 new MsrContract.Msr(msrName, msrUrl)
