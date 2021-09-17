@@ -56,7 +56,7 @@ for access management (version 15.0.1). The Spring Keycloak adapter is used to
 link the service to the authentication server. Therefore, before running the 
 service you will need to create a security realm in Keycloak and setup a client
 service. To get things going faster, the required client configuration can be
-found in the [service-registry.json](src/main/java/resources/service-registry.json)
+found in the [service-registry.json](src/main/resources/service-registry.json)
 file. Note that the client's access type is *confidential* so you might need
 to regererate the client's secret. Once the service is ready in the Keycloak
 service, you will need to connect the service to it using the relevant section
@@ -125,7 +125,7 @@ access to the endpoint if the user has the *get_api_instances* role.
 In order to enable the resource-level access management you will need to turn
 on the *Authorization Enabled* setting in the main setting of the service 
 registry client. To keep things simple, the authorization configuration can be
-found [here](src/main/java/resources/service-registry-authorization.json).
+found [here](src/main/resources/service-registry-authorization.json).
 You can simply import the file in the *Authorization* tab of the client.
 
 The last trick that binds everything together is again found in the 
