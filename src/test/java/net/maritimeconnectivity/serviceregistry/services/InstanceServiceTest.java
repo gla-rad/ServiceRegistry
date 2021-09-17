@@ -1,8 +1,25 @@
+/*
+ * Copyright (c) 2021 Maritime Connectivity Platform Consortium
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.maritimeconnectivity.serviceregistry.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
+import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -67,6 +84,12 @@ class InstanceServiceTest {
      */
     @Mock
     private XmlService xmlService;
+
+    /**
+     * The LedgerRequest Service Mock.
+     */
+    @Mock
+    private LedgerRequestService ledgerRequestService;
 
     /**
      * The User Context.
@@ -222,6 +245,23 @@ class InstanceServiceTest {
     }
 
     /**
+     * Test that when we are trying to register an instance with existing mrn and version
+     * a DuplicationKeyException will be thrown.
+     */
+    @Test
+    void testSaveWithDuplicatedMRNVersion() {
+        doReturn(Optional.of(this.newInstance)).when(this.instanceRepo).findByDomainIdAndVersion(this.newInstance.getInstanceId(), this.newInstance.getVersion());
+
+        // Perform the service call
+        assertThrows(DuplicateDataException.class, () ->
+                this.instanceService.save(this.newInstance)
+        );
+
+        // And also that no saving calls took place in the repository
+        verify(this.instanceRepo, never()).save(any());
+    }
+
+    /**
      * Test that we can save correctly a new or existing instance if all
      * the validation checks are successful.
      */
@@ -305,7 +345,8 @@ class InstanceServiceTest {
      */
     @Test
     void testDelete() throws DataNotFoundException {
-        doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
+        doNothing().when(this.ledgerRequestService).deleteByInstanceId(this.existingInstance.getInstanceId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
 
         // Perform the service call
@@ -321,8 +362,6 @@ class InstanceServiceTest {
      */
     @Test
     void testDeleteNotFound() {
-        doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
-
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
                 this.instanceService.delete(this.existingInstance.getId())
@@ -351,7 +390,7 @@ class InstanceServiceTest {
      * to update the status of, a DataNotFoundException will be thrown.
      */
     @Test
-    void testUpdateStatusNotFound() throws DataNotFoundException, XMLValidationException, GeometryParseException {
+    void testUpdateStatusNotFound() throws DataNotFoundException {
         doReturn(null).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
 
         // Perform the service call
@@ -407,7 +446,7 @@ class InstanceServiceTest {
      */
     @Test
     void testFindByDomainIdAndVersion() {
-        doReturn(this.existingInstance).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships("domainId", "0.0.1Test");
+        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships("domainId", "0.0.1Test");
 
         // Perform the service call
         Instance result = this.instanceService.findByDomainIdAndVersion("domainId", "0.0.1Test");

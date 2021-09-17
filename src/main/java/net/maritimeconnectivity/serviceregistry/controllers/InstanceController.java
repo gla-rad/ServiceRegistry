@@ -112,7 +112,7 @@ public class InstanceController {
      *
      * @param instance the instance to create
      * @return the ResponseEntity with status 201 (Created) and with body the new instance,
-     * or with status 400 (Bad Request) if the instance has already an ID, or coudln't be created
+     * or with status 400 (Bad Request) if the instance has already an ID, or couldn't be created
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
@@ -190,7 +190,7 @@ public class InstanceController {
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
         } catch (Exception ex) {
-            log.error("Unknown error: ", ex);
+            log.error("Saving error: ", ex);
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", ex.getMessage(), ex.toString()))
                     .body(instance);
@@ -233,7 +233,7 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .build();
         } catch (Exception ex) {
-            log.error("Unknown error: ", ex);
+            log.error("Update status error: ", ex);
             return ResponseEntity.badRequest()
                     .build();
         }
