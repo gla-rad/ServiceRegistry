@@ -3,6 +3,22 @@
   "policyEnforcementMode": "PERMISSIVE",
   "resources": [
     {
+      "name": "logout_page",
+      "type": "urn:service-registry:resources:logout",
+      "ownerManagedAccess": false,
+      "displayName": "Logout Page",
+      "attributes": {},
+      "_id": "02650335-8eeb-4d11-9647-bd0a0dbaad71",
+      "uris": [
+        "/logout"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
       "name": "api_instances_dt",
       "type": "urn:service-registry:resources:instances:dt",
       "ownerManagedAccess": false,
