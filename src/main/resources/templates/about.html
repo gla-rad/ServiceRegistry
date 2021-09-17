@@ -24,49 +24,35 @@
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container mt-3">
-                <div class="card shadow" sec:authorize="!isAuthenticated()">
-                    <div class="card-header">
-                        <h2>Welcome</h2>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <p class="m-2">Please sign-in to access the service facilities.</p>
-                        </div>
-                        <div class="row d-flex justify-content-center">
-                            <div class="btn btn-primary" onclick="window.location.href='/login'">
-                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div th:replace="fragments/general.html :: login-card"></div>
                 <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
                         <h2>Maritime Service Registry Information</h2>
                     </div>
                     <div class="card-body">
                         <div class="row p-1">
-                            <h5>Name:</h5>
-                            <span>&nbsp;[[${MSRName}]] </span>
+                            <div class="col-sm-2"><h5>Name:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${MSRName}]] </span></div>
                         </div>
                         <div class="row p-1">
-                            <h5>End point (MRN):</h5>
-                            <span>&nbsp;[[${MSRMRN}]] </span>
+                            <div class="col-sm-2"><h5>End point (MRN):</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${MSRMRN}]] </span></div>
                         </div>
                         <div class="row p-1">
-                            <h5>End point (URL):</h5>
-                            <span>&nbsp;[[${MSRURL}]] </span>
+                            <div class="col-sm-2"><h5>End point (URL):</h5></div>
+                            <div class="col-sm-10">&nbsp<span>[[${MSRURL}]]</span></div>
                         </div>
                         <div class="row p-1">
-                            <h5>Operator name:</h5>
-                            <span>&nbsp;[[${operatorName}]] </span>
+                            <div class="col-sm-2"><h5>Operator name:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${operatorName}]] </span></div>
                         </div>
                         <div class="row p-1">
-                            <h5>Operator MRN:</h5>
-                            <span>&nbsp;[[${operatorMRN}]] </span>
+                            <div class="col-sm-2"><h5>Operator MRN:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${operatorMRN}]] </span></div>
                         </div>
                         <div class="row p-1">
-                            <h5>Contact:</h5>
-                            <span>&nbsp;[[${contact}]] </span>
+                            <div class="col-sm-2"><h5>Contact:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${contact}]] </span></div>
                         </div>
                     </div>
                 </div>
