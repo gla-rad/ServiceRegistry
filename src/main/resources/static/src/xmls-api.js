@@ -24,13 +24,7 @@ class XmlsApi {
             contentType: 'application/json',
             crossDomain: true,
             success: callback,
-            error: (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -69,13 +63,7 @@ class XmlsApi {
                 }
                 callback(instance)
             },
-            error: (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 }
