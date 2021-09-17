@@ -418,12 +418,12 @@ function saveInstanceThroughDatatables(instance) {
         instancesTable.context[0].oInit.onAddRow(instancesTable,
                 instance,
                 (data) => { instancesTable.row.add(data).draw(false); },
-                (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); hideLoader(); });
+                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while saving the instance.")); hideLoader(); });
     } else {
         instancesTable.context[0].oInit.onEditRow(instancesTable,
                 instance,
                 (data,b,c,d,e) => { instancesTable.ajax.reload(); },
-                (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); hideLoader(); });
+                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while updating the instance.")); hideLoader(); });
     }
 }
 
