@@ -21,6 +21,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for the Instance entity.
@@ -85,7 +86,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
             "from Instance instance " +
             "where instance.instanceId = :id " +
             "and instance.version = :version")
-    Instance findByDomainIdAndVersion(@Param("id") String id, @Param("version") String version);
+    Optional<Instance> findByDomainIdAndVersion(@Param("id") String id, @Param("version") String version);
 
     /**
      * Find by domain id and version eager relationships list.
@@ -99,6 +100,6 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
             "left join fetch instance.docs " +
             "where instance.instanceId = :id " +
             "and instance.version = :version")
-    Instance findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
+    Optional<Instance> findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
 
 }
