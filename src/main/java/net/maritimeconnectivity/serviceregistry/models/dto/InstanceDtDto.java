@@ -19,8 +19,6 @@ package net.maritimeconnectivity.serviceregistry.models.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
@@ -35,11 +33,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The Instance DTO Class.
+ * The Instance Datatables DTO Class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class InstanceDto implements Serializable, JsonSerializable {
+public class InstanceDtDto implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = -1173956383783083179L;
 
@@ -69,8 +67,9 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String mmsi;
     private String imo;
     private String serviceType;
-    private Xml instanceAsXml;
-    private DocDto instanceAsDoc;
+    private XmlDto instanceAsXml;
+    private Long instanceAsDocId;
+    private String instanceAsDocName;
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
@@ -80,7 +79,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
     /**
      * Instantiates a new Instance dto.
      */
-    public InstanceDto() {
+    public InstanceDtDto() {
 
     }
 
@@ -413,7 +412,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the instance as xml
      */
-    public Xml getInstanceAsXml() {
+    public XmlDto getInstanceAsXml() {
         return instanceAsXml;
     }
 
@@ -422,26 +421,44 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param instanceAsXml the instance as xml
      */
-    public void setInstanceAsXml(Xml instanceAsXml) {
+    public void setInstanceAsXml(XmlDto instanceAsXml) {
         this.instanceAsXml = instanceAsXml;
     }
 
     /**
-     * Gets instance as doc.
+     * Gets instance as doc id.
      *
-     * @return the instance as doc
+     * @return the instance as doc id
      */
-    public DocDto getInstanceAsDoc() {
-        return instanceAsDoc;
+    public Long getInstanceAsDocId() {
+        return instanceAsDocId;
     }
 
     /**
-     * Sets instance as doc.
+     * Sets instance as doc id.
      *
-     * @param instanceAsDoc the instance as doc
+     * @param instanceAsDocId the instance as doc id
      */
-    public void setInstanceAsDoc(DocDto instanceAsDoc) {
-        this.instanceAsDoc = instanceAsDoc;
+    public void setInstanceAsDocId(Long instanceAsDocId) {
+        this.instanceAsDocId = instanceAsDocId;
+    }
+
+    /**
+     * Gets instance as doc name.
+     *
+     * @return the instance as doc name
+     */
+    public String getInstanceAsDocName() {
+        return instanceAsDocName;
+    }
+
+    /**
+     * Sets instance as doc name.
+     *
+     * @param instanceAsDocName the instance as doc name
+     */
+    public void setInstanceAsDocName(String instanceAsDocName) {
+        this.instanceAsDocName = instanceAsDocName;
     }
 
     /**
