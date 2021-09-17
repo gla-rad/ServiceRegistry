@@ -166,6 +166,7 @@ $(() => {
                 return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
+                hideLoader();
                 console.error(thrownError);
             }
         },
@@ -181,7 +182,7 @@ $(() => {
             className: 'instance-edit-panel-toggle',
             name: 'add-instance', // do not change name
             action: (e, dt, node, config) => {
-                clearInstanceEditPanel();
+                loadInstanceEditPanel(true);
             }
         }, {
             extend: 'selected', // Bind to Selected row
@@ -190,7 +191,7 @@ $(() => {
             className: 'instance-edit-panel-toggle',
             name: 'edit-instance', // do not change name
             action: (e, dt, node, config) => {
-                loadInstanceEditPanel();
+                loadInstanceEditPanel(false);
             }
         }, {
             extend: 'selected', // Bind to Selected row
@@ -241,7 +242,7 @@ $(() => {
 
     // Show the loader on processing
     instancesTable.on( 'processing.dt', function(e, settings, processing) {
-        processing ? showLoader(false) : hideLoader();;
+        processing ? showLoader(false) : hideLoader();
     });
 
     // We also need to link the instance create/edit toggle buttons with the the
@@ -484,33 +485,22 @@ function onLedgerRequestUpdate($modalDiv, id, status) {
 }
 
 /**
- * The instances edit dialog form should be clear every time before it is used
- * so that new entries are not polluted by old data.
- */
-function clearInstanceEditPanel() {
-    // Do the form
-    $('form[name="instanceEditPanelForm"]').trigger("reset");
-
-    // Don't forget the XML content
-    $("#instanceEditPanel").find("#xml-input").val(null);
-
-    // Mark the a new instance can be created through the edit dialog
-    newInstance = true;
-}
-
-/**
  * This helper function loads the XML and field data from the selected instance
  * in the instance table onto the edit dialog.
  */
-function loadInstanceEditPanel() {
-    // First always clear to be sure
-    clearInstanceEditPanel();
+function loadInstanceEditPanel(isNewInstance) {
+    // Note if a new or an existing instance is to be loaded
+    newInstance = isNewInstance;
 
     // Get the instance edit panel modal dialog
-    let $modalDiv = $("#instanceEditPanel");
+    var $modalDiv = $("#instanceEditPanel");
+
+    // First always clear to be sure
+    clearInstanceEditPanel();
+    clearInstanceDoc($modalDiv);
 
     // If a row has been selected load the data into the form
-    if(instancesTable.row({selected : true})) {
+    if(!isNewInstance && instancesTable.row({selected : true})) {
         // Populate the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
@@ -522,12 +512,19 @@ function loadInstanceEditPanel() {
 
         // Handle the instance doc field if populated or not
         rowData.instanceAsDocId ? showInstanceDoc($modalDiv) : clearInstanceDoc($modalDiv);
-    } else {
-        clearInstanceDoc($modalDiv);
     }
+}
 
-    // Make that an existing instance has been loaded
-    newInstance = false;
+/**
+ * The instances edit dialog form should be clear every time before it is used
+ * so that new entries are not polluted by old data.
+ */
+function clearInstanceEditPanel() {
+    // Do the form
+    $('form[name="instanceEditPanelForm"]').trigger("reset");
+
+    // Don't forget the XML content
+    $("#instanceEditPanel").find("#xml-input").val(null);
 }
 
 /**
