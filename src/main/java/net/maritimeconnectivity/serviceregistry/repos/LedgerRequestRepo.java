@@ -20,7 +20,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for the Ledger Request entity.
@@ -30,34 +30,14 @@ import java.util.List;
 public interface LedgerRequestRepo extends JpaRepository<LedgerRequest, Long> {
 
     /**
-     * Find all with eager relationships list.
+     * Find by instance ID.
      *
-     * @return the list
-     */
-    @Query("select distinct request " +
-            "from LedgerRequest request ")
-    List<LedgerRequest> findAll();
-
-    /**
-     * Find by domain id list.
-     *
-     * @param id the id
-     * @return the list
-     */
-    @Query("select request " +
-            "from LedgerRequest request " +
-            "where request.id = :id")
-    LedgerRequest findOne(@Param("id") Long id);
-
-    /**
-     * Find by domain id list.
-     *
-     * @param domainId the id
+     * @param instanceId the instance ID
      * @return the list
      */
     @Query("select distinct request " +
             "from LedgerRequest request " +
-            "where request.serviceInstance.instanceId = :domainId")
-    List<LedgerRequest> findByDomainId(@Param("domainId") String domainId);
+            "where request.serviceInstance.id = :instanceId")
+    Optional<LedgerRequest> findByInstanceId(@Param("instanceId") Long instanceId);
 
 }
