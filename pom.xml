@@ -23,7 +23,7 @@
 		<hibernate.search-orm.version>5.11.9.Final</hibernate.search-orm.version>
 		<keycloak.version>12.0.1</keycloak.version>
 		<swagger.version>3.0.0</swagger.version>
-		<bootstrap.version>4.5.2</bootstrap.version>
+		<bootstrap.version>5.1.0</bootstrap.version>
 		<jquery.version>3.5.1</jquery.version>
 		<fa.version>5.11.2</fa.version>
 	</properties>
