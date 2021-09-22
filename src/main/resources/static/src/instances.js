@@ -171,7 +171,7 @@ $(() => {
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
