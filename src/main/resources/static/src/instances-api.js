@@ -24,13 +24,7 @@ class InstancesApi {
             contentType: 'application/json',
             crossDomain: true,
             success: callback,
-            error: (response, status, more) => {
-               if(errorCallback) {
-                   errorCallback(response, status, more);
-               } else {
-                   console.error(response)
-               }
-           }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -50,13 +44,7 @@ class InstancesApi {
             dataType: 'json',
             data: instance,
             success: callback,
-            error: (response, status, more) => {
-               if(errorCallback) {
-                   errorCallback(response, status, more);
-               } else {
-                   console.error(response)
-               }
-           }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -77,13 +65,7 @@ class InstancesApi {
             dataType: 'json',
             data: instance,
             success: callback,
-            error:  (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -101,13 +83,7 @@ class InstancesApi {
             contentType: 'application/json',
             crossDomain: true,
             success: callback,
-            error:  (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-           }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -126,13 +102,7 @@ class InstancesApi {
             contentType: 'application/json',
             crossDomain: true,
             success: callback,
-            error: (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -151,13 +121,7 @@ class InstancesApi {
             contentType: 'application/json',
             crossDomain: true,
             success: callback,
-            error: (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 }
