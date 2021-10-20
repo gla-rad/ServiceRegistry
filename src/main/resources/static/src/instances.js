@@ -144,7 +144,12 @@ var columnDefs = [{
     render: function ( data, type, row ) {
         return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="openInstanceAsDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
     },
- }];
+ }, {
+    data: "designs",
+    type: "hidden",
+    visible: false,
+    searchable: false,
+}];
 
 $(() => {
     // First link the API libs
@@ -436,7 +441,11 @@ function saveInstanceThroughDatatables(instance) {
 function onValidateXml($modalDiv) {
     this.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
         for (var field in response) {
-            $modalDiv.find("input#"+field).val(response[field]);
+            if(response[field] && typeof response[field] === 'object') {
+                $modalDiv.find("input#"+field).val(Object.entries(response[field]));
+            } else {
+                $modalDiv.find("input#"+field).val(response[field]);
+            }
         }
         $modalDiv.removeClass('loading');
     }, (response, status, more) => {
@@ -516,7 +525,11 @@ function loadInstanceEditPanel() {
         // Populate the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
-             $(this).val(rowData[$(this).attr('id')]);
+            if(rowData[$(this).attr('id')] && typeof rowData[$(this).attr('id')] === 'object') {
+                $(this).val(Object.entries(rowData[$(this).attr('id')]));
+            } else {
+                $(this).val(rowData[$(this).attr('id')]);
+            }
         });
 
         // Augmenting xml content on the data
@@ -657,6 +670,9 @@ function alignData(rowData, field, value, columnDefs){
         }
         else if(["keywords", "serviceType", "unlocode"].includes(field)) {
             rowData[field] = value.split(",");
+        }
+        else if( field === "designs") {
+            rowData[field] = value ? { [value.split(",")[0]]: value.split(",")[1] } : null;
         }
         else if(field.toUpperCase().endsWith("JSON")) {
             rowData[field] = JSON.stringify(value);
