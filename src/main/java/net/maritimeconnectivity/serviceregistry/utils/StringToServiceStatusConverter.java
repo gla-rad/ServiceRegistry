@@ -16,7 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.springframework.core.convert.converter.Converter;
 
 /**

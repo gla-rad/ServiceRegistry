@@ -23,20 +23,19 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
-import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.Query;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.hibernate.search.jpa.FullTextEntityManager;
 import org.hibernate.search.jpa.FullTextQuery;
 import org.hibernate.search.jpa.Search;
 import org.hibernate.search.query.dsl.QueryBuilder;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
@@ -57,8 +56,6 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.peek;
 
 /**
  * Service Implementation for managing Instance.
@@ -454,7 +451,13 @@ public class InstanceService {
         instance.setMmsi(serviceInstance.getMMSI());
         instance.setImo(serviceInstance.getIMO());
         instance.setServiceType(serviceInstance.getServiceType());
-        instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
+        instance.setUnlocode(serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .findFirst()
+                .orElse(null));
     }
 
     /**
@@ -468,13 +471,24 @@ public class InstanceService {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
-        String unLoCode = serviceInstance.getCoversAreas().getUnLoCode();
-        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas().getCoversAreas();
+        String unLoCode = serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .findFirst()
+                .orElse(null);
+        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(CoverageArea.class::isInstance)
+                .map(CoverageArea.class::cast)
+                .collect(Collectors.toList());
 
         // UN/LOCODE and Coverage Geometry are supported simultaneously.
         // However, for geo-searches, Coverage takes precedence over UN/LOCODE.
         if (unLoCode != null && unLoCode.length() > 0) {
-            instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
+            instance.setUnlocode(unLoCode);
         }
 
         // Check the coverage areas
