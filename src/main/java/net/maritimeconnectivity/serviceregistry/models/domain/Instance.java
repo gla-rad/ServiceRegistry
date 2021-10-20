@@ -16,16 +16,12 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
-import net.maritimeconnectivity.serviceregistry.utils.ServiceStatusBridge;
+import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -38,6 +34,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The type Instance.
@@ -115,7 +112,8 @@ public class Instance implements Serializable, JsonSerializable {
     private String instanceId; //MRN
 
     @Field()
-    @Field(name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @IndexedEmbedded
+    @Field(bridge=@FieldBridge(impl= StringListBridge.class), name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "keywords_sort")
     @ElementCollection
     private List<String> keywords;
@@ -135,8 +133,12 @@ public class Instance implements Serializable, JsonSerializable {
     @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
 
-    @Column(name = "unlocode")
-    private String unlocode;
+    @Field()
+    @IndexedEmbedded
+    @Field(bridge=@FieldBridge(impl= StringListBridge.class), name = "unlocode_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @SortableField(forField = "unlocode_sort")
+    @ElementCollection
+    private List<String> unlocode;
 
     @Field()
     @Field(name = "endpointUri_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
@@ -165,7 +167,8 @@ public class Instance implements Serializable, JsonSerializable {
     private String imo;
 
     @Field()
-    @Field(name = "serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
+    @IndexedEmbedded
+    @Field(bridge=@FieldBridge(impl= StringListBridge.class), name="serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "serviceType_sort")
     @ElementCollection
     @JsonProperty("serviceType")
@@ -425,7 +428,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the unlocode
      */
-    public String getUnlocode() {
+    public List<String> getUnlocode() {
         return unlocode;
     }
 
@@ -434,7 +437,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param unlocode the unlocode
      */
-    public void setUnlocode(String unlocode) {
+    public void setUnlocode(List<String> unlocode) {
         this.unlocode = unlocode;
     }
 
@@ -696,15 +699,15 @@ public class Instance implements Serializable, JsonSerializable {
                 ", geometry=" + geometry +
                 ", geometryContentType='" + geometryContentType + '\'' +
                 ", instanceId='" + instanceId + '\'' +
-                ", keywords='" + keywords + '\'' +
+                ", keywords='" + Optional.ofNullable(keywords).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", status='" + status + '\'' +
                 ", organizationId='" + organizationId + '\'' +
-                ", unlocode='" + unlocode + '\'' +
+                ", unlocode='" + Optional.ofNullable(unlocode).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", endpointUri='" + endpointUri + '\'' +
                 ", endpointType='" + endpointType + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
-                ", serviceType='" + serviceType + '\'' +
+                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 '}';
     }
 

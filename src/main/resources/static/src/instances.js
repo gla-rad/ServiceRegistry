@@ -493,6 +493,9 @@ function clearInstanceEditPanel() {
     // Don't forget the XML content
     $("#instanceEditPanel").find("#xml-input").val(null);
 
+    // And the document option
+    clearInstanceDoc($("#instanceEditPanel"));
+
     // Mark the a new instance can be created through the edit dialog
     newInstance = true;
 }
@@ -651,6 +654,9 @@ function alignData(rowData, field, value, columnDefs){
     if (field && columnDefs.includes(field)){
         if (field === 'id'){
             rowData[field] = parseInt(value);
+        }
+        else if(["keywords", "serviceType", "unlocode"].includes(field)) {
+            rowData[field] = value.split(",");
         }
         else if(field.toUpperCase().endsWith("JSON")) {
             rowData[field] = JSON.stringify(value);
