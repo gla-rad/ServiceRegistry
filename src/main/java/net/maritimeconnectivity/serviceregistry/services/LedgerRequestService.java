@@ -260,7 +260,7 @@ public class LedgerRequestService {
                         .orElseThrow(() -> new LedgerRegistrationError(MsrErrorConstant.LEDGER_REQUEST_STATUS_NOT_FULFILLED + "- current status: " + l.getStatus(), null))))
                 .map(l -> this.updateStatus(l.getId(), LedgerRequestStatus.REQUESTING, null,true))
                 .map(peek(l -> {
-                    msrContract.registerServiceInstance(this.smartContractProvider.createNewServiceInstance(l.getServiceInstance()), l.getServiceInstance().getKeywordsList())
+                    msrContract.registerServiceInstance(this.smartContractProvider.createNewServiceInstance(l.getServiceInstance()), l.getServiceInstance().getKeywords())
                             .sendAsync()
                             .whenComplete((receipt, ex) -> this.handleLedgerRegistrationResponse(l, receipt, ex));
                 }))

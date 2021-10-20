@@ -29,7 +29,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

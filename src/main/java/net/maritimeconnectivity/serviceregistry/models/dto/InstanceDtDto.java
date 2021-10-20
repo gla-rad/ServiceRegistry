@@ -22,7 +22,7 @@ import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
 import javax.validation.constraints.NotNull;

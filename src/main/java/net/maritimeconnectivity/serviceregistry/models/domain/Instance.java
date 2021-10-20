@@ -27,10 +27,10 @@ import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import net.maritimeconnectivity.serviceregistry.utils.ServiceStatusBridge;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.annotations.*;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 
@@ -117,8 +117,8 @@ public class Instance implements Serializable, JsonSerializable {
     @Field()
     @Field(name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "keywords_sort")
-    @Column(name = "keywords")
-    private String keywords;
+    @ElementCollection
+    private List<String> keywords;
 
     @NotNull
     @Enumerated(EnumType.STRING)
@@ -167,9 +167,9 @@ public class Instance implements Serializable, JsonSerializable {
     @Field()
     @Field(name = "serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "serviceType_sort")
-    @Column(name = "service_type")
+    @ElementCollection
     @JsonProperty("serviceType")
-    private String serviceType;
+    private List<String> serviceType;
 
     @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
@@ -371,7 +371,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the keywords
      */
-    public String getKeywords() {
+    public List<String> getKeywords() {
         return keywords;
     }
 
@@ -380,7 +380,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param keywords the keywords
      */
-    public void setKeywords(String keywords) {
+    public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
     }
 
@@ -515,7 +515,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public String getServiceType() {
+    public List<String>  getServiceType() {
         return serviceType;
     }
 
@@ -524,7 +524,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param serviceType the service type
      */
-    public void setServiceType(String serviceType) {
+    public void setServiceType(List<String>  serviceType) {
         this.serviceType = serviceType;
     }
 
@@ -706,20 +706,6 @@ public class Instance implements Serializable, JsonSerializable {
                 ", imo='" + imo + '\'' +
                 ", serviceType='" + serviceType + '\'' +
                 '}';
-    }
-
-    /**
-     * Returns the comma separated keywords of the instance as a list of
-     * strings.
-     *
-     * @return The list of keywords
-     */
-    @JsonIgnore
-    public List<String> getKeywordsList() {
-        return Optional.ofNullable(this.keywords)
-                .map(keywords -> keywords.split(" "))
-                .map(Arrays::asList)
-                .orElse(Collections.emptyList());
     }
 
 }
