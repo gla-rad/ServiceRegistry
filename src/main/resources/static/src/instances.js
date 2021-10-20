@@ -4,7 +4,6 @@
 var fileUtils;
 var instancesApi;
 var xmlsApi;
-var docsApi;
 var ledgerRequestsApi;
 
 /**
@@ -142,7 +141,7 @@ var columnDefs = [{
     searchable: false,
     className: 'dt-body-center',
     render: function ( data, type, row ) {
-        return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="openInstanceAsDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
+        return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="downloadDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
     },
  }, {
     data: "designs",
@@ -156,7 +155,6 @@ $(() => {
     this.fileUtils = new FileUtils();
     this.instancesApi = new InstancesApi();
     this.xmlsApi = new XmlsApi();
-    this.docsApi = new DocsApi();
     this.ledgerRequestsApi = new LedgerRequestsApi();
 
     // Now initialise the instances table
@@ -212,6 +210,21 @@ $(() => {
             }
         }, {
             extend: 'selected', // Bind to Selected row
+            text: '<i class="fas fa-paperclip"></i>',
+            titleAttr: 'Files Attachments',
+            name: 'attachments', // do not change name
+            className: 'instance-attachments-toggle',
+            action: (e, dt, node, config) => {
+                var idx = dt.cell('.selected', 0).index();
+                var data = dt.row(idx.row).data();
+                loadFileUploader(
+                    "#file-uploader-id",
+                    `/api/docs`,
+                    () => { }
+                );
+            }
+       }, {
+            extend: 'selected', // Bind to Selected row
             text: '<i class="fas fa-clipboard-check"></i>',
             titleAttr: 'Instance Status',
             name: 'instance-status', // do not change name
@@ -254,6 +267,13 @@ $(() => {
     instancesTable.buttons('.instance-edit-panel-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceEditPanel" });
+
+    // We also need to link the attachment toggle button with the the modal
+    // dialog so that by clicking the button the panel pops up. It's easier done
+    // with jQuery.
+    instancesTable.buttons('.instance-attachments-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#attachmentsPanel" });
 
     // On confirmation of the XML validation, we need to make an AJAX
     // call back to the service to perform the G-1128 compliance validation.
@@ -324,7 +344,7 @@ $(() => {
 
     // Link the download instance doc button functionality
     $('#instanceEditPanel').on('click', '.btn-download-instance-doc', (e) => {
-        downloadInstanceDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
+        downloadDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
     });
 
     // We also need to link the instance status toggle button with the the
@@ -706,36 +726,3 @@ function clearInstanceDoc($modalDiv) {
     $modalDiv.find("#instanceAsDoc").show();
 }
 
-/**
- * Download the selected document ID from the server, decode the data from
- * the provided Base64 format and open's it in the browser.
- *
- * @param {number}      docId           The ID of the document to be opened
- */
-function openInstanceAsDoc(docId) {
-    showLoader();
-    this.docsApi.getDoc(docId, (doc) => {
-        fileUtils.openFileWindow(doc.filecontentContentType, doc.filecontent);
-        hideLoader();
-    }, (response, status, more) => {
-         hideLoader();
-         showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
-    })
-}
-
-/**
- * Download the selected document ID from the server, decode the data from
- * the provided Base64 format.
- *
- * @param {number}      docId           The ID of the document to be opened
- */
-function downloadInstanceDoc(docId) {
-    showLoader();
-    this.docsApi.getDoc(docId, (doc) => {
-        fileUtils.downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
-        hideLoader();
-    }, (response, status, more) => {
-        hideLoader();
-        showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
-    });
-}
