@@ -27,10 +27,7 @@ import org.locationtech.jts.geom.Geometry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Instance Datatables DTO Class.
@@ -57,16 +54,16 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String geometryContentType;
     @NotNull
     private String instanceId; //MRN
-    private String keywords;
+    private List<String> keywords;
     @NotNull
     private ServiceStatus status;
     private String organizationId; // Use the JWT auth token for that
-    private String unlocode;
+    private List<String> unlocode;
     private String endpointUri;
     private String endpointType;
     private String mmsi;
     private String imo;
-    private String serviceType;
+    private List<String> serviceType;
     private XmlDto instanceAsXml;
     private Long instanceAsDocId;
     private String instanceAsDocName;
@@ -250,7 +247,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the keywords
      */
-    public String getKeywords() {
+    public List<String> getKeywords() {
         return keywords;
     }
 
@@ -259,7 +256,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param keywords the keywords
      */
-    public void setKeywords(String keywords) {
+    public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
     }
 
@@ -304,7 +301,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the unlocode
      */
-    public String getUnlocode() {
+    public List<String> getUnlocode() {
         return unlocode;
     }
 
@@ -313,7 +310,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param unlocode the unlocode
      */
-    public void setUnlocode(String unlocode) {
+    public void setUnlocode(List<String> unlocode) {
         this.unlocode = unlocode;
     }
 
@@ -394,7 +391,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public String getServiceType() {
+    public List<String> getServiceType() {
         return serviceType;
     }
 
@@ -403,7 +400,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param serviceType the service type
      */
-    public void setServiceType(String serviceType) {
+    public void setServiceType(List<String> serviceType) {
         this.serviceType = serviceType;
     }
 
