@@ -24,8 +24,8 @@ import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -83,8 +83,8 @@ public class UnLoCodeService {
                 // Insert the G1128 geometry into the XML
                 Xml instanceXml = instance.getInstanceAsXml();
                 ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
-                serviceInstance.getCoversAreas().getCoversAreas().clear();
-                serviceInstance.getCoversAreas().getCoversAreas().add(coverageArea);
+                serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes().clear();
+                serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes().add(coverageArea);
                 instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
                 instance.setInstanceAsXml(instanceXml);
             }
