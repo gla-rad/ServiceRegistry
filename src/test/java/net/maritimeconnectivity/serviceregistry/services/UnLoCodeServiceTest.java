@@ -32,6 +32,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -102,7 +103,7 @@ class UnLoCodeServiceTest {
         assertNotNull(unLoCodeMapEntry);
 
         // Perform the service call
-        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, unLoCode);
+        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, Collections.singletonList(unLoCode));
 
         // Make sure the UnLoCode was applied correctly
         assertNotNull(this.existingInstance.getGeometry());
@@ -124,7 +125,7 @@ class UnLoCodeServiceTest {
     @Test
     void testApplyUnLoCodeMappingNotFound() {
         // Perform the service call
-        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, "INVALID");
+        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, Collections.singletonList("INVALID"));
 
         // Make sure the UnLoCode was applied correctly
         assertNull(this.existingInstance.getGeometry());

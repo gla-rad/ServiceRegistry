@@ -34,6 +34,7 @@ import org.hibernate.search.jpa.FullTextQuery;
 import org.hibernate.search.jpa.Search;
 import org.hibernate.search.query.dsl.QueryBuilder;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
@@ -56,6 +57,7 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing Instance.
@@ -456,8 +458,9 @@ public class InstanceService {
                 .stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
-                .findFirst()
-                .orElse(null));
+                .collect(Collectors.toList()));
+        instance.setDesigns(Stream.of(serviceInstance.getImplementsServiceDesign())
+                .collect(Collectors.toMap(ServiceDesignReference::getId, ServiceDesignReference::getVersion)));
     }
 
     /**
@@ -471,13 +474,13 @@ public class InstanceService {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
-        String unLoCode = serviceInstance.getCoversAreas()
+        List<String> unLoCode = serviceInstance.getCoversAreas()
                 .getCoversAreasAndUnLoCodes()
                 .stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
-                .findFirst()
-                .orElse(null);
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
         List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas()
                 .getCoversAreasAndUnLoCodes()
                 .stream()
@@ -487,7 +490,7 @@ public class InstanceService {
 
         // UN/LOCODE and Coverage Geometry are supported simultaneously.
         // However, for geo-searches, Coverage takes precedence over UN/LOCODE.
-        if (unLoCode != null && unLoCode.length() > 0) {
+        if (unLoCode != null && unLoCode.size() > 0) {
             instance.setUnlocode(unLoCode);
         }
 
@@ -501,7 +504,7 @@ public class InstanceService {
                         .orElseThrow(() -> new ParseException("Invalid geometry detected")));
             }
             instance.setGeometry(new GeometryCombiner(geometryList).combine());
-        } else if (unLoCode != null && unLoCode.length() > 0) {
+        } else if (unLoCode != null && unLoCode.size() > 0) {
             unLoCodeService.applyUnLoCodeMapping(instance, unLoCode);
         }
     }
