@@ -23,7 +23,7 @@
 		<hibernate.search-orm.version>5.11.9.Final</hibernate.search-orm.version>
 		<keycloak.version>12.0.1</keycloak.version>
 		<swagger.version>3.0.0</swagger.version>
-		<bootstrap.version>5.1.0</bootstrap.version>
+		<bootstrap.version>5.1.3</bootstrap.version>
 		<jquery.version>3.5.1</jquery.version>
 		<fa.version>5.11.2</fa.version>
 	</properties>
@@ -183,6 +183,21 @@
 			<groupId>org.webjars.bowergithub.leaflet</groupId>
 			<artifactId>leaflet.draw</artifactId>
 			<version>1.0.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.bower</groupId>
+			<artifactId>bootstrap-fileinput</artifactId>
+			<version>5.2.1</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.webjars.bower</groupId>
+					<artifactId>jquery</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.webjars.bower</groupId>
+					<artifactId>bootstrap</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- Testing -->
