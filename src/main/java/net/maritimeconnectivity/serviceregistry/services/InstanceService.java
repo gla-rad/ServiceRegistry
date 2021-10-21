@@ -79,19 +79,19 @@ public class InstanceService {
      * The Instance Repository.
      */
     @Autowired
-    private InstanceRepo instanceRepo;
+    InstanceRepo instanceRepo;
 
     /**
      * The XML Service.
      */
     @Autowired
-    private XmlService xmlService;
+    XmlService xmlService;
 
     /**
      * The Doc Service.
      */
     @Autowired
-    private DocService docService;
+    DocService docService;
 
     /**
      * The LedgerRequest Service.
@@ -409,7 +409,7 @@ public class InstanceService {
      * an appropriate format to be viewed by a datatables jQuery table.
      *
      * @param dtPagingRequest the Datatables pagination request
-     * @return the Datatables paged response
+     * @return the paged response
      */
     @Transactional(readOnly = true)
     public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
@@ -424,10 +424,10 @@ public class InstanceService {
                 .filter(ls -> ls.getSort().length > 0)
                 .ifPresent(searchQuery::setSort);
 
-        // For some reason we need this casting otherwise JDK8 complains
+        // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(FullTextQuery::getResultList)
-                .map(stations -> new PageImpl<Instance>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .map(instances -> new PageImpl<Instance>(instances, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
@@ -511,10 +511,10 @@ public class InstanceService {
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * search test. This query will be based solely on the stations table and
+     * search test. This query will be based solely on the instances table and
      * will include the following fields:
      * <ul>
-     *  <li>Version</li>Name
+     *  <li>Version</li>
      *  <li>Version</li>
      *  <li>Last Updated At</li>
      *  <li>Status</li>

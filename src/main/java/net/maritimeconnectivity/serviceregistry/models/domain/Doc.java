@@ -17,8 +17,10 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.annotations.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -40,23 +42,36 @@ import java.util.Set;
 @Entity
 @Table(name = "document")
 @Cacheable
+@Indexed
+@NormalizerDef(name = "lowercase2", filters = @TokenFilterDef(factory = LowerCaseFilterFactory.class))
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Doc implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
+    @Field(name = "id_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase2"))
+    @SortableField(forField = "id_sort")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
+    @Field()
+    @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase2"))
+    @SortableField(forField = "name_sort")
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Field()
+    @Field(name = "comment_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase2"))
+    @SortableField(forField = "comment_sort")
     @Column(name = "comment")
     private String comment;
 
     @NotNull
+    @Field()
+    @Field(name = "mimetype_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase2"))
+    @SortableField(forField = "mimetype_sort")
     @Column(name = "mimetype", nullable = false)
     private String mimetype;
 
@@ -69,6 +84,8 @@ public class Doc implements Serializable {
     private String filecontentContentType;
 
     @ManyToMany(mappedBy = "docs")
+    @IndexedEmbedded(depth = 1)
+    @ContainedIn
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Instance> instances = new HashSet<>();
