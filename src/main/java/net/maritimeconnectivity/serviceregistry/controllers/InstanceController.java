@@ -85,8 +85,7 @@ public class InstanceController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<InstanceDto>> getInstances(Pageable pageable)
-            throws URISyntaxException {
+    public ResponseEntity<List<InstanceDto>> getInstances(Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
         final Page<Instance> page = this.instanceService.findAll(pageable);
         return ResponseEntity.ok()
@@ -95,7 +94,8 @@ public class InstanceController {
     }
 
     /**
-     * POST /api/instances/dt : Returns a paged list of all current instances.
+     * POST /api/instances/dt : Returns a paged list of all current instances
+     * for the datatables display.
      *
      * @param dtPagingRequest the datatables paging request
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
