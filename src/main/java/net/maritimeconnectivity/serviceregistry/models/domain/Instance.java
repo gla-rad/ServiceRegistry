@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.utils.*;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
@@ -57,12 +58,14 @@ public class Instance implements Serializable, JsonSerializable {
     private static final long serialVersionUID = 1L;
 
     @Id
+    @NumericField()
     @Field(name = "id_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "id_sort")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
+    @Analyzer(impl= KeywordAnalyzer.class)
     @Field()
     @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
     @SortableField(forField = "name_sort")
@@ -183,6 +186,8 @@ public class Instance implements Serializable, JsonSerializable {
     private Doc instanceAsDoc;
 
     @ManyToMany(fetch=FetchType.LAZY)
+    @IndexedEmbedded(depth = 1)
+    @ContainedIn
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "instance_docs",
             joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),

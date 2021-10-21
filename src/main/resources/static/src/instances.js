@@ -1,12 +1,4 @@
 /**
- * The API Call Libraries
- */
-var fileUtils;
-var instancesApi;
-var xmlsApi;
-var ledgerRequestsApi;
-
-/**
  * Global variables
  */
 var instancesTable = undefined;
@@ -150,13 +142,10 @@ var columnDefs = [{
     searchable: false,
 }];
 
+/**
+ * Standard jQuery initialisation of the page.
+ */
 $(() => {
-    // First link the API libs
-    this.fileUtils = new FileUtils();
-    this.instancesApi = new InstancesApi();
-    this.xmlsApi = new XmlsApi();
-    this.ledgerRequestsApi = new LedgerRequestsApi();
-
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         serverSide: true,
@@ -219,7 +208,7 @@ $(() => {
                 var data = dt.row(idx.row).data();
                 loadFileUploader(
                     "#file-uploader-id",
-                    `/api/docs`,
+                    `/api/docs/dt?instanceId=${data["id"]}`,
                     () => { }
                 );
             }
@@ -243,13 +232,13 @@ $(() => {
             }
         }],
         onAddRow: (datatable, rowdata, success, error) => {
-            this.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
+            api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
         },
         onDeleteRow: (datatable, rowdata, success, error) => {
-            this.instancesApi.deleteInstance(rowdata["id"], success, error);
+            api.instancesApi.deleteInstance(rowdata["id"], success, error);
         },
         onEditRow: (datatable, rowdata, success, error) => {
-            this.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
+            api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
         },
         initComplete: (settings, json) => {
             hideLoader();
@@ -381,9 +370,9 @@ $(() => {
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
     });
 
-    // We also need to link the instance coverage toggle button with the the modal
-    // panel so that by clicking the button the panel pops up. It's easier done with
-    // jQuery.
+    // We also need to link the instance coverage toggle button with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
     instancesTable.buttons('.instance-coverage-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceCoveragePanel" });
@@ -393,35 +382,6 @@ $(() => {
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(instanceMap);
-
-    // FeatureGroup is to store editable layers
-    drawnItems = new L.FeatureGroup();
-    instanceMap.addLayer(drawnItems);
-
-    // Initialise the draw toolbar
-    drawControl = new L.Control.Draw({
-        draw: {
-            marker: false,
-            polyline: false,
-            polygon: true,
-            rectangle: true,
-            circle: false,
-            circlemarker: false,
-        },
-        edit: {
-            featureGroup: drawnItems,
-            remove: true
-        }
-    });
-
-    // Handle the leaflet draw create events
-    instanceMap.on('draw:created', function (e) {
-        var type = e.layerType;
-        var layer = e.layer;
-
-        // Do whatever else you need to. (save to db, add to map etc)
-        drawnItems.addLayer(layer);
-    });
 
     // Invalidate the map size on show to fix the presentation
     $('#instanceCoveragePanel').on('shown.bs.modal', function() {
@@ -459,7 +419,7 @@ function saveInstanceThroughDatatables(instance) {
  * @param {Component}   $modalDiv   The modal component performing the validation
  */
 function onValidateXml($modalDiv) {
-    this.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
+    api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
         for (var field in response) {
             if(response[field] && typeof response[field] === 'object') {
                 $modalDiv.find("input#"+field).val(Object.entries(response[field]));
@@ -483,7 +443,7 @@ function onValidateXml($modalDiv) {
  * @param {String}      status      The new status value
  */
 function onStatusUpdate($modalDiv, id, status) {
-    this.instancesApi.setStatus(id, status, () => {
+    api.instancesApi.setStatus(id, status, () => {
         $modalDiv.removeClass('loading');
         instancesTable.draw('page');
     }, (response, status, more) => {
@@ -502,7 +462,7 @@ function onStatusUpdate($modalDiv, id, status) {
  * @param {String}      status      The new status value
  */
 function onLedgerRequestUpdate($modalDiv, id, status) {
-    this.instancesApi.setLedgerStatus(id, status, () => {
+    api.instancesApi.setLedgerStatus(id, status, () => {
         $modalDiv.removeClass('loading');
         instancesTable.draw('page');
     }, (response, status, more) => {
@@ -579,10 +539,6 @@ function loadInstanceCoverage(event, table, button, config) {
     var data = instancesTable.row({selected : true}).data();
     var geometry = data.geometry;
 
-    // Refresh the stations map control - For now leave disabled
-    //instanceMap.removeControl(drawControl);
-    //instanceMap.addControl(drawControl);
-
     // Recreate the drawn items feature group
     drawnItems.clearLayers();
     if(geometry) {
@@ -642,7 +598,7 @@ function loadInstanceLedgerStatus(event, table, button, config) {
         // First always start with the last known value
         $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
         // And then query the server for an update
-        this.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
+        api.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
         });
     }

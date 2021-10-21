@@ -1,9 +1,19 @@
 /**
- * Standard jQuery initialisation of the page were all buttons are assigned an
- * operation and the form doesn't really do anything.
+ * The API Call Libraries
+ */
+var fileUtils;
+var api = {};
+
+/**
+ * Standard jQuery initialisation of the page.
  */
 $(() => {
-    console.log("Content Loaded");
+    // First link the API libs
+    fileUtils = new FileUtils();
+    api.instancesApi = new InstancesApi();
+    api.xmlsApi = new XmlsApi();
+    api.docsApi = new DocsApi();
+    api.ledgerRequestsApi = new LedgerRequestsApi();
 });
 
 /**
@@ -68,7 +78,11 @@ var attachmentsTableColumnDefs = [{
     data: "mimetype",
     title: "Type",
     hoverMsg: "The file type of the attachment"
-}];
+}, {
+     data: "comment",
+     title: "Comment",
+     hoverMsg: "Comments on the attachment"
+ }];
 
 //Define this globally so that we can manipulate them
 var attachmentsTable = undefined;
@@ -91,13 +105,13 @@ function loadFileUploader(containerSelector, ajaxUrl, callback) {
 
     // First popuplate the attachments datatable
     attachmentsTable = $('#attachmentsTable').DataTable({
+        serverSide: true,
         ajax: {
-            type: "GET",
+            type: "POST",
             url: ajaxUrl,
-            dataType: "json",
-            cache: false,
-            dataSrc: function (json) {
-                return json;
+            contentType: "application/json",
+            data: function (d) {
+                return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
                 console.error(thrownError);
@@ -158,7 +172,7 @@ function loadFileUploader(containerSelector, ajaxUrl, callback) {
  */
 function downloadDoc(docId) {
     showLoader();
-    new DocsApi().getDoc(docId, (doc) => {
+    api.docsApi.getDoc(docId, (doc) => {
         fileUtils.downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
         hideLoader();
     }, (response, status, more) => {
