@@ -1,15 +1,14 @@
 /**
  * The API Call Libraries
  */
-var fileUtils;
-var api = {};
+var api = undefined;
 
 /**
  * Standard jQuery initialisation of the page.
  */
 $(() => {
     // First link the API libs
-    fileUtils = new FileUtils();
+    api = {};
     api.instancesApi = new InstancesApi();
     api.xmlsApi = new XmlsApi();
     api.docsApi = new DocsApi();
@@ -94,21 +93,21 @@ var attachmentsTable = undefined;
  * uploaded will first be destroyed (at least if it exists), and then recreated
  * every single time.
  *
- * @param {str} containerSelector   The container selector to initialise the uploader in
+ * @param {str} instanceId          The ID of the instance the documents belong to
  * @param {str} ajaxUrl             The AJAX URL to upload the file to
  * @param {*} callback              The success callback
  */
-function loadFileUploader(containerSelector, ajaxUrl, callback) {
+function loadFileUploader(instanceId, ajaxUrl, callback) {
     if(attachmentsTable) {
         attachmentsTable.destroy();
     }
 
-    // First popuplate the attachments datatable
+    // First populate the attachments datatable
     attachmentsTable = $('#attachmentsTable').DataTable({
         serverSide: true,
         ajax: {
             type: "POST",
-            url: ajaxUrl,
+            url: `${ajaxUrl}/dt?instanceId=${instanceId}`,
             contentType: "application/json",
             data: function (d) {
                 return JSON.stringify(d);
@@ -144,8 +143,6 @@ function loadFileUploader(containerSelector, ajaxUrl, callback) {
                 url: `${ajaxUrl}/${rowdata["id"]}`,
                 type: 'DELETE',
                 contentType: 'application/json; charset=utf-8',
-                dataType: 'json',
-                data: JSON.stringify(rowdata),
                 success: success,
                 error: error
             });
@@ -153,15 +150,45 @@ function loadFileUploader(containerSelector, ajaxUrl, callback) {
     });
 
     // Then create the file uploading component
-    $(containerSelector).fileinput("destroy");
-    $(containerSelector).fileinput({
+    $("#file-uploader-id").fileinput("destroy");
+    $("#file-uploader-id").fileinput({
         theme: 'fas',
         showPreview: true,
-        allowedFileExtensions: ['pdf', 'odt', 'doc', 'docx', 'xls', 'xlsx', 'jpeg', 'jpg', 'png', 'gif'],
-        uploadUrl: ajaxUrl,
-    }).on('fileuploaded', function(e, params) {
-        attachmentsTable.ajax.reload();
-    })
+        showUpload: false,
+        allowedFileExtensions: ['pdf', 'doc', 'docx', 'odt', 'xls', 'xlsx', 'jpeg', 'jpg', 'png', 'gif']
+    });
+
+    $('#attachmentUploadButton').unbind('click');
+    $('#attachmentUploadButton').on('click', (e) => {
+        e.preventDefault();
+        showLoader();
+        var uploadFiles = $("#file-uploader-id").prop('files');
+        encodeFilesToBase64(uploadFiles)
+            .then((attachments) => {
+                var successfulUploads = 0;
+                for(var attachment of attachments) {
+                    // Create the document object
+                    var doc = {
+                        'name': attachment.file.name,
+                        'comment': $("#file-uploader-comment-id").val(),
+                        'mimetype': attachment.file.type,
+                        'filecontent': attachment.content,
+                        'filecontentContentType': attachment.file.type,
+                        'instanceId': instanceId
+                    };
+                    // Upload the document
+                    api.docsApi.createDoc(JSON.stringify(doc), (result) => {
+                        successfulUploads++;
+                        // In the last iteration stop the loader
+                        if(successfulUploads == attachments.length) {
+                            $("#attachmentForm").trigger("reset");
+                            attachmentsTable.ajax.reload();
+                            hideLoader();
+                        }
+                    });
+                }
+            });
+    });
 }
 
 /**
@@ -173,7 +200,7 @@ function loadFileUploader(containerSelector, ajaxUrl, callback) {
 function downloadDoc(docId) {
     showLoader();
     api.docsApi.getDoc(docId, (doc) => {
-        fileUtils.downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
+        downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
         hideLoader();
     }, (response, status, more) => {
         hideLoader();

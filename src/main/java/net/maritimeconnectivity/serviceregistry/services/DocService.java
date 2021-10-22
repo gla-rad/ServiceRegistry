@@ -188,7 +188,7 @@ public class DocService {
                     }
                     if(instanceId != null) {
                         b.must(f.match()
-                                .field( "instances.id_search" )
+                                .field( "instance.id_search" )
                                 .matching( instanceId )
                                 .toPredicate());
                     }

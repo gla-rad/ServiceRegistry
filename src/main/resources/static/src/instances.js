@@ -136,7 +136,12 @@ var columnDefs = [{
         return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="downloadDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
     },
  }, {
-    data: "designs",
+    data: "implementsServiceDesign",
+    type: "hidden",
+    visible: false,
+    searchable: false,
+}, {
+    data: "implementsServiceDesignVersion",
     type: "hidden",
     visible: false,
     searchable: false,
@@ -207,8 +212,8 @@ $(() => {
                 var idx = dt.cell('.selected', 0).index();
                 var data = dt.row(idx.row).data();
                 loadFileUploader(
-                    "#file-uploader-id",
-                    `/api/docs/dt?instanceId=${data["id"]}`,
+                    data["id"],
+                    "/api/docs",
                     () => { }
                 );
             }
@@ -302,15 +307,17 @@ $(() => {
         if(uploadFiles && uploadFiles.length == 1) {
             showLoader();
             // Initialise the File Reader
-            fileUtils.encodeFileToBase64(uploadFiles[0], (base64Data) => {
-                rowData["instanceAsDoc"] = {};
-                rowData["instanceAsDoc"]["id"] = null;
-                rowData["instanceAsDoc"]["name"] = uploadFiles[0].name;
-                rowData["instanceAsDoc"]["mimetype"] = uploadFiles[0].type;
-                rowData["instanceAsDoc"]["filecontent"] = base64Data;
-                rowData["instanceAsDoc"]["filecontentContentType"] = uploadFiles[0].type;
-                saveInstanceThroughDatatables(rowData);
-            });
+            encodeFileToBase64(uploadFiles[0])
+                .then((attachment) => {
+                    rowData["instanceAsDoc"] = {
+                        'name': attachment.file.name,
+                        'mimetype': attachment.file.type,
+                        'filecontent': attachment.content,
+                        'filecontentContentType': attachment.file.type,
+                        'instanceId': rowData["id"]
+                    };
+                    saveInstanceThroughDatatables(rowData);
+                });
         }
         // Otherwise save directly using the datatables
         else {
@@ -383,6 +390,19 @@ $(() => {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(instanceMap);
 
+    // FeatureGroup is to store editable layers
+    drawnItems = new L.FeatureGroup();
+    instanceMap.addLayer(drawnItems);
+
+    // Handle the leaflet draw create events
+    instanceMap.on('draw:created', function (e) {
+        var type = e.layerType;
+        var layer = e.layer;
+
+        // Do whatever else you need to. (save to db, add to map etc)
+        drawnItems.addLayer(layer);
+    });
+
     // Invalidate the map size on show to fix the presentation
     $('#instanceCoveragePanel').on('shown.bs.modal', function() {
         setTimeout(function() {
@@ -421,11 +441,7 @@ function saveInstanceThroughDatatables(instance) {
 function onValidateXml($modalDiv) {
     api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
         for (var field in response) {
-            if(response[field] && typeof response[field] === 'object') {
-                $modalDiv.find("input#"+field).val(Object.entries(response[field]));
-            } else {
-                $modalDiv.find("input#"+field).val(response[field]);
-            }
+            $modalDiv.find("input#"+field).val(response[field]);
         }
         $modalDiv.removeClass('loading');
     }, (response, status, more) => {
@@ -505,11 +521,7 @@ function loadInstanceEditPanel() {
         // Populate the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
-            if(rowData[$(this).attr('id')] && typeof rowData[$(this).attr('id')] === 'object') {
-                $(this).val(Object.entries(rowData[$(this).attr('id')]));
-            } else {
-                $(this).val(rowData[$(this).attr('id')]);
-            }
+            $(this).val(rowData[$(this).attr('id')]);
         });
 
         // Augmenting xml content on the data
@@ -616,7 +628,6 @@ function initialiseData() {
     newRowData["comment"] = "";
     newRowData["instanceAsDoc"] = null;
     newRowData["geometryContentType"] = null;
-    newRowData["designs"] = {};
     newRowData["specifications"] = {};
     newRowData["geometryJson"] = {};
     newRowData["instanceAsDoc"] = null;

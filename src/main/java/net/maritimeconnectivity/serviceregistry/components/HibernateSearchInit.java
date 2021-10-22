@@ -21,6 +21,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
 import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.hibernate.search.util.common.SearchException;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -66,7 +67,7 @@ public class HibernateSearchInit implements ApplicationListener<ContextRefreshed
         // And perform the indexing
         try {
             indexer.startAndWait();
-        } catch (InterruptedException e) {
+        } catch (InterruptedException | SearchException e) {
             this.log.error(e.getMessage());
         }
     }

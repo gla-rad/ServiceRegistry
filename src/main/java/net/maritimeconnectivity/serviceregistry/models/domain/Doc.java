@@ -28,9 +28,7 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordFie
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * The type Doc.
@@ -40,6 +38,7 @@ import java.util.Set;
  * service specification, or a Getting Started PDF attached to a service
  * instance.
  * </p>
+ *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
@@ -77,11 +76,11 @@ public class Doc implements Serializable {
     @Column(name = "filecontent_content_type", nullable = false)
     private String filecontentContentType;
 
-    @ManyToMany(mappedBy = "docs")
+    @OneToOne(fetch = FetchType.EAGER)
     @IndexedEmbedded()
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    private Set<Instance> instances = new HashSet<>();
+    private Instance instance;
 
     /**
      * Instantiates a new Doc.
@@ -199,21 +198,21 @@ public class Doc implements Serializable {
     }
 
     /**
-     * Gets instances.
+     * Gets instance.
      *
-     * @return the instances
+     * @return the instance
      */
-    public Set<Instance> getInstances() {
-        return instances;
+    public Instance getInstance() {
+        return instance;
     }
 
     /**
-     * Sets instances.
+     * Sets instance.
      *
-     * @param instances the instances
+     * @param instance the instance
      */
-    public void setInstances(Set<Instance> instances) {
-        this.instances = instances;
+    public void setInstance(Instance instance) {
+        this.instance = instance;
     }
 
     /**
