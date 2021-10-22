@@ -25,7 +25,6 @@ import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
@@ -155,11 +154,8 @@ public class Instance implements Serializable, JsonSerializable {
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
 
-    @ManyToMany(fetch=FetchType.LAZY)
+    @OneToMany(mappedBy = "instance", cascade = {CascadeType.ALL}, orphanRemoval = true, fetch=FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_docs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
     private Set<Doc> docs = new HashSet<>();
 
     /**
@@ -682,6 +678,40 @@ public class Instance implements Serializable, JsonSerializable {
                 ", imo='" + imo + '\'' +
                 ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 '}';
+    }
+
+    /**
+     * Currently the G1128 Instance Specification guideline supports only one
+     * design reference per instance so this bypasses the database structure of
+     * a list.
+     *
+     * @return  The single design reference of the instance
+     */
+    public String getImplementsDesign() {
+        return Optional.ofNullable(this.getDesigns())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    /**
+     * Currently the G1128 Instance Specification guideline supports only one
+     * design reference per instance so this bypasses the database structure of
+     * a list.
+     *
+     * @return  The single design version reference of the instance
+     */
+    public String getImplementsDesignVersion() {
+        return Optional.ofNullable(this.getDesigns())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
     }
 
 }

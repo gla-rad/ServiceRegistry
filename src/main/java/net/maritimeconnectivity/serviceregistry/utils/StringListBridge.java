@@ -20,6 +20,7 @@ import org.hibernate.search.mapper.pojo.bridge.ValueBridge;
 import org.hibernate.search.mapper.pojo.bridge.runtime.ValueBridgeToIndexedValueContext;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -45,13 +46,12 @@ public class StringListBridge implements ValueBridge<List, String> {
      */
     @Override
     public String toIndexedValue(List value, ValueBridgeToIndexedValueContext context) {
-        // If the object comes from the database and it's an enum then return
-        // its name as a string.
-        if(List.class.isInstance(value)) {
-            return (String)((List)value).stream().collect(Collectors.joining(","));
+        // Check for nulls first
+        if(Objects.nonNull(value)) {
+            return (String)(value).stream().collect(Collectors.joining(","));
         }
-        // Otherwise get the toString function to do out dirty work
-        return value.toString();
+        // Otherwise, it's null
+        return null;
     }
 
 }

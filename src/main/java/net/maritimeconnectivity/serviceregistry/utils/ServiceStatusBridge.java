@@ -20,6 +20,8 @@ import org.hibernate.search.mapper.pojo.bridge.ValueBridge;
 import org.hibernate.search.mapper.pojo.bridge.runtime.ValueBridgeToIndexedValueContext;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 
+import java.util.Objects;
+
 /**
  * The Service Status Bridge Class.
  *
@@ -43,13 +45,12 @@ public class ServiceStatusBridge implements ValueBridge<ServiceStatus, String> {
      */
     @Override
     public String toIndexedValue(ServiceStatus value, ValueBridgeToIndexedValueContext context) {
-        // If the object comes from the database and it's an enum then return
-        // its name as a string.
-        if(ServiceStatus.class.isInstance(value)) {
-            return ((ServiceStatus)value).name();
+        // Check for nulls first
+        if(Objects.nonNull(value)) {
+            return value.name();
         }
-        // Otherwise get the toString function to do out dirty work
-        return value.toString();
+        // Otherwise, it's null
+        return null;
     }
 
 }

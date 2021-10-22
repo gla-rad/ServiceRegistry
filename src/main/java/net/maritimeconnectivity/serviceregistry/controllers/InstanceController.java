@@ -30,6 +30,7 @@ import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +38,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
@@ -76,6 +78,36 @@ public class InstanceController {
      */
     @Autowired
     DomainDtoMapper<Instance, InstanceDtDto> instanceDomainToDtDtoMapper;
+
+    /**
+     * Setup up addition model mapper configurations.
+     */
+    @PostConstruct
+    void setup() {
+        this.instanceDtoToDomainMapper.getModelMapper().addMappings(new PropertyMap<InstanceDto, Instance>() {
+            @Override
+            protected void configure() {
+                // For some reason the model mapper pick up a circular
+                // dependency with the document instance reference so better
+                // to block that and just depend on hinernate to make the link.
+                skip(destination.getInstanceAsDoc().getInstance());
+            }
+        });
+        this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
+            @Override
+            protected void configure() {
+                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
+                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
+            }
+        });
+        this.instanceDomainToDtDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDtDto>() {
+            @Override
+            protected void configure() {
+                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
+                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
+            }
+        });
+    }
 
     /**
      * GET /api/instances : get all the instances.

@@ -140,7 +140,21 @@
                         <table datatable id="attachmentsTable" class="table table-striped table-bordered table-sm row-border hover w-100">
                         </table>
                         <br/>
-                        <input id="file-uploader-id" type="file" class="file">
+                        <form id="attachmentForm">
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="form-group">
+                                        <input id="file-uploader-id" type="file" class="file" multiple>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label for="file-uploader-comment-id">Comment</label>
+                                        <textarea class="form-control" id="file-uploader-comment-id" rows="12" style="resize:none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -148,6 +162,10 @@
                         <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close">
                             <i class="fas">&times</i>&nbsp;
                             <span class="btn-label">Close</span>
+                        </button>
+                        <button id="attachmentUploadButton" type="button" class="btn btn-primary" title="Upload">
+                            <i class="fas fa-upload"></i>&nbsp;
+                            <span class="btn-label">Upload</span>
                         </button>
                     </div>
                 </div>
