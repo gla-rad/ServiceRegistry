@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.models.dto;
 
 import javax.validation.constraints.NotNull;
-import java.util.Set;
 
 /**
  * The Doc Datatables DTO Class.
@@ -34,7 +33,7 @@ public class DocDtDto {
     @NotNull
     private String mimetype;
     private String filecontentContentType;
-    private Set<Long> instanceIds;
+    private Long instanceId;
 
     /**
      * Instantiates a new Doc dt dto.
@@ -131,5 +130,23 @@ public class DocDtDto {
      */
     public void setFilecontentContentType(String filecontentContentType) {
         this.filecontentContentType = filecontentContentType;
+    }
+
+    /**
+     * Gets instance id.
+     *
+     * @return the instance id
+     */
+    public Long getInstanceId() {
+        return instanceId;
+    }
+
+    /**
+     * Sets instance id.
+     *
+     * @param instanceId the instance id
+     */
+    public void setInstanceId(Long instanceId) {
+        this.instanceId = instanceId;
     }
 }

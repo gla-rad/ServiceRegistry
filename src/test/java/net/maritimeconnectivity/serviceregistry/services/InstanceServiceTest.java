@@ -638,7 +638,7 @@ class InstanceServiceTest {
         doReturn(searchResult).when(mockedQuery).fetch(any(), any());
         doReturn(this.instances.subList(0, 5)).when(searchResult).hits();
         doReturn(searchResultTotal).when(searchResult).total();
-        doReturn(10).when(searchResultTotal).hitCount();
+        doReturn(10L).when(searchResultTotal).hitCount();
         doReturn(mockedQuery).when(this.instanceService).searchInstanceQuery(any(), any());
 
         // Perform the service call

@@ -38,6 +38,7 @@ public class DocDto implements Serializable, JsonSerializable  {
     @NotNull
     private byte[] filecontent;
     private String filecontentContentType;
+    private Long instanceId;
 
     /**
      * Instantiates a new Doc dto.
@@ -152,6 +153,24 @@ public class DocDto implements Serializable, JsonSerializable  {
      */
     public void setFilecontentContentType(String filecontentContentType) {
         this.filecontentContentType = filecontentContentType;
+    }
+
+    /**
+     * Gets instance id.
+     *
+     * @return the instance id
+     */
+    public Long getInstanceId() {
+        return instanceId;
+    }
+
+    /**
+     * Sets instance id.
+     *
+     * @param instanceId the instance id
+     */
+    public void setInstanceId(Long instanceId) {
+        this.instanceId = instanceId;
     }
 
 }

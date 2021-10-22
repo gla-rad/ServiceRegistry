@@ -70,8 +70,8 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
-    private Map<String, String> designs = new HashMap<>();
-    private Map<String, String> specifications = new HashMap<>();
+    private String implementsServiceDesign;
+    private String implementsServiceDesignVersion;
 
     /**
      * Instantiates a new Instance dto.
@@ -477,42 +477,6 @@ public class InstanceDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets designs.
-     *
-     * @return the designs
-     */
-    public Map<String, String> getDesigns() {
-        return designs;
-    }
-
-    /**
-     * Sets designs.
-     *
-     * @param designs the designs
-     */
-    public void setDesigns(Map<String, String> designs) {
-        this.designs = designs;
-    }
-
-    /**
-     * Gets specifications.
-     *
-     * @return the specifications
-     */
-    public Map<String, String> getSpecifications() {
-        return specifications;
-    }
-
-    /**
-     * Sets specifications.
-     *
-     * @param specifications the specifications
-     */
-    public void setSpecifications(Map<String, String> specifications) {
-        this.specifications = specifications;
-    }
-
-    /**
      * Gets ledger request status.
      *
      * @return the ledger request status
@@ -530,4 +494,39 @@ public class InstanceDto implements Serializable, JsonSerializable {
         this.ledgerRequestStatus = ledgerRequestStatus;
     }
 
+    /**
+     * Gets implements service design.
+     *
+     * @return the implements service design
+     */
+    public String getImplementsServiceDesign() {
+        return implementsServiceDesign;
+    }
+
+    /**
+     * Sets implements service design.
+     *
+     * @param implementsServiceDesign the implements service design
+     */
+    public void setImplementsServiceDesign(String implementsServiceDesign) {
+        this.implementsServiceDesign = implementsServiceDesign;
+    }
+
+    /**
+     * Gets implements service design version.
+     *
+     * @return the implements service design version
+     */
+    public String getImplementsServiceDesignVersion() {
+        return implementsServiceDesignVersion;
+    }
+
+    /**
+     * Sets implements service design version.
+     *
+     * @param implementsServiceDesignVersion the implements service design version
+     */
+    public void setImplementsServiceDesignVersion(String implementsServiceDesignVersion) {
+        this.implementsServiceDesignVersion = implementsServiceDesignVersion;
+    }
 }
