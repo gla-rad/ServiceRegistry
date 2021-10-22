@@ -27,12 +27,12 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.search.Query;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.hibernate.search.jpa.FullTextEntityManager;
-import org.hibernate.search.jpa.FullTextQuery;
-import org.hibernate.search.jpa.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
@@ -414,20 +414,12 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        FullTextQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue());
-        searchQuery.setFirstResult(dtPagingRequest.getStart());
-        searchQuery.setMaxResults(dtPagingRequest.getLength());
-
-        // Add sorting if requested
-        Optional.of(dtPagingRequest)
-                .map(DtPagingRequest::getLucenceSort)
-                .filter(ls -> ls.getSort().length > 0)
-                .ifPresent(searchQuery::setSort);
+        SearchQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
-                .map(FullTextQuery::getResultList)
-                .map(instances -> new PageImpl<Instance>(instances, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
@@ -514,7 +506,7 @@ public class InstanceService {
      * search test. This query will be based solely on the instances table and
      * will include the following fields:
      * <ul>
-     *  <li>Version</li>
+     *  <li>Name</li>
      *  <li>Version</li>
      *  <li>Last Updated At</li>
      *  <li>Status</li>
@@ -529,21 +521,17 @@ public class InstanceService {
      * @param searchText    the text to be searched
      * @return the full text query
      */
-    protected FullTextQuery searchInstanceQuery(String searchText) {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        QueryBuilder queryBuilder = fullTextEntityManager.getSearchFactory()
-                .buildQueryBuilder()
-                .forEntity(Instance.class)
-                .get();
-
-        Query luceneQuery = queryBuilder
-                .keyword()
-                .wildcard()
-                .onFields(this.searchFields)
-                .matching(Optional.ofNullable(searchText).orElse("").toLowerCase() + "*")
-                .createQuery();
-
-        return fullTextEntityManager.createFullTextQuery(luceneQuery, Instance.class);
+    protected SearchQuery<Instance> searchInstanceQuery(String searchText, org.apache.lucene.search.Sort sort) {
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( scope.predicate().wildcard()
+                        .fields( this.searchFields )
+                        .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
+                        .toPredicate() )
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
     }
 
 }

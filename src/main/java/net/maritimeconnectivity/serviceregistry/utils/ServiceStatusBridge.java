@@ -16,7 +16,8 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import org.hibernate.search.bridge.builtin.StringBridge;
+import org.hibernate.search.mapper.pojo.bridge.ValueBridge;
+import org.hibernate.search.mapper.pojo.bridge.runtime.ValueBridgeToIndexedValueContext;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 
 /**
@@ -30,23 +31,25 @@ import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class ServiceStatusBridge extends StringBridge {
+public class ServiceStatusBridge implements ValueBridge<ServiceStatus, String> {
 
     /**
      * Implement a generic object to string translation, depending on whether
      * the provided object is a ServiceStatus enum or another string.
      *
-     * @param object the object to be translated
+     * @param value the value to be translated
+     * @param context the value bridge indexed value context
      * @return the string representation
      */
-    public String objectToString(Object object) {
+    @Override
+    public String toIndexedValue(ServiceStatus value, ValueBridgeToIndexedValueContext context) {
         // If the object comes from the database and it's an enum then return
         // its name as a string.
-        if(ServiceStatus.class.isInstance(object)) {
-            return ((ServiceStatus)object).name();
+        if(ServiceStatus.class.isInstance(value)) {
+            return ((ServiceStatus)value).name();
         }
         // Otherwise get the toString function to do out dirty work
-        return object.toString();
+        return value.toString();
     }
 
 }

@@ -23,11 +23,13 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
-import org.apache.lucene.search.Query;
-import org.hibernate.search.jpa.FullTextEntityManager;
-import org.hibernate.search.jpa.FullTextQuery;
-import org.hibernate.search.jpa.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.common.BooleanOperator;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -36,13 +38,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -155,20 +151,12 @@ public class DocService {
     @Transactional(readOnly = true)
     public Page<Doc> handleDatatablesPagingRequest(Long instanceId, DtPagingRequest dtPagingRequest) {
         // Create the search query
-        FullTextQuery searchQuery = this.searchDocQuery(instanceId, dtPagingRequest.getSearch().getValue());
-        searchQuery.setFirstResult(dtPagingRequest.getStart());
-        searchQuery.setMaxResults(dtPagingRequest.getLength());
-
-        // Add sorting if requested
-        Optional.of(dtPagingRequest)
-                .map(DtPagingRequest::getLucenceSort)
-                .filter(ls -> ls.getSort().length > 0)
-                .ifPresent(searchQuery::setSort);
+        SearchQuery searchQuery = this.searchDocQuery(instanceId, dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
-                .map(FullTextQuery::getResultList)
-                .map(docs -> new PageImpl<Doc>(docs, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<Doc>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
@@ -185,32 +173,27 @@ public class DocService {
      * @param searchText    the text to be searched
      * @return the full text query
      */
-    protected FullTextQuery searchDocQuery(Long instanceId, String searchText) {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        QueryBuilder queryBuilder = fullTextEntityManager.getSearchFactory()
-                .buildQueryBuilder()
-                .forEntity(Doc.class)
-                .get();
-
-        Query luceneQuery = queryBuilder
-                .keyword()
-                .wildcard()
-                .onFields(this.searchFields)
-                .matching(Optional.ofNullable(searchText).orElse("").toLowerCase() + "*")
-                .createQuery();
-
-        Query instanceIdQuery = queryBuilder
-                .keyword()
-                .onField("instances.name")
-                .ignoreFieldBridge()
-                .matching("Test*")
-                .createQuery();
-
-        Query finalQuery = queryBuilder.bool()
-                .must(luceneQuery)
-                .must(instanceIdQuery)
-                .createQuery();
-
-        return fullTextEntityManager.createFullTextQuery(finalQuery, Doc.class);
+    protected SearchQuery<Doc> searchDocQuery(Long instanceId, String searchText, org.apache.lucene.search.Sort sort) {
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Doc> scope = searchSession.scope( Doc.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( f -> f.bool(b -> {
+                    b.must( f.matchAll() );
+                    if(searchText != null && StringUtils.isNotBlank(searchText)) {
+                        b.must(f.wildcard()
+                                .fields(this.searchFields)
+                                .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
+                                .toPredicate());
+                    }
+                    if(instanceId != null) {
+                        b.must(f.match()
+                                .field( "instances.id_search" )
+                                .matching( instanceId )
+                                .toPredicate());
+                    }
+                }))
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
     }
 }
