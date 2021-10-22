@@ -22,11 +22,14 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.utils.*;
-import org.apache.lucene.analysis.core.KeywordAnalyzer;
-import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.search.annotations.*;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.automaticindexing.ReindexOnUpdate;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
+import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
+import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -49,52 +52,38 @@ import java.util.stream.Collectors;
  */
 @Entity
 @Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
-@Cacheable
 @Indexed
-@NormalizerDef(name = "lowercase", filters = @TokenFilterDef(factory = LowerCaseFilterFactory.class))
+@Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Instance implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @NumericField()
-    @Field(name = "id_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "id_sort")
+    @GenericField(name = "id_search", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @Analyzer(impl= KeywordAnalyzer.class)
-    @Field()
-    @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "name_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "name")
     private String name;
 
     @NotNull
-    @Field()
-    @Field(name = "version_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "version_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "version")
     private String version;
 
-    @Field()
-    @Field(name = "publishedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "publishedAt_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "published_at")
     private String publishedAt;
 
-    @Field()
-    @Field(name = "lastUpdatedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "lastUpdatedAt_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "last_updated_at")
     private String lastUpdatedAt;
 
     @NotNull
-    @Field()
-    @Field(name = "comment_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "comment_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
@@ -107,72 +96,53 @@ public class Instance implements Serializable, JsonSerializable {
     private String geometryContentType;
 
     @NotNull
-    @Field()
-    @Field(name = "instanceId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "instanceId_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "instance_id", updatable = false)
     @JsonProperty("instanceId")
     private String instanceId; //MRN
 
-    @Field()
-    @IndexedEmbedded
-    @Field(bridge=@FieldBridge(impl= StringListBridge.class), name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "keywords_sort")
+
+    @GenericField(valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+                  sortable = Sortable.YES)
     @ElementCollection
     private List<String> keywords;
 
     @NotNull
+    @KeywordField(valueBridge=@ValueBridgeRef(type=ServiceStatusBridge.class), sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
-    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class))
-    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class), name = "status_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "status_sort")
     @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
-    @Field()
-    @Field(name = "organizationId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "organizationId_sort")
-    @Column(name = "organization_id")
+    @KeywordField(sortable = Sortable.YES)
     @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
 
-    @Field()
-    @IndexedEmbedded
-    @Field(bridge=@FieldBridge(impl= StringListBridge.class), name = "unlocode_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "unlocode_sort")
+    @FullTextField
     @ElementCollection
     private List<String> unlocode;
 
-    @Field()
-    @Field(name = "endpointUri_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "endpointUri_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_uri")
     @JsonProperty("endpointUri")
     private String endpointUri;
 
-    @Field()
-    @Field(name = "endpointType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "endpointType_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_type")
     @JsonProperty("endpointType")
     private String endpointType;
 
-    @Field()
-    @Field(name = "mmsi_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "mmsi_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "mmsi")
     private String mmsi;
 
-    @Field()
-    @Field(name = "imo_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "imo_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "imo")
     private String imo;
 
-    @Field()
-    @IndexedEmbedded
-    @Field(bridge=@FieldBridge(impl= StringListBridge.class), name="serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "serviceType_sort")
+    @GenericField(valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+                  sortable = Sortable.YES)
     @ElementCollection
     @JsonProperty("serviceType")
     private List<String> serviceType;
@@ -186,8 +156,6 @@ public class Instance implements Serializable, JsonSerializable {
     private Doc instanceAsDoc;
 
     @ManyToMany(fetch=FetchType.LAZY)
-    @IndexedEmbedded(depth = 1)
-    @ContainedIn
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     @JoinTable(name = "instance_docs",
             joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
