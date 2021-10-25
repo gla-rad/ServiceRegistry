@@ -27,6 +27,10 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.Query;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -414,13 +418,33 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        SearchQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
+        SearchQuery searchQuery = this.getSearchInstanceQueryByText(dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
                 .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
+    }
+
+    /**
+     * Handles a datatables pagination request and returns the results list in
+     * an appropriate format to be viewed by a datatables jQuery table.
+     *
+     * @param queryString
+     * @param pageable
+     * @return the paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<Instance> handleSearchQueryRequest(String queryString, Pageable pageable) {
+        // Create the search query
+        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, null);
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
+                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
     /**
@@ -519,9 +543,10 @@ public class InstanceService {
      * </ul>
      *
      * @param searchText    the text to be searched
-     * @return the full text query
+     * @param sort          the sorting operation to be applied
+     * @return the constructed hibernate search query object
      */
-    protected SearchQuery<Instance> searchInstanceQuery(String searchText, org.apache.lucene.search.Sort sort) {
+    protected SearchQuery<Instance> getSearchInstanceQueryByText(String searchText, org.apache.lucene.search.Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<Instance> scope = searchSession.scope( Instance.class );
         return searchSession.search( scope )
@@ -531,6 +556,51 @@ public class InstanceService {
                         .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
                         .toPredicate() )
                 .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
+    }
+
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search query string. This query should follow the Lucene query syntax
+     * and the search will include the following fields:
+     * <ul>
+     *  <li>Name</li>
+     *  <li>Version</li>
+     *  <li>Last Updated At</li>
+     *  <li>Status</li>
+     *  <li>Status</li>
+     *  <li>Organization ID</li>
+     *  <li>ndpoint URI</li>
+     *  <li>MMSI</li>
+     *  <li>IMO</li>
+     *  <li>Service Type</li>
+     * </ul>
+     *
+     * @param queryString   The lucene query string to use for the search
+     * @param sort          the sorting operation to be applied
+     * @return the constructed hibernate search query object
+     */
+    protected SearchQuery<Instance> getSearchInstanceQueryByQueryString(String queryString, org.apache.lucene.search.Sort sort) {
+        // First parse the input string to make sure it's right
+        MultiFieldQueryParser parser = new MultiFieldQueryParser( this.searchFields, new StandardAnalyzer() );
+        parser.setDefaultOperator( QueryParser.Operator.AND );
+        final Query luceneQuery = Optional.ofNullable(queryString)
+                .map(q -> {
+                    try {
+                        return parser.parse(q);
+                    } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
+                        this.log.error(ex.getMessage());
+                        return null;
+                    }
+                })
+                .orElseThrow(() -> new DataNotFoundException("The provided query is invalid... no data returned", null));
+
+        // Then build and return the hibernate-search query
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( f -> f.fromLuceneQuery(luceneQuery) )
                 .toQuery();
     }
 

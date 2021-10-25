@@ -18,8 +18,11 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
-import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.engine.search.query.SearchResultTotal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,8 +36,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -54,12 +59,6 @@ class DocServiceTest {
      */
     @Mock
     private DocRepo docRepo;
-
-    /**
-     * The Instance Repository Mock.
-     */
-    @Mock
-    private InstanceRepo instanceRepo;
 
     // Test Variables
     private List<Doc> docs;
@@ -212,5 +211,59 @@ class DocServiceTest {
         assertThrows(DataNotFoundException.class, () ->
                 this.docService.delete(this.existingDoc.getId())
         );
+    }
+
+    /**
+     * Test that we can retrieve the paged list of docs for a Datatables
+     * pagination request (which by the way also includes search and sorting
+     * definitions).
+     */
+    @Test
+    void testHandleDatatablesPagingRequest() {
+        // First create the pagination request
+        DtPagingRequest dtPagingRequest = new DtPagingRequest();
+        dtPagingRequest.setStart(0);
+        dtPagingRequest.setLength(5);
+
+        // Set the pagination request columns
+        dtPagingRequest.setColumns(new ArrayList());
+        Stream.of("name",
+                  "comment",
+                  "mimetype")
+                .map(DtColumn::new)
+                .forEach(dtPagingRequest.getColumns()::add);
+
+        // Set the pagination request ordering
+        DtOrder dtOrder = new DtOrder();
+        dtOrder.setColumn(0);
+        dtOrder.setDir(DtDirection.asc);
+        dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
+
+        // Set the pagination search
+        DtSearch dtSearch = new DtSearch();
+        dtSearch.setValue("search-term");
+        dtPagingRequest.setSearch(dtSearch);
+
+        // Mock the full text query
+        SearchQuery<Doc> mockedQuery = mock(SearchQuery.class);
+        SearchResult<Doc> searchResult = mock(SearchResult.class);
+        SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
+        doReturn(searchResult).when(mockedQuery).fetch(any(), any());
+        doReturn(this.docs.subList(0, 5)).when(searchResult).hits();
+        doReturn(searchResultTotal).when(searchResult).total();
+        doReturn(10L).when(searchResultTotal).hitCount();
+        doReturn(mockedQuery).when(this.docService).getSearchDocQueryByText(eq(1L), any(), any());
+
+        // Perform the service call
+        Page<Doc> result = this.docService.handleDatatablesPagingRequest(1L, dtPagingRequest);
+
+        // Validate the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getContent().size(); i++){
+            assertEquals(this.docs.get(i), result.getContent().get(i));
+        }
     }
 }

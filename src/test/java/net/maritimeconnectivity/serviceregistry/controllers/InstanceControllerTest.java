@@ -139,7 +139,7 @@ class InstanceControllerTest {
     }
 
     /**
-     * Test that the APi supports the jQuery Datatables server-side paging
+     * Test that the API supports the jQuery Datatables server-side paging
      * and search requests.
      */
     @Test
