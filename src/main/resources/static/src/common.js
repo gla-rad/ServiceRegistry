@@ -183,7 +183,8 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
     $('#attachmentUploadButton').on('click', (e) => {
         e.preventDefault();
         var uploadFiles = $("#file-uploader-id").prop('files');
-        if(!uploadFiles || uploadFiles.size() == 0) {
+        // Sanity Check
+        if(!uploadFiles || uploadFiles.length == 0) {
             return;
         }
         showLoader();
