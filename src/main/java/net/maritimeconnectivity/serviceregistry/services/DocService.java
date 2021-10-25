@@ -19,13 +19,11 @@ package net.maritimeconnectivity.serviceregistry.services;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.search.backend.lucene.LuceneExtension;
-import org.hibernate.search.engine.search.common.BooleanOperator;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
@@ -62,12 +60,6 @@ public class DocService {
      */
     @Autowired
     DocRepo docRepo;
-
-    /**
-     * The Instance Repository.
-     */
-    @Autowired
-    InstanceRepo instanceRepo;
 
     // Service Variables
     private final String[] searchFields = new String[] {
@@ -112,17 +104,6 @@ public class DocService {
         log.debug("Request to save Doc : {}", doc);
         Doc result = this.docRepo.save(doc);
 
-        // Save the linked instances, if any
-        Optional.of(this.instanceRepo)
-                .map(InstanceRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(i -> i.getInstanceAsDoc() != null && i.getInstanceAsDoc().getId() == result.getId())
-                .forEach(i -> {
-                    log.debug("Updating Linked Instance: {}", i);
-                    this.instanceRepo.save(i);
-                });
-
         return result;
     }
 
@@ -151,7 +132,7 @@ public class DocService {
     @Transactional(readOnly = true)
     public Page<Doc> handleDatatablesPagingRequest(Long instanceId, DtPagingRequest dtPagingRequest) {
         // Create the search query
-        SearchQuery searchQuery = this.searchDocQuery(instanceId, dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
+        SearchQuery searchQuery = this.getSearchDocQueryByText(instanceId, dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -173,7 +154,7 @@ public class DocService {
      * @param searchText    the text to be searched
      * @return the full text query
      */
-    protected SearchQuery<Doc> searchDocQuery(Long instanceId, String searchText, org.apache.lucene.search.Sort sort) {
+    protected SearchQuery<Doc> getSearchDocQueryByText(Long instanceId, String searchText, org.apache.lucene.search.Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<Doc> scope = searchSession.scope( Doc.class );
         return searchSession.search( scope )
