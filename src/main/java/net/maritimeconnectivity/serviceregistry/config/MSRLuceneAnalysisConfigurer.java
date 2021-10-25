@@ -45,9 +45,5 @@ public class MSRLuceneAnalysisConfigurer implements LuceneAnalysisConfigurer {
         context.normalizer( "lowercase" ).custom()
                 .tokenFilter( LowerCaseFilterFactory.class )
                 .tokenFilter( ASCIIFoldingFilterFactory.class );
-
-        context.normalizer( "uppercase" ).custom()
-                .tokenFilter( UpperCaseFilterFactory.class )
-                .tokenFilter( ASCIIFoldingFilterFactory.class );
     }
 }

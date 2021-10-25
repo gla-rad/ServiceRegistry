@@ -110,12 +110,12 @@ public class Instance implements Serializable, JsonSerializable {
     private List<String> keywords;
 
     @NotNull
-    @KeywordField(normalizer = "uppercase", sortable = Sortable.YES)
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
-    @KeywordField(sortable = Sortable.YES)
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
 

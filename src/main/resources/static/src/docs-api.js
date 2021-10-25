@@ -22,6 +22,7 @@ class DocsApi {
             url: `api/docs`,
             type: 'POST',
             contentType: 'application/json',
+            crossDomain: true,
             dataType: 'json',
             data: doc,
             success: callback,

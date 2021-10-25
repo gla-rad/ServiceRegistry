@@ -128,6 +128,7 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
             type: "POST",
             url: `${ajaxUrl}/dt?instanceId=${instanceId}`,
             contentType: "application/json",
+            crossDomain: true,
             data: function (d) {
                 return JSON.stringify(d);
             },
@@ -161,7 +162,8 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
             $.ajax({
                 url: `${ajaxUrl}/${rowdata["id"]}`,
                 type: 'DELETE',
-                contentType: 'application/json; charset=utf-8',
+                contentType: 'application/json',
+                crossDomain: true,
                 success: success,
                 error: error
             });
@@ -180,8 +182,11 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
     $('#attachmentUploadButton').unbind('click');
     $('#attachmentUploadButton').on('click', (e) => {
         e.preventDefault();
-        showLoader();
         var uploadFiles = $("#file-uploader-id").prop('files');
+        if(!uploadFiles || uploadFiles.size() == 0) {
+            return;
+        }
+        showLoader();
         encodeFilesToBase64(uploadFiles)
             .then((attachments) => {
                 var successfulUploads = 0;
