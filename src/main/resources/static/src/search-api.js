@@ -22,6 +22,7 @@ class SearchApi {
             url: '/api/_search/instances',
             type: 'GET',
             contentType: 'application/json',
+            crossDomain: true,
             data: {
                 query: queryString,
                 page: 0,
@@ -34,7 +35,7 @@ class SearchApi {
                } else {
                    console.error(response)
                }
-           }
+            }
         });
     }
 }
