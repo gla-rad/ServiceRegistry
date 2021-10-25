@@ -112,12 +112,12 @@ function loadInstancesTable(queryString) {
             url: '/api/_search/instances',
             type: 'GET',
             contentType: 'application/json',
+            crossDomain: true,
             data: {
                 query: queryString,
                 page: 0,
                 size: 100
             },
-            cache: false,
             dataSrc: function (json) {
                 return json;
             },

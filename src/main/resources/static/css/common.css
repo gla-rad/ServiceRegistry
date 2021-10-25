@@ -26,6 +26,14 @@ body {
     transform: translate(-50%, -50%);
 }
 
+.login-card {
+    opacity: 0.75;
+}
+
+.login-card:hover {
+    opacity: 1;
+}
+
 /* The map search overlay card */
 .search-overlay {
     position: absolute;

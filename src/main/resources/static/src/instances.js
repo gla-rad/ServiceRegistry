@@ -155,18 +155,20 @@ $(() => {
     instancesTable = $('#instancesTable').DataTable({
         serverSide: true,
         ajax: {
-            "type": "POST",
-            "url": "/api/instances/dt",
-            "contentType": "application/json",
-            "data": function (d) {
+            type: "POST",
+            url: "/api/instances/dt",
+            contentType: "application/json",
+            crossDomain: true,
+            data: function (d) {
                 return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
+                hideLoader();
                 console.error(thrownError);
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-lg-2 col-md-4'B><'col-lg-2 col-md-4'l><'col-lg-8 col-md-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -177,7 +179,7 @@ $(() => {
             className: 'instance-edit-panel-toggle',
             name: 'add-instance', // do not change name
             action: (e, dt, node, config) => {
-                clearInstanceEditPanel();
+                loadInstanceEditPanel(true);
             }
         }, {
             extend: 'selected', // Bind to Selected row
@@ -186,7 +188,7 @@ $(() => {
             className: 'instance-edit-panel-toggle',
             name: 'edit-instance', // do not change name
             action: (e, dt, node, config) => {
-                loadInstanceEditPanel();
+                loadInstanceEditPanel(false);
             }
         }, {
             extend: 'selected', // Bind to Selected row
@@ -252,7 +254,7 @@ $(() => {
 
     // Show the loader on processing
     instancesTable.on( 'processing.dt', function(e, settings, processing) {
-        processing ? showLoader(false) : hideLoader();;
+        processing ? showLoader(false) : hideLoader();
     });
 
     // We also need to link the instance create/edit toggle buttons with the the
@@ -421,12 +423,12 @@ function saveInstanceThroughDatatables(instance) {
         instancesTable.context[0].oInit.onAddRow(instancesTable,
                 instance,
                 (data) => { instancesTable.row.add(data).draw(false); },
-                (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); hideLoader(); });
+                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while saving the instance.")); hideLoader(); });
     } else {
         instancesTable.context[0].oInit.onEditRow(instancesTable,
                 instance,
                 (data,b,c,d,e) => { instancesTable.ajax.reload(); },
-                (data) => { showError(data.getResponseHeader('X-mcsrApp-error')); hideLoader(); });
+                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while updating the instance.")); hideLoader(); });
     }
 }
 
@@ -509,15 +511,19 @@ function clearInstanceEditPanel() {
  * This helper function loads the XML and field data from the selected instance
  * in the instance table onto the edit dialog.
  */
-function loadInstanceEditPanel() {
-    // First always clear to be sure
-    clearInstanceEditPanel();
+function loadInstanceEditPanel(isNewInstance) {
+    // Note if a new or an existing instance is to be loaded
+    newInstance = isNewInstance;
 
     // Get the instance edit panel modal dialog
-    let $modalDiv = $("#instanceEditPanel");
+    var $modalDiv = $("#instanceEditPanel");
+
+    // First always clear to be sure
+    clearInstanceEditPanel();
+    clearInstanceDoc($modalDiv);
 
     // If a row has been selected load the data into the form
-    if(instancesTable.row({selected : true})) {
+    if(!isNewInstance && instancesTable.row({selected : true})) {
         // Populate the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
@@ -529,12 +535,19 @@ function loadInstanceEditPanel() {
 
         // Handle the instance doc field if populated or not
         rowData.instanceAsDocId ? showInstanceDoc($modalDiv) : clearInstanceDoc($modalDiv);
-    } else {
-        clearInstanceDoc($modalDiv);
     }
+}
 
-    // Make that an existing instance has been loaded
-    newInstance = false;
+/**
+ * The instances edit dialog form should be clear every time before it is used
+ * so that new entries are not polluted by old data.
+ */
+function clearInstanceEditPanel() {
+    // Do the form
+    $('form[name="instanceEditPanelForm"]').trigger("reset");
+
+    // Don't forget the XML content
+    $("#instanceEditPanel").find("#xml-input").val(null);
 }
 
 /**

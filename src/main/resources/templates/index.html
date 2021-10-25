@@ -15,7 +15,7 @@
   -->
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:include="fragments/general.html :: headerfiles"></th:block>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.0/css/dataTables.bootstrap5.min.css" />
@@ -42,11 +42,11 @@
                         <div id="indexGreetingBody" class="accordion-collapse collapse show" aria-labelledby="indexGreeting" data-bs-parent="#accordion">
                             <div class="accordion-body">
                                 <div class="row">
-                                    <div class="col-6">
-                                        <h3>Core components of the MCP</h3>
+                                    <div class="col-5">
+                                        <h3>Core MCP Components</h3>
                                         <img class="w-100" th:src="@{static/images/mc-core-components.png}" alt="">
                                     </div>
-                                    <div class="col-6">
+                                    <div class="col-7">
                                         <h3>The MCP</h3>
                                         <p><small>
                                             The MCP is a decentralised platform that facilitates
@@ -81,7 +81,6 @@
                                                 [[${projectLocation}]]
                                             </a>
                                         </small></p>
-
                                     </div>
                                 </div>
                             </div>
