@@ -16,10 +16,14 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import org.keycloak.enums.TokenStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.ServletException;
@@ -84,9 +88,9 @@ public class HTMLViewerController {
      * The instance page
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The instance page
      */
-    @GetMapping("/instances")
+    @GetMapping("/instances.html")
     public String instances(Model model) {
         model.addAttribute("operatorUrl", this.operatorUrl);
         model.addAttribute("copyright", this.copyright);
@@ -95,12 +99,12 @@ public class HTMLViewerController {
     }
 
     /**
-     * The instance page
+     * The about page.
      *
      * @param model The application UI model
-     * @return The index page
+     * @return The about page
      */
-    @GetMapping("/about")
+    @GetMapping("/about.html")
     public String about(Model model) {
         model.addAttribute("MSRName", msrName);
         model.addAttribute("MSRMRN", msrMrn);
@@ -115,21 +119,10 @@ public class HTMLViewerController {
     }
 
     /**
-     * Logs the user in an authenticated session and redirect to the home page.
-     *
-     * @param request The logout request
-     * @return The home page
-     */
-    @GetMapping(path = "/login")
-    public ModelAndView login(HttpServletRequest request) {
-        return new ModelAndView("redirect:" + "/");
-    }
-
-    /**
      * Logs the user out of the authenticated session.
      *
      * @param request The logout request
-     * @return The home page
+     * @return The home  redirection
      * @throws ServletException Servlet Exception during the logout
      */
     @GetMapping(path = "/logout")
