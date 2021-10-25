@@ -6,7 +6,7 @@ var instanceMap = undefined;
 var newInstance = true;
 
 /**
- * The Loads Table Column Definitions
+ * The Instances Table Column Definitions
  * @type {Array}
  */
 var columnDefs = [{
@@ -29,7 +29,7 @@ var columnDefs = [{
     placeholder: "Version of the service"
 }, {
     data: "serviceType",
-    title: "Service Type",
+    title: "Type",
     readonly : true,
     hoverMsg: "Type of service",
     placeholder: "Type of the service"
@@ -47,7 +47,7 @@ var columnDefs = [{
     placeholder: "Access point of the service"
 }, {
     data: "organizationId",
-    title: "Organization ID",
+    title: "Organization",
     readonly : true,
     hoverMsg: "MRN of service provider",
     placeholder: "MRN of the service provider (organization)"
@@ -126,7 +126,7 @@ var columnDefs = [{
     searchable: false
  }, {
     data: "instanceAsDocId",
-    title: "Instance Doc",
+    title: "Doc",
     type: "file",
     readonly : true,
     visible: true,
@@ -407,7 +407,7 @@ $(() => {
     $('#instanceCoveragePanel').on('shown.bs.modal', function() {
         setTimeout(function() {
             instanceMap.invalidateSize();
-        }, 10);
+        }, 50);
     });
 });
 
@@ -557,6 +557,9 @@ function loadInstanceCoverage(event, table, button, config) {
         var geomLayer = L.geoJson(geometry);
         addNonGroupLayers(geomLayer, drawnItems);
         instanceMap.setView(geomLayer.getBounds().getCenter(), 5);
+        setTimeout(function() {
+            instanceMap.fitBounds(geomLayer.getBounds());
+        }, 700);
     }
 }
 

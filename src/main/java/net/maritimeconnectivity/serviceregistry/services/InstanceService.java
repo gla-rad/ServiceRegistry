@@ -132,6 +132,19 @@ public class InstanceService {
             "imo",
             "serviceType"
     };
+    private final String[] searchFieldsWithSort = new String[] {
+            "name_sort",
+            "version",
+            "lastUpdatedAt",
+            "instanceId",
+            "keywords_sort",
+            "status",
+            "organizationId",
+            "endpointUri",
+            "mmsi",
+            "imo",
+            "serviceType_sort"
+    };
 
     /**
      * Definition of the whole world area in GeoJSON.
@@ -418,7 +431,11 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        SearchQuery searchQuery = this.getSearchInstanceQueryByText(dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
+        SearchQuery searchQuery = this.getSearchInstanceQueryByText(
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
+                        .filter(f -> f.endsWith("_sort"))
+                        .collect(Collectors.toList())));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -552,7 +569,7 @@ public class InstanceService {
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
                 .where( scope.predicate().wildcard()
-                        .fields( this.searchFields )
+                        .fields( this.searchFieldsWithSort )
                         .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
                         .toPredicate() )
                 .sort(f -> f.fromLuceneSort(sort))

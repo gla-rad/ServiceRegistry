@@ -64,7 +64,8 @@ public class Instance implements Serializable, JsonSerializable {
     private Long id;
 
     @NotNull
-    @KeywordField(sortable = Sortable.YES)
+    @FullTextField
+    @KeywordField(name = "name_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "name")
     private String name;
 
@@ -100,15 +101,16 @@ public class Instance implements Serializable, JsonSerializable {
     @JsonProperty("instanceId")
     private String instanceId; //MRN
 
-
-    @GenericField(valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+    @FullTextField
+    @GenericField(name="keywords_sort",
+                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
                   sortable = Sortable.YES)
     @ElementCollection
     private List<String> keywords;
 
     @NotNull
-    @KeywordField(valueBridge=@ValueBridgeRef(type=ServiceStatusBridge.class), sortable = Sortable.YES)
+    @KeywordField(normalizer = "uppercase", sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
@@ -139,7 +141,9 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "imo")
     private String imo;
 
-    @GenericField(valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+    @FullTextField
+    @GenericField(name="serviceType_sort",
+                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
                   sortable = Sortable.YES)
     @ElementCollection
