@@ -132,7 +132,9 @@ public class DocService {
     @Transactional(readOnly = true)
     public Page<Doc> handleDatatablesPagingRequest(Long instanceId, DtPagingRequest dtPagingRequest) {
         // Create the search query
-        SearchQuery searchQuery = this.getSearchDocQueryByText(instanceId, dtPagingRequest.getSearch().getValue(), dtPagingRequest.getLucenceSort());
+        SearchQuery searchQuery = this.getSearchDocQueryByText(instanceId,
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(null));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
