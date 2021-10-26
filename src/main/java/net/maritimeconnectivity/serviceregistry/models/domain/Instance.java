@@ -25,6 +25,9 @@ import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.GeoPointBinding;
+import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.Latitude;
+import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.Longitude;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
@@ -91,6 +94,11 @@ public class Instance implements Serializable, JsonSerializable {
     @JsonDeserialize(using = GeometryJSONDeserializer.class)
     @Column(name = "geometry")
     private Geometry geometry;
+
+    @Embedded
+    @GenericField
+    @ElementCollection
+    private List<HSGeometryPoint> geometryPoints;
 
     @Column(name = "geometry_content_type")
     private String geometryContentType;
@@ -610,6 +618,14 @@ public class Instance implements Serializable, JsonSerializable {
      */
     public void setSpecifications(Map<String, String> specifications) {
         this.specifications = specifications;
+    }
+
+    public List<HSGeometryPoint> getGeometryPoints() {
+        return geometryPoints;
+    }
+
+    public void setGeometryPoints(List<HSGeometryPoint> geometryPoints) {
+        this.geometryPoints = geometryPoints;
     }
 
     /**

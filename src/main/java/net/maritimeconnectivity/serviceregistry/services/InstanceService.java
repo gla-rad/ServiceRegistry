@@ -28,15 +28,21 @@ import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.search.*;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep;
+import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.engine.spatial.GeoPoint;
+import org.hibernate.search.engine.spatial.GeoPolygon;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
 import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.hibernate.sql.ast.Clause;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
@@ -598,10 +604,81 @@ public class InstanceService {
      * @return the constructed hibernate search query object
      */
     protected SearchQuery<Instance> getSearchInstanceQueryByQueryString(String queryString, org.apache.lucene.search.Sort sort) {
+        // First look out for a geometry query that need to be handled differently
+        Optional<PhraseQuery> geoQuery = this.getGeographyQuery(queryString);
+        // And remove it from the query string
+        if(geoQuery.isPresent()) {
+            queryString = queryString.replaceAll("(AND|OR)?\\s?geometry:\".*\"", "");
+        }
+
+        // Then parse the input string to make sure it's right
+        final Query luceneQuery = this.getLuceneQuery(queryString);
+
+        // Then build and return the hibernate-search query
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .where( f -> f.bool()
+                        .must(q1 -> {
+                            if(luceneQuery != null && StringUtils.isNotBlank(luceneQuery.toString())) {
+                                return q1.extension(LuceneExtension.get()).fromLuceneQuery(luceneQuery);
+                            } else {
+                                return q1.matchAll();
+                            }
+                        })
+                        .must(q2 -> {
+                            if(geoQuery.isPresent()) {
+                                return q2.spatial()
+                                        .within()
+                                        .field("geometryPoints")
+                                        .polygon(GeoPolygon.of(geoQuery.map(c -> c.getTerms())
+                                                        .map(Arrays::asList)
+                                                        .map(terms -> terms.stream().map(Term::text).collect(Collectors.toList()))
+                                                        .orElseGet(() -> Arrays.asList(new String[]{"-90,-180", "90,-180", "90,180", "-90,180", "-90,-180"}))
+                                                        .stream()
+                                                        .map(text -> text.split(","))
+                                                        .map(parts -> GeoPoint.of(Double.parseDouble(parts[0]), Double.parseDouble(parts[1])))
+                                                        .collect(Collectors.toList()))
+                                        );
+                            } else {
+                                return q2.matchAll();
+                            }
+                        })
+                )
+                .toQuery();
+    }
+
+
+
+    protected Optional<PhraseQuery> getGeographyQuery(String queryString) {
         // First parse the input string to make sure it's right
-        MultiFieldQueryParser parser = new MultiFieldQueryParser( this.searchFields, new StandardAnalyzer() );
+        Query luceneQuery = this.getLuceneQuery(queryString);
+
+        if(BooleanQuery.class.isInstance(luceneQuery)) {
+            return Optional.of(luceneQuery)
+                    .map(BooleanQuery.class::cast)
+                    .map(BooleanQuery::clauses)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .filter(c -> PhraseQuery.class.isInstance(c.getQuery()))
+                    .filter(c -> PhraseQuery.class.cast(c.getQuery()).getField().equals("geometry"))
+                    .findFirst()
+                    .map(c -> c.getQuery())
+                    .map(PhraseQuery.class::cast);
+        } else if(PhraseQuery.class.isInstance(luceneQuery)) {
+            return Optional.of(luceneQuery)
+                    .map(PhraseQuery.class::cast)
+                    .filter(q -> q.getField().equals("geometry"));
+        } else {
+            return Optional.empty();
+        }
+    }
+
+    protected Query getLuceneQuery(String queryString) {
+        // First parse the input string to make sure it's right
+        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
         parser.setDefaultOperator( QueryParser.Operator.AND );
-        final Query luceneQuery = Optional.ofNullable(queryString)
+        return Optional.ofNullable(queryString)
                 .map(q -> {
                     try {
                         return parser.parse(q);
@@ -610,15 +687,7 @@ public class InstanceService {
                         return null;
                     }
                 })
-                .orElseThrow(() -> new DataNotFoundException("The provided query is invalid... no data returned", null));
-
-        // Then build and return the hibernate-search query
-        SearchSession searchSession = Search.session( entityManager );
-        SearchScope<Instance> scope = searchSession.scope( Instance.class );
-        return searchSession.search( scope )
-                .extension(LuceneExtension.get())
-                .where( f -> f.fromLuceneQuery(luceneQuery) )
-                .toQuery();
+                .orElse(null);
     }
 
 }
