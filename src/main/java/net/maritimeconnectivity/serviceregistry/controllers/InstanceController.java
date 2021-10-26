@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
+import net.maritimeconnectivity.serviceregistry.models.domain.HSGeometryPoint;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
@@ -30,6 +31,9 @@ import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Geometry;
+import org.modelmapper.AbstractConverter;
 import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,7 +47,11 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * REST controller for managing Instance.
@@ -79,6 +87,19 @@ public class InstanceController {
     @Autowired
     DomainDtoMapper<Instance, InstanceDtDto> instanceDomainToDtDtoMapper;
 
+    class GeometryConverter extends AbstractConverter<Geometry, List<HSGeometryPoint>> {
+        @Override
+        protected List<HSGeometryPoint> convert(Geometry geometry) {
+            return Optional.ofNullable(geometry)
+                    .map(Geometry::getCoordinates)
+                    .map(Arrays::asList)
+                    .orElse(Collections.emptyList())
+                    .stream()
+                    .map(c -> new HSGeometryPoint(c.getY(), c.getX()))
+                    .collect(Collectors.toList());
+        }
+    }
+
     /**
      * Setup up addition model mapper configurations.
      */
@@ -89,8 +110,9 @@ public class InstanceController {
             protected void configure() {
                 // For some reason the model mapper pick up a circular
                 // dependency with the document instance reference so better
-                // to block that and just depend on hinernate to make the link.
+                // to block that and just depend on hibernate to make the link.
                 skip(destination.getInstanceAsDoc().getInstance());
+                using(new GeometryConverter()).map(source.getGeometry()).setGeometryPoints(null);
             }
         });
         this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
