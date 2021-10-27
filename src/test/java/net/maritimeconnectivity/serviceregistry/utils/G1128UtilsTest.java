@@ -17,9 +17,9 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import org.apache.commons.io.IOUtils;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageInfo;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageInfo;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -28,8 +28,10 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class G1128UtilsTest {
 
@@ -43,17 +45,17 @@ class G1128UtilsTest {
     @BeforeEach
     void setup() {
         this.serviceInstanceXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-                "<serviceInstance xmlns=\"http://efficiensea2.org/maritime-cloud/service-registry/v1/ServiceInstanceSchema.xsd\" xmlns:ns2=\"http://efficiensea2.org/maritime-cloud/service-registry/v1/ServiceSpecificationSchema.xsd\">\n" +
+                "<serviceInstance xmlns=\"http://iala-aism.org/g1128/v1.3/ServiceInstanceSchema.xsd\" xmlns:ns2=\"http://iala-aism.org/g1128/v1.3/ServiceSpecificationSchema.xsd\">\n" +
                 "    <id>org.test.serviceInstance.0.0.1</id>\n" +
                 "    <version>0.0.1TEST</version>\n" +
                 "    <name>Service Instance Name</name>\n" +
                 "    <status>released</status>\n" +
                 "    <description>No comment</description>\n" +
-                "    <keywords>test,G1128,service,instance</keywords>\n" +
+                "    <keywords>test G1128 service instance</keywords>\n" +
                 "    <endpoint>https://test.org/somoething</endpoint>\n" +
                 "    <MMSI>123456789</MMSI>\n" +
-                "    <IMO>imo</IMO>\n" +
-                "    <serviceType>test</serviceType>\n" +
+                "    <IMO>1234567</IMO>\n" +
+                "    <serviceType>other:test</serviceType>\n" +
                 "    <requiresAuthorization>false</requiresAuthorization>\n" +
                 "    <coversAreas>\n" +
                 "        <unLoCode>HWC</unLoCode>\n" +
@@ -65,18 +67,18 @@ class G1128UtilsTest {
         this.serviceInstance.setName("Service Instance Name");
         this.serviceInstance.setVersion("0.0.1TEST");
         this.serviceInstance.setId("org.test.serviceInstance.0.0.1");
-        this.serviceInstance.setKeywords("test,G1128,service,instance");
+        this.serviceInstance.getKeywords().addAll(Arrays.asList(new String[]{"test","G1128","service","instance"}));
         this.serviceInstance.setStatus(ServiceStatus.RELEASED);
         this.serviceInstance.setDescription("No comment");
         this.serviceInstance.setName(serviceInstance.getName());
         this.serviceInstance.setEndpoint("https://test.org/somoething");
         this.serviceInstance.setMMSI("123456789");
-        this.serviceInstance.setIMO("imo");
-        this.serviceInstance.setServiceType("test");
+        this.serviceInstance.setIMO("1234567");
+        this.serviceInstance.getServiceType().add("other:test");
 
         /// Also set the UnLoCode for the coverage info
         CoverageInfo coverageInfo = new CoverageInfo();
-        coverageInfo.setUnLoCode("HWC");
+        coverageInfo.getCoversAreasAndUnLoCodes().add("HWC");
         this.serviceInstance.setCoversAreas(coverageInfo);
     }
 
@@ -121,7 +123,7 @@ class G1128UtilsTest {
         assertEquals(this.serviceInstance.getMMSI(), serviceInstance.getMMSI());
         assertEquals(this.serviceInstance.getIMO(), serviceInstance.getIMO());
         assertEquals(this.serviceInstance.getServiceType(), serviceInstance.getServiceType());
-        assertEquals(this.serviceInstance.getCoversAreas().getUnLoCode(), serviceInstance.getCoversAreas().getUnLoCode());
+        assertEquals(this.serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes(), serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes());
         assertEquals(this.serviceInstance.getProducedBy(), serviceInstance.getProducedBy());
         assertEquals(this.serviceInstance.getProvidedBy(), serviceInstance.getProvidedBy());
     }

@@ -267,6 +267,22 @@
       ]
     },
     {
+      "name": "api_search_instances",
+      "type": "urn:service-registry:resources:search:instances",
+      "ownerManagedAccess": false,
+      "displayName": "API Search Instances Endpoint",
+      "attributes": {},
+      "_id": "da305207-0100-4b6d-ae6c-db38e184b46a",
+      "uris": [
+        "/api/_search/instances"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
       "name": "api_instances",
       "type": "urn:service-registry:resources:instances",
       "ownerManagedAccess": false,
@@ -362,6 +378,17 @@
       "decisionStrategy": "UNANIMOUS",
       "config": {
         "roles": "[{\"id\":\"service-registry/get_api_xmls\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "5a204d4e-4351-49b8-8102-6ae83540b026",
+      "name": "get_api_search_instances",
+      "description": "Whether the user has the get_api_search_instances role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_search_instances\",\"required\":true}]"
       }
     },
     {
@@ -596,6 +623,19 @@
         "resources": "[\"api_doc\"]",
         "scopes": "[\"GET\"]",
         "applyPolicies": "[\"get_api_doc\"]"
+      }
+    },
+    {
+      "id": "3b0409ae-09c1-467c-b54d-63fd4acbd45e",
+      "name": "Allow Get Search Instances",
+      "description": "Allows users to search for instances",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_search_instances\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_search_instances\"]"
       }
     },
     {

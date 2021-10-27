@@ -34,7 +34,9 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
 import java.net.ConnectException;
+import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * The Smart Contract Provider Component.
@@ -141,7 +143,7 @@ public class SmartContractProvider {
         return new MsrContract.ServiceInstance(instance.getName(),
                 instance.getInstanceId(),
                 instance.getVersion(),
-                instance.getKeywords(),
+                Optional.ofNullable(instance.getKeywords()).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")),
                 Optional.ofNullable(instance.getGeometry()).map(Geometry::toString).orElse(null),
                 "designMrn",
                 "designVersion",

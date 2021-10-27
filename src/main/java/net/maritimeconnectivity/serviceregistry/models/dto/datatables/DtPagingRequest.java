@@ -17,9 +17,12 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.datatables;
 
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedSetSortField;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -176,15 +179,17 @@ public class DtPagingRequest {
      * Constructs a Lucence Data Sort object based on the information of the
      * datatables page request.
      *
+     * @param diffSortFields The fields that have been sorted under a different index
      * @return the Springboot sort definition
      */
-    public org.apache.lucene.search.Sort getLucenceSort() {
+    public org.apache.lucene.search.Sort getLucenceSort(List<String> diffSortFields) {
         // Create the Lucene sorting and direction
         List<SortField> sortFields = this.getOrder().stream()
-                .map(dtOrder -> new SortField(
-                        this.getColumns().get(dtOrder.getColumn()).getData() + "_sort",
-                        this.getColumns().get(dtOrder.getColumn()).getData().equalsIgnoreCase("id") ? SortField.Type.LONG : SortField.Type.STRING,
-                        dtOrder.getDir() == DtDirection.desc))
+                .map(dtOrder -> {
+                    String field = this.getColumns().get(dtOrder.getColumn()).getData();
+                    field = Optional.ofNullable(diffSortFields).orElseGet(() -> Collections.emptyList()).contains(field + "_sort") ? field + "_sort" : field;
+                    return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.desc);
+                })
                 .collect(Collectors.toList());
         return new org.apache.lucene.search.Sort(sortFields.toArray(new SortField[]{}));
     }
