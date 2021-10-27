@@ -16,9 +16,9 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain.enums;
 
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicedesignschema.ServiceDesign;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceSpecification;
+import org.iala_aism.g1128.v1_3.servicedesignschema.ServiceDesign;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceSpecification;
 
 /**
  * The G1128 Schemas Enumeration.
