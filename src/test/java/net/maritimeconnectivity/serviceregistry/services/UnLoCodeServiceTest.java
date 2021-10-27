@@ -20,7 +20,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import org.apache.commons.io.IOUtils;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +32,7 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -102,7 +103,7 @@ class UnLoCodeServiceTest {
         assertNotNull(unLoCodeMapEntry);
 
         // Perform the service call
-        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, unLoCode);
+        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, Collections.singletonList(unLoCode));
 
         // Make sure the UnLoCode was applied correctly
         assertNotNull(this.existingInstance.getGeometry());
@@ -124,7 +125,7 @@ class UnLoCodeServiceTest {
     @Test
     void testApplyUnLoCodeMappingNotFound() {
         // Perform the service call
-        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, "INVALID");
+        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, Collections.singletonList("INVALID"));
 
         // Make sure the UnLoCode was applied correctly
         assertNull(this.existingInstance.getGeometry());

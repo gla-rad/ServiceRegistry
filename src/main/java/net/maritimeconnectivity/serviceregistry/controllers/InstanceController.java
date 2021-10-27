@@ -29,7 +29,8 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.modelmapper.PropertyMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +38,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.net.URI;
@@ -78,6 +80,36 @@ public class InstanceController {
     DomainDtoMapper<Instance, InstanceDtDto> instanceDomainToDtDtoMapper;
 
     /**
+     * Setup up addition model mapper configurations.
+     */
+    @PostConstruct
+    void setup() {
+        this.instanceDtoToDomainMapper.getModelMapper().addMappings(new PropertyMap<InstanceDto, Instance>() {
+            @Override
+            protected void configure() {
+                // For some reason the model mapper pick up a circular
+                // dependency with the document instance reference so better
+                // to block that and just depend on hinernate to make the link.
+                skip(destination.getInstanceAsDoc().getInstance());
+            }
+        });
+        this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
+            @Override
+            protected void configure() {
+                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
+                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
+            }
+        });
+        this.instanceDomainToDtDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDtDto>() {
+            @Override
+            protected void configure() {
+                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
+                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
+            }
+        });
+    }
+
+    /**
      * GET /api/instances : get all the instances.
      *
      * @param pageable the pagination information
@@ -85,8 +117,7 @@ public class InstanceController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<InstanceDto>> getInstances(Pageable pageable)
-            throws URISyntaxException {
+    public ResponseEntity<List<InstanceDto>> getInstances(Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
         final Page<Instance> page = this.instanceService.findAll(pageable);
         return ResponseEntity.ok()
@@ -95,7 +126,8 @@ public class InstanceController {
     }
 
     /**
-     * POST /api/instances/dt : Returns a paged list of all current instances.
+     * POST /api/instances/dt : Returns a paged list of all current instances
+     * for the datatables display.
      *
      * @param dtPagingRequest the datatables paging request
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body

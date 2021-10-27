@@ -11,6 +11,32 @@ class DocsApi {
     }
 
     /**
+     * API Instance Doc creating function.
+     *
+     * @param  {obj} doc                The ID of doc to be created
+     * @param  {Function} callback      The callback to be used after the AJAX call
+     * @param  {Function} errorCallback The error callback to be used if the AJAX call fails
+     */
+    createDoc(doc, callback, errorCallback) {
+        $.ajax({
+            url: `api/docs`,
+            type: 'POST',
+            contentType: 'application/json',
+            crossDomain: true,
+            dataType: 'json',
+            data: doc,
+            success: callback,
+            error: (response, status, more) => {
+                if(errorCallback) {
+                    errorCallback(response, status, more);
+                } else {
+                    console.error(response)
+                }
+            }
+        });
+    }
+
+    /**
      * API Instance Doc reading function.
      *
      * @param  {number} docId           The ID of the doc to be retrieved

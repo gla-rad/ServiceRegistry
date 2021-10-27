@@ -23,20 +23,24 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
-import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
-import org.hibernate.search.jpa.FullTextEntityManager;
-import org.hibernate.search.jpa.FullTextQuery;
-import org.hibernate.search.jpa.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
@@ -57,8 +61,7 @@ import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.peek;
+import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing Instance.
@@ -80,19 +83,19 @@ public class InstanceService {
      * The Instance Repository.
      */
     @Autowired
-    private InstanceRepo instanceRepo;
+    InstanceRepo instanceRepo;
 
     /**
      * The XML Service.
      */
     @Autowired
-    private XmlService xmlService;
+    XmlService xmlService;
 
     /**
      * The Doc Service.
      */
     @Autowired
-    private DocService docService;
+    DocService docService;
 
     /**
      * The LedgerRequest Service.
@@ -128,6 +131,19 @@ public class InstanceService {
             "mmsi",
             "imo",
             "serviceType"
+    };
+    private final String[] searchFieldsWithSort = new String[] {
+            "name_sort",
+            "version",
+            "lastUpdatedAt",
+            "instanceId",
+            "keywords_sort",
+            "status",
+            "organizationId",
+            "endpointUri",
+            "mmsi",
+            "imo",
+            "serviceType_sort"
     };
 
     /**
@@ -410,26 +426,42 @@ public class InstanceService {
      * an appropriate format to be viewed by a datatables jQuery table.
      *
      * @param dtPagingRequest the Datatables pagination request
-     * @return the Datatables paged response
+     * @return the paged response
      */
     @Transactional(readOnly = true)
     public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        FullTextQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue());
-        searchQuery.setFirstResult(dtPagingRequest.getStart());
-        searchQuery.setMaxResults(dtPagingRequest.getLength());
+        SearchQuery searchQuery = this.getSearchInstanceQueryByText(
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
+                        .filter(f -> f.endsWith("_sort"))
+                        .collect(Collectors.toList())));
 
-        // Add sorting if requested
-        Optional.of(dtPagingRequest)
-                .map(DtPagingRequest::getLucenceSort)
-                .filter(ls -> ls.getSort().length > 0)
-                .ifPresent(searchQuery::setSort);
-
-        // For some reason we need this casting otherwise JDK8 complains
+        // Map the results to a paged response
         return Optional.of(searchQuery)
-                .map(FullTextQuery::getResultList)
-                .map(stations -> new PageImpl<Instance>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
+    }
+
+    /**
+     * Handles a datatables pagination request and returns the results list in
+     * an appropriate format to be viewed by a datatables jQuery table.
+     *
+     * @param queryString
+     * @param pageable
+     * @return the paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<Instance> handleSearchQueryRequest(String queryString, Pageable pageable) {
+        // Create the search query
+        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, null);
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
+                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
     /**
@@ -454,7 +486,14 @@ public class InstanceService {
         instance.setMmsi(serviceInstance.getMMSI());
         instance.setImo(serviceInstance.getIMO());
         instance.setServiceType(serviceInstance.getServiceType());
-        instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
+        instance.setUnlocode(serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .collect(Collectors.toList()));
+        instance.setDesigns(Stream.of(serviceInstance.getImplementsServiceDesign())
+                .collect(Collectors.toMap(ServiceDesignReference::getId, ServiceDesignReference::getVersion)));
     }
 
     /**
@@ -468,13 +507,24 @@ public class InstanceService {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
-        String unLoCode = serviceInstance.getCoversAreas().getUnLoCode();
-        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas().getCoversAreas();
+        List<String> unLoCode = serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
+        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(CoverageArea.class::isInstance)
+                .map(CoverageArea.class::cast)
+                .collect(Collectors.toList());
 
         // UN/LOCODE and Coverage Geometry are supported simultaneously.
         // However, for geo-searches, Coverage takes precedence over UN/LOCODE.
-        if (unLoCode != null && unLoCode.length() > 0) {
-            instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
+        if (unLoCode != null && unLoCode.size() > 0) {
+            instance.setUnlocode(unLoCode);
         }
 
         // Check the coverage areas
@@ -487,17 +537,17 @@ public class InstanceService {
                         .orElseThrow(() -> new ParseException("Invalid geometry detected")));
             }
             instance.setGeometry(new GeometryCombiner(geometryList).combine());
-        } else if (unLoCode != null && unLoCode.length() > 0) {
+        } else if (unLoCode != null && unLoCode.size() > 0) {
             unLoCodeService.applyUnLoCodeMapping(instance, unLoCode);
         }
     }
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * search test. This query will be based solely on the stations table and
+     * search test. This query will be based solely on the instances table and
      * will include the following fields:
      * <ul>
-     *  <li>Version</li>Name
+     *  <li>Name</li>
      *  <li>Version</li>
      *  <li>Last Updated At</li>
      *  <li>Status</li>
@@ -510,23 +560,65 @@ public class InstanceService {
      * </ul>
      *
      * @param searchText    the text to be searched
-     * @return the full text query
+     * @param sort          the sorting operation to be applied
+     * @return the constructed hibernate search query object
      */
-    protected FullTextQuery searchInstanceQuery(String searchText) {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        QueryBuilder queryBuilder = fullTextEntityManager.getSearchFactory()
-                .buildQueryBuilder()
-                .forEntity(Instance.class)
-                .get();
+    protected SearchQuery<Instance> getSearchInstanceQueryByText(String searchText, org.apache.lucene.search.Sort sort) {
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( scope.predicate().wildcard()
+                        .fields( this.searchFieldsWithSort )
+                        .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
+                        .toPredicate() )
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
+    }
 
-        Query luceneQuery = queryBuilder
-                .keyword()
-                .wildcard()
-                .onFields(this.searchFields)
-                .matching(Optional.ofNullable(searchText).orElse("").toLowerCase() + "*")
-                .createQuery();
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search query string. This query should follow the Lucene query syntax
+     * and the search will include the following fields:
+     * <ul>
+     *  <li>Name</li>
+     *  <li>Version</li>
+     *  <li>Last Updated At</li>
+     *  <li>Status</li>
+     *  <li>Status</li>
+     *  <li>Organization ID</li>
+     *  <li>ndpoint URI</li>
+     *  <li>MMSI</li>
+     *  <li>IMO</li>
+     *  <li>Service Type</li>
+     * </ul>
+     *
+     * @param queryString   The lucene query string to use for the search
+     * @param sort          the sorting operation to be applied
+     * @return the constructed hibernate search query object
+     */
+    protected SearchQuery<Instance> getSearchInstanceQueryByQueryString(String queryString, org.apache.lucene.search.Sort sort) {
+        // First parse the input string to make sure it's right
+        MultiFieldQueryParser parser = new MultiFieldQueryParser( this.searchFields, new StandardAnalyzer() );
+        parser.setDefaultOperator( QueryParser.Operator.AND );
+        final Query luceneQuery = Optional.ofNullable(queryString)
+                .map(q -> {
+                    try {
+                        return parser.parse(q);
+                    } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
+                        this.log.error(ex.getMessage());
+                        return null;
+                    }
+                })
+                .orElseThrow(() -> new DataNotFoundException("The provided query is invalid... no data returned", null));
 
-        return fullTextEntityManager.createFullTextQuery(luceneQuery, Instance.class);
+        // Then build and return the hibernate-search query
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( f -> f.fromLuceneQuery(luceneQuery) )
+                .toQuery();
     }
 
 }

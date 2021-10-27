@@ -16,21 +16,20 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
-import net.maritimeconnectivity.serviceregistry.utils.ServiceStatusBridge;
-import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.search.annotations.*;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
+import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
+import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 
@@ -38,6 +37,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The type Instance.
@@ -51,50 +51,39 @@ import java.util.*;
  */
 @Entity
 @Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
-@Cacheable
 @Indexed
-@NormalizerDef(name = "lowercase", filters = @TokenFilterDef(factory = LowerCaseFilterFactory.class))
+@Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Instance implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @Field(name = "id_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "id_sort")
+    @GenericField(name = "id_search", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @Field()
-    @Field(name = "name_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "name_sort")
+    @FullTextField
+    @KeywordField(name = "name_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "name")
     private String name;
 
     @NotNull
-    @Field()
-    @Field(name = "version_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "version_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "version")
     private String version;
 
-    @Field()
-    @Field(name = "publishedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "publishedAt_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "published_at")
     private String publishedAt;
 
-    @Field()
-    @Field(name = "lastUpdatedAt_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "lastUpdatedAt_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "last_updated_at")
     private String lastUpdatedAt;
 
     @NotNull
-    @Field()
-    @Field(name = "comment_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "comment_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
@@ -107,69 +96,59 @@ public class Instance implements Serializable, JsonSerializable {
     private String geometryContentType;
 
     @NotNull
-    @Field()
-    @Field(name = "instanceId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "instanceId_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "instance_id", updatable = false)
     @JsonProperty("instanceId")
     private String instanceId; //MRN
 
-    @Field()
-    @Field(name = "keywords_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "keywords_sort")
-    @Column(name = "keywords")
-    private String keywords;
+    @FullTextField
+    @GenericField(name="keywords_sort",
+                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+                  sortable = Sortable.YES)
+    @ElementCollection
+    private List<String> keywords;
 
     @NotNull
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
-    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class))
-    @Field(bridge=@FieldBridge(impl= ServiceStatusBridge.class), name = "status_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "status_sort")
     @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
     private ServiceStatus status;
 
-    @Field()
-    @Field(name = "organizationId_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "organizationId_sort")
-    @Column(name = "organization_id")
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
 
-    @Column(name = "unlocode")
-    private String unlocode;
+    @FullTextField
+    @ElementCollection
+    private List<String> unlocode;
 
-    @Field()
-    @Field(name = "endpointUri_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "endpointUri_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_uri")
     @JsonProperty("endpointUri")
     private String endpointUri;
 
-    @Field()
-    @Field(name = "endpointType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "endpointType_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_type")
     @JsonProperty("endpointType")
     private String endpointType;
 
-    @Field()
-    @Field(name = "mmsi_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "mmsi_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "mmsi")
     private String mmsi;
 
-    @Field()
-    @Field(name = "imo_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "imo_sort")
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "imo")
     private String imo;
 
-    @Field()
-    @Field(name = "serviceType_sort", analyze = Analyze.NO, normalizer = @Normalizer(definition = "lowercase"))
-    @SortableField(forField = "serviceType_sort")
-    @Column(name = "service_type")
+    @FullTextField
+    @GenericField(name="serviceType_sort",
+                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+                  sortable = Sortable.YES)
+    @ElementCollection
     @JsonProperty("serviceType")
-    private String serviceType;
+    private List<String> serviceType;
 
     @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
@@ -179,11 +158,8 @@ public class Instance implements Serializable, JsonSerializable {
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
 
-    @ManyToMany(fetch=FetchType.LAZY)
+    @OneToMany(mappedBy = "instance", cascade = {CascadeType.ALL}, orphanRemoval = true, fetch=FetchType.LAZY)
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_docs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
     private Set<Doc> docs = new HashSet<>();
 
     /**
@@ -371,7 +347,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the keywords
      */
-    public String getKeywords() {
+    public List<String> getKeywords() {
         return keywords;
     }
 
@@ -380,7 +356,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param keywords the keywords
      */
-    public void setKeywords(String keywords) {
+    public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
     }
 
@@ -425,7 +401,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the unlocode
      */
-    public String getUnlocode() {
+    public List<String> getUnlocode() {
         return unlocode;
     }
 
@@ -434,7 +410,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param unlocode the unlocode
      */
-    public void setUnlocode(String unlocode) {
+    public void setUnlocode(List<String> unlocode) {
         this.unlocode = unlocode;
     }
 
@@ -515,7 +491,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public String getServiceType() {
+    public List<String>  getServiceType() {
         return serviceType;
     }
 
@@ -524,7 +500,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param serviceType the service type
      */
-    public void setServiceType(String serviceType) {
+    public void setServiceType(List<String>  serviceType) {
         this.serviceType = serviceType;
     }
 
@@ -696,30 +672,50 @@ public class Instance implements Serializable, JsonSerializable {
                 ", geometry=" + geometry +
                 ", geometryContentType='" + geometryContentType + '\'' +
                 ", instanceId='" + instanceId + '\'' +
-                ", keywords='" + keywords + '\'' +
+                ", keywords='" + Optional.ofNullable(keywords).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", status='" + status + '\'' +
                 ", organizationId='" + organizationId + '\'' +
-                ", unlocode='" + unlocode + '\'' +
+                ", unlocode='" + Optional.ofNullable(unlocode).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", endpointUri='" + endpointUri + '\'' +
                 ", endpointType='" + endpointType + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
-                ", serviceType='" + serviceType + '\'' +
+                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 '}';
     }
 
     /**
-     * Returns the comma separated keywords of the instance as a list of
-     * strings.
+     * Currently the G1128 Instance Specification guideline supports only one
+     * design reference per instance so this bypasses the database structure of
+     * a list.
      *
-     * @return The list of keywords
+     * @return  The single design reference of the instance
      */
-    @JsonIgnore
-    public List<String> getKeywordsList() {
-        return Optional.ofNullable(this.keywords)
-                .map(keywords -> keywords.split(" "))
-                .map(Arrays::asList)
-                .orElse(Collections.emptyList());
+    public String getImplementsDesign() {
+        return Optional.ofNullable(this.getDesigns())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    /**
+     * Currently the G1128 Instance Specification guideline supports only one
+     * design reference per instance so this bypasses the database structure of
+     * a list.
+     *
+     * @return  The single design version reference of the instance
+     */
+    public String getImplementsDesignVersion() {
+        return Optional.ofNullable(this.getDesigns())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
     }
 
 }

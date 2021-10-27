@@ -16,17 +16,14 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto;
 
-import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 
 /**
- * The Doc DTO Class.
+ * The Doc Datatables DTO Class.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class DocDto implements Serializable, JsonSerializable  {
+public class DocDtDto {
 
     // Class Variables
     private Long id;
@@ -35,15 +32,13 @@ public class DocDto implements Serializable, JsonSerializable  {
     private String comment;
     @NotNull
     private String mimetype;
-    @NotNull
-    private byte[] filecontent;
     private String filecontentContentType;
     private Long instanceId;
 
     /**
-     * Instantiates a new Doc dto.
+     * Instantiates a new Doc dt dto.
      */
-    public DocDto() {
+    public DocDtDto() {
 
     }
 
@@ -120,24 +115,6 @@ public class DocDto implements Serializable, JsonSerializable  {
     }
 
     /**
-     * Get filecontent byte [ ].
-     *
-     * @return the byte [ ]
-     */
-    public byte[] getFilecontent() {
-        return filecontent;
-    }
-
-    /**
-     * Sets filecontent.
-     *
-     * @param filecontent the filecontent
-     */
-    public void setFilecontent(byte[] filecontent) {
-        this.filecontent = filecontent;
-    }
-
-    /**
      * Gets filecontent content type.
      *
      * @return the filecontent content type
@@ -172,5 +149,4 @@ public class DocDto implements Serializable, JsonSerializable  {
     public void setInstanceId(Long instanceId) {
         this.instanceId = instanceId;
     }
-
 }
