@@ -105,7 +105,10 @@
                                 <div class="input-group mb3">
                                     <span class="input-group-text" id="search-label">Search</span>
                                     <input type="text" class="form-control" id="queryString" placeholder="field:value" aria-label="Query" aria-describedby="search-label">
-                                    <button type="button" class="btn btn-outline-primary" id="instanceSearchButton" onclick="searchForInstances()"><i class="fas fa-search"></i></button>
+                                    <button type="button" class="btn btn-outline-primary" id="instanceSearchButton" onclick="searchForInstances()" title="Perform Search"><i class="fas fa-search"></i></button>
+                                    <button type="button" class="btn btn-outline-primary" id="instanceGeoSearchButton" onclick="geoSearchForInstances()" data-bs-toggle="button" autocomplete="off" title="Define Spatial Parameters">
+                                        <i class="fas fa-map-marked"></i>
+                                    </button>
                                     <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
                                         <span class="visually-hidden">Search Type Dropdown</span>
                                     </button>
