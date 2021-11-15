@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.utils;
+package net.maritimeconnectivity.serviceregistry.components;
 
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
 
 /**
  * The Sting to Service Status Converter.
@@ -27,6 +28,7 @@ import org.springframework.core.convert.converter.Converter;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
+@Component
 public class StringToServiceStatusConverter implements Converter<String, ServiceStatus> {
 
     @Override

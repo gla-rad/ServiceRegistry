@@ -16,18 +16,15 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.utils.*;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryBinder;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
+import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.GeoPointBinding;
-import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.Latitude;
-import org.hibernate.search.mapper.pojo.bridge.builtin.annotation.Longitude;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
@@ -56,7 +53,7 @@ import java.util.stream.Collectors;
 @Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
 @Indexed
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Instance implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = 1L;
@@ -90,15 +87,9 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "comment")
     private String comment;
 
-    @JsonSerialize(using = GeometryJSONSerializer.class)
-    @JsonDeserialize(using = GeometryJSONDeserializer.class)
+    @NonStandardField(valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     @Column(name = "geometry")
     private Geometry geometry;
-
-    @Embedded
-    @GenericField
-    @ElementCollection
-    private List<HSGeometryPoint> geometryPoints;
 
     @Column(name = "geometry_content_type")
     private String geometryContentType;
@@ -106,7 +97,6 @@ public class Instance implements Serializable, JsonSerializable {
     @NotNull
     @KeywordField(sortable = Sortable.YES)
     @Column(name = "instance_id", updatable = false)
-    @JsonProperty("instanceId")
     private String instanceId; //MRN
 
     @FullTextField
@@ -124,7 +114,6 @@ public class Instance implements Serializable, JsonSerializable {
     private ServiceStatus status;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
-    @JsonProperty("organizationId")
     private String organizationId; // Use the JWT auth token for that
 
     @FullTextField
@@ -133,12 +122,10 @@ public class Instance implements Serializable, JsonSerializable {
 
     @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_uri")
-    @JsonProperty("endpointUri")
     private String endpointUri;
 
     @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_type")
-    @JsonProperty("endpointType")
     private String endpointType;
 
     @KeywordField(sortable = Sortable.YES)
@@ -155,7 +142,6 @@ public class Instance implements Serializable, JsonSerializable {
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
                   sortable = Sortable.YES)
     @ElementCollection
-    @JsonProperty("serviceType")
     private List<String> serviceType;
 
     @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
@@ -618,14 +604,6 @@ public class Instance implements Serializable, JsonSerializable {
      */
     public void setSpecifications(Map<String, String> specifications) {
         this.specifications = specifications;
-    }
-
-    public List<HSGeometryPoint> getGeometryPoints() {
-        return geometryPoints;
-    }
-
-    public void setGeometryPoints(List<HSGeometryPoint> geometryPoints) {
-        this.geometryPoints = geometryPoints;
     }
 
     /**

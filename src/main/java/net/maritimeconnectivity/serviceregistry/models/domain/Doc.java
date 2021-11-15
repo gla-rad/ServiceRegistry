@@ -45,7 +45,7 @@ import java.util.Objects;
 @Table(name = "document")
 @Indexed
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Doc implements Serializable {
 
     private static final long serialVersionUID = 1L;
