@@ -28,21 +28,23 @@ import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.*;
+import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortedSetSortField;
+import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
+import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
+import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
+import org.apache.lucene.spatial.query.SpatialArgs;
+import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 import org.hibernate.search.backend.lucene.LuceneExtension;
-import org.hibernate.search.engine.search.predicate.dsl.BooleanPredicateClausesStep;
-import org.hibernate.search.engine.search.predicate.dsl.SearchPredicateFactory;
+import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
-import org.hibernate.search.engine.spatial.GeoPoint;
-import org.hibernate.search.engine.spatial.GeoPolygon;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
 import org.hibernate.search.mapper.orm.session.SearchSession;
-import org.hibernate.sql.ast.Clause;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
@@ -50,6 +52,8 @@ import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
+import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
+import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
@@ -459,9 +463,9 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handleSearchQueryRequest(String queryString, Pageable pageable) {
-        // Create the search query
-        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, null);
+    public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
+        // Create the search query - always sort by name
+        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -556,10 +560,10 @@ public class InstanceService {
      *  <li>Name</li>
      *  <li>Version</li>
      *  <li>Last Updated At</li>
-     *  <li>Status</li>
+     *  <li>Instance ID</li>
      *  <li>Status</li>
      *  <li>Organization ID</li>
-     *  <li>ndpoint URI</li>
+     *  <li>Endpoint URI</li>
      *  <li>MMSI</li>
      *  <li>IMO</li>
      *  <li>Service Type</li>
@@ -569,7 +573,7 @@ public class InstanceService {
      * @param sort          the sorting operation to be applied
      * @return the constructed hibernate search query object
      */
-    protected SearchQuery<Instance> getSearchInstanceQueryByText(String searchText, org.apache.lucene.search.Sort sort) {
+    protected SearchQuery<Instance> getSearchInstanceQueryByText(String searchText, Sort sort) {
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<Instance> scope = searchSession.scope( Instance.class );
         return searchSession.search( scope )
@@ -584,97 +588,63 @@ public class InstanceService {
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * search query string. This query should follow the Lucene query syntax
-     * and the search will include the following fields:
+     * search query string and the geo-spatial geometry. This query string
+     * should follow the Lucene query syntax and the search will include the
+     * following fields:
      * <ul>
      *  <li>Name</li>
      *  <li>Version</li>
      *  <li>Last Updated At</li>
-     *  <li>Status</li>
+     *  <li>Instance ID</li>
      *  <li>Status</li>
      *  <li>Organization ID</li>
-     *  <li>ndpoint URI</li>
+     *  <li>Endpoint URI</li>
      *  <li>MMSI</li>
      *  <li>IMO</li>
      *  <li>Service Type</li>
      * </ul>
+     * The geo-spatial geometry is a LocationTech Geometry Collection that will
+     * be evaluated if it intersects with any of the available instances.
      *
      * @param queryString   The lucene query string to use for the search
-     * @param sort          the sorting operation to be applied
+     * @param geometry      The geo-spatial geometry to use for the search
+     * @param sort          The sorting operation to be applied
      * @return the constructed hibernate search query object
      */
-    protected SearchQuery<Instance> getSearchInstanceQueryByQueryString(String queryString, org.apache.lucene.search.Sort sort) {
-        // First look out for a geometry query that need to be handled differently
-        Optional<PhraseQuery> geoQuery = this.getGeographyQuery(queryString);
-        // And remove it from the query string
-        if(geoQuery.isPresent()) {
-            queryString = queryString.replaceAll("(AND|OR)?\\s?geometry:\".*\"", "");
-        }
+    protected SearchQuery<Instance> getSearchInstanceQueryByQueryString(String queryString, Geometry geometry, Sort sort) {
+        // First parse the input string to make sure it's right
+        final Query luceneQuery = this.createLuceneQuery(queryString);
 
-        // Then parse the input string to make sure it's right
-        final Query luceneQuery = this.getLuceneQuery(queryString);
+        // Also look out for a geometry query that needs to be handled differently
+        final Query geoQuery = this.createGeoSpatialQuery(geometry);
 
         // Then build and return the hibernate-search query
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<Instance> scope = searchSession.scope( Instance.class );
         return searchSession.search( scope )
                 .where( f -> f.bool()
-                        .must(q1 -> {
-                            if(luceneQuery != null && StringUtils.isNotBlank(luceneQuery.toString())) {
-                                return q1.extension(LuceneExtension.get()).fromLuceneQuery(luceneQuery);
-                            } else {
-                                return q1.matchAll();
-                            }
-                        })
-                        .must(q2 -> {
-                            if(geoQuery.isPresent()) {
-                                return q2.spatial()
-                                        .within()
-                                        .field("geometryPoints")
-                                        .polygon(GeoPolygon.of(geoQuery.map(c -> c.getTerms())
-                                                        .map(Arrays::asList)
-                                                        .map(terms -> terms.stream().map(Term::text).collect(Collectors.toList()))
-                                                        .orElseGet(() -> Arrays.asList(new String[]{"-90,-180", "90,-180", "90,180", "-90,180", "-90,-180"}))
-                                                        .stream()
-                                                        .map(text -> text.split(","))
-                                                        .map(parts -> GeoPoint.of(Double.parseDouble(parts[0]), Double.parseDouble(parts[1])))
-                                                        .collect(Collectors.toList()))
-                                        );
-                            } else {
-                                return q2.matchAll();
-                            }
-                        })
+                        .must(q1 -> Optional.ofNullable(luceneQuery)
+                                .map(q1.extension(LuceneExtension.get())::fromLuceneQuery)
+
+                                .orElseGet(() -> q1.matchAll())
+                        )
+                        .must(q2 -> Optional.ofNullable(geoQuery)
+                                .map(q2.extension(LuceneExtension.get())::fromLuceneQuery)
+                                .orElseGet(() -> q2.matchAll())
+                        )
                 )
+                .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
                 .toQuery();
     }
 
-
-
-    protected Optional<PhraseQuery> getGeographyQuery(String queryString) {
-        // First parse the input string to make sure it's right
-        Query luceneQuery = this.getLuceneQuery(queryString);
-
-        if(BooleanQuery.class.isInstance(luceneQuery)) {
-            return Optional.of(luceneQuery)
-                    .map(BooleanQuery.class::cast)
-                    .map(BooleanQuery::clauses)
-                    .orElse(Collections.emptyList())
-                    .stream()
-                    .filter(c -> PhraseQuery.class.isInstance(c.getQuery()))
-                    .filter(c -> PhraseQuery.class.cast(c.getQuery()).getField().equals("geometry"))
-                    .findFirst()
-                    .map(c -> c.getQuery())
-                    .map(PhraseQuery.class::cast);
-        } else if(PhraseQuery.class.isInstance(luceneQuery)) {
-            return Optional.of(luceneQuery)
-                    .map(PhraseQuery.class::cast)
-                    .filter(q -> q.getField().equals("geometry"));
-        } else {
-            return Optional.empty();
-        }
-    }
-
-    protected Query getLuceneQuery(String queryString) {
+    /**
+     * Creates a Lucene query based on the query string provided. The query
+     * string should follow the Lucene query syntax.
+     *
+     * @param queryString   The query string that follows the Lucene query syntax
+     * @return The Lucene query constructed
+     */
+    protected Query createLuceneQuery(String queryString) {
         // First parse the input string to make sure it's right
         MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
         parser.setDefaultOperator( QueryParser.Operator.AND );
@@ -684,9 +654,31 @@ public class InstanceService {
                         return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
                         this.log.error(ex.getMessage());
-                        return null;
+                        throw new InvalidRequestException(ex.getMessage(), ex);
                     }
                 })
+                .orElse(null);
+    }
+
+    /**
+     * Creates a Lucene geo-spatial query based on the provided geometry. The
+     * query isa recursive one based on the maxLevels defined (in this case 11,
+     * which result in a sub-meter precision).
+     *
+     * @param geometry      The geometry to generate the spatial query for
+     * @return The Lucene geo-spatial query constructed
+     */
+    protected Query createGeoSpatialQuery(Geometry geometry) {
+        // Initialise the spatial strategy
+        JtsSpatialContext ctx = JtsSpatialContext.GEO;
+        int maxLevels = 11; //results in sub-meter precision for geohash
+        SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
+        RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid,"geometry");
+
+        // Create the Lucene GeoSpatial Query
+        return Optional.ofNullable(geometry)
+                .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
+                .map(strategy::makeQuery)
                 .orElse(null);
     }
 

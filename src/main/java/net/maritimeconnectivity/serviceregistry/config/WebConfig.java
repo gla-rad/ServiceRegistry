@@ -16,8 +16,10 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
-import net.maritimeconnectivity.serviceregistry.utils.StringToG1128SchemaConverter;
-import net.maritimeconnectivity.serviceregistry.utils.StringToServiceStatusConverter;
+import net.maritimeconnectivity.serviceregistry.components.GeoJsonStringToGeometryConverter;
+import net.maritimeconnectivity.serviceregistry.components.StringToG1128SchemaConverter;
+import net.maritimeconnectivity.serviceregistry.components.StringToServiceStatusConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -35,6 +37,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
+
+    /**
+     * The String to G1128 Schema Converter.
+     */
+    @Autowired
+    StringToG1128SchemaConverter stringToG1128SchemaConverter;
+
+    /**
+     * The String to Service Status Converter.
+     */
+    @Autowired
+    StringToServiceStatusConverter stringToServiceStatusConverter;
+
+    /**
+     * The GeoJSON string to Geometry Converter.
+     */
+    @Autowired
+    GeoJsonStringToGeometryConverter geoJsonStringToGeometryConverter;
 
     /**
      * Add the static resources and webjars to the web resources.
@@ -70,8 +90,9 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addFormatters(FormatterRegistry registry) {
-        registry.addConverter(new StringToServiceStatusConverter());
-        registry.addConverter(new StringToG1128SchemaConverter());
+        registry.addConverter(stringToG1128SchemaConverter);
+        registry.addConverter(stringToServiceStatusConverter);
+        registry.addConverter(geoJsonStringToGeometryConverter);
     }
 
 }
