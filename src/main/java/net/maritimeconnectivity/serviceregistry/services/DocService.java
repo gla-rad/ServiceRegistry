@@ -21,7 +21,6 @@ import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
-import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -36,8 +35,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing Doc.
@@ -66,6 +67,10 @@ public class DocService {
             "name",
             "comment",
             "mimetype"
+    };
+    private final String[] searchFieldsWithSort = new String[] {
+            "id",
+            "comment",
     };
 
     /**
@@ -134,7 +139,8 @@ public class DocService {
         // Create the search query
         SearchQuery searchQuery = this.getSearchDocQueryByText(instanceId,
                 dtPagingRequest.getSearch().getValue(),
-                dtPagingRequest.getLucenceSort(null));
+                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
+                        .collect(Collectors.toList())));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -171,7 +177,7 @@ public class DocService {
                     }
                     if(instanceId != null) {
                         b.must(f.match()
-                                .field( "instance.id_search" )
+                                .field( "instance.id_sort" )
                                 .matching( instanceId )
                                 .toPredicate());
                     }
