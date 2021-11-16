@@ -59,7 +59,7 @@ public class Instance implements Serializable, JsonSerializable {
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GenericField(name = "id_search", sortable = Sortable.YES)
+    @GenericField(name = "id_sort", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 

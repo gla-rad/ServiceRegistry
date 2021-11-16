@@ -20,10 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.IndexedEmbedded;
-import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -51,6 +48,7 @@ public class Doc implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id
+    @GenericField(name = "id_sort", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
@@ -60,6 +58,7 @@ public class Doc implements Serializable {
     private String name;
 
     @FullTextField()
+    @KeywordField(name = "comment_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
@@ -77,7 +76,7 @@ public class Doc implements Serializable {
     private String filecontentContentType;
 
     @OneToOne(fetch = FetchType.EAGER)
-    @IndexedEmbedded()
+    @IndexedEmbedded(includePaths = "id_sort")
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Instance instance;

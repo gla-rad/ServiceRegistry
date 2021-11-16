@@ -143,17 +143,10 @@ public class InstanceService {
             "serviceType"
     };
     private final String[] searchFieldsWithSort = new String[] {
-            "name_sort",
-            "version",
-            "lastUpdatedAt",
-            "instanceId",
-            "keywords_sort",
-            "status",
-            "organizationId",
-            "endpointUri",
-            "mmsi",
-            "imo",
-            "serviceType_sort"
+            "id",
+            "name",
+            "keywords",
+            "serviceType"
     };
 
     /**
@@ -444,7 +437,6 @@ public class InstanceService {
         SearchQuery searchQuery = this.getSearchInstanceQueryByText(
                 dtPagingRequest.getSearch().getValue(),
                 dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
-                        .filter(f -> f.endsWith("_sort"))
                         .collect(Collectors.toList())));
 
         // Map the results to a paged response
@@ -579,7 +571,7 @@ public class InstanceService {
         return searchSession.search( scope )
                 .extension(LuceneExtension.get())
                 .where( scope.predicate().wildcard()
-                        .fields( this.searchFieldsWithSort )
+                        .fields( this.searchFields )
                         .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
                         .toPredicate() )
                 .sort(f -> f.fromLuceneSort(sort))
