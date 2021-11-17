@@ -97,12 +97,13 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any());
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .param("query", "1")
+                        .param("queryString", "name:Test")
+                        .param("geometryString", "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
