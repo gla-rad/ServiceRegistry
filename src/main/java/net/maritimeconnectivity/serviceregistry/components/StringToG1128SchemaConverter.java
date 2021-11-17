@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.utils;
+package net.maritimeconnectivity.serviceregistry.components;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
 
 /**
  * The Sting to G1128 Schemas Converter.
@@ -26,6 +27,7 @@ import org.springframework.core.convert.converter.Converter;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
+@Component
 public class StringToG1128SchemaConverter implements Converter<String, G1128Schemas> {
 
     @Override

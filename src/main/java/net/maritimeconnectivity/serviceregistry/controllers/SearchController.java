@@ -22,15 +22,20 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for providing the search facilities.
@@ -58,15 +63,21 @@ public class SearchController {
      * SEARCH /_search/instances?query=:query : search for the instance
      * corresponding to the search query string provided.
      *
-     * @param queryString the query of the instance search
+     * @param queryString   the query string of the instance search
+     * @param geometry      the geometry of the instance search
      * @return the result of the search
      */
     @GetMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<InstanceDto>> searchInstances(@RequestParam("query") String queryString, Pageable pageable) throws URISyntaxException {
-        log.debug("REST request to search for a page of Instances for query {}", queryString);
-        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, pageable);
+    public ResponseEntity<List<InstanceDto>> searchInstances(@RequestParam("queryString") String queryString,
+                                                             @RequestParam(value = "geometry") Optional<Geometry> geometry,
+                                                             Pageable pageable) throws URISyntaxException {
+        log.debug("REST request to search for a page of Instances for query {} and geometry {}", queryString, geometry.map(Geometry::toText).orElse("None"));
+        // Perform the search
+        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, geometry.orElse(null), pageable);
+        // And build the response
         return ResponseEntity.ok()
-                .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/instances"))
+                .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/_search/instances"))
                 .body(this.instanceDomainToDtoMapper.convertToList(page.getContent(), InstanceDto.class));
     }
+
 }

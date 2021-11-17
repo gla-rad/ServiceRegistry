@@ -84,15 +84,6 @@ public class InstanceController {
      */
     @PostConstruct
     void setup() {
-        this.instanceDtoToDomainMapper.getModelMapper().addMappings(new PropertyMap<InstanceDto, Instance>() {
-            @Override
-            protected void configure() {
-                // For some reason the model mapper pick up a circular
-                // dependency with the document instance reference so better
-                // to block that and just depend on hinernate to make the link.
-                skip(destination.getInstanceAsDoc().getInstance());
-            }
-        });
         this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
             @Override
             protected void configure() {
