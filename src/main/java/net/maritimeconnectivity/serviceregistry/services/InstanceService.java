@@ -152,12 +152,17 @@ public class InstanceService {
     /**
      * Definition of the whole world area in GeoJSON.
      */
-    String wholeWorldGeoJson = "{\n" +
+    protected String wholeWorldGeoJson = "{\n" +
             "  \"type\": \"Polygon\",\n" +
             "  \"coordinates\": [\n" +
             "    [[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]\n" +
             "  ]\n" +
             "}";
+
+    /**
+     * Allow a common G1128 Utils definitions for the G1128 Instances.
+     */
+    protected G1128Utils<ServiceInstance> g1128SIUtils = new G1128Utils<>(ServiceInstance.class);
 
     /**
      * Get all the instances.
@@ -264,9 +269,9 @@ public class InstanceService {
             Xml instanceXml = instance.getInstanceAsXml();
             if (instanceXml != null && instanceXml.getContent() != null) {
                 // Unmarshall the XML, update the status and re-marshall the to XML
-                ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
+                ServiceInstance serviceInstance = this.g1128SIUtils.unmarshallG1128(instanceXml.getContent());
                 serviceInstance.setStatus(status);
-                instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
+                instanceXml.setContent(this.g1128SIUtils.marshalG1128(serviceInstance));
                 // Save XML
                 this.xmlService.save(instanceXml);
             }
@@ -422,6 +427,14 @@ public class InstanceService {
         } catch (JAXBException | ParseException e) {
             throw new GeometryParseException("Service Instance geometry parsing error.", e);
         }
+
+        // Update the XML with a formatted version
+        Optional.of(instance)
+                .map(Instance::getInstanceAsXml)
+                .map(Xml::getContent)
+                .map(xml -> { try { return g1128SIUtils.unmarshallG1128(xml); } catch (JAXBException e) { return null; } })
+                .map(si -> { try { return g1128SIUtils.marshalG1128(si); } catch (JAXBException e) { return null; } })
+                .ifPresent(instance.getInstanceAsXml()::setContent);
     }
 
     /**
@@ -529,7 +542,7 @@ public class InstanceService {
             instance.setUnlocode(unLoCode);
         }
 
-        // Check the coverage areas
+        // Apply coverage areas, or for UnLoCode use its coordinates
         if (coverageAreas != null && coverageAreas.size() > 0) {
             List<Geometry> geometryList = new ArrayList();
             for(CoverageArea coverageArea : coverageAreas) {

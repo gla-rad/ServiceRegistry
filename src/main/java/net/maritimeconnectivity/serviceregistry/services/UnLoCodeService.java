@@ -21,20 +21,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
-import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.apache.commons.lang3.StringUtils;
+import org.locationtech.jts.geom.util.GeometryCombiner;
+import org.locationtech.jts.io.ParseException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -43,8 +41,16 @@ public class UnLoCodeService {
     private static final String JSON_KEY_COUNTRY = "Country";
     private static final String JSON_KEY_LOCATION = "Location";
     private static final String JSON_KEY_COORDINATES = "Coordinates";
+    private static final double INVALID_COORDINATE = -99999.0;
 
-    HashMap<String, UnLoCodeMapEntry> UnLoCodeMap = null;
+    /**
+     * The JSON Object Mapper.
+     */
+    @Autowired
+    ObjectMapper objectMapper;
+
+    // Service Variables
+    HashMap<String, UnLoCodeMapEntry> UnLoCodeMap = new HashMap<>();
 
     /**
      * Once the service has been initialised, it will read the full list of the
@@ -57,7 +63,6 @@ public class UnLoCodeService {
             this.loadUnLoCodeMapping(s);
         } catch (IOException e) {
             log.error(e.getMessage());
-            this.UnLoCodeMap = new HashMap<>();
         }
     }
 
@@ -68,37 +73,18 @@ public class UnLoCodeService {
      * @param unLoCode the UN LoCode
      */
     public void applyUnLoCodeMapping(Instance instance, List<String> unLoCode) {
-        Optional.ofNullable(unLoCode)
+        // Convert the UnLoCodes to geometries
+        List unLoCodeGeometries = Optional.ofNullable(unLoCode)
                 .orElse(Collections.emptyList())
                 .stream()
+                .filter(UnLoCodeMap::containsKey)
                 .map(UnLoCodeMap::get)
-                .forEach(e -> {
-                    String pointWKT = "";
-                    try {
-                        if (e != null) {
-                            // Translate the WKT notation to a JSON node
-                            pointWKT = "POINT (" + e.getLongitude() + " " + e.getLatitude() + ")";
-                            JsonNode pointJson = WKTUtil.convertWKTtoGeoJson(pointWKT);
-
-                            // Update the json geometry so E2 can find it
-                            instance.setGeometryJson(pointJson);
-
-                            // Create the G1128 geometry from the point WKT notation
-                            CoverageArea coverageArea = new CoverageArea();
-                            coverageArea.setGeometryAsWKT(pointWKT);
-
-                            // Insert the G1128 geometry into the XML
-                            Xml instanceXml = instance.getInstanceAsXml();
-                            ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
-                            serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes().clear();
-                            serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes().add(coverageArea);
-                            instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
-                            instance.setInstanceAsXml(instanceXml);
-                        }
-                    } catch (Exception ex) {
-                        log.error("Error parsing point geometry generated from UnLoCode mapping " + pointWKT + ": ", ex);
-                    }
-                });
+                .map(e -> String.format("POINT (%.2f %.2f)", e.getLongitude(), e.getLatitude()))
+                .map(p -> { try { return WKTUtil.convertWKTtoGeometry(p); } catch (ParseException e) { return null; } })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        // And update the instance geometry
+        instance.setGeometry(new GeometryCombiner(unLoCodeGeometries).combine());
     }
 
     /**
@@ -107,21 +93,18 @@ public class UnLoCodeService {
      * @throws Exception if the unLoCode mapping file could not be found
      */
     private void loadUnLoCodeMapping(InputStream inStream) throws IOException {
-        UnLoCodeMap = new HashMap<>();
-        ObjectMapper mapper = new ObjectMapper();
-        double invalid = -99999;
-
-        JsonNode unLoCodeJson = mapper.readTree(inStream);
+        this.UnLoCodeMap.clear();
+        final JsonNode unLoCodeJson = this.objectMapper.readTree(inStream);
         for (JsonNode entry : unLoCodeJson) {
+            UnLoCodeMapEntry unLoCode = new UnLoCodeMapEntry();
+            unLoCode.setLatitude(INVALID_COORDINATE);
+            unLoCode.setLongitude(INVALID_COORDINATE);
             try {
-                UnLoCodeMapEntry unLoCode = new UnLoCodeMapEntry();
                 String country = entry.get(JSON_KEY_COUNTRY).textValue();
                 String location = entry.get(JSON_KEY_LOCATION).textValue();
                 String coordinatesCombined = entry.get(JSON_KEY_COORDINATES).textValue();
-                unLoCode.setLatitude(invalid);
-                unLoCode.setLongitude(invalid);
                 //coordinates are given in the form of "DDMM[N/S] DDDMM[W/E]"
-                if (coordinatesCombined != null) {
+                if (StringUtils.isNotBlank(coordinatesCombined)) {
                     coordinatesCombined = coordinatesCombined.trim();
                     if (coordinatesCombined.length() > 0) {
                         String[] c = coordinatesCombined.split("\\s");
@@ -144,12 +127,13 @@ public class UnLoCodeService {
                 String status = entry.get("Status").textValue();
 
                 unLoCode.setStatus(status);
-                if (unLoCode.getLatitude() != invalid && unLoCode.getLongitude() != invalid) {
-                    UnLoCodeMap.put(country + location, unLoCode);
+                if (unLoCode.getLatitude() != INVALID_COORDINATE && unLoCode.getLongitude() != INVALID_COORDINATE) {
+                    this.UnLoCodeMap.put(country + location, unLoCode);
                 }
-            } catch (Exception e) {
-                log.error("Error parsing UnLoCode mapping file: ", e);
+            } catch (Exception ex) {
+                this.log.error("Error parsing UnLoCode mapping file: ", ex);
             }
         }
     }
+
 }
