@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
@@ -69,13 +70,15 @@ public class SearchController {
      *
      * @param queryString   the query string of the instance search
      * @param geometry      the geometry of the instance search
-     * @param geometry      the geometry WKT string of the instance search
+     * @param geometryWKT   the geometry WKT string of the instance search
+     * @param globalSearch  whether the global ledger search facility should be used
      * @return the result of the search
      */
     @GetMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<InstanceDto>> searchInstances(@RequestParam("queryString") String queryString,
                                                              @RequestParam(value = "geometry") Optional<Geometry> geometry,
                                                              @RequestParam(value = "geometryWKT") Optional<String> geometryWKT,
+                                                             @RequestParam(value = "globalSearch") Optional<Boolean> globalSearch,
                                                              Pageable pageable) throws URISyntaxException {
         // We only allow one geometry specification method
         if(geometry.isPresent() && geometryWKT.filter(StringUtils::isNotBlank).isPresent()) {
@@ -90,9 +93,8 @@ public class SearchController {
                 .orElseGet(() -> geometryWKT.map(wkt -> {
                         try {
                             return WKTUtil.convertWKTtoGeometry(wkt);
-                        } catch (ParseException ex) {
-                            this.log.error(ex.getMessage(), ex);
-                            return null;
+                        } catch (Exception ex) {
+                            throw new InvalidRequestException(ex.getMessage(), ex);
                         }
                     }).orElse(null)
                 );
