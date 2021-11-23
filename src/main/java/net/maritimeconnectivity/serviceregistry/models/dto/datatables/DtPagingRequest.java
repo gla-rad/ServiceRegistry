@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.datatables;
 
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.search.SortedSetSortField;
 import org.springframework.data.domain.PageRequest;
 
@@ -187,8 +188,12 @@ public class DtPagingRequest {
         List<SortField> sortFields = this.getOrder().stream()
                 .map(dtOrder -> {
                     String field = this.getColumns().get(dtOrder.getColumn()).getData();
-                    field = Optional.ofNullable(diffSortFields).orElseGet(() -> Collections.emptyList()).contains(field + "_sort") ? field + "_sort" : field;
-                    return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.desc);
+                    field = Optional.ofNullable(diffSortFields).orElseGet(() -> Collections.emptyList()).contains(field) ? field + "_sort" : field;
+                    if(field.equals("id_sort")) {
+                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.desc);
+                    } else {
+                        return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.desc);
+                    }
                 })
                 .collect(Collectors.toList());
         return new org.apache.lucene.search.Sort(sortFields.toArray(new SortField[]{}));

@@ -112,6 +112,7 @@ class InstanceServiceTest {
     private Xml xml;
     private Instance newInstance;
     private Instance existingInstance;        // No need to add this since
+    private Point point;
 
     /**
      * Common setup for all the tests.
@@ -142,7 +143,7 @@ class InstanceServiceTest {
 
         // Create a temp geometry factory to get some shapes
         GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
-        Point point = factory.createPoint(new Coordinate(52.001, 1.002));
+        this.point = factory.createPoint(new Coordinate(52.001, 1.002));
 
         // Create a new instance
         this.newInstance = new Instance();
@@ -151,7 +152,7 @@ class InstanceServiceTest {
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
         this.newInstance.setStatus(ServiceStatus.RELEASED);
-        this.newInstance.setGeometry(point);
+        this.newInstance.setGeometry(this.point);
         this.newInstance.setInstanceAsXml(xml);
 
         // Create an instance with an ID
@@ -162,7 +163,7 @@ class InstanceServiceTest {
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
         this.existingInstance.setStatus(ServiceStatus.RELEASED);
-        this.existingInstance.setGeometry(point);
+        this.existingInstance.setGeometry(this.point);
         this.existingInstance.setInstanceAsXml(xml);
     }
 
@@ -669,10 +670,10 @@ class InstanceServiceTest {
         doReturn(this.instances.subList(0, 5)).when(searchResult).hits();
         doReturn(searchResultTotal).when(searchResult).total();
         doReturn(10L).when(searchResultTotal).hitCount();
-        doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByQueryString(any(), any());
+        doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByQueryString(any(), any(), any());
 
         // Perform the service call
-        Page<Instance> result = this.instanceService.handleSearchQueryRequest("search-term", this.pageable);
+        Page<Instance> result = this.instanceService.handleSearchQueryRequest("search-term", this.point, this.pageable);
 
         // Validate the result
         assertNotNull(result);
