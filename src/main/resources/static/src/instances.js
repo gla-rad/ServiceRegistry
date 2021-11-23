@@ -1,13 +1,4 @@
 /**
- * The API Call Libraries
- */
-var fileUtils;
-var instancesApi;
-var xmlsApi;
-var docsApi;
-var ledgerRequestsApi;
-
-/**
  * Global variables
  */
 var instancesTable = undefined;
@@ -15,7 +6,7 @@ var instanceMap = undefined;
 var newInstance = true;
 
 /**
- * The Loads Table Column Definitions
+ * The Instances Table Column Definitions
  * @type {Array}
  */
 var columnDefs = [{
@@ -38,7 +29,7 @@ var columnDefs = [{
     placeholder: "Version of the service"
 }, {
     data: "serviceType",
-    title: "Service Type",
+    title: "Type",
     readonly : true,
     hoverMsg: "Type of service",
     placeholder: "Type of the service"
@@ -56,7 +47,7 @@ var columnDefs = [{
     placeholder: "Access point of the service"
 }, {
     data: "organizationId",
-    title: "Organization ID",
+    title: "Organization",
     readonly : true,
     hoverMsg: "MRN of service provider",
     placeholder: "MRN of the service provider (organization)"
@@ -135,25 +126,31 @@ var columnDefs = [{
     searchable: false
  }, {
     data: "instanceAsDocId",
-    title: "Instance Doc",
+    title: "Doc",
     type: "file",
     readonly : true,
     visible: true,
     searchable: false,
     className: 'dt-body-center',
     render: function ( data, type, row ) {
-        return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="openInstanceAsDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
+        return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="downloadDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
     },
- }];
+ }, {
+    data: "implementsServiceDesign",
+    type: "hidden",
+    visible: false,
+    searchable: false,
+}, {
+    data: "implementsServiceDesignVersion",
+    type: "hidden",
+    visible: false,
+    searchable: false,
+}];
 
+/**
+ * Standard jQuery initialisation of the page.
+ */
 $(() => {
-    // First link the API libs
-    this.fileUtils = new FileUtils();
-    this.instancesApi = new InstancesApi();
-    this.xmlsApi = new XmlsApi();
-    this.docsApi = new DocsApi();
-    this.ledgerRequestsApi = new LedgerRequestsApi();
-
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         serverSide: true,
@@ -209,6 +206,21 @@ $(() => {
             }
         }, {
             extend: 'selected', // Bind to Selected row
+            text: '<i class="fas fa-paperclip"></i>',
+            titleAttr: 'Files Attachments',
+            name: 'attachments', // do not change name
+            className: 'instance-attachments-toggle',
+            action: (e, dt, node, config) => {
+                var idx = dt.cell('.selected', 0).index();
+                var data = dt.row(idx.row).data();
+                loadFileUploader(
+                    data["id"],
+                    "/api/docs",
+                    () => { }
+                );
+            }
+       }, {
+            extend: 'selected', // Bind to Selected row
             text: '<i class="fas fa-clipboard-check"></i>',
             titleAttr: 'Instance Status',
             name: 'instance-status', // do not change name
@@ -227,13 +239,13 @@ $(() => {
             }
         }],
         onAddRow: (datatable, rowdata, success, error) => {
-            this.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
+            api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
         },
         onDeleteRow: (datatable, rowdata, success, error) => {
-            this.instancesApi.deleteInstance(rowdata["id"], success, error);
+            api.instancesApi.deleteInstance(rowdata["id"], success, error);
         },
         onEditRow: (datatable, rowdata, success, error) => {
-            this.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
+            api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
         },
         initComplete: (settings, json) => {
             hideLoader();
@@ -251,6 +263,13 @@ $(() => {
     instancesTable.buttons('.instance-edit-panel-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceEditPanel" });
+
+    // We also need to link the attachment toggle button with the the modal
+    // dialog so that by clicking the button the panel pops up. It's easier done
+    // with jQuery.
+    instancesTable.buttons('.instance-attachments-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#attachmentsPanel" });
 
     // On confirmation of the XML validation, we need to make an AJAX
     // call back to the service to perform the G-1128 compliance validation.
@@ -290,15 +309,17 @@ $(() => {
         if(uploadFiles && uploadFiles.length == 1) {
             showLoader();
             // Initialise the File Reader
-            fileUtils.encodeFileToBase64(uploadFiles[0], (base64Data) => {
-                rowData["instanceAsDoc"] = {};
-                rowData["instanceAsDoc"]["id"] = null;
-                rowData["instanceAsDoc"]["name"] = uploadFiles[0].name;
-                rowData["instanceAsDoc"]["mimetype"] = uploadFiles[0].type;
-                rowData["instanceAsDoc"]["filecontent"] = base64Data;
-                rowData["instanceAsDoc"]["filecontentContentType"] = uploadFiles[0].type;
-                saveInstanceThroughDatatables(rowData);
-            });
+            encodeFileToBase64(uploadFiles[0])
+                .then((attachment) => {
+                    rowData["instanceAsDoc"] = {
+                        'name': attachment.file.name,
+                        'mimetype': attachment.file.type,
+                        'filecontent': attachment.content,
+                        'filecontentContentType': attachment.file.type,
+                        'instanceId': rowData["id"]
+                    };
+                    saveInstanceThroughDatatables(rowData);
+                });
         }
         // Otherwise save directly using the datatables
         else {
@@ -321,7 +342,7 @@ $(() => {
 
     // Link the download instance doc button functionality
     $('#instanceEditPanel').on('click', '.btn-download-instance-doc', (e) => {
-        downloadInstanceDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
+        downloadDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
     });
 
     // We also need to link the instance status toggle button with the the
@@ -358,9 +379,9 @@ $(() => {
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
     });
 
-    // We also need to link the instance coverage toggle button with the the modal
-    // panel so that by clicking the button the panel pops up. It's easier done with
-    // jQuery.
+    // We also need to link the instance coverage toggle button with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
     instancesTable.buttons('.instance-coverage-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceCoveragePanel" });
@@ -375,22 +396,6 @@ $(() => {
     drawnItems = new L.FeatureGroup();
     instanceMap.addLayer(drawnItems);
 
-    // Initialise the draw toolbar
-    drawControl = new L.Control.Draw({
-        draw: {
-            marker: false,
-            polyline: false,
-            polygon: true,
-            rectangle: true,
-            circle: false,
-            circlemarker: false,
-        },
-        edit: {
-            featureGroup: drawnItems,
-            remove: true
-        }
-    });
-
     // Handle the leaflet draw create events
     instanceMap.on('draw:created', function (e) {
         var type = e.layerType;
@@ -404,7 +409,7 @@ $(() => {
     $('#instanceCoveragePanel').on('shown.bs.modal', function() {
         setTimeout(function() {
             instanceMap.invalidateSize();
-        }, 10);
+        }, 50);
     });
 });
 
@@ -436,7 +441,7 @@ function saveInstanceThroughDatatables(instance) {
  * @param {Component}   $modalDiv   The modal component performing the validation
  */
 function onValidateXml($modalDiv) {
-    this.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
+    api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
         for (var field in response) {
             $modalDiv.find("input#"+field).val(response[field]);
         }
@@ -456,7 +461,7 @@ function onValidateXml($modalDiv) {
  * @param {String}      status      The new status value
  */
 function onStatusUpdate($modalDiv, id, status) {
-    this.instancesApi.setStatus(id, status, () => {
+    api.instancesApi.setStatus(id, status, () => {
         $modalDiv.removeClass('loading');
         instancesTable.draw('page');
     }, (response, status, more) => {
@@ -475,13 +480,31 @@ function onStatusUpdate($modalDiv, id, status) {
  * @param {String}      status      The new status value
  */
 function onLedgerRequestUpdate($modalDiv, id, status) {
-    this.instancesApi.setLedgerStatus(id, status, () => {
+    api.instancesApi.setLedgerStatus(id, status, () => {
         $modalDiv.removeClass('loading');
         instancesTable.draw('page');
     }, (response, status, more) => {
         $modalDiv.removeClass('loading');
         showError(getErrorFromHeader(response, "Error while trying to update the instance global ledger status!"));
     });
+}
+
+/**
+ * The instances edit dialog form should be clear every time before it is used
+ * so that new entries are not polluted by old data.
+ */
+function clearInstanceEditPanel() {
+    // Do the form
+    $('form[name="instanceEditPanelForm"]').trigger("reset");
+
+    // Don't forget the XML content
+    $("#instanceEditPanel").find("#xml-input").val(null);
+
+    // And the document option
+    clearInstanceDoc($("#instanceEditPanel"));
+
+    // Mark the a new instance can be created through the edit dialog
+    newInstance = true;
 }
 
 /**
@@ -504,7 +527,7 @@ function loadInstanceEditPanel(isNewInstance) {
         // Populate the form
         rowData = instancesTable.row({selected : true}).data();
         $('form[name="instanceEditPanelForm"] :input').each(function() {
-             $(this).val(rowData[$(this).attr('id')]);
+            $(this).val(rowData[$(this).attr('id')]);
         });
 
         // Augmenting xml content on the data
@@ -541,16 +564,15 @@ function loadInstanceCoverage(event, table, button, config) {
     var data = instancesTable.row({selected : true}).data();
     var geometry = data.geometry;
 
-    // Refresh the stations map control - For now leave disabled
-    //instanceMap.removeControl(drawControl);
-    //instanceMap.addControl(drawControl);
-
     // Recreate the drawn items feature group
     drawnItems.clearLayers();
     if(geometry) {
         var geomLayer = L.geoJson(geometry);
         addNonGroupLayers(geomLayer, drawnItems);
         instanceMap.setView(geomLayer.getBounds().getCenter(), 5);
+        setTimeout(function() {
+            instanceMap.fitBounds(geomLayer.getBounds());
+        }, 700);
     }
 }
 
@@ -604,7 +626,7 @@ function loadInstanceLedgerStatus(event, table, button, config) {
         // First always start with the last known value
         $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
         // And then query the server for an update
-        this.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
+        api.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
         });
     }
@@ -622,7 +644,6 @@ function initialiseData() {
     newRowData["comment"] = "";
     newRowData["instanceAsDoc"] = null;
     newRowData["geometryContentType"] = null;
-    newRowData["designs"] = {};
     newRowData["specifications"] = {};
     newRowData["geometryJson"] = {};
     newRowData["instanceAsDoc"] = null;
@@ -649,6 +670,12 @@ function alignData(rowData, field, value, columnDefs){
     if (field && columnDefs.includes(field)){
         if (field === 'id'){
             rowData[field] = parseInt(value);
+        }
+        else if(["keywords", "serviceType", "unlocode"].includes(field)) {
+            rowData[field] = value.split(",");
+        }
+        else if( field === "designs") {
+            rowData[field] = value ? { [value.split(",")[0]]: value.split(",")[1] } : null;
         }
         else if(field.toUpperCase().endsWith("JSON")) {
             rowData[field] = JSON.stringify(value);
@@ -682,36 +709,3 @@ function clearInstanceDoc($modalDiv) {
     $modalDiv.find("#instanceAsDoc").show();
 }
 
-/**
- * Download the selected document ID from the server, decode the data from
- * the provided Base64 format and open's it in the browser.
- *
- * @param {number}      docId           The ID of the document to be opened
- */
-function openInstanceAsDoc(docId) {
-    showLoader();
-    this.docsApi.getDoc(docId, (doc) => {
-        fileUtils.openFileWindow(doc.filecontentContentType, doc.filecontent);
-        hideLoader();
-    }, (response, status, more) => {
-         hideLoader();
-         showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
-    })
-}
-
-/**
- * Download the selected document ID from the server, decode the data from
- * the provided Base64 format.
- *
- * @param {number}      docId           The ID of the document to be opened
- */
-function downloadInstanceDoc(docId) {
-    showLoader();
-    this.docsApi.getDoc(docId, (doc) => {
-        fileUtils.downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
-        hideLoader();
-    }, (response, status, more) => {
-        hideLoader();
-        showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
-    });
-}

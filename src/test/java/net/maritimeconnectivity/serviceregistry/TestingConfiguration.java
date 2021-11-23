@@ -21,10 +21,7 @@ import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
-import net.maritimeconnectivity.serviceregistry.models.dto.DocDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.XmlDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -96,6 +93,14 @@ public class TestingConfiguration {
     @Bean
     public DomainDtoMapper docDomainToDtoMapper() {
         return new DomainDtoMapper<Doc, DocDto>();
+    }
+
+    /**
+     * Doc Mapper from Domain to Datatable DTO.
+     */
+    @Bean
+    public DomainDtoMapper docDomainToDtDtoMapper() {
+        return new DomainDtoMapper<Doc, DocDtDto>();
     }
 
     /**

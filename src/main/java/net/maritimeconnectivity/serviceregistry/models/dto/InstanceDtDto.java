@@ -22,15 +22,12 @@ import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Instance Datatables DTO Class.
@@ -57,24 +54,24 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String geometryContentType;
     @NotNull
     private String instanceId; //MRN
-    private String keywords;
+    private List<String> keywords;
     @NotNull
     private ServiceStatus status;
     private String organizationId; // Use the JWT auth token for that
-    private String unlocode;
+    private List<String> unlocode;
     private String endpointUri;
     private String endpointType;
     private String mmsi;
     private String imo;
-    private String serviceType;
+    private List<String> serviceType;
     private XmlDto instanceAsXml;
     private Long instanceAsDocId;
     private String instanceAsDocName;
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
-    private Map<String, String> designs = new HashMap<>();
-    private Map<String, String> specifications = new HashMap<>();
+    private String implementsServiceDesign;
+    private String implementsServiceDesignVersion;
 
     /**
      * Instantiates a new Instance dto.
@@ -250,7 +247,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the keywords
      */
-    public String getKeywords() {
+    public List<String> getKeywords() {
         return keywords;
     }
 
@@ -259,7 +256,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param keywords the keywords
      */
-    public void setKeywords(String keywords) {
+    public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
     }
 
@@ -304,7 +301,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the unlocode
      */
-    public String getUnlocode() {
+    public List<String> getUnlocode() {
         return unlocode;
     }
 
@@ -313,7 +310,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param unlocode the unlocode
      */
-    public void setUnlocode(String unlocode) {
+    public void setUnlocode(List<String> unlocode) {
         this.unlocode = unlocode;
     }
 
@@ -394,7 +391,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public String getServiceType() {
+    public List<String> getServiceType() {
         return serviceType;
     }
 
@@ -403,7 +400,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param serviceType the service type
      */
-    public void setServiceType(String serviceType) {
+    public void setServiceType(List<String> serviceType) {
         this.serviceType = serviceType;
     }
 
@@ -498,42 +495,6 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets designs.
-     *
-     * @return the designs
-     */
-    public Map<String, String> getDesigns() {
-        return designs;
-    }
-
-    /**
-     * Sets designs.
-     *
-     * @param designs the designs
-     */
-    public void setDesigns(Map<String, String> designs) {
-        this.designs = designs;
-    }
-
-    /**
-     * Gets specifications.
-     *
-     * @return the specifications
-     */
-    public Map<String, String> getSpecifications() {
-        return specifications;
-    }
-
-    /**
-     * Sets specifications.
-     *
-     * @param specifications the specifications
-     */
-    public void setSpecifications(Map<String, String> specifications) {
-        this.specifications = specifications;
-    }
-
-    /**
      * Gets ledger request status.
      *
      * @return the ledger request status
@@ -551,4 +512,39 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
         this.ledgerRequestStatus = ledgerRequestStatus;
     }
 
+    /**
+     * Gets implements service design.
+     *
+     * @return the implements service design
+     */
+    public String getImplementsServiceDesign() {
+        return implementsServiceDesign;
+    }
+
+    /**
+     * Sets implements service design.
+     *
+     * @param implementsServiceDesign the implements service design
+     */
+    public void setImplementsServiceDesign(String implementsServiceDesign) {
+        this.implementsServiceDesign = implementsServiceDesign;
+    }
+
+    /**
+     * Gets implements service design version.
+     *
+     * @return the implements service design version
+     */
+    public String getImplementsServiceDesignVersion() {
+        return implementsServiceDesignVersion;
+    }
+
+    /**
+     * Sets implements service design version.
+     *
+     * @param implementsServiceDesignVersion the implements service design version
+     */
+    public void setImplementsServiceDesignVersion(String implementsServiceDesignVersion) {
+        this.implementsServiceDesignVersion = implementsServiceDesignVersion;
+    }
 }

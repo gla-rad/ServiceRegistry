@@ -19,14 +19,23 @@ package net.maritimeconnectivity.serviceregistry.services;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.Collections;
 import java.util.Optional;
 
@@ -41,16 +50,23 @@ import java.util.Optional;
 public class DocService {
 
     /**
+     * The Entity Manager.
+     */
+    @Autowired
+    EntityManager entityManager;
+
+    /**
      * The Doc Repository.
      */
     @Autowired
-    private DocRepo docRepo;
+    DocRepo docRepo;
 
-    /**
-     * The Instance Repository.
-     */
-    @Autowired
-    private InstanceRepo instanceRepo;
+    // Service Variables
+    private final String[] searchFields = new String[] {
+            "name",
+            "comment",
+            "mimetype"
+    };
 
     /**
      *  Get all the docs.
@@ -88,17 +104,6 @@ public class DocService {
         log.debug("Request to save Doc : {}", doc);
         Doc result = this.docRepo.save(doc);
 
-        // Save the linked instances, if any
-        Optional.of(this.instanceRepo)
-                .map(InstanceRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(i -> i.getInstanceAsDoc() != null && i.getInstanceAsDoc().getId() == result.getId())
-                .forEach(i -> {
-                    log.debug("Updating Linked Instance: {}", i);
-                    this.instanceRepo.save(i);
-                });
-
         return result;
     }
 
@@ -117,4 +122,61 @@ public class DocService {
         }
     }
 
+    /**
+     * Handles a datatables pagination request and returns the results list in
+     * an appropriate format to be viewed by a datatables jQuery table.
+     *
+     * @param dtPagingRequest the Datatables pagination request
+     * @return the paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<Doc> handleDatatablesPagingRequest(Long instanceId, DtPagingRequest dtPagingRequest) {
+        // Create the search query
+        SearchQuery searchQuery = this.getSearchDocQueryByText(instanceId,
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(null));
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<Doc>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
+    }
+
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search test. This query will be based solely on the docs table and
+     * will include the following fields:
+     * <ul>
+     *  <li>Name</li>Name
+     *  <li>Comment</li>
+     *  <li>MIME TYpe</li>
+     * </ul>
+     *
+     * @param searchText    the text to be searched
+     * @return the full text query
+     */
+    protected SearchQuery<Doc> getSearchDocQueryByText(Long instanceId, String searchText, org.apache.lucene.search.Sort sort) {
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Doc> scope = searchSession.scope( Doc.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( f -> f.bool(b -> {
+                    b.must( f.matchAll() );
+                    if(searchText != null && StringUtils.isNotBlank(searchText)) {
+                        b.must(f.wildcard()
+                                .fields(this.searchFields)
+                                .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
+                                .toPredicate());
+                    }
+                    if(instanceId != null) {
+                        b.must(f.match()
+                                .field( "instance.id_search" )
+                                .matching( instanceId )
+                                .toPredicate());
+                    }
+                }))
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
+    }
 }

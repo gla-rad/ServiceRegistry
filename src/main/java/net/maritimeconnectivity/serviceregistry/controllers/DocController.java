@@ -21,7 +21,10 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.DocDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.DocDtDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
@@ -67,6 +70,12 @@ public class DocController {
     DomainDtoMapper<DocDto, Doc> docDtoToDomainMapper;
 
     /**
+     * Object Mapper from Domain to Datatable DTO.
+     */
+    @Autowired
+    DomainDtoMapper<Doc, DocDtDto> docDomainToDtDtoMapper;
+
+    /**
      * The Doc Service.
      */
     @Autowired
@@ -80,13 +89,27 @@ public class DocController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<DocDto>> getAllDocs(Pageable pageable)
-            throws URISyntaxException {
+    public ResponseEntity<List<DocDto>> getDocs(Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of Docs");
         final Page<Doc> page = this.docService.findAll(pageable);
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/docs"))
                 .body(this.docDomainToDtoMapper.convertToList(page.getContent(), DocDto.class));
+    }
+
+    /**
+     * POST /api/docs/dt : Returns a paged list of all current docs for the
+     * datatables display.
+     *
+     * @param dtPagingRequest the datatables paging request
+     * @return the ResponseEntity with status 200 (OK) and the list of stations in body
+     */
+    @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<DtPage<DocDtDto>> getDocsForDatatables(@RequestParam Long instanceId, @RequestBody DtPagingRequest dtPagingRequest) {
+        log.debug("REST request to get page of Instances for datatables");
+        final Page<Doc> page = this.docService.handleDatatablesPagingRequest(instanceId, dtPagingRequest);
+        return ResponseEntity.ok()
+                .body(this.docDomainToDtDtoMapper.convertToDtPage(page, dtPagingRequest, DocDtDto.class));
     }
 
     /**
