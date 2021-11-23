@@ -109,7 +109,7 @@ class InstanceServiceTest {
     private Pageable pageable;
     private Xml xml;
     private Instance newInstance;
-    private Instance existingInstance;
+    private Instance existingInstance;        // No need to add this since
 
     /**
      * Common setup for all the tests.
