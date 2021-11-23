@@ -6,6 +6,7 @@ var instancesTable = undefined;
 var drawControl = undefined;
 var drawnItems = undefined;
 var instanceItems = undefined;
+var geoSpatialSearchMode = "geoJson";
 
 /**
  * Standard jQuery initialisation of the page.
@@ -30,6 +31,27 @@ $(() => {
 
         // Do whatever else you need to. (save to db, add to map etc)
         drawnItems.addLayer(layer);
+
+        // Convert the geometry to WKT if the search mode is enabled
+        if(geoSpatialSearchMode === "WKT") {
+            $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
+        }
+    });
+
+    // Handle the leaflet draw edit events
+    searchMap.on('draw:edited', function (e) {
+        // Convert the geometry to WKT if the search mode is enabled
+        if(geoSpatialSearchMode === "WKT") {
+            $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
+        }
+    });
+
+    // Handle the leaflet draw delete events
+    searchMap.on('draw:deleted', function (e) {
+        // Convert the geometry to WKT if the search mode is enabled
+        if(geoSpatialSearchMode === "WKT") {
+            $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
+        }
     });
 
     // Add the draw toolbar
@@ -50,10 +72,10 @@ $(() => {
 
     // Also link the instance search button with the enter key
     $("#queryString").keypress(function(event) {
-    if (event.keyCode === 13) {
-        $("#instanceSearchButton").click();
-    }
-});
+        if (event.keyCode === 13) {
+            $("#instanceSearchButton").click();
+        }
+    });
 });
 
 /**
@@ -107,13 +129,7 @@ function searchForInstances() {
     var queryString =  $("#queryString").val();
 
     // Get the search query geometry
-    var queryGeometry = {
-        type: "GeometryCollection",
-        geometries: []
-    };
-    drawnItems.toGeoJSON().features.forEach(feature => {
-        queryGeometry.geometries.push(feature.geometry);
-    });
+    var queryGeometry = getGeoSpatialSearchGeometry();
 
     // Sanity Check
     if((!queryString || queryString.trim() === "") && (!queryGeometry || queryGeometry.geometries.length == 0)) {
@@ -123,7 +139,7 @@ function searchForInstances() {
     }
 
     // Perform the api search
-    loadInstancesTable(queryString, queryGeometry.geometries.length > 0 ? JSON.stringify(queryGeometry) : null);
+    loadInstancesTable(queryString, queryGeometry.geometries.length > 0 ? JSON.stringify(queryGeometry) : null, $("#geometryWKT").text());
 }
 
 /**
@@ -135,9 +151,15 @@ function geoSearchForInstances() {
     searchMap.removeControl(drawControl);
     if($("#instanceGeoSearchButton").hasClass("active")) {
         searchMap.addControl(drawControl);
+        if(geoSpatialSearchMode === "WKT") {
+            $("#geometryWKTArea").show();
+        }
     } else {
         // Recreate the drawn items feature group
         drawnItems.clearLayers();
+        if(geoSpatialSearchMode === "WKT") {
+            $("#geometryWKTArea").hide();
+        }
     }
 }
 
@@ -146,9 +168,10 @@ function geoSearchForInstances() {
  * instance results table and show the matching entries.
  *
  * @param  {string} queryString     The instance query string to be used
- * @param  {string} queryGeometry   The instance geometry query GeoJSON string
+ * @param  {string} queryGeoJSON    The instance geometry query GeoJSON string
+ * @param  {string} queryWKT        The instance geometry query WKT string
  */
-function loadInstancesTable(queryString, queryGeometry) {
+function loadInstancesTable(queryString, queryGeoJSON, queryWKT) {
     // Destroy the matrix if it already exists
     instanceItems.clearLayers();
     destroyInstancesTable();
@@ -162,7 +185,8 @@ function loadInstancesTable(queryString, queryGeometry) {
             crossDomain: true,
             data: {
                 queryString: queryString,
-                geometry: queryGeometry,
+                geometry: geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : null,
+                geometryWKT: geoSpatialSearchMode === 'WKT' ? queryWKT.trim() : null,
                 page: 0,
                 size: 100
             },
@@ -244,5 +268,46 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
         });
     } else {
         targetGroup.addLayer(sourceLayer);
+    }
+}
+
+/**
+ * A helper function that picks up all the drawn items and translates then into
+ * a GeoJSON format and combines them into a geometry collection.
+ */
+function getGeoSpatialSearchGeometry() {
+    // Initialise a geometry collection
+    var queryGeometry = {
+        type: "GeometryCollection",
+        geometries: []
+    };
+    // Add all the draw items GeoJSON definition
+    drawnItems.toGeoJSON().features.forEach(feature => {
+        queryGeometry.geometries.push(feature.geometry);
+    });
+    // And return
+    return queryGeometry;
+}
+
+/**
+ * Turns on the WKT mode of the Geo-Spatial search mechanism. This will make
+ * the WKT text area visible and fill it in with the geographic area WKT
+ * information from the drawn geometries.
+ */
+function setGeoSpatialSearchMode(searchType) {
+    // Save the selection
+    geoSpatialSearchMode = searchType;
+
+    // Show the WKT text field if the WKT type is enabled
+    if(geoSpatialSearchMode === "WKT") {
+        // First convert the geometry to WKT
+        $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
+        // Then show the WKT text area
+        $("#geometryWKTArea").show();
+    } else {
+        // First clear the geometry to WKT
+        $("#geometryWKT").text("");
+        // Hide the WKT text area
+        $("#geometryWKTArea").hide();
     }
 }
