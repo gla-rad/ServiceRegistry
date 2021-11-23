@@ -18,9 +18,10 @@ package net.maritimeconnectivity.serviceregistry.utils;
 
 import org.hibernate.search.mapper.pojo.bridge.ValueBridge;
 import org.hibernate.search.mapper.pojo.bridge.runtime.ValueBridgeToIndexedValueContext;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * The Service Status Bridge Class.
@@ -33,7 +34,7 @@ import java.util.Objects;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class ServiceStatusBridge implements ValueBridge<ServiceStatus, String> {
+public class StringListBridge implements ValueBridge<List, String> {
 
     /**
      * Implement a generic object to string translation, depending on whether
@@ -44,10 +45,10 @@ public class ServiceStatusBridge implements ValueBridge<ServiceStatus, String> {
      * @return the string representation
      */
     @Override
-    public String toIndexedValue(ServiceStatus value, ValueBridgeToIndexedValueContext context) {
+    public String toIndexedValue(List value, ValueBridgeToIndexedValueContext context) {
         // Check for nulls first
         if(Objects.nonNull(value)) {
-            return value.name();
+            return (String)(value).stream().collect(Collectors.joining(","));
         }
         // Otherwise, it's null
         return null;

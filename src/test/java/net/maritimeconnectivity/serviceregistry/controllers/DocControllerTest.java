@@ -22,10 +22,11 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.dto.DocDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -38,23 +39,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
-@ExtendWith(SpringExtension.class)
 @WebMvcTest(controllers = DocController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 @Import(TestingConfiguration.class)
 class DocControllerTest {
@@ -136,6 +137,45 @@ class DocControllerTest {
         // Parse and validate the response
         DocDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DocDto[].class);
         assertEquals(5, Arrays.asList(result).size());
+    }
+
+    /**
+     * Test that the API supports the jQuery Datatables server-side paging
+     * and search requests.
+     */
+    @Test
+    void testGetDocsForDatatables() throws Exception {
+        // Create a test datatables paging request
+        DtColumn dtColumn = new DtColumn("id");
+        dtColumn.setName("ID");
+        dtColumn.setOrderable(true);
+        DtOrder dtOrder = new DtOrder();
+        dtOrder.setColumn(0);
+        dtOrder.setDir(DtDirection.asc);
+        DtPagingRequest dtPagingRequest = new DtPagingRequest();
+        dtPagingRequest.setStart(0);
+        dtPagingRequest.setLength(this.docs.size());
+        dtPagingRequest.setDraw(1);
+        dtPagingRequest.setSearch(new DtSearch());
+        dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
+        dtPagingRequest.setColumns(Collections.singletonList(dtColumn));
+
+        // Create a mocked paging response
+        Page<Doc> page = new PageImpl<>(this.docs, this.pageable, this.docs.size());
+
+        // Mock the service call for creating a new instance
+        doReturn(page).when(this.docService).handleDatatablesPagingRequest(eq(1L), any());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(post("/api/docs/dt?instanceId=1")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(this.objectMapper.writeValueAsString(dtPagingRequest)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse and validate the response
+        DtPage<InstanceDto> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
+        assertEquals(this.docs.size(), result.getData().size());
     }
 
     /**

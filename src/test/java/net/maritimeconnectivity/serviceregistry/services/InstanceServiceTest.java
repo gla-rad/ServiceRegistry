@@ -30,8 +30,10 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.UserContext;
 import org.apache.commons.io.IOUtils;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
-import org.hibernate.search.jpa.FullTextQuery;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.engine.search.query.SearchResultTotal;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -596,7 +598,7 @@ class InstanceServiceTest {
      * definitions).
      */
     @Test
-    void testHandleDatatablesPagingRequests() {
+    void testHandleDatatablesPagingRequest() {
         // First create the pagination request
         DtPagingRequest dtPagingRequest = new DtPagingRequest();
         dtPagingRequest.setStart(0);
@@ -630,12 +632,47 @@ class InstanceServiceTest {
         dtPagingRequest.setSearch(dtSearch);
 
         // Mock the full text query
-        FullTextQuery mockedQuery = mock(FullTextQuery.class);
-        doReturn(this.instances.subList(0, 5)).when(mockedQuery).getResultList();
-        doReturn(mockedQuery).when(this.instanceService).searchInstanceQuery(any());
+        SearchQuery<Instance> mockedQuery = mock(SearchQuery.class);
+        SearchResult<Instance> searchResult = mock(SearchResult.class);
+        SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
+        doReturn(searchResult).when(mockedQuery).fetch(any(), any());
+        doReturn(this.instances.subList(0, 5)).when(searchResult).hits();
+        doReturn(searchResultTotal).when(searchResult).total();
+        doReturn(10L).when(searchResultTotal).hitCount();
+        doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByText(any(), any());
 
         // Perform the service call
         Page<Instance> result = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
+
+        // Validate the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getContent().size(); i++){
+            assertEquals(this.instances.get(i), result.getContent().get(i));
+        }
+    }
+
+    /**
+     * Test that we can retrieve the paged list of instances based on a
+     * Lucene search query. The pages request parameter contains any paging
+     * and soring information.
+     */
+    @Test
+    void testHandleSearchQueryRequest() {
+        // Mock the full text query
+        SearchQuery<Instance> mockedQuery = mock(SearchQuery.class);
+        SearchResult<Instance> searchResult = mock(SearchResult.class);
+        SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
+        doReturn(searchResult).when(mockedQuery).fetch(any(), any());
+        doReturn(this.instances.subList(0, 5)).when(searchResult).hits();
+        doReturn(searchResultTotal).when(searchResult).total();
+        doReturn(10L).when(searchResultTotal).hitCount();
+        doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByQueryString(any(), any());
+
+        // Perform the service call
+        Page<Instance> result = this.instanceService.handleSearchQueryRequest("search-term", this.pageable);
 
         // Validate the result
         assertNotNull(result);

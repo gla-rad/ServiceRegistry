@@ -129,6 +129,51 @@
             </div>
         </div>
     </div>
+    <div th:fragment="attachment-dialog" class="modal fade" id="attachmentsPanel" tabindex="-1" role="dialog" aria-labelledby="attachmentsPanelHeader"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="attachmentsPanelHeader">Attachments</h5>
+                    <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="">
+                        <table datatable id="attachmentsTable" class="table table-striped table-bordered table-sm row-border hover w-100">
+                        </table>
+                        <br/>
+                        <form id="attachmentForm">
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="form-group">
+                                        <input id="file-uploader-id" type="file" class="file" multiple>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label for="file-uploader-comment-id">Comment</label>
+                                        <textarea class="form-control" id="file-uploader-comment-id" rows="12" style="resize:none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="float-end">
+                        <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close">
+                            <i class="fas">&times</i>&nbsp;
+                            <span class="btn-label">Close</span>
+                        </button>
+                        <button id="attachmentUploadButton" type="button" class="btn btn-primary" title="Upload">
+                            <i class="fas fa-upload"></i>&nbsp;
+                            <span class="btn-label">Upload</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div th:fragment="footer" class="flex-fill flex-grow-0 flex-shrink-1">
         <footer class="footer bg-dark">
             <div class="row">
