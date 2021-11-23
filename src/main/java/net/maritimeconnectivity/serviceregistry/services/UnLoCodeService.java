@@ -24,14 +24,17 @@ import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @Slf4j
@@ -64,33 +67,38 @@ public class UnLoCodeService {
      * @param instance the instance to provide the mapping to
      * @param unLoCode the UN LoCode
      */
-    public void applyUnLoCodeMapping(Instance instance, String unLoCode) {
-        UnLoCodeMapEntry e = UnLoCodeMap.get(unLoCode);
-        String pointWKT = "";
-        try {
-            if (e != null) {
-                // Translate the WKT notation to a JSON node
-                pointWKT = "POINT (" + e.getLongitude() + " " + e.getLatitude() + ")";
-                JsonNode pointJson = WKTUtil.convertWKTtoGeoJson(pointWKT);
+    public void applyUnLoCodeMapping(Instance instance, List<String> unLoCode) {
+        Optional.ofNullable(unLoCode)
+                .orElse(Collections.emptyList())
+                .stream()
+                .map(UnLoCodeMap::get)
+                .forEach(e -> {
+                    String pointWKT = "";
+                    try {
+                        if (e != null) {
+                            // Translate the WKT notation to a JSON node
+                            pointWKT = "POINT (" + e.getLongitude() + " " + e.getLatitude() + ")";
+                            JsonNode pointJson = WKTUtil.convertWKTtoGeoJson(pointWKT);
 
-                // Update the json geometry so E2 can find it
-                instance.setGeometryJson(pointJson);
+                            // Update the json geometry so E2 can find it
+                            instance.setGeometryJson(pointJson);
 
-                // Create the G1128 geometry from the point WKT notation
-                CoverageArea coverageArea = new CoverageArea();
-                coverageArea.setGeometryAsWKT(pointWKT);
+                            // Create the G1128 geometry from the point WKT notation
+                            CoverageArea coverageArea = new CoverageArea();
+                            coverageArea.setGeometryAsWKT(pointWKT);
 
-                // Insert the G1128 geometry into the XML
-                Xml instanceXml = instance.getInstanceAsXml();
-                ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
-                serviceInstance.getCoversAreas().getCoversAreas().clear();
-                serviceInstance.getCoversAreas().getCoversAreas().add(coverageArea);
-                instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
-                instance.setInstanceAsXml(instanceXml);
-            }
-        } catch (Exception ex) {
-            log.error("Error parsing point geometry generated from UnLoCode mapping " + pointWKT + ": ", ex);
-        }
+                            // Insert the G1128 geometry into the XML
+                            Xml instanceXml = instance.getInstanceAsXml();
+                            ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
+                            serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes().clear();
+                            serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes().add(coverageArea);
+                            instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
+                            instance.setInstanceAsXml(instanceXml);
+                        }
+                    } catch (Exception ex) {
+                        log.error("Error parsing point geometry generated from UnLoCode mapping " + pointWKT + ": ", ex);
+                    }
+                });
     }
 
     /**

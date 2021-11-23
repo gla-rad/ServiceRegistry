@@ -56,8 +56,11 @@ class XmlsApi {
                     else if(name == 'endpoint')
                        name = 'endpointUri';
                     else if(name == 'implementsServiceDesign') {
-                       name = 'designs';
-                       value = value['id'];
+                       name = 'implementsServiceDesign';
+                       // Don't forget the version
+                       instance['implementsServiceDesignVersion'] = (value ? value['version'] : null);
+                       // Now clear the value
+                       value = value ? value['id'] : null;
                     }
                     instance[name] = value
                 }
