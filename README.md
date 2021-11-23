@@ -142,6 +142,43 @@ resource request. Hence, when a user performs a GET on the */api/instances*
 endpoint, the *get_api_instances* will be activated and allow access to the
 resource only if the user has the *get_api_instances* role. Awesome!!!
 
+### Roles
+Because keycloak is not great in importing the client roles required for this
+operation, a list of all currently used endpoint roles is provided below:
+
+#### Endpoint Roles
+| Role Name | Role Description |
+| ----------| ---------------- |
+| delete_api_doc | Users are allowed API requests to delete an existing doc |
+| delete_api_instance | Users are allowed API requests to delete an existing instance |
+| delete_api_xml | Users are allowed API requests to delete an existing xml |
+| get_api_doc | Users are allowed API requests to retrieve an existing doc |
+| get_api_docs | Users are allowed API requests to retrieve the docs |
+| get_api_docs_dt | Users are allowed API requests to retrieve the docs in a datatables format |
+| get_api_instance | Users are allowed API requests to retrieve a single instance |
+| get_api_instances | Users are allowed API requests to retrieve the instances |
+| get_api_instances_dt | Users are allowed API requests to retrieve the instances in a datatables format |
+| get_api_search_instances | Users are allowed API requests to search for instances |
+| get_api_xml | Users are allowed API requests to retrieve an existing xml |
+| get_api_xmls | Users are allowed API requests to retrieve the xmls |
+| get_api_xmls_dt | Users are allowed API requests to retrieve the xmls in a datatables format |
+| post_api_docs | Users are allowed API requests to create new docs |
+| post_api_instances | Users are allowed API requests to create new instances |
+| post_api_xmls | Users are allowed API requests to create new xmls |
+| put_api_doc | Users are allowed API requests to update an existing doc |
+| put_api_instance | Users are allowed API requests to update an existing instance |
+| put_api_instance_ledger_status | Users are allowed API requests to update the ledger status of existing instances |
+| put_api_instance_status | Users are allowed API requests to update the status of existing instances |
+| put_api_xml | Users are allowed API requests to update an existing xml |
+
+#### Composite Roles
+| Role Name | Role Description |
+| ----------| ---------------- |
+| user | Users are allowed to login and view the local service registry |
+| service_admin | Users are allows to create and upload new services and change their local status |
+| ledger_admin | Users are allowed to control instances and upload them to the global MSR ledger |
+| admin | MSR site administrator role |
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to
 discuss what you would like to change.

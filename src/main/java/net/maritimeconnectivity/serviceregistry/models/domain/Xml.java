@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
@@ -33,7 +34,7 @@ import java.util.Objects;
 @Entity
 @Table(name = "xml")
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Xml {
 
     private static final long serialVersionUID = 1L;
