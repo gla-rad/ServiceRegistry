@@ -102,37 +102,34 @@
                                         here
                                     </a>.
                                 </small></p>
-                                <div class="row mb-3">
-                                    <div class="col-md-8 col-lg-9">
-                                        <div class="input-group">
-                                            <span class="input-group-text" id="search-label">Search</span>
-                                            <input type="text" class="form-control" id="queryString" placeholder="field1:value1 AND/OR field2:value2" aria-label="Query" aria-describedby="search-label">
-                                            <button type="button" class="btn btn-outline-primary" id="instanceSearchButton" onclick="searchForInstances()" title="Perform Search"><i class="fas fa-search"></i></button>
-                                            <button type="button" class="btn btn-outline-primary" id="instanceGeoSearchButton" onclick="geoSearchForInstances()" data-bs-toggle="button" autocomplete="off" title="Define Spatial Parameters">
-                                                <i class="fas fa-map-marked"></i>
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <span class="visually-hidden">Search Type Dropdown</span>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><a class="dropdown-item" onclick="setGeoSpatialSearchMode('geoJson')">Use GeoJSON</a></li>
-                                                <li><a class="dropdown-item" onclick="setGeoSpatialSearchMode('WKT')">Use WKT</a></li>
-                                            </ul>
-                                            </br>
-                                        </div>
-                                    </div>
-                                    <div class="col">
-                                        <select class="form-select">
-                                            <option value="global" selected>Global Search</option>
-                                            <option value="local">Local Search</option>
-                                        </select>
-                                    </div>
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="search-label">Search</span>
+                                    <input type="text" class="form-control" id="queryString" placeholder="field1:value1 AND/OR field2:value2" aria-label="Query" aria-describedby="search-label">
+                                    <button type="button" class="btn btn-outline-primary" id="instanceSearchButton" onclick="searchForInstances()" title="Perform Search"><i class="fas fa-search"></i></button>
+                                    <button type="button" class="btn btn-outline-primary" id="instanceGeoSearchButton" onclick="geoSearchForInstances()" data-bs-toggle="button" autocomplete="off" title="Define Spatial Parameters">
+                                        <i class="fas fa-map-marked"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <span class="visually-hidden">Search Type Dropdown</span>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item" onclick="setGeoSpatialSearchMode('geoJson')">
+                                            <span id="geoJsonOption" class="fw-bold">Use GeoJSON</span>
+                                        </a></li>
+                                        <li><a class="dropdown-item" onclick="setGeoSpatialSearchMode('WKT')">
+                                            <span id="WKTOption" class="">Use WKT</span>
+                                        </a></li>
+                                    </ul>
+                                    <select id="searchType" class="form-select" style="max-width: 150px;">
+                                        <option value="global" selected>Global Search</option>
+                                        <option value="local">Local Search</option>
+                                    </select>
                                 </div>
                                 <div id="geometryWKTArea" class="mb-3" style="display:none;">
                                     <label for="geometryWKT" class="form-label">Geometry in WKT</label>
-                                    <textarea class="form-control" id="geometryWKT" rows="3" disabled></textarea>
+                                    <textarea class="form-control" id="geometryWKT" rows="3"></textarea>
                                 </div>
-                                <table id="instancesTable" class="table table-sm table-striped row-border hover w-100">
+                                <table id="instancesTable" class="table table-sm table-striped row-border hover border shadow w-100">
                                 </table>
                             </div>
                         </div>
