@@ -56,7 +56,7 @@ function handleAjaxError(response, status, more, errorCallback) {
 function getErrorFromHeader(response, defaultMessage) {
     // Try to figure out if we have a default message and use it if it makes
     // sense. If a forbidden status has been returned though, we are fixed.
-    defaultMessage = response.status === 403 ?
+    defaultMessage = (response.status === 0 || response.status === 403) ?
         "You do not seem to have the right permissions to perform this action." :
         (defaultMessage ? defaultMessage : "An unknown error occurred while performing this action.");
     // BTW always give priority to the response header messages
@@ -190,7 +190,7 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
         showLoader();
         encodeFilesToBase64(uploadFiles)
             .then((attachments) => {
-                var successfulUploads = 0;
+                var completedUploads = 0;
                 for(var attachment of attachments) {
                     // Create the document object
                     var doc = {
@@ -202,15 +202,27 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
                         'instanceId': instanceId
                     };
                     // Upload the document
-                    api.docsApi.createDoc(JSON.stringify(doc), (result) => {
-                        successfulUploads++;
-                        // In the last iteration stop the loader
-                        if(successfulUploads == attachments.length) {
-                            $("#attachmentForm").trigger("reset");
-                            attachmentsTable.ajax.reload();
-                            hideLoader();
+                    api.docsApi.createDoc(JSON.stringify(doc),
+                        (result) => {
+                            completedUploads++;
+                            // In the last iteration stop the loader
+                            if(completedUploads == attachments.length) {
+                                $("#attachmentForm").trigger("reset");
+                                attachmentsTable.ajax.reload();
+                                hideLoader();
+                            }
+                        },
+                        (response, status, more) => {
+                           completedUploads++;
+                           // In the last iteration stop the loader
+                           if(completedUploads == attachments.length) {
+                               $("#attachmentForm").trigger("reset");
+                               attachmentsTable.ajax.reload();
+                               hideLoader();
+                           }
+                           showError(getErrorFromHeader(response, "Error while trying to upload the attachment!"));
                         }
-                    });
+                    );
                 }
             });
     });

@@ -3,7 +3,9 @@
  */
 var searchMap = undefined;
 var instancesTable = undefined;
+var drawControl = undefined;
 var drawnItems = undefined;
+var instanceItems = undefined;
 
 /**
  * Standard jQuery initialisation of the page.
@@ -18,6 +20,8 @@ $(() => {
     // FeatureGroup is to store editable layers
     drawnItems = new L.FeatureGroup();
     searchMap.addLayer(drawnItems);
+    instanceItems = new L.FeatureGroup();
+    searchMap.addLayer(instanceItems);
 
     // Handle the leaflet draw create events
     searchMap.on('draw:created', function (e) {
@@ -26,6 +30,22 @@ $(() => {
 
         // Do whatever else you need to. (save to db, add to map etc)
         drawnItems.addLayer(layer);
+    });
+
+    // Add the draw toolbar
+    drawControl = new L.Control.Draw({
+        draw: {
+            marker: false,
+            polyline: true,
+            polygon: true,
+            rectangle: true,
+            circle: false,
+            circlemarker: false,
+        },
+        edit: {
+            featureGroup: drawnItems,
+            remove: true
+        }
     });
 
     // Also link the instance search button with the enter key
@@ -86,14 +106,39 @@ function searchForInstances() {
     // Get the search query string
     var queryString =  $("#queryString").val();
 
-    if(!queryString || queryString.trim() === "") {
+    // Get the search query geometry
+    var queryGeometry = {
+        type: "GeometryCollection",
+        geometries: []
+    };
+    drawnItems.toGeoJSON().features.forEach(feature => {
+        queryGeometry.geometries.push(feature.geometry);
+    });
+
+    // Sanity Check
+    if((!queryString || queryString.trim() === "") && (!queryGeometry || queryGeometry.geometries.length == 0)) {
         showError("Please provide a valid query to proceed with the search...");
         destroyInstancesTable();
         return;
     }
 
     // Perform the api search
-    loadInstancesTable(queryString);
+    loadInstancesTable(queryString, queryGeometry.geometries.length > 0 ? JSON.stringify(queryGeometry) : null);
+}
+
+/**
+ * The primary function to define a geo-spatial search parameter to be used
+ * while searching for instances using the back-end API geo-sp.
+ */
+function geoSearchForInstances() {
+    // Refresh the search map control
+    searchMap.removeControl(drawControl);
+    if($("#instanceGeoSearchButton").hasClass("active")) {
+        searchMap.addControl(drawControl);
+    } else {
+        // Recreate the drawn items feature group
+        drawnItems.clearLayers();
+    }
 }
 
 /**
@@ -101,9 +146,11 @@ function searchForInstances() {
  * instance results table and show the matching entries.
  *
  * @param  {string} queryString     The instance query string to be used
+ * @param  {string} queryGeometry   The instance geometry query GeoJSON string
  */
-function loadInstancesTable(queryString) {
+function loadInstancesTable(queryString, queryGeometry) {
     // Destroy the matrix if it already exists
+    instanceItems.clearLayers();
     destroyInstancesTable();
 
     // Now initialise the instances table
@@ -114,7 +161,8 @@ function loadInstancesTable(queryString) {
             contentType: 'application/json',
             crossDomain: true,
             data: {
-                query: queryString,
+                queryString: queryString,
+                geometry: queryGeometry,
                 page: 0,
                 size: 100
             },
@@ -122,7 +170,8 @@ function loadInstancesTable(queryString) {
                 return json;
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
-                console.error(thrownError);
+                showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));
+                destroyInstancesTable();
             }
         },
         columns: columnDefs,
@@ -163,7 +212,7 @@ function destroyInstancesTable() {
 }
 
 /**
- * This function will load the station geometry onto the drawnItems variable
+ * This function will load the station geometry onto the instanceItems variable
  * so that it is shown in the station maps layers.
  *
  * @param {Event}         event         The event that took place
@@ -177,10 +226,10 @@ function loadInstanceCoverage(event, table, button, config) {
     var geometry = data.geometry;
 
     // Recreate the drawn items feature group
-    drawnItems.clearLayers();
+    instanceItems.clearLayers();
     if(geometry) {
         var geomLayer = L.geoJson(geometry);
-        addNonGroupLayers(geomLayer, drawnItems);
+        addNonGroupLayers(geomLayer, instanceItems);
         searchMap.fitBounds(geomLayer.getBounds());
     }
 }

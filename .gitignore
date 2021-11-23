@@ -33,10 +33,7 @@ build/
 .vscode/
 
 ### Lucence Index ###
-/net.maritimeconnectivity.serviceregistry.models.domain.Instance
-/net.maritimeconnectivity.serviceregistry.models.domain.Doc
-/Instance
-/Doc
+/lucene/
 
 ### macOS ###
 .DS_Store
