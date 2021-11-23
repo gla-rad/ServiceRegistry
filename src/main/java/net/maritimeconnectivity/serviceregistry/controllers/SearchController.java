@@ -21,8 +21,12 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -65,15 +69,40 @@ public class SearchController {
      *
      * @param queryString   the query string of the instance search
      * @param geometry      the geometry of the instance search
+     * @param geometry      the geometry WKT string of the instance search
      * @return the result of the search
      */
     @GetMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<InstanceDto>> searchInstances(@RequestParam("queryString") String queryString,
                                                              @RequestParam(value = "geometry") Optional<Geometry> geometry,
+                                                             @RequestParam(value = "geometryWKT") Optional<String> geometryWKT,
                                                              Pageable pageable) throws URISyntaxException {
-        log.debug("REST request to search for a page of Instances for query {} and geometry {}", queryString, geometry.map(Geometry::toText).orElse("None"));
+        // We only allow one geometry specification method
+        if(geometry.isPresent() && geometryWKT.filter(StringUtils::isNotBlank).isPresent()) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("search",
+                            "multiplesearchspecifications",
+                            "Multiple geometries specifications provided... cannot proceed with the search"))
+                    .build();
+        }
+        // If at maximum only one geometry is provided, retrieve it
+        final Geometry searchGeometry =  geometry.filter(Geometry::isValid)
+                .orElseGet(() -> geometryWKT.map(wkt -> {
+                        try {
+                            return WKTUtil.convertWKTtoGeometry(wkt);
+                        } catch (ParseException ex) {
+                            this.log.error(ex.getMessage(), ex);
+                            return null;
+                        }
+                    }).orElse(null)
+                );
+        // And also parse it as text for the logging
+        final String searchGeometryString = Optional.ofNullable(searchGeometry)
+                .map(Geometry::toText)
+                .orElseGet(() -> geometryWKT.orElse("None "));
+        log.debug("REST request to search for a page of Instances for query {} and geometry {}", queryString, searchGeometryString);
         // Perform the search
-        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, geometry.orElse(null), pageable);
+        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, searchGeometry, pageable);
         // And build the response
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/_search/instances"))
