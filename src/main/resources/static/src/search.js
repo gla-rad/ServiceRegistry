@@ -4,82 +4,13 @@
 var searchMap = undefined;
 var instancesTable = undefined;
 var drawControl = undefined;
-var drawnItems = undefined;
+var drawControlFull = undefined;
+var drawControlEditOnly = undefined;
 var instanceItems = undefined;
 var geoSpatialSearchMode = "geoJson";
 
 /**
- * Standard jQuery initialisation of the page.
- */
-$(() => {
-    // Now also initialise the search map before we need it
-    searchMap = L.map('searchMap').setView([54.910, -3.432], 5);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(searchMap);
-
-    // FeatureGroup is to store editable layers
-    drawnItems = new L.FeatureGroup();
-    searchMap.addLayer(drawnItems);
-    instanceItems = new L.FeatureGroup();
-    searchMap.addLayer(instanceItems);
-
-    // Handle the leaflet draw create events
-    searchMap.on('draw:created', function (e) {
-        var type = e.layerType;
-        var layer = e.layer;
-
-        // Do whatever else you need to. (save to db, add to map etc)
-        drawnItems.addLayer(layer);
-
-        // Convert the geometry to WKT if the search mode is enabled
-        if(geoSpatialSearchMode === "WKT") {
-            $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
-        }
-    });
-
-    // Handle the leaflet draw edit events
-    searchMap.on('draw:edited', function (e) {
-        // Convert the geometry to WKT if the search mode is enabled
-        if(geoSpatialSearchMode === "WKT") {
-            $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
-        }
-    });
-
-    // Handle the leaflet draw delete events
-    searchMap.on('draw:deleted', function (e) {
-        // Convert the geometry to WKT if the search mode is enabled
-        if(geoSpatialSearchMode === "WKT") {
-            $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
-        }
-    });
-
-    // Add the draw toolbar
-    drawControl = new L.Control.Draw({
-        draw: {
-            marker: false,
-            polyline: true,
-            polygon: true,
-            rectangle: true,
-            circle: false,
-            circlemarker: false,
-        },
-        edit: {
-            featureGroup: drawnItems,
-            remove: true
-        }
-    });
-
-    // Also link the instance search button with the enter key
-    $("#queryString").keypress(function(event) {
-        if (event.keyCode === 13) {
-            $("#instanceSearchButton").click();
-        }
-    });
-});
-
-/**
- * The Instances Table Column Definitions
+ * The Instances Search Table Column Definitions
  * @type {Array}
  */
 var columnDefs = [{
@@ -120,6 +51,109 @@ var columnDefs = [{
     placeholder: "Access point of the service"
 }];
 
+/**
+ * Standard jQuery initialisation of the page.
+ */
+$(() => {
+    // Now also initialise the search map before we need it
+    searchMap = L.map('searchMap').setView([54.910, -3.432], 5);
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(searchMap);
+
+    // FeatureGroup is to store editable layers
+    drawnItems = new L.FeatureGroup();
+    searchMap.addLayer(drawnItems);
+    instanceItems = new L.FeatureGroup();
+    searchMap.addLayer(instanceItems);
+
+    // Add the draw toolbar
+    drawControlFull = new L.Control.Draw({
+        draw: {
+            marker: false,
+            polyline: true,
+            polygon: true,
+            rectangle: true,
+            circle: false,
+            circlemarker: false,
+        },
+        edit: {
+            featureGroup: drawnItems
+        }
+    });
+    drawControlEditOnly = new L.Control.Draw({
+        edit: {
+            featureGroup: drawnItems,
+            remove: true
+        },
+        draw: false
+    });
+
+    // Handle the leaflet draw create events
+    searchMap.on('draw:created', function (e) {
+        // Do whatever else you need to. (save to db, add to map etc)
+        var type = e.layerType;
+        var layer = e.layer;
+        drawnItems.addLayer(layer);
+
+        // Restrict new shapes, only allow edit
+        drawControlFull.remove(searchMap);
+        drawControlEditOnly.addTo(searchMap)
+
+        // Convert the geometry to WKT if the search mode is enabled
+        if(geoSpatialSearchMode === "WKT") {
+            populateWKTTextArea();
+        }
+    });
+
+    // Handle the leaflet draw edit events
+    searchMap.on('draw:edited', function (e) {
+        // Convert the geometry to WKT if the search mode is enabled
+        if(geoSpatialSearchMode === "WKT") {
+            populateWKTTextArea();
+        }
+    });
+
+    // Handle the leaflet draw delete events
+    searchMap.on('draw:deleted', function (e) {
+        // Allow users to add new shapes, not only editing
+        if (drawnItems.getLayers().length === 0){
+            drawControlEditOnly.remove(searchMap);
+            drawControlFull.addTo(searchMap);
+        };
+
+        // Convert the geometry to WKT if the search mode is enabled
+        if(geoSpatialSearchMode === "WKT") {
+            populateWKTTextArea();
+        }
+    });
+
+    // Also link the instance search button with the enter key
+    $("#queryString").keypress(function(event) {
+        if (event.keyCode === 13) {
+            $("#instanceSearchButton").click();
+        }
+    });
+
+    // Monitor the WKT string to update the selected area in the map
+    $('#geometryWKT').on("input propertychange", function() {
+        // For valid text inputs, try to parse the WKT string
+        if(this.value && this.value.trim().length>0) {
+            var parsedGeoJson = undefined;
+            try {
+                parsedGeoJson = Terraformer.WKT.parse(this.value);
+            } catch(ex) {
+                // Nothing to do
+            }
+
+            // If a valid GeoJSON object was parsed, replace it in the map
+            if(parsedGeoJson) {
+                drawnItems.clearLayers();
+                addNonGroupLayers(L.geoJson(parsedGeoJson), drawnItems);
+            }
+        }
+    });
+});
 
 /**
  * The primary function to search for instances using the back-end API.
@@ -131,15 +165,18 @@ function searchForInstances() {
     // Get the search query geometry
     var queryGeometry = getGeoSpatialSearchGeometry();
 
+    // Get the global/local search selection
+    var globalSearch = $("#searchType :selected").val() === "global";
+
     // Sanity Check
-    if((!queryString || queryString.trim() === "") && (!queryGeometry || queryGeometry.geometries.length == 0)) {
+    if((!queryString || queryString.trim() === "") && (!queryGeometry)) {
         showError("Please provide a valid query to proceed with the search...");
         destroyInstancesTable();
         return;
     }
 
     // Perform the api search
-    loadInstancesTable(queryString, queryGeometry.geometries.length > 0 ? JSON.stringify(queryGeometry) : null, $("#geometryWKT").text());
+    loadInstancesTable(queryString, JSON.stringify(queryGeometry), $("#geometryWKT").val(), globalSearch);
 }
 
 /**
@@ -148,9 +185,10 @@ function searchForInstances() {
  */
 function geoSearchForInstances() {
     // Refresh the search map control
-    searchMap.removeControl(drawControl);
+    drawControlFull.remove(searchMap);
+    drawControlEditOnly.remove(searchMap);
     if($("#instanceGeoSearchButton").hasClass("active")) {
-        searchMap.addControl(drawControl);
+        drawControlFull.addTo(searchMap);
         if(geoSpatialSearchMode === "WKT") {
             $("#geometryWKTArea").show();
         }
@@ -158,6 +196,7 @@ function geoSearchForInstances() {
         // Recreate the drawn items feature group
         drawnItems.clearLayers();
         if(geoSpatialSearchMode === "WKT") {
+            clearWTKTextArea();
             $("#geometryWKTArea").hide();
         }
     }
@@ -170,8 +209,9 @@ function geoSearchForInstances() {
  * @param  {string} queryString     The instance query string to be used
  * @param  {string} queryGeoJSON    The instance geometry query GeoJSON string
  * @param  {string} queryWKT        The instance geometry query WKT string
+ * @param  {boolean} globalSearch   Whether the global ledger search facility should be user
  */
-function loadInstancesTable(queryString, queryGeoJSON, queryWKT) {
+function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     // Destroy the matrix if it already exists
     instanceItems.clearLayers();
     destroyInstancesTable();
@@ -187,6 +227,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT) {
                 queryString: queryString,
                 geometry: geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : null,
                 geometryWKT: geoSpatialSearchMode === 'WKT' ? queryWKT.trim() : null,
+                globalSearch: globalSearch,
                 page: 0,
                 size: 100
             },
@@ -277,13 +318,10 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
  */
 function getGeoSpatialSearchGeometry() {
     // Initialise a geometry collection
-    var queryGeometry = {
-        type: "GeometryCollection",
-        geometries: []
-    };
-    // Add all the draw items GeoJSON definition
+    var queryGeometry = undefined;
+    // Add all the draw items GeoJSON definition - We only allow one!!!
     drawnItems.toGeoJSON().features.forEach(feature => {
-        queryGeometry.geometries.push(feature.geometry);
+        queryGeometry = feature.geometry;
     });
     // And return
     return queryGeometry;
@@ -296,18 +334,43 @@ function getGeoSpatialSearchGeometry() {
  */
 function setGeoSpatialSearchMode(searchType) {
     // Save the selection
+    $("#" + geoSpatialSearchMode + "Option").removeClass("fw-bold");
     geoSpatialSearchMode = searchType;
+    $("#" + geoSpatialSearchMode + "Option").addClass("fw-bold");
 
-    // Show the WKT text field if the WKT type is enabled
+    // Show the WKT text area field if the WKT type is enabled
     if(geoSpatialSearchMode === "WKT") {
-        // First convert the geometry to WKT
-        $("#geometryWKT").text(Terraformer.WKT.convert(getGeoSpatialSearchGeometry()));
-        // Then show the WKT text area
-        $("#geometryWKTArea").show();
-    } else {
-        // First clear the geometry to WKT
-        $("#geometryWKT").text("");
-        // Hide the WKT text area
+        // Only show the WKT if we have an active geometry search
+        if($("#instanceGeoSearchButton").hasClass("active")) {
+            populateWKTTextArea();
+            $("#geometryWKTArea").show();
+        }
+    }
+    // Otherwise clear out and hide
+    else {
+        clearWTKTextArea();
         $("#geometryWKTArea").hide();
     }
+}
+
+/**
+ * Populates the WKT area with the latest information from the leadlet map
+ * drawing session. Note that currently only one shape is allowed at each time.
+ * This is mainly due to the fact that the Terraformer WKT library does not
+ * support parsing GEOMETRYCOLLECTION WKT strings.
+ */
+function populateWKTTextArea() {
+    var geometry = getGeoSpatialSearchGeometry();
+    if(geometry) {
+        $("#geometryWKT").val(Terraformer.WKT.convert(geometry));
+    } else {
+        clearWTKTextArea();
+    }
+}
+
+/**
+ * This function simply clears out the WKT area.
+ */
+function clearWTKTextArea() {
+    $("#geometryWKT").val("");
 }
