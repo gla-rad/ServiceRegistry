@@ -11,6 +11,24 @@ class InstancesApi {
     }
 
     /**
+     * API instance retrieval function.
+     *
+     * @param  {number} id              The ID of the instance to be retrieved
+     * @param  {Function} callback      The callback to be used after the AJAX call
+     * @param  {Function} errorCallback The error callback to be used if the AJAX call fails
+     */
+    getInstance(id, callback, errorCallback) {
+        $.ajax({
+            url: `/api/instances/${id}`,
+            type: 'GET',
+            contentType: 'application/json',
+            crossDomain: true,
+            success: callback,
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
+        });
+    }
+
+    /**
      * API instance creation function.
      *
      * @param  {obj} instance           The instance to be created
@@ -22,16 +40,11 @@ class InstancesApi {
             url: '/api/instances',
             type: 'POST',
             contentType: 'application/json',
+            crossDomain: true,
             dataType: 'json',
             data: instance,
             success: callback,
-            error: (response, status, more) => {
-               if(errorCallback) {
-                   errorCallback(response, status, more);
-               } else {
-                   console.error(response)
-               }
-           }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -48,16 +61,11 @@ class InstancesApi {
             url: `/api/instances/${id}`,
             type: 'PUT',
             contentType: 'application/json',
+            crossDomain: true,
             dataType: 'json',
             data: instance,
             success: callback,
-            error:  (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -73,14 +81,9 @@ class InstancesApi {
             url: `/api/instances/${id}`,
             type: 'DELETE',
             contentType: 'application/json',
+            crossDomain: true,
             success: callback,
-            error:  (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-           }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -97,14 +100,9 @@ class InstancesApi {
             url: `/api/instances/${id}/status?status=${status}`,
             type: 'PUT',
             contentType: 'application/json',
+            crossDomain: true,
             success: callback,
-            error: (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 
@@ -121,14 +119,9 @@ class InstancesApi {
             url: `/api/instances/${id}/ledger-status?ledgerStatus=${status}`,
             type: 'PUT',
             contentType: 'application/json',
+            crossDomain: true,
             success: callback,
-            error: (response, status, more) => {
-                if(errorCallback) {
-                    errorCallback(response, status, more);
-                } else {
-                    console.error(response)
-                }
-            }
+            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
 }
