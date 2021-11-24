@@ -16,11 +16,12 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import org.apache.commons.io.IOUtils;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +33,9 @@ import org.springframework.core.io.ClassPathResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,6 +82,7 @@ class UnLoCodeServiceTest {
         this.existingInstance.setInstanceAsXml(xml);
 
         // And finally initialise the service
+        this.unLoCodeService.objectMapper = new ObjectMapper();
         this.unLoCodeService.init();
     }
 
@@ -96,13 +101,18 @@ class UnLoCodeServiceTest {
     @Test
     void testApplyUnLoCodeMapping() {
         // Get a UnLoCode entry from the loaded map
-        String unLoCode = this.unLoCodeService.UnLoCodeMap.keySet().stream().findFirst().orElse(null);
+        String unLoCode = this.unLoCodeService.UnLoCodeMap.entrySet()
+                .stream()
+                .filter(entry -> Objects.nonNull(entry.getValue().getLatitude()) && Objects.nonNull(entry.getValue().getLongitude()))
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .orElse(null);
         assertNotNull(unLoCode);
         UnLoCodeMapEntry unLoCodeMapEntry = this.unLoCodeService.UnLoCodeMap.get(unLoCode);
         assertNotNull(unLoCodeMapEntry);
 
         // Perform the service call
-        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, unLoCode);
+        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, Collections.singletonList(unLoCode));
 
         // Make sure the UnLoCode was applied correctly
         assertNotNull(this.existingInstance.getGeometry());
@@ -110,11 +120,7 @@ class UnLoCodeServiceTest {
         assertEquals(1, this.existingInstance.getGeometry().getCoordinates().length);
         assertEquals(unLoCodeMapEntry.getLongitude(), this.existingInstance.getGeometry().getCoordinate().getX());
         assertEquals(unLoCodeMapEntry.getLatitude(), this.existingInstance.getGeometry().getCoordinate().getY());
-        assertNotEquals(this.xmlContent, this.existingInstance.getInstanceAsXml().getContent());
-
-        // Now also try to find the WKT notation in the instance XML
-        String wktNotation =  String.format("POINT (%.2f %.2f)", unLoCodeMapEntry.getLongitude(), unLoCodeMapEntry.getLatitude());
-        assertTrue(this.existingInstance.getInstanceAsXml().getContent().contains(wktNotation));
+        assertEquals(this.xmlContent, this.existingInstance.getInstanceAsXml().getContent());
     }
 
     /**
@@ -124,7 +130,7 @@ class UnLoCodeServiceTest {
     @Test
     void testApplyUnLoCodeMappingNotFound() {
         // Perform the service call
-        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, "INVALID");
+        this.unLoCodeService.applyUnLoCodeMapping(this.existingInstance, Collections.singletonList("INVALID"));
 
         // Make sure the UnLoCode was applied correctly
         assertNull(this.existingInstance.getGeometry());

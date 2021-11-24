@@ -17,20 +17,17 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @WebMvcTest(controllers = HTMLViewerController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
 class HTMLViewerControllerTest {
 
@@ -57,7 +54,7 @@ class HTMLViewerControllerTest {
     @Test
     void testGetInstances() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(get("/instances")
+        this.mockMvc.perform(get("/instances.html")
                 .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }
@@ -68,7 +65,7 @@ class HTMLViewerControllerTest {
     @Test
     void testGetAbout() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(get("/about")
+        this.mockMvc.perform(get("/about.html")
                 .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }

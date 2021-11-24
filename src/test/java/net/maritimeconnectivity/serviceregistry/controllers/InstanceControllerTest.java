@@ -17,21 +17,23 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -39,7 +41,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -48,18 +49,16 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("test")
-@RunWith(SpringRunner.class)
 @WebMvcTest(controllers = InstanceController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class InstanceControllerTest {
 
     @Autowired
@@ -67,6 +66,9 @@ class InstanceControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    public DomainDtoMapper instanceDomainToDtoMapper;
 
     @MockBean
     private InstanceService instanceService;
@@ -132,12 +134,12 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Instance[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance[].class);
+        InstanceDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto[].class);
         assertEquals(5, Arrays.asList(result).size());
     }
 
     /**
-     * Test that the APi supports the jQuery Datatables server-side paging
+     * Test that the API supports the jQuery Datatables server-side paging
      * and search requests.
      */
     @Test
@@ -157,15 +159,11 @@ class InstanceControllerTest {
         dtPagingRequest.setOrder(Collections.singletonList(dtOrder));
         dtPagingRequest.setColumns(Collections.singletonList(dtColumn));
 
-        // Create a mocked datatables paging response
-        DtPage<Instance> dtPage = new DtPage<>();
-        dtPage.setData(this.instances);
-        dtPage.setDraw(1);
-        dtPage.setRecordsFiltered(this.instances.size());
-        dtPage.setRecordsTotal(this.instances.size());
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(dtPage).when(this.instanceService).handleDatatablesPagingRequest(any());
+        doReturn(page).when(this.instanceService).handleDatatablesPagingRequest(any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/instances/dt")
@@ -175,7 +173,7 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        DtPage<Instance> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
+        DtPage<InstanceDto> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), DtPage.class);
         assertEquals(this.instances.size(), result.getData().size());
     }
 
@@ -194,8 +192,14 @@ class InstanceControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.existingInstance, result);
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**
@@ -205,7 +209,7 @@ class InstanceControllerTest {
     @Test
     void testGetInstanceNotFound() throws Exception {
         Long id = 0L;
-        doThrow(DataNotFoundException.class).when(this.instanceService).findOne(any());
+        doThrow(new DataNotFoundException()).when(this.instanceService).findOne(any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/instances/{id}", id))
@@ -214,7 +218,7 @@ class InstanceControllerTest {
 
     /**
      * Test that we can create a new instance correctly through a POST request.
-     * The incoming instance should NOT has an ID, while the returned
+     * The incoming instance should NOT have an ID, while the returned
      * value will have the ID field populated.
      */
     @Test
@@ -225,14 +229,20 @@ class InstanceControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(post("/api/instances")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.newInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.newInstance, InstanceDto.class))))
                 .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.existingInstance, result);
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**
@@ -245,7 +255,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(post("/api/instances")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -264,14 +274,20 @@ class InstanceControllerTest {
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 
         // Parse and validate the response
-        Instance result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Instance.class);
-        assertEquals(this.existingInstance, result);
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**
@@ -287,7 +303,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -307,7 +323,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -327,7 +343,7 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(this.objectMapper.writeValueAsString(this.existingInstance)))
+                .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
                 .andExpect(status().isBadRequest())
                 .andExpect(header().exists("X-mcsrApp-error"))
                 .andExpect(header().exists("X-mcsrApp-params"))
@@ -353,7 +369,7 @@ class InstanceControllerTest {
      */
     @Test
     void testDeleteInstanceNotFound() throws Exception {
-        doThrow(DataNotFoundException.class).when(this.instanceService).delete(any());
+        doThrow(new DataNotFoundException()).when(this.instanceService).delete(any());
 
         // Perform the MVC request
         this.mockMvc.perform(delete("/api/instances/{id}", this.existingInstance.getId()))

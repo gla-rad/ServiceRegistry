@@ -1,6 +1,6 @@
 <serviceInstance
-        xmlns="http://efficiensea2.org/maritime-cloud/service-registry/v1/ServiceInstanceSchema.xsd"
-        xmlns:ServiceSpecificationSchema="http://efficiensea2.org/maritime-cloud/service-registry/v1/ServiceSpecificationSchema.xsd">
+        xmlns="http://iala-aism.org/g1128/v1.3/ServiceInstanceSchema.xsd"
+        xmlns:ServiceSpecificationSchema="http://iala-aism.org/g1128/v1.3/ServiceSpecificationSchema.xsd">
     <id>urn:mrn:mcp:service:test:org:instance:100</id>
     <version>1</version>
     <name>Test Service Instance No1</name>
@@ -9,8 +9,8 @@
     <keywords>test mcp navigation</keywords>
     <endpoint>https://testservice.mcp.enav.org/service/endpoint/</endpoint>
     <MMSI>123456789</MMSI>
-    <IMO>987654321</IMO>
-    <serviceType>test</serviceType>
+    <IMO>1234567</IMO>
+    <serviceType>other:test</serviceType>
     <requiresAuthorization>true</requiresAuthorization>
     <offersServiceLevel>
         <availability>0</availability>

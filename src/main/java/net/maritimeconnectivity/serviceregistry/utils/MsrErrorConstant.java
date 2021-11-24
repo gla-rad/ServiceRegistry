@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.domain.enums;
+package net.maritimeconnectivity.serviceregistry.utils;
 
-/**
- * The SpecificationTemplateType enumeration.
- */
-public enum SpecificationTemplateType {
-    SPECIFICATION,
-    DESIGN,
-    INSTANCE
+public class MsrErrorConstant {
+    public static final String LEDGER_NOT_CONNECTED = "Unable to connect to the MSR global ledger.";
+    public static final String LEDGER_REQUEST_STATUS_NOT_FULFILLED = "Registration to the global MSR ledger requires the request status to be set to 'VETTED'.";
+    public static final String LEDGER_REQUEST_NOT_FOUND = "No requested ledger request was not found.";
+    public static final String LEDGER_REGISTRATION_FAILED = "Instance registration to the MSR ledger has failed.";
 }

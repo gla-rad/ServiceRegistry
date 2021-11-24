@@ -15,55 +15,189 @@
   -->
 
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:include="fragments/general.html :: headerfiles"></th:block>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/jquery.dataTables.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/1.1.2/css/buttons.dataTables.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.2/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.0.0/css/buttons.bootstrap5.min.css" />
+    <link rel="stylesheet" th:href="@{/webjars/leaflet/dist/leaflet.css}" />
+    <link rel="stylesheet" th:href="@{/webjars/leaflet-draw/dist/leaflet.draw.css}" />
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap-fileinput/css/fileinput.min.css}" />
 </head>
 <body>
-    <div class="d-flex flex-column vh-100">
+    <div class="sky-bg d-flex flex-column vh-100">
         <div th:replace="fragments/general.html :: navbar"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container-fluid mt-3">
-                <div class="card shadow" sec:authorize="!isAuthenticated()">
-                    <div class="card-header">
-                        <h2>Welcome</h2>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="row">
-                            <p class="m-2">Please sign-in to access the service facilities.</p>
-                        </div>
-                        <div class="row d-flex justify-content-center">
-                            <div class="btn btn-primary" onclick="window.location.href='/login'">
-                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <div th:replace="fragments/general.html :: loader"></div>
+                <div th:replace="fragments/general.html :: login-card"></div>
                 <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
                         <h2>Service Registry Management Dashboard</h2>
                     </div>
                     <div class="card-body">
                         <div class="col-12 m-1">
-                            <table id="table_id" class="table table-striped table-bordered table-sm row-border hover w-100">
+                            <table id="instancesTable" class="table table-sm table-striped row-border hover w-100">
                             </table>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="instanceEditPanel" tabindex="-1" role="dialog" aria-labelledby="instanceEditPanelHeader"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceEditPanelHeader">G-1128 Instance Definition</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:replace="fragments/instance-editor.html :: instanceEditPanelForm"></form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Cancel Changes">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Changes">
+                                <i class="fas fa-save"></i>&nbsp;
+                                <span class="btn-label">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="instanceCoveragePanel" tabindex="-1" role="dialog" aria-labelledby="instanceCoveragePanelLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceCoveragePanelLabel">Instance Coverage</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- map container -->
+                        <div id="instanceMap" class="map border shadow"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="instanceStatusPanel" tabindex="-1" role="dialog" aria-labelledby="instanceStatusPanelLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceStatusPanelLabel">Instance Status</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="mr-sm-2" for="instanceStatusSelect">Instance Status:</label>&nbsp;
+                                    <select class="custom-select mr-sm-2" id="instanceStatusSelect">
+                                        <option value="PROVISIONAL">Provisional</option>
+                                        <option value="RELEASED">Released</option>
+                                        <option value="DEPRECATED">Deprecated</option>
+                                        <option value="DELETED">Deleted</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Status">
+                                <i class="fas fa-save"></i>&nbsp;
+                                <span class="btn-label">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="instanceLedgerPanel" tabindex="-1" role="dialog" aria-labelledby="instanceLedgerPanelLabel"
+             aria-hidden="true">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceLedgerPanelLabel">Instance Ledger Request Status</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form>
+                            <div class="form-row align-items-center">
+                                <div class="col-auto">
+                                    <label class="mr-sm-2" for="instanceLedgerStatusSelect">Ledger Request Status:</label>&nbsp;
+                                    <select class="custom-select mr-sm-2" id="instanceLedgerStatusSelect">
+                                        <option value="INACTIVE">Inactive</option>
+                                        <option value="CREATED">Created</option>
+                                        <option value="VETTING">Vetting</option>
+                                        <option value="VETTED">Vetted</option>
+                                        <option value="REQUESTING">Requesting</option>
+                                        <option value="SUCCEEDED">Succeeded</option>
+                                        <option value="FAILED">Failed</option>
+                                        <option value="REJECTED">Rejected</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Status">
+                                <i class="fas fa-save"></i>&nbsp;
+                                <span class="btn-label">Save</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:replace="fragments/general.html :: attachment-dialog"></div>
+        <div th:replace="fragments/general.html :: error-dialog"></div>
         <div th:replace="fragments/general.html :: footer"></div>
     </div>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
-    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.js" ></script>
-    <script src="https://cdn.datatables.net/buttons/1.6.2/js/dataTables.buttons.js" ></script>
+    <script th:src="@{/webjars/leaflet/dist/leaflet.js}"></script>
+    <script th:src="@{/webjars/leaflet-draw/dist/leaflet.draw.js}"></script>
+    <script th:src="@{/webjars/bootstrap-fileinput/js/fileinput.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap-fileinput/themes/fas/theme.min.js}"></script>
+    <script src="https://cdn.datatables.net/1.11.0/js/jquery.dataTables.js" ></script>
+    <script src="https://cdn.datatables.net/1.11.0/js/dataTables.bootstrap5.min.js" ></script>
+    <script src="https://cdn.datatables.net/buttons/2.0.0/js/dataTables.buttons.min.js" ></script>
+    <script src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.bootstrap5.min.js" ></script>
+    <script src="https://cdn.datatables.net/buttons/2.0.0/js/buttons.html5.min.js" ></script>
     <script src="https://cdn.datatables.net/select/1.3.1/js/dataTables.select.js" ></script>
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>
     <script th:src="@{/static/lib/dataTables.msrEditor.free.js}"></script>
-    <script th:src="@{/static/src/tableView.js}"></script>
-    <script th:src="@{/static/utils.js}"></script>
+    <script th:src="@{/static/src/file-utils.js}"></script>
+    <script th:src="@{/static/src/api/instances-api.js}"></script>
+    <script th:src="@{/static/src/api/xmls-api.js}"></script>
+    <script th:src="@{/static/src/api/docs-api.js}"></script>
+    <script th:src="@{/static/src/api/ledger-requests-api.js}"></script>
+    <script th:src="@{/static/src/api/search-api.js}"></script>
+    <script th:src="@{/static/src/common.js}"></script>
+    <script th:src="@{/static/src/instances.js}"></script>
 </body>
 </html>
