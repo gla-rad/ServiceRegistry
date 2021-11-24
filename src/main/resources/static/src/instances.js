@@ -2,8 +2,15 @@
  * Global variables
  */
 var instancesTable = undefined;
-var instanceMap = undefined;
 var newInstance = true;
+
+/**
+ * Global map variables
+ */
+var instanceMap = undefined;
+var drawnMapItems = undefined;
+var instanceEditCoverageMap = undefined;
+var drawnEditMapItems = undefined;
 
 /**
  * The Instances Table Column Definitions
@@ -202,7 +209,9 @@ $(() => {
             name: 'instance-coverage', // do not change name
             className: 'instance-coverage-toggle',
             action: (e, dt, node, config) => {
-                loadInstanceCoverage(e, dt, node, config);
+                if(dt.row({selected : true})) {
+                    loadGeometryOnMap(dt.row({selected : true}).data().geometry, instanceMap, drawnMapItems);
+                }
             }
         }, {
             extend: 'selected', // Bind to Selected row
@@ -276,7 +285,7 @@ $(() => {
     $('#instanceEditPanel').on('click', '.btn-validate-xml', (e) => {
         var $modalDiv = $(e.delegateTarget);
         $modalDiv.addClass('loading');
-        onValidateXml($modalDiv);
+        validateXml($modalDiv);
     });
 
     // On confirmation of the instance saving, we need to make an AJAX
@@ -284,7 +293,8 @@ $(() => {
     $('#instanceEditPanel').on('click', '.btn-ok', (e) => {
         var $modalDiv = $(e.delegateTarget);
         var columnDefData = columnDefs.map((e) => e["data"]);
-        var rowData = initialiseData();
+        var g1128Compliant = $("#g1128CompliantButton").prop('checked');
+        var rowData = initialiseInstanceData(g1128Compliant);
 
         // If an existing row has been selected, copy the data for an update
         if(!newInstance && instancesTable.row({selected : true}).length != 0) {
@@ -296,10 +306,14 @@ $(() => {
             rowData = alignData(rowData, $(this).attr('id'), $(this).val(), columnDefData);
         });
 
-        // Augmenting xml content on the data
-        var xmlContent = $modalDiv.find("#xml-input").val();
-        if (xmlContent && xmlContent.length>0) {
-            rowData["instanceAsXml"]["content"] = xmlContent;
+        // For G1128-compliant entries, augmenting xml content on the data
+        if(g1128Compliant) {
+            var xmlContent = $modalDiv.find("#xml-input").val();
+            if (xmlContent && xmlContent.length>0) {
+                rowData["instanceAsXml"]["content"] = xmlContent;
+            }
+        } else {
+            rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
         }
 
         // Adding the attached documents
@@ -386,32 +400,113 @@ $(() => {
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceCoveragePanel" });
 
-    // Now also initialise the instance map before we need it
-    instanceMap = L.map('instanceMap').setView([54.910, -3.432], 5);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(instanceMap);
+    // Also initialise the instance map before we need it
+    drawnMapItems = new L.FeatureGroup();
+    instanceMap = initMapWithDrawnItems('instanceMap', drawnMapItems, false);
 
-    // FeatureGroup is to store editable layers
-    drawnItems = new L.FeatureGroup();
-    instanceMap.addLayer(drawnItems);
+    // Also initialise the instance edit coverage map before we need it
+    drawnEditMapItems = new L.FeatureGroup();
+    instanceEditCoverageMap = initMapWithDrawnItems('instanceEditCoverageMap', drawnEditMapItems, true);
 
-    // Handle the leaflet draw create events
-    instanceMap.on('draw:created', function (e) {
-        var type = e.layerType;
-        var layer = e.layer;
-
-        // Do whatever else you need to. (save to db, add to map etc)
-        drawnItems.addLayer(layer);
-    });
-
-    // Invalidate the map size on show to fix the presentation
+    // Invalidate the instance map size on show to fix the presentation
     $('#instanceCoveragePanel').on('shown.bs.modal', function() {
         setTimeout(function() {
             instanceMap.invalidateSize();
         }, 50);
     });
+
+    // Invalidate the instance edit coverage map size on tab show to fix the presentation
+    $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function() {
+        // Make sure this is the coverage tab
+        if($(this).attr('id') != "coverage-tab") {
+            return;
+        }
+        // And if so fix the map presentation
+        setTimeout(function() {
+            instanceEditCoverageMap.invalidateSize();
+            // If we have an instance selected
+            if(!newInstance && instancesTable.row({selected : true})) {
+                // Get the currently selected instance's geometry
+                var geometry = instancesTable.row({selected : true}).data().geometry;
+                // If nothing is drawn yet, try to reload the instance's coverage
+                if(geometry && drawnEditMapItems.getLayers().length == 0) {
+                    loadGeometryOnMap(geometry, instanceEditCoverageMap, drawnEditMapItems);
+                }
+            }
+        }, 50);
+    });
+
+    // When G-1128 Compliant ask for the XML otherwise the user has to fill
+    // in the input fields directly.
+    $("#g1128CompliantButton").click(function() {
+        toggleG1128Compliant();
+    });
 });
+
+/**
+ * Update the instance edit panel view based on the selection of the G1128
+ * compliant button.
+ */
+function toggleG1128Compliant() {
+    var g1128Compliant = $("#g1128CompliantButton").prop('checked');
+    var selector = $("#g1128CompliantButton").data("target");
+
+    // Enable/Disable the form
+    $('form[name="instanceEditPanelForm"] :input').filter('[data-g1128="true"]').attr('readonly', g1128Compliant);
+    $('form[name="instanceEditPanelForm"] select').filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
+
+    // Control the drawing
+    if(g1128Compliant) {
+        $(selector).removeClass('d-none');
+        drawControlFull.remove(instanceEditCoverageMap);
+    } else {
+        $(selector).addClass('d-none');
+        drawControlFull.addTo(instanceEditCoverageMap);
+    }
+
+    // Refresh the map size due to the change
+    setTimeout(function() {
+        instanceEditCoverageMap.invalidateSize();
+    }, 50);
+}
+
+/**
+ * Using an AJAX call we ask the server to validate the provided XML and if
+ * proven correct we can use the returned JSON object to populate the instance
+ * editor field values. Note that some of the G-1128 field do not correspond
+ * to the names of the fields used here so we need to translate them.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the validation
+ */
+function validateXml($modalDiv) {
+    api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
+        // Update the instance fields
+        for (var field in response) {
+            $modalDiv.find("input#"+field).val(response[field]);
+        }
+        // Update the instance coverage area
+        if(response["coversAreas"] && response["coversAreas"]["coversAreasAndUnLoCodes"]) {
+            drawnEditMapItems.clearLayers();
+            response["coversAreas"]["coversAreasAndUnLoCodes"].forEach((area) => {
+                var parsedGeoJson = undefined;
+                try {
+                    parsedGeoJson = Terraformer.WKT.parse(area.geometryAsWKT);
+                } catch(ex) {
+                    // Nothing to do
+                }
+
+                // If a valid GeoJSON object was parsed, replace it in the map
+                if(parsedGeoJson) {
+                    addNonGroupLayers(L.geoJson(parsedGeoJson), drawnEditMapItems);
+                }
+            });
+        }
+        $modalDiv.removeClass('loading');
+    }, (response, status, more) => {
+        $modalDiv.removeClass('loading');
+        showError(getErrorFromHeader(response, "Error while trying to validate whether the XML is G-1128 compliant!"));
+    });
+}
 
 /**
  * Performs the instance saving operation through the instances datatables
@@ -430,26 +525,6 @@ function saveInstanceThroughDatatables(instance) {
                 (data,b,c,d,e) => { instancesTable.ajax.reload(); },
                 (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while updating the instance.")); hideLoader(); });
     }
-}
-
-/**
- * Using an AJAX call we ask the server to validate the provided XML and if
- * proven correct we can use the returned JSON object to populate the instance
- * editor field values. Note that some of the G-1128 field do not correspond
- * to the names of the fields used here so we need to translate them.
- *
- * @param {Component}   $modalDiv   The modal component performing the validation
- */
-function onValidateXml($modalDiv) {
-    api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
-        for (var field in response) {
-            $modalDiv.find("input#"+field).val(response[field]);
-        }
-        $modalDiv.removeClass('loading');
-    }, (response, status, more) => {
-        $modalDiv.removeClass('loading');
-        showError(getErrorFromHeader(response, "Error while trying to validate whether the XML is G-1128 compliant!"));
-    });
 }
 
 /**
@@ -494,14 +569,25 @@ function onLedgerRequestUpdate($modalDiv, id, status) {
  * so that new entries are not polluted by old data.
  */
 function clearInstanceEditPanel() {
+    // Always init in the info tab
+    $('#instanceTabs button:first').tab('show');
+
+    // Reset to G1128 Compliant
+    $('#g1128CompliantButton').prop('checked',  true);
+    toggleG1128Compliant();
+
     // Do the form
     $('form[name="instanceEditPanelForm"]').trigger("reset");
 
+    // And the map
+    drawnEditMapItems.clearLayers();
+    resetMapView(instanceEditCoverageMap);
+
     // Don't forget the XML content
-    $("#instanceEditPanel").find("#xml-input").val(null);
+    $('#instanceEditPanel').find('#xml-input').val(null);
 
     // And the document option
-    clearInstanceDoc($("#instanceEditPanel"));
+    clearInstanceDoc($('#instanceEditPanel'));
 
     // Mark the a new instance can be created through the edit dialog
     newInstance = true;
@@ -512,80 +598,45 @@ function clearInstanceEditPanel() {
  * in the instance table onto the edit dialog.
  */
 function loadInstanceEditPanel(isNewInstance) {
-    // Note if a new or an existing instance is to be loaded
-    newInstance = isNewInstance;
-
     // Get the instance edit panel modal dialog
-    var $modalDiv = $("#instanceEditPanel");
+    var $modalDiv = $('#instanceEditPanel');
 
     // First always clear to be sure
     clearInstanceEditPanel();
     clearInstanceDoc($modalDiv);
 
+    // Note if a new or an existing instance is to be loaded
+    newInstance = isNewInstance;
+
     // If a row has been selected load the data into the form
     if(!isNewInstance && instancesTable.row({selected : true})) {
         // Populate the form
         rowData = instancesTable.row({selected : true}).data();
+        var g1128Compliant = rowData['instanceAsXml'] != null;
+        $('#g1128CompliantButton').prop('checked', g1128Compliant);
+
+        // Populate all the form fields
         $('form[name="instanceEditPanelForm"] :input').each(function() {
             $(this).val(rowData[$(this).attr('id')]);
+            $(this).filter('[data-g1128="true"]').attr('readonly', g1128Compliant);
+        });
+        $('form[name="instanceEditPanelForm"] select').each(function() {
+            $(this).val(rowData[$(this).attr('id')]);
+            $(this).filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
         });
 
         // Augmenting xml content on the data
-        $("#instanceEditPanel").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
+        if(g1128Compliant) {
+            $("#g1128SideBar").removeClass('d-none');
+            $("#g1128SideBar").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
+            drawControlFull.remove(instanceEditCoverageMap);
+        } else {
+            $("#g1128SideBar").addClass('d-none');
+            drawControlFull.addTo(instanceEditCoverageMap);
+        }
 
         // Handle the instance doc field if populated or not
         rowData.instanceAsDocId ? showInstanceDoc($modalDiv) : clearInstanceDoc($modalDiv);
-    }
-}
-
-/**
- * The instances edit dialog form should be clear every time before it is used
- * so that new entries are not polluted by old data.
- */
-function clearInstanceEditPanel() {
-    // Do the form
-    $('form[name="instanceEditPanelForm"]').trigger("reset");
-
-    // Don't forget the XML content
-    $("#instanceEditPanel").find("#xml-input").val(null);
-}
-
-/**
- * This function will load the station geometry onto the drawnItems variable
- * so that it is shown in the station maps layers.
- *
- * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN type table
- * @param {Node}          button        The button node that was pressed
- * @param {Configuration} config        The table configuration
- */
-function loadInstanceCoverage(event, table, button, config) {
-    var idx = table.cell('.selected', 0).index();
-    var data = instancesTable.row({selected : true}).data();
-    var geometry = data.geometry;
-
-    // Recreate the drawn items feature group
-    drawnItems.clearLayers();
-    if(geometry) {
-        var geomLayer = L.geoJson(geometry);
-        addNonGroupLayers(geomLayer, drawnItems);
-        instanceMap.setView(geomLayer.getBounds().getCenter(), 5);
-        setTimeout(function() {
-            instanceMap.fitBounds(geomLayer.getBounds());
-        }, 700);
-    }
-}
-
-/**
- * Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
- */
-function addNonGroupLayers(sourceLayer, targetGroup) {
-    if (sourceLayer instanceof L.LayerGroup) {
-        sourceLayer.eachLayer(function(layer) {
-            addNonGroupLayers(layer, targetGroup);
-        });
-    } else {
-        targetGroup.addLayer(sourceLayer);
     }
 }
 
@@ -600,9 +651,9 @@ function addNonGroupLayers(sourceLayer, targetGroup) {
  */
 function loadInstanceStatus(event, table, button, config) {
     // If a row has been selected load the data into the form
-    if(instancesTable.row({selected : true})) {
-        rowData = instancesTable.row({selected : true}).data();
-        $("#instanceStatusPanel").find("#instanceStatusSelect").val(rowData["status"]);
+    if(table.row({selected : true})) {
+        var rowdata = table.row({selected : true}).data();
+        $("#instanceStatusPanel").find("#instanceStatusSelect").val(rowdata["status"]);
     }
 }
 
@@ -618,8 +669,8 @@ function loadInstanceStatus(event, table, button, config) {
  */
 function loadInstanceLedgerStatus(event, table, button, config) {
     // If a row has been selected load the data into the form
-    if(instancesTable.row({selected : true})) {
-        rowdata = instancesTable.row({selected : true}).data();
+    if(table.row({selected : true})) {
+        var rowdata = table.row({selected : true}).data();
         id = rowdata["id"];
         ledgerRequestId = rowdata["ledgerRequestId"];
         ledgerRequestStatus = rowdata["ledgerRequestStatus"];
@@ -636,7 +687,7 @@ function loadInstanceLedgerStatus(event, table, button, config) {
  * This helper function returns a band new blank instance object to be used
  * for generating new entries.
  */
-function initialiseData() {
+function initialiseInstanceData(g1128Compliant) {
     // Create the new object
     var newRowData = {}
 
@@ -647,11 +698,11 @@ function initialiseData() {
     newRowData["specifications"] = {};
     newRowData["geometryJson"] = {};
     newRowData["instanceAsDoc"] = null;
-    newRowData["instanceAsXml"] = {
+    newRowData["instanceAsXml"] = g1128Compliant ? {
         name: "xml",
         comment: "no comment", content: "",
         contentContentType: "G1128 Instance Specification XML"
-    };
+    } : null;
 
     // Return the object
     return newRowData;
@@ -687,17 +738,6 @@ function alignData(rowData, field, value, columnDefs){
 }
 
 /**
- * Displays the instance doc file selection field in the instance edit dialogs
- * and hides the doc name field.
- *
- * @param {Component}   $modalDiv   The modal component performing the operation
- */
-function showInstanceDoc($modalDiv) {
-    $modalDiv.find("#instanceAsDoc").hide();
-    $modalDiv.find("#instanceAsDocWithValue").show();
-}
-
-/**
  * Clear the instance doc name field from the instance edit dialogs and
  * shows back the file selection field.
  *
@@ -708,4 +748,16 @@ function clearInstanceDoc($modalDiv) {
     $modalDiv.find("#instanceAsDocWithValue").find("#instanceAsDocName").val("");
     $modalDiv.find("#instanceAsDoc").show();
 }
+
+/**
+ * Displays the instance doc file selection field in the instance edit dialogs
+ * and hides the doc name field.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the operation
+ */
+function showInstanceDoc($modalDiv) {
+    $modalDiv.find("#instanceAsDoc").hide();
+    $modalDiv.find("#instanceAsDocWithValue").show();
+}
+
 

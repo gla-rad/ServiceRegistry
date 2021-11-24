@@ -56,10 +56,7 @@ var columnDefs = [{
  */
 $(() => {
     // Now also initialise the search map before we need it
-    searchMap = L.map('searchMap').setView([54.910, -3.432], 5);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(searchMap);
+    searchMap = initMap('searchMap');
 
     // FeatureGroup is to store editable layers
     drawnItems = new L.FeatureGroup();
@@ -67,27 +64,9 @@ $(() => {
     instanceItems = new L.FeatureGroup();
     searchMap.addLayer(instanceItems);
 
-    // Add the draw toolbar
-    drawControlFull = new L.Control.Draw({
-        draw: {
-            marker: false,
-            polyline: true,
-            polygon: true,
-            rectangle: true,
-            circle: false,
-            circlemarker: false,
-        },
-        edit: {
-            featureGroup: drawnItems
-        }
-    });
-    drawControlEditOnly = new L.Control.Draw({
-        edit: {
-            featureGroup: drawnItems,
-            remove: true
-        },
-        draw: false
-    });
+    // Initialise the draw controls
+    initDrawControlFull(drawnItems);
+    initDrawControlEditOnly(drawnItems);
 
     // Handle the leaflet draw create events
     searchMap.on('draw:created', function (e) {
@@ -163,7 +142,7 @@ function searchForInstances() {
     var queryString =  $("#queryString").val();
 
     // Get the search query geometry
-    var queryGeometry = getGeoSpatialSearchGeometry();
+    var queryGeometry = getSingleGeometryFromMap(drawnItems);
 
     // Get the global/local search selection
     var globalSearch = $("#searchType :selected").val() === "global";
@@ -257,9 +236,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     // On an instance selection, draw the area on the map
     instancesTable.on( 'select', function ( e, dt, type, indexes ) {
         if ( type === 'row' ) {
-            var idx = dt.cell('.selected', 0).index();
-            var data = dt.row(idx.row).data();
-            loadInstanceCoverage( e, dt, type, indexes );
+            loadGeometryOnMap(dt.row({selected : true}).data().geometry, searchMap, instanceItems);
         }
     });
 }
@@ -274,57 +251,6 @@ function destroyInstancesTable() {
         instancesTable = undefined;
         $("#instancesTable").empty();
     }
-}
-
-/**
- * This function will load the station geometry onto the instanceItems variable
- * so that it is shown in the station maps layers.
- *
- * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN type table
- * @param {Node}          button        The button node that was pressed
- * @param {Configuration} config        The table configuration
- */
-function loadInstanceCoverage(event, table, button, config) {
-    var idx = table.cell('.selected', 0).index();
-    var data = instancesTable.row({selected : true}).data();
-    var geometry = data.geometry;
-
-    // Recreate the drawn items feature group
-    instanceItems.clearLayers();
-    if(geometry) {
-        var geomLayer = L.geoJson(geometry);
-        addNonGroupLayers(geomLayer, instanceItems);
-        searchMap.fitBounds(geomLayer.getBounds());
-    }
-}
-
-/**
- * Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
- */
-function addNonGroupLayers(sourceLayer, targetGroup) {
-    if (sourceLayer instanceof L.LayerGroup) {
-        sourceLayer.eachLayer(function(layer) {
-            addNonGroupLayers(layer, targetGroup);
-        });
-    } else {
-        targetGroup.addLayer(sourceLayer);
-    }
-}
-
-/**
- * A helper function that picks up all the drawn items and translates then into
- * a GeoJSON format and combines them into a geometry collection.
- */
-function getGeoSpatialSearchGeometry() {
-    // Initialise a geometry collection
-    var queryGeometry = undefined;
-    // Add all the draw items GeoJSON definition - We only allow one!!!
-    drawnItems.toGeoJSON().features.forEach(feature => {
-        queryGeometry = feature.geometry;
-    });
-    // And return
-    return queryGeometry;
 }
 
 /**
@@ -360,7 +286,7 @@ function setGeoSpatialSearchMode(searchType) {
  * support parsing GEOMETRYCOLLECTION WKT strings.
  */
 function populateWKTTextArea() {
-    var geometry = getGeoSpatialSearchGeometry();
+    var geometry = getSingleGeometryFromMap(drawnItems);
     if(geometry) {
         $("#geometryWKT").val(Terraformer.WKT.convert(geometry));
     } else {
