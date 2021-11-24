@@ -89,10 +89,10 @@ class SearchControllerTest {
 
     /**
      * Test that we can search for instances using the search API endpoint that
-     * supports Lucene queries and a paged result.
+     * supports Lucene queries and a paged result using GeoJSON geometries.
      */
     @Test
-    void testSearchInstances() throws Exception {
+    void testSearchInstancesGeoJSON() throws Exception {
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
@@ -103,7 +103,7 @@ class SearchControllerTest {
         MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
                         .contentType(MediaType.APPLICATION_JSON_VALUE)
                         .param("queryString", "name:Test")
-                        .param("geometryString", "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}")
+                        .param("geometry", "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}")
                         .param("page", "0")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -112,6 +112,56 @@ class SearchControllerTest {
         // Parse and validate the response
         List<InstanceDto> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), List.class);
         assertEquals(this.instances.size(), result.size());
+    }
+
+    /**
+     * Test that we can search for instances using the search API endpoint that
+     * supports Lucene queries and a paged result using WKT geometries.
+     */
+    @Test
+    void testSearchInstancesWKT() throws Exception {
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the service call for creating a new instance
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .param("queryString", "name:Test")
+                        .param("geometryWKT", "LINESTRING ( 0 50, 0 52 )")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Parse and validate the response
+        List<InstanceDto> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), List.class);
+        assertEquals(this.instances.size(), result.size());
+    }
+
+    /**
+     * Test that if we attempt to search for instances using multiple geometry
+     * specifications (i.e. GeoJSON and WKT) a bad request will be returned
+     */
+    @Test
+    void testSearchInstancesMultipleGeometries() throws Exception {
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the service call for creating a new instance
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
+
+        // Perform the MVC request
+        this.mockMvc.perform(get("/api/_search/instances")
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .param("queryString", "name:Test")
+                        .param("geometry", "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}")
+                        .param("geometryWKT", "LINESTRING ( 0 50, 0 52 )")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isBadRequest());
     }
 
 }
