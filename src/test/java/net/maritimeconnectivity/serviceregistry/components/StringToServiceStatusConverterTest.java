@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.utils;
+package net.maritimeconnectivity.serviceregistry.components;
 
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import net.maritimeconnectivity.serviceregistry.components.StringToServiceStatusConverter;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class StringToServiceStatusConverterTest {
 
@@ -45,7 +47,7 @@ class StringToServiceStatusConverterTest {
     }
 
     /**
-     * Test that we for invalid input, the StringToServiceStatusConverter will
+     * Test that for invalid inputs, the StringToServiceStatusConverter will
      * return null.
      */
     @Test

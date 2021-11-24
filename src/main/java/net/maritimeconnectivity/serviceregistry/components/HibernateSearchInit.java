@@ -13,11 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package net.maritimeconnectivity.serviceregistry.config;
+package net.maritimeconnectivity.serviceregistry.components;
 
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.search.jpa.FullTextEntityManager;
-import org.hibernate.search.jpa.Search;
+import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
+import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
+import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.hibernate.search.util.common.SearchException;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -53,22 +57,19 @@ public class HibernateSearchInit implements ApplicationListener<ContextRefreshed
     @Override
     @Transactional
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        FullTextEntityManager fullTextEntityManager = this.getFullTextEntityManager();
-        try {
-            fullTextEntityManager.createIndexer().startAndWait();
-        } catch (InterruptedException e) {
-            log.error(e.getMessage());
-        }
-    }
+        // Once the application has booted up, access the search session
+        SearchSession searchSession = Search.session( entityManager );
 
-    /**
-     * Returns the full text entity manager. This call is mainly used to easily
-     * mock the full text entity manager for testing the search initialisation.
-     *
-     * @return the full text entity manager
-     */
-    protected FullTextEntityManager getFullTextEntityManager() {
-        return Search.getFullTextEntityManager(entityManager);
+        // Create a mass indexer
+        MassIndexer indexer = searchSession.massIndexer( Instance.class, Doc.class )
+                .threadsToLoadObjects( 7 );
+
+        // And perform the indexing
+        try {
+            indexer.startAndWait();
+        } catch (InterruptedException | SearchException e) {
+            this.log.error(e.getMessage());
+        }
     }
 
 }

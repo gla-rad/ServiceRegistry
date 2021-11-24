@@ -1,0 +1,834 @@
+{
+  "allowRemoteResourceManagement": true,
+  "policyEnforcementMode": "PERMISSIVE",
+  "resources": [
+    {
+      "name": "logout_page",
+      "type": "urn:service-registry:resources:logout",
+      "ownerManagedAccess": false,
+      "displayName": "Logout Page",
+      "attributes": {},
+      "_id": "02650335-8eeb-4d11-9647-bd0a0dbaad71",
+      "uris": [
+        "/logout"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
+      "name": "api_instances_dt",
+      "type": "urn:service-registry:resources:instances:dt",
+      "ownerManagedAccess": false,
+      "displayName": "API Instances DT Endpoint",
+      "attributes": {},
+      "_id": "12ce8f54-e27b-4894-a42e-b96cbf0a5e96",
+      "uris": [
+        "/api/instances/dt"
+      ],
+      "scopes": [
+        {
+          "name": "POST"
+        }
+      ]
+    },
+    {
+      "name": "home_page",
+      "type": "urn:service-registry:resources:home-page",
+      "ownerManagedAccess": false,
+      "displayName": "Home Page",
+      "attributes": {},
+      "_id": "27c4cde7-9e2c-4f3c-b9f6-78bc88ee6348",
+      "uris": [
+        "/"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
+      "name": "html_pages",
+      "type": "urn:service-registry:resources:html",
+      "ownerManagedAccess": false,
+      "displayName": "HTML Pages",
+      "attributes": {},
+      "_id": "359d3b3f-812f-4987-b0cf-66d977beee6f",
+      "uris": [
+        "/*.html"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
+      "name": "api_docs",
+      "type": "urn:service-registry:resources:docs",
+      "ownerManagedAccess": false,
+      "displayName": "API Docs Endpoint",
+      "attributes": {},
+      "_id": "3ccb72eb-c639-473d-9baf-4788db4948e7",
+      "uris": [
+        "/api/docs"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        },
+        {
+          "name": "POST"
+        }
+      ]
+    },
+    {
+      "name": "api_xml",
+      "type": "urn:service-registry:resources:xmls:id",
+      "ownerManagedAccess": false,
+      "displayName": "API XML Endpoint",
+      "attributes": {},
+      "_id": "6a55c8ff-7723-4b3f-bb9f-c734cf1fd93e",
+      "uris": [
+        "/api/xmls/{id}"
+      ],
+      "scopes": [
+        {
+          "name": "DELETE"
+        },
+        {
+          "name": "GET"
+        },
+        {
+          "name": "PUT"
+        }
+      ]
+    },
+    {
+      "name": "api_instance",
+      "type": "urn:service-registry:resources:instances:id",
+      "ownerManagedAccess": false,
+      "displayName": "API Instance Endpoint",
+      "attributes": {},
+      "_id": "6aa56185-7075-45e1-9a8a-731f0641c369",
+      "uris": [
+        "/api/instances/{id}"
+      ],
+      "scopes": [
+        {
+          "name": "DELETE"
+        },
+        {
+          "name": "GET"
+        },
+        {
+          "name": "PUT"
+        }
+      ]
+    },
+    {
+      "name": "api_instance_ledger_status",
+      "type": "urn:service-registry:resources:instance:id:ledger-status",
+      "ownerManagedAccess": false,
+      "displayName": "API Instance Ledger Status Endpoint",
+      "attributes": {},
+      "_id": "73cc1adf-501b-4e58-a083-3a83ecd0e2e1",
+      "uris": [
+        "/api/instances/{id}/ledger-status"
+      ],
+      "scopes": [
+        {
+          "name": "PUT"
+        }
+      ]
+    },
+    {
+      "name": "api_docs_dt",
+      "type": "urn:service-registry:resources:docs:dt",
+      "ownerManagedAccess": false,
+      "displayName": "API Docs DT Endpoint",
+      "attributes": {},
+      "_id": "83309a84-94bf-441c-8836-ccd51c0da8b5",
+      "uris": [
+        "/api/docs/dt"
+      ],
+      "scopes": [
+        {
+          "name": "POST"
+        }
+      ]
+    },
+    {
+      "name": "api_doc",
+      "type": "urn:service-registry:resources:docs:id",
+      "ownerManagedAccess": false,
+      "displayName": "APi Doc Endpoint",
+      "attributes": {},
+      "_id": "8fb7ca5a-e59e-4de1-9c21-6c811fe30608",
+      "uris": [
+        "/api/docs/{id}"
+      ],
+      "scopes": [
+        {
+          "name": "DELETE"
+        },
+        {
+          "name": "GET"
+        },
+        {
+          "name": "PUT"
+        }
+      ]
+    },
+    {
+      "name": "api_xmls",
+      "type": "urn:service-registry:resources:xmls",
+      "ownerManagedAccess": false,
+      "displayName": "API XMLs Endpoint",
+      "attributes": {},
+      "_id": "9002fcfd-060c-4e98-a7f3-7505cde3bd2a",
+      "uris": [
+        "/api/xmls"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        },
+        {
+          "name": "POST"
+        }
+      ]
+    },
+    {
+      "name": "webjars",
+      "type": "urn:service-registry:resources:webjars",
+      "ownerManagedAccess": false,
+      "displayName": "Webjars",
+      "attributes": {},
+      "_id": "a7a02162-4e37-4fc7-9357-d8f57984a5db",
+      "uris": [
+        "/webjars/*"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
+      "name": "api_instance_status",
+      "type": "urn:service-registry:resources:instances:id:status",
+      "ownerManagedAccess": false,
+      "displayName": "API Instance Status Endpoint",
+      "attributes": {},
+      "_id": "b1896f01-30ff-4a53-8502-3314e7be3a46",
+      "uris": [
+        "/api/instances/{id}/status"
+      ],
+      "scopes": [
+        {
+          "name": "PUT"
+        }
+      ]
+    },
+    {
+      "name": "static_sources",
+      "type": "urn:service-registry:resources:static",
+      "ownerManagedAccess": false,
+      "displayName": "Static Sources",
+      "attributes": {},
+      "_id": "cf87cc10-fbf6-48ce-979b-7b71d9ba9eff",
+      "uris": [
+        "/static/*"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
+      "name": "api_xmls_dt",
+      "type": "urn:service-registry:resources:xmls:dt",
+      "ownerManagedAccess": false,
+      "displayName": "API XMLs DT Endpoint",
+      "attributes": {},
+      "_id": "d7d655e3-9293-4180-b463-9f89d59fe8e5",
+      "uris": [
+        "/api/xmls/dt"
+      ],
+      "scopes": [
+        {
+          "name": "POST"
+        }
+      ]
+    },
+    {
+      "name": "api_search_instances",
+      "type": "urn:service-registry:resources:search:instances",
+      "ownerManagedAccess": false,
+      "displayName": "API Search Instances Endpoint",
+      "attributes": {},
+      "_id": "da305207-0100-4b6d-ae6c-db38e184b46a",
+      "uris": [
+        "/api/_search/instances"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        }
+      ]
+    },
+    {
+      "name": "api_instances",
+      "type": "urn:service-registry:resources:instances",
+      "ownerManagedAccess": false,
+      "displayName": "API Instances Endpoint",
+      "attributes": {},
+      "_id": "f41942d8-4667-40fa-94ce-10258f9a7be1",
+      "uris": [
+        "/api/instances"
+      ],
+      "scopes": [
+        {
+          "name": "GET"
+        },
+        {
+          "name": "POST"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "0f8e22cd-f79d-442d-a51e-5a4625d108a7",
+      "name": "put_api_instance_status",
+      "description": "Whether the user has the put_api_instance_status role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/put_api_instance_status\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "2b048cda-6ff3-4315-840b-fd6d50205f80",
+      "name": "put_api_instance",
+      "description": "Whether the user has the put_api_instance role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/put_api_instance\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "438a82c0-9784-48f1-b37d-f6b407621e96",
+      "name": "post_api_xmls",
+      "description": "Whether the user has the post_api_xmls role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/post_api_xmls\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "44a53eb5-b0a5-49a1-8f61-16d96bb8c977",
+      "name": "get_api_instance",
+      "description": "Whether the user has the get_api_instance role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_instance\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "49b1fe04-16b5-4ffe-8db8-fe3e36b0ec27",
+      "name": "get_api_xml",
+      "description": "Whether the user has the get_api_xml role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_xml\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "49c8e261-ac4a-433f-8fda-79d884a04e8c",
+      "name": "delete_api_instance",
+      "description": "Whether the user has the delete_api_instance role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/delete_api_instance\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "54e84f4b-0afc-459f-8d53-0f3e68ddaf0d",
+      "name": "get_api_xmls",
+      "description": "Whether the user has the get_api_xmls role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_xmls\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "5a204d4e-4351-49b8-8102-6ae83540b026",
+      "name": "get_api_search_instances",
+      "description": "Whether the user has the get_api_search_instances role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_search_instances\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "64d04c9a-857a-4046-8bf1-5a65dff6230c",
+      "name": "get_api_instances",
+      "description": "Whether the user has the get_api_instances role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_instances\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "6f910479-6499-4c3e-b768-6417506c38f9",
+      "name": "post_api_xmls_dt",
+      "description": "Whether the user has the post_api_xmls_dt role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_xmls_dt\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "70ad9d14-2840-4007-9272-3ca87df9d9cf",
+      "name": "get_api_doc",
+      "description": "Whether the user has the get_api_doc role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_doc\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "780e4811-50cf-4307-b249-81eff5502994",
+      "name": "get_api_docs",
+      "description": "Whether the user has the get_api_docs role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_docs\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "8de5ed4c-0932-4923-b32d-a3d763f31662",
+      "name": "delete_api_doc",
+      "description": "Whether the user has the delete_api_doc role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/delete_api_doc\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "8f24aca0-d512-4b4f-81bf-cd5c39eabbca",
+      "name": "post_api_docs",
+      "description": "Whether the user has the post_api_docs role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/post_api_docs\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "9d4f3a57-88ad-4efc-b43f-a130091d0c27",
+      "name": "put_api_instance_ledger_status",
+      "description": "Whether the user has the put_api_instance_ledger_status role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/put_api_instance_ledger_status\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "9f57abf9-0b07-42ad-9f33-82317f77c3ed",
+      "name": "delete_api_xml",
+      "description": "Whether the user has the delete_api_xml role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/delete_api_xml\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "ad236a5c-9885-4f01-a829-25066a59fb5d",
+      "name": "post_api_instances_dt",
+      "description": "Whether the user has the post_api_instances_dt role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_instances_dt\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "be68083a-f2d7-413c-bfff-f74b4b799e2c",
+      "name": "post_api_docs_dt",
+      "description": "Whether the user has the post_api_docs_dt role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/get_api_docs_dt\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "c5c021c9-bdd2-4d00-bc8c-b54b0d55a1ea",
+      "name": "put_api_xml",
+      "description": "Whether the user has the put_api_xml role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/put_api_xml\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "d1c74755-8c9d-46dc-8b79-e88501b031e5",
+      "name": "post_api_instances",
+      "description": "Whether the user has the post_api_instances role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/post_api_instances\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "d2d07987-1261-41c6-874a-d6223c697413",
+      "name": "put_api_doc",
+      "description": "Whether the user has the put_api_doc role",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"service-registry/put_api_doc\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "0485e4a8-ba1a-4958-86f3-bcf4e01221fa",
+      "name": "Allow Get Xml",
+      "description": "Allows users to retrieve an existing xml",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_xml\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_xml\"]"
+      }
+    },
+    {
+      "id": "0521b80b-bf80-45ca-93c0-5066a89ef912",
+      "name": "Allow Get Instances",
+      "description": "Allows users to retrieve the instances",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instances\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_instances\"]"
+      }
+    },
+    {
+      "id": "228a9f2a-5729-40fa-852d-311e1318ce62",
+      "name": "Allow Put Doc",
+      "description": "Allows users to update an existing doc",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_doc\"]",
+        "scopes": "[\"PUT\"]",
+        "applyPolicies": "[\"put_api_doc\"]"
+      }
+    },
+    {
+      "id": "2717ceba-3416-4d25-93fc-75e5c0ccb20e",
+      "name": "Allow Delete Xml",
+      "description": "Allows users to delete an existing xml",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_xml\"]",
+        "scopes": "[\"DELETE\"]",
+        "applyPolicies": "[\"delete_api_xml\"]"
+      }
+    },
+    {
+      "id": "2fcbfa30-940d-4ef4-8dbc-cfcff94d8a05",
+      "name": "Allow Put Xml",
+      "description": "Allows users to update an existing xml",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_xml\"]",
+        "scopes": "[\"PUT\"]",
+        "applyPolicies": "[\"put_api_xml\"]"
+      }
+    },
+    {
+      "id": "3207dab3-c977-4dde-af58-3b1f514c04a4",
+      "name": "Allow Post Xmls DT",
+      "description": "Allows users to retrieve the xmls in a datatables format",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_xmls_dt\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_xmls_dt\"]"
+      }
+    },
+    {
+      "id": "3410d169-336f-445f-bbe9-ce1f270080ff",
+      "name": "Allow Get Doc",
+      "description": "Allows users to retrieve an existing doc",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_doc\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_doc\"]"
+      }
+    },
+    {
+      "id": "3b0409ae-09c1-467c-b54d-63fd4acbd45e",
+      "name": "Allow Get Search Instances",
+      "description": "Allows users to search for instances",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_search_instances\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_search_instances\"]"
+      }
+    },
+    {
+      "id": "3b07ed33-b23d-40b0-83d9-0f63382fe130",
+      "name": "Allow Post Docs DT",
+      "description": "Allows users to retrieve the docs in a datatables format",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_docs_dt\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_docs_dt\"]"
+      }
+    },
+    {
+      "id": "3ce80460-75ba-43fa-8056-884d6fe6647a",
+      "name": "Allow Delete Instance",
+      "description": "Allows users to delete an existing instance",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instance\"]",
+        "scopes": "[\"DELETE\"]",
+        "applyPolicies": "[\"delete_api_instance\"]"
+      }
+    },
+    {
+      "id": "604f4279-e0f4-40bc-96f4-8de9005f848b",
+      "name": "Allow Post Xmls",
+      "description": "Allows users to create new xmls",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_xmls\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_xmls\"]"
+      }
+    },
+    {
+      "id": "640bb14b-cc02-4367-b5b8-568ff9036d7b",
+      "name": "Allow Get Docs",
+      "description": "Allows users to retrieve the docs",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_docs\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_docs\"]"
+      }
+    },
+    {
+      "id": "6a58f8d2-7dba-4fd2-9846-c72e3d945182",
+      "name": "Allow Post Instances DT",
+      "description": "Allows users to retrieve the instances in a datatables format",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instances_dt\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_instances_dt\"]"
+      }
+    },
+    {
+      "id": "6bd87787-03de-4d68-9c96-d1a9eec9af73",
+      "name": "Allow Put Instance Ledger Status",
+      "description": "Allows users to update the ledger status of an existing instance",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instance_ledger_status\"]",
+        "scopes": "[\"PUT\"]",
+        "applyPolicies": "[\"put_api_instance_ledger_status\"]"
+      }
+    },
+    {
+      "id": "80f1ea8e-4527-40ff-93a3-7022218d7ba1",
+      "name": "Allow Get Instance",
+      "description": "Allows users to retrieve an existing instance",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instance\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_instance\"]"
+      }
+    },
+    {
+      "id": "8a0762f6-a56b-40b4-a2ed-3c5c896de682",
+      "name": "Allow Get Xmls",
+      "description": "Allows users to retrieve the xmls",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_xmls\"]",
+        "scopes": "[\"GET\"]",
+        "applyPolicies": "[\"get_api_xmls\"]"
+      }
+    },
+    {
+      "id": "8e843d04-2151-4d69-9629-6eb75d47a7ab",
+      "name": "Allow Put Instance Status",
+      "description": "Allows users to update the status of an existing instance",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instance_status\"]",
+        "scopes": "[\"PUT\"]",
+        "applyPolicies": "[\"put_api_instance_status\"]"
+      }
+    },
+    {
+      "id": "985c94a8-c26b-4513-b036-453261d868e3",
+      "name": "Allow Post Instances",
+      "description": "Allows users to create new instances",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instances\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_instances\"]"
+      }
+    },
+    {
+      "id": "a3abf694-31f1-44bd-8381-11458aba658e",
+      "name": "Allow Put Instance",
+      "description": "Allows users to update an existing instance",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_instance\"]",
+        "scopes": "[\"PUT\"]",
+        "applyPolicies": "[\"put_api_instance\"]"
+      }
+    },
+    {
+      "id": "d2e9160a-0e71-4d18-ada9-4321d5a4f735",
+      "name": "Allow Delete Doc",
+      "description": "Allows users to delete an existing doc",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_doc\"]",
+        "scopes": "[\"DELETE\"]",
+        "applyPolicies": "[\"delete_api_doc\"]"
+      }
+    },
+    {
+      "id": "f1fc29a9-797a-40b7-9227-6dc8b06114ae",
+      "name": "Allow Post Docs",
+      "description": "Allows users to create new docs",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_docs\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_docs\"]"
+      }
+    }
+  ],
+  "scopes": [
+    {
+      "id": "5882a2c6-d1fc-4f63-8bb9-077907a84fad",
+      "name": "DELETE",
+      "displayName": "DELETE"
+    },
+    {
+      "id": "75fcae0a-1f7e-47ac-b1eb-50ab4bef7aa9",
+      "name": "GET",
+      "displayName": "GET"
+    },
+    {
+      "id": "ac355569-bebe-4277-abd3-1ce63343febf",
+      "name": "POST",
+      "displayName": "POST"
+    },
+    {
+      "id": "bf8fde33-419d-443e-ae62-3824b3c9724e",
+      "name": "PUT",
+      "displayName": "PUT"
+    }
+  ],
+  "decisionStrategy": "AFFIRMATIVE"
+}

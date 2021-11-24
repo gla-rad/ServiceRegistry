@@ -1,10 +1,28 @@
+/*
+ * Copyright (c) 2021 Maritime Connectivity Platform Consortium
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package net.maritimeconnectivity.serviceregistry.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
+import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
+import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
@@ -12,8 +30,10 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.UserContext;
 import org.apache.commons.io.IOUtils;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
-import org.hibernate.search.jpa.FullTextQuery;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.engine.search.query.SearchResult;
+import org.hibernate.search.engine.search.query.SearchResultTotal;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +48,6 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -70,6 +89,18 @@ class InstanceServiceTest {
     private XmlService xmlService;
 
     /**
+     * The Doc Service Mock.
+     */
+    @Mock
+    private DocService docService;
+
+    /**
+     * The LedgerRequest Service Mock.
+     */
+    @Mock
+    private LedgerRequestService ledgerRequestService;
+
+    /**
      * The User Context.
      */
     @Mock
@@ -80,7 +111,8 @@ class InstanceServiceTest {
     private Pageable pageable;
     private Xml xml;
     private Instance newInstance;
-    private Instance existingInstance;
+    private Instance existingInstance;        // No need to add this since
+    private Point point;
 
     /**
      * Common setup for all the tests.
@@ -111,7 +143,7 @@ class InstanceServiceTest {
 
         // Create a temp geometry factory to get some shapes
         GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
-        Point point = factory.createPoint(new Coordinate(52.001, 1.002));
+        this.point = factory.createPoint(new Coordinate(52.001, 1.002));
 
         // Create a new instance
         this.newInstance = new Instance();
@@ -120,7 +152,7 @@ class InstanceServiceTest {
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
         this.newInstance.setStatus(ServiceStatus.RELEASED);
-        this.newInstance.setGeometry(point);
+        this.newInstance.setGeometry(this.point);
         this.newInstance.setInstanceAsXml(xml);
 
         // Create an instance with an ID
@@ -131,7 +163,7 @@ class InstanceServiceTest {
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
         this.existingInstance.setStatus(ServiceStatus.RELEASED);
-        this.existingInstance.setGeometry(point);
+        this.existingInstance.setGeometry(this.point);
         this.existingInstance.setInstanceAsXml(xml);
     }
 
@@ -211,7 +243,7 @@ class InstanceServiceTest {
      */
     @Test
     void testSaveNoValidId() {
-        doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+        doReturn(Optional.empty()).when(this.instanceRepo).findById(this.existingInstance.getId());
 
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
@@ -228,12 +260,11 @@ class InstanceServiceTest {
      */
     @Test
     void testSaveWithDuplicatedMRNVersion() {
-        doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
-        doReturn(new Instance()).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships(this.existingInstance.getInstanceId(), this.existingInstance.getVersion());
+        doReturn(Optional.of(this.newInstance)).when(this.instanceRepo).findByDomainIdAndVersion(this.newInstance.getInstanceId(), this.newInstance.getVersion());
 
         // Perform the service call
-        assertThrows(DuplicateKeyException.class, () ->
-                this.instanceService.save(this.existingInstance)
+        assertThrows(DuplicateDataException.class, () ->
+                this.instanceService.save(this.newInstance)
         );
 
         // And also that no saving calls took place in the repository
@@ -323,8 +354,9 @@ class InstanceServiceTest {
      * Test that we can successfully delete an existing instance.
      */
     @Test
-    void testDelete() throws DataNotFoundException {
-        doReturn(Boolean.TRUE).when(this.instanceRepo).existsById(this.existingInstance.getId());
+    void testDelete() {
+        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
+        doNothing().when(this.ledgerRequestService).deleteByInstanceId(this.existingInstance.getId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
 
         // Perform the service call
@@ -340,8 +372,6 @@ class InstanceServiceTest {
      */
     @Test
     void testDeleteNotFound() {
-        doReturn(Boolean.FALSE).when(this.instanceRepo).existsById(this.existingInstance.getId());
-
         // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
                 this.instanceService.delete(this.existingInstance.getId())
@@ -370,7 +400,7 @@ class InstanceServiceTest {
      * to update the status of, a DataNotFoundException will be thrown.
      */
     @Test
-    void testUpdateStatusNotFound() throws DataNotFoundException, XMLValidationException, GeometryParseException {
+    void testUpdateStatusNotFound() throws DataNotFoundException {
         doReturn(null).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
 
         // Perform the service call
@@ -426,7 +456,7 @@ class InstanceServiceTest {
      */
     @Test
     void testFindByDomainIdAndVersion() {
-        doReturn(this.existingInstance).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships("domainId", "0.0.1Test");
+        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findByDomainIdAndVersionEagerRelationships("domainId", "0.0.1Test");
 
         // Perform the service call
         Instance result = this.instanceService.findByDomainIdAndVersion("domainId", "0.0.1Test");
@@ -517,7 +547,7 @@ class InstanceServiceTest {
     }
 
     /**
-     * That that we can detect geometry errors when validating an incoming instance
+     * Test that we can detect geometry errors when validating an incoming instance
      * saving request.
      */
     @Test
@@ -537,12 +567,39 @@ class InstanceServiceTest {
     }
 
     /**
+     * Test that we can detect when we receive an invalid document when
+     * validating an incoming  instance saving request.
+     */
+    @Test
+    void testValidateInstanceForSaveDocError() throws IOException {
+        // Load a valid test XML for our instance
+        InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
+        String xmlContent = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+
+        // Set the content in a new instance to be validated
+        this.existingInstance.getInstanceAsXml().setContent(xmlContent);
+
+        // Set the doc in a new instance to be validated
+        Doc doc = new Doc();
+        doc.setId(666L);
+        this.existingInstance.setInstanceAsDoc(doc);
+
+        doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
+        doThrow(DataNotFoundException.class).when(this.docService).findOne(doc.getId());
+
+        // Perform the service call
+        assertThrows(DataNotFoundException.class, () ->
+                this.instanceService.validateInstanceForSave(this.existingInstance)
+        );
+    }
+
+    /**
      * Test that we can retrieve the paged list of instances for a Datatables
      * pagination request (which by the way also includes search and sorting
      * definitions).
      */
     @Test
-    void testHandleDatatablesPagingRequests() {
+    void testHandleDatatablesPagingRequest() {
         // First create the pagination request
         DtPagingRequest dtPagingRequest = new DtPagingRequest();
         dtPagingRequest.setStart(0);
@@ -576,20 +633,55 @@ class InstanceServiceTest {
         dtPagingRequest.setSearch(dtSearch);
 
         // Mock the full text query
-        FullTextQuery mockedQuery = mock(FullTextQuery.class);
-        doReturn(this.instances.subList(0, 5)).when(mockedQuery).getResultList();
-        doReturn(mockedQuery).when(this.instanceService).searchInstanceQuery(any());
+        SearchQuery<Instance> mockedQuery = mock(SearchQuery.class);
+        SearchResult<Instance> searchResult = mock(SearchResult.class);
+        SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
+        doReturn(searchResult).when(mockedQuery).fetch(any(), any());
+        doReturn(this.instances.subList(0, 5)).when(searchResult).hits();
+        doReturn(searchResultTotal).when(searchResult).total();
+        doReturn(10L).when(searchResultTotal).hitCount();
+        doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByText(any(), any());
 
         // Perform the service call
-        DtPage<Instance> result = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
+        Page<Instance> result = this.instanceService.handleDatatablesPagingRequest(dtPagingRequest);
 
         // Validate the result
         assertNotNull(result);
-        assertEquals(5, result.getRecordsFiltered());
+        assertEquals(5, result.getSize());
 
         // Test each of the result entries
-        for(int i=0; i < result.getRecordsFiltered(); i++){
-            assertEquals(this.instances.get(i), result.getData().get(i));
+        for(int i=0; i < result.getContent().size(); i++){
+            assertEquals(this.instances.get(i), result.getContent().get(i));
+        }
+    }
+
+    /**
+     * Test that we can retrieve the paged list of instances based on a
+     * Lucene search query. The pages request parameter contains any paging
+     * and soring information.
+     */
+    @Test
+    void testHandleSearchQueryRequest() {
+        // Mock the full text query
+        SearchQuery<Instance> mockedQuery = mock(SearchQuery.class);
+        SearchResult<Instance> searchResult = mock(SearchResult.class);
+        SearchResultTotal searchResultTotal = mock(SearchResultTotal.class);
+        doReturn(searchResult).when(mockedQuery).fetch(any(), any());
+        doReturn(this.instances.subList(0, 5)).when(searchResult).hits();
+        doReturn(searchResultTotal).when(searchResult).total();
+        doReturn(10L).when(searchResultTotal).hitCount();
+        doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByQueryString(any(), any(), any());
+
+        // Perform the service call
+        Page<Instance> result = this.instanceService.handleSearchQueryRequest("search-term", this.point, this.pageable);
+
+        // Validate the result
+        assertNotNull(result);
+        assertEquals(5, result.getSize());
+
+        // Test each of the result entries
+        for(int i=0; i < result.getContent().size(); i++){
+            assertEquals(this.instances.get(i), result.getContent().get(i));
         }
     }
 

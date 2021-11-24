@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.utils;
+package net.maritimeconnectivity.serviceregistry.components;
 
+import net.maritimeconnectivity.serviceregistry.components.StringToG1128SchemaConverter;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +47,7 @@ class StringToG1128SchemaConverterTest {
     }
 
     /**
-     * Test that we for invalid input, the StringToG1128SchemaConverter will
+     * Test that for invalid inputs, the StringToG1128SchemaConverter will
      * return null.
      */
     @Test
