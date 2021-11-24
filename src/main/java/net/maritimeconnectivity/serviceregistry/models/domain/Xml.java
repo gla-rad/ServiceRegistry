@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
@@ -24,16 +25,16 @@ import java.util.Objects;
 
 /**
  * The type Xml.
- *
+ * <p>
  * A technical way to describe aspects if a service.The Xml should validate
  * against a XSD from a SpecificationTemplate.
- *
+ * </p>
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
 @Table(name = "xml")
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Xml {
 
     private static final long serialVersionUID = 1L;

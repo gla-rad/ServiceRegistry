@@ -19,13 +19,13 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * The type Doc.
@@ -34,29 +34,36 @@ import java.util.Set;
  * objects.This could be an office document containing guidelines linked,to a
  * service specification, or a Getting Started PDF attached to a service
  * instance.
+ * </p>
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
 @Table(name = "document")
+@Indexed
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Doc implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
+    @GenericField(name = "id_sort", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "name", nullable = false)
     private String name;
 
+    @FullTextField()
+    @KeywordField(name = "comment_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
     @NotNull
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "mimetype", nullable = false)
     private String mimetype;
 
@@ -68,10 +75,11 @@ public class Doc implements Serializable {
     @Column(name = "filecontent_content_type", nullable = false)
     private String filecontentContentType;
 
-    @ManyToMany(mappedBy = "docs")
+    @OneToOne(fetch = FetchType.EAGER)
+    @IndexedEmbedded(includePaths = "id_sort")
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    private Set<Instance> instances = new HashSet<>();
+    private Instance instance;
 
     /**
      * Instantiates a new Doc.
@@ -189,21 +197,21 @@ public class Doc implements Serializable {
     }
 
     /**
-     * Gets instances.
+     * Gets instance.
      *
-     * @return the instances
+     * @return the instance
      */
-    public Set<Instance> getInstances() {
-        return instances;
+    public Instance getInstance() {
+        return instance;
     }
 
     /**
-     * Sets instances.
+     * Sets instance.
      *
-     * @param instances the instances
+     * @param instance the instance
      */
-    public void setInstances(Set<Instance> instances) {
-        this.instances = instances;
+    public void setInstance(Instance instance) {
+        this.instance = instance;
     }
 
     /**

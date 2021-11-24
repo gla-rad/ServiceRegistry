@@ -20,28 +20,40 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
-import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
-import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
-import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
-import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
+import net.maritimeconnectivity.serviceregistry.exceptions.*;
+import net.maritimeconnectivity.serviceregistry.models.domain.*;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortedSetSortField;
+import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
+import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
+import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
+import org.apache.lucene.spatial.query.SpatialArgs;
+import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.CoverageArea;
-import org.efficiensea2.maritime_cloud.service_registry.v1.serviceinstanceschema.ServiceInstance;
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
-import org.hibernate.search.jpa.FullTextEntityManager;
-import org.hibernate.search.jpa.FullTextQuery;
-import org.hibernate.search.jpa.Search;
-import org.hibernate.search.query.dsl.QueryBuilder;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
+import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
+import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
@@ -54,9 +66,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
 import javax.persistence.EntityManager;
+import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing Instance.
@@ -78,13 +93,25 @@ public class InstanceService {
      * The Instance Repository.
      */
     @Autowired
-    private InstanceRepo instanceRepo;
+    InstanceRepo instanceRepo;
 
     /**
      * The XML Service.
      */
     @Autowired
-    private XmlService xmlService;
+    XmlService xmlService;
+
+    /**
+     * The Doc Service.
+     */
+    @Autowired
+    DocService docService;
+
+    /**
+     * The LedgerRequest Service.
+     */
+    @Autowired(required = false)
+    private LedgerRequestService ledgerRequestService;
 
     /**
      * The UnLoCode Service.
@@ -115,16 +142,27 @@ public class InstanceService {
             "imo",
             "serviceType"
     };
+    private final String[] searchFieldsWithSort = new String[] {
+            "id",
+            "name",
+            "keywords",
+            "serviceType"
+    };
 
     /**
      * Definition of the whole world area in GeoJSON.
      */
-    String wholeWorldGeoJson = "{\n" +
+    protected String wholeWorldGeoJson = "{\n" +
             "  \"type\": \"Polygon\",\n" +
             "  \"coordinates\": [\n" +
             "    [[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]\n" +
             "  ]\n" +
             "}";
+
+    /**
+     * Allow a common G1128 Utils definitions for the G1128 Instances.
+     */
+    protected G1128Utils<ServiceInstance> g1128SIUtils = new G1128Utils<>(ServiceInstance.class);
 
     /**
      * Get all the instances.
@@ -139,9 +177,9 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by id.
+     * Get one instance by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      * @return the entity
      */
     @Transactional(readOnly = true)
@@ -154,14 +192,14 @@ public class InstanceService {
     /**
      * Save a instance.
      *
-     * @param instance the entity to save
+     * @param instance  the entity to save
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException, DuplicateKeyException {
+    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
-        // First of all validate the object
+        // First, validate the object
         this.validateInstanceForSave(instance);
 
         // Don't accept empty geometry value, set whole earth coverage
@@ -175,37 +213,46 @@ public class InstanceService {
         if(instance.getId() == null) {
             instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
         }
+
         // If the publication date is missing
-        if(instance.getPublishedAt() == null) {
+        if(StringUtils.isBlank(instance.getPublishedAt())) {
             instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
         }
+
         // And don't forget the last update
-        instance.setLastUpdatedAt(instance.getPublishedAt());
+        if(StringUtils.isBlank(instance.getLastUpdatedAt())) {
+            instance.setLastUpdatedAt(instance.getPublishedAt());
+        } else {
+            instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
+        }
 
         // The save and return
         return this.instanceRepo.save(instance);
     }
 
     /**
-     * Delete the  instance by id.
+     * Delete the instance by ID.
      *
-     * @param id the id of the entity
+     * @param id        the ID of the entity
      */
     @Transactional(propagation = Propagation.NESTED)
     public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
-        if(this.instanceRepo.existsById(id)) {
-            this.instanceRepo.deleteById(id);
-        } else {
-            throw new DataNotFoundException("No instance found for the provided ID", null);
-        }
+        this.instanceRepo.findById(id)
+                .ifPresentOrElse(i -> {
+                    Optional.ofNullable(this.ledgerRequestService)
+                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getId()));
+                    this.instanceRepo.deleteById(i.getId());
+                }, () -> {
+                    throw new DataNotFoundException("No instance found for the provided ID", null);
+                });
     }
 
     /**
-     * Update the status of an instance by id.
+     * Update the status of an instance by ID.
      *
-     * @param id     the id of the entity
-     * @param status the status of the entity
+     * @param id        the ID of the entity
+     * @param status    the status of the entity
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
@@ -222,26 +269,56 @@ public class InstanceService {
             Xml instanceXml = instance.getInstanceAsXml();
             if (instanceXml != null && instanceXml.getContent() != null) {
                 // Unmarshall the XML, update the status and re-marshall the to XML
-                ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instanceXml.getContent());
+                ServiceInstance serviceInstance = this.g1128SIUtils.unmarshallG1128(instanceXml.getContent());
                 serviceInstance.setStatus(status);
-                instanceXml.setContent(new G1128Utils<>(ServiceInstance.class).marshalG1128(serviceInstance));
+                instanceXml.setContent(this.g1128SIUtils.marshalG1128(serviceInstance));
                 // Save XML
-                xmlService.save(instanceXml);
+                this.xmlService.save(instanceXml);
             }
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException e) {
-            log.error("Problem during instance status update.", e);
-            throw e;
+        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException ex) {
+            log.error("Problem during instance status update.", ex);
+            throw ex;
         }
     }
 
     /**
-     * Get all the instances that match a domain specific ID (for example,
-     * maritime id), regardless of their version.
+     * Update the ledger status of an instance by ID.
      *
-     * @param domainId          the domain specific id of the instance
+     * @param id            the ID of the entity
+     * @param ledgerStatus  the ledger status of the entity
+     */
+    @Transactional
+    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
+        return Optional.ofNullable(this.ledgerRequestService)
+                .map(lss -> {
+                    // First make sure the instance is valid
+                    final Instance instance = this.findOne(id);
+
+                    // Get a ledger request and if it does not exist create one
+                    final LedgerRequest request = Optional.of(instance)
+                            .filter(i -> Objects.nonNull(i.getLedgerRequest()))
+                            .map(Instance::getLedgerRequest)
+                            .orElseGet(() ->  {
+                                final LedgerRequest newRequest = new LedgerRequest();
+                                newRequest.setServiceInstance(instance);
+                                newRequest.setStatus(LedgerRequestStatus.CREATED);
+                                return this.ledgerRequestService.save(newRequest);
+                            });
+
+                    // Finally, update the status
+                    return lss.updateStatus(request.getId(), ledgerStatus, reason);
+                })
+                .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
+    }
+
+    /**
+     * Get all the instances that match a domain specific ID (for example,
+     * maritime ID), regardless of their version.
+     *
+     * @param domainId      the domain specific ID of the instance
      * @return the list of matching entities
      */
     public List<Instance> findAllByDomainId(String domainId) {
@@ -250,42 +327,39 @@ public class InstanceService {
     }
 
     /**
-     * Get one instance by domain specific id (for example, maritime id) and version.
+     * Get one instance by domain specific id (for example, maritime id) and
+     * version.
      *
-     * @param domainId            the domain specific id of the instance
-     * @param version             the version identifier of the instance
+     * @param domainId      the domain specific id of the instance
+     * @param version       the version identifier of the instance
      * @return the entity
      */
     @Transactional(readOnly = true)
     public Instance findByDomainIdAndVersion(String domainId, String version) {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
-        try {
-            return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version);
-        } catch (Exception e) {
-            log.debug("Could not find instance for domain id {} and version {}", domainId, version);
-            log.error(e.getMessage());
-        }
-        return null;
+        return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version)
+                .orElseGet(() -> {
+                    log.debug("Could not find instance for domain id {} and version {}", domainId, version);
+                    return null;
+                });
     }
 
     /**
-     * Get one instance by domain specific id (for example, maritime id), only return the latest version.
+     * Get one instance by domain specific ID (for example, maritime ID), only
+     * return the latest version.
      *
-     * @param domainId            the domain specific id of the instance
+     * @param domainId      the domain specific id of the instance
      * @return the entity
      */
     @Transactional(readOnly = true)
     public Instance findLatestVersionByDomainId(String domainId) {
         log.debug("Request to get Instance by domain id {}", domainId);
-        try {
-            return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
+        return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
                 .max(Comparator.comparing(i -> new DefaultArtifactVersion(i.getVersion())))
-                .orElseThrow(() -> new DataNotFoundException("No instance found!", null));
-        } catch (Exception e) {
-            log.debug("Could not find a live instance for domain id {}", domainId);
-            log.error(e.getMessage());
-        }
-        return null;
+                .orElseGet(() -> {
+                    log.debug("Could not find a live instance for domain id {}", domainId);
+                    return null;
+                });
     }
 
     /**
@@ -297,28 +371,41 @@ public class InstanceService {
      *    <li>Parsing GeoData (GeometryParseException if fails)</li>
      * </ul>
      *
-     * @param instance the instance to be saved
+     * @param instance      the instance to be saved
      * @throws XMLValidationException If fails first phase (Validating and parsing XML)
      * @throws GeometryParseException If fails second phase (Parsing geo data)
      */
-    public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException, DataNotFoundException {
+    public void validateInstanceForSave(Instance instance) throws XMLValidationException, GeometryParseException {
         if(instance == null) {
             return;
         }
 
         // Try to find the instance if an ID is provided
         if(instance.getId() != null) {
-            Optional.of(instance.getId())
-                    .map(instanceRepo::existsById)
-                    .filter(Boolean.TRUE::equals)
-                    .orElseThrow(() -> new DataNotFoundException("No instance found for the provided ID", null));
+            this.instanceRepo.findById(instance.getId())
+                    .ifPresentOrElse(existingInstance -> {
+                        // We need to be able to update instances with providing
+                        // the whole instance doc every time. Therefore, if
+                        // we just have an ID but not file, we can try to load
+                        // the saved doc from the database into the input
+                        // instance. Note that we don't actually throw an error
+                        // for invalid docs... it's just an ID anyway right?
+                        if(Objects.nonNull(instance.getInstanceAsDoc()) && Objects.isNull(instance.getInstanceAsDoc().getFilecontent())) {
+                            Optional.of(instance.getInstanceAsDoc())
+                                    .map(Doc::getId)
+                                    .filter(docId -> Objects.nonNull(existingInstance.getInstanceAsDoc()))
+                                    .filter(docId -> docId.equals(existingInstance.getInstanceAsDoc().getId()))
+                                    .map(this.docService::findOne)
+                                    .ifPresent(doc -> instance.setInstanceAsDoc(doc));
+                        }
+                    }, () -> {
+                        throw new DataNotFoundException("No instance found for the provided ID", null);
+                    });
         }
-
-        // Check the instance exists or not
-        if(instance.getInstanceId() != null && instance.getVersion() != null) {
-            if (this.instanceRepo.findByDomainIdAndVersionEagerRelationships(instance.getInstanceId(), instance.getVersion()) != null){
-                throw new DuplicateKeyException("Duplicated instance with the same MRN and version found: ", null);
-            }
+        // Else check for MRN and version conflicts with other instances
+        else if(instance.getInstanceId() != null && instance.getVersion() != null) {
+            this.instanceRepo.findByDomainIdAndVersion(instance.getInstanceId(), instance.getVersion())
+                    .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found.", null); });
         }
 
         try {
@@ -340,6 +427,14 @@ public class InstanceService {
         } catch (JAXBException | ParseException e) {
             throw new GeometryParseException("Service Instance geometry parsing error.", e);
         }
+
+        // Update the XML with a formatted version
+        Optional.of(instance)
+                .map(Instance::getInstanceAsXml)
+                .map(Xml::getContent)
+                .map(xml -> { try { return g1128SIUtils.unmarshallG1128(xml); } catch (JAXBException e) { return null; } })
+                .map(si -> { try { return g1128SIUtils.marshalG1128(si); } catch (JAXBException e) { return null; } })
+                .ifPresent(instance.getInstanceAsXml()::setContent);
     }
 
     /**
@@ -347,34 +442,47 @@ public class InstanceService {
      * an appropriate format to be viewed by a datatables jQuery table.
      *
      * @param dtPagingRequest the Datatables pagination request
-     * @return the Datatables paged response
+     * @return the paged response
      */
     @Transactional(readOnly = true)
-    public DtPage<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
+    public Page<Instance> handleDatatablesPagingRequest(DtPagingRequest dtPagingRequest) {
         // Create the search query
-        FullTextQuery searchQuery = this.searchInstanceQuery(dtPagingRequest.getSearch().getValue());
-        searchQuery.setFirstResult(dtPagingRequest.getStart());
-        searchQuery.setMaxResults(dtPagingRequest.getLength());
+        SearchQuery searchQuery = this.getSearchInstanceQueryByText(
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
+                        .collect(Collectors.toList())));
 
-        // Add sorting if requested
-        Optional.of(dtPagingRequest)
-                .map(DtPagingRequest::getLucenceSort)
-                .filter(ls -> ls.getSort().length > 0)
-                .ifPresent(searchQuery::setSort);
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
+    }
 
-        // For some reason we need this casting otherwise JDK8 complains
-        return (DtPage<Instance>) Optional.of(searchQuery)
-                .map(FullTextQuery::getResultList)
-                .map(stations -> new PageImpl<>(stations, dtPagingRequest.toPageRequest(), searchQuery.getResultSize()))
-                .map(Page.class::cast)
-                .map(page -> new DtPage<>((Page<Instance>)page, dtPagingRequest))
-                .orElseGet(DtPage::new);
+    /**
+     * Handles a datatables pagination request and returns the results list in
+     * an appropriate format to be viewed by a datatables jQuery table.
+     *
+     * @param queryString
+     * @param pageable
+     * @return the paged response
+     */
+    @Transactional(readOnly = true)
+    public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
+        // Create the search query - always sort by name
+        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
+                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
     /**
      * Parse instance attributes from the xml payload for search/filtering
      *
-     * @param instance the instance to parse
+     * @param instance      the instance to parse
      * @return an instance with its attributes set
      * @throws JAXBException if the XML is invalid or required attributes not present
      */
@@ -393,13 +501,20 @@ public class InstanceService {
         instance.setMmsi(serviceInstance.getMMSI());
         instance.setImo(serviceInstance.getIMO());
         instance.setServiceType(serviceInstance.getServiceType());
-        instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
+        instance.setUnlocode(serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .collect(Collectors.toList()));
+        instance.setDesigns(Stream.of(serviceInstance.getImplementsServiceDesign())
+                .collect(Collectors.toMap(ServiceDesignReference::getId, ServiceDesignReference::getVersion)));
     }
 
     /**
      * Parse instance geometry from the xml payload for search/filtering
      *
-     * @param instance the instance to parse
+     * @param instance      the instance to parse
      * @return an instance with its attributes set
      * @throws Exception if the XML is invalid or attributes not present
      */
@@ -407,16 +522,27 @@ public class InstanceService {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
         ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
 
-        String unLoCode = serviceInstance.getCoversAreas().getUnLoCode();
-        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas().getCoversAreas();
+        List<String> unLoCode = serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
+                .filter(StringUtils::isNotBlank)
+                .collect(Collectors.toList());
+        List<CoverageArea> coverageAreas = serviceInstance.getCoversAreas()
+                .getCoversAreasAndUnLoCodes()
+                .stream()
+                .filter(CoverageArea.class::isInstance)
+                .map(CoverageArea.class::cast)
+                .collect(Collectors.toList());
 
         // UN/LOCODE and Coverage Geometry are supported simultaneously.
         // However, for geo-searches, Coverage takes precedence over UN/LOCODE.
-        if (unLoCode != null && unLoCode.length() > 0) {
-            instance.setUnlocode(serviceInstance.getCoversAreas().getUnLoCode());
+        if (unLoCode != null && unLoCode.size() > 0) {
+            instance.setUnlocode(unLoCode);
         }
 
-        // Check the coverage areas
+        // Apply coverage areas, or for UnLoCode use its coordinates
         if (coverageAreas != null && coverageAreas.size() > 0) {
             List<Geometry> geometryList = new ArrayList();
             for(CoverageArea coverageArea : coverageAreas) {
@@ -426,44 +552,140 @@ public class InstanceService {
                         .orElseThrow(() -> new ParseException("Invalid geometry detected")));
             }
             instance.setGeometry(new GeometryCombiner(geometryList).combine());
-        } else if (unLoCode != null && unLoCode.length() > 0) {
+        } else if (unLoCode != null && unLoCode.size() > 0) {
             unLoCodeService.applyUnLoCodeMapping(instance, unLoCode);
         }
     }
 
     /**
      * Constructs a hibernate search query using Lucene based on the provided
-     * search test. This query will be based solely on the stations table and
+     * search test. This query will be based solely on the instances table and
      * will include the following fields:
-     * - Name
-     * - Version
-     * - Last Updated At
-     * - Keywords
-     * - Status
-     * - Organisation ID
-     * - Endpoint URI
-     * - MMSI
-     * - IMO
-     * - Service Type
+     * <ul>
+     *  <li>Name</li>
+     *  <li>Version</li>
+     *  <li>Last Updated At</li>
+     *  <li>Instance ID</li>
+     *  <li>Status</li>
+     *  <li>Organization ID</li>
+     *  <li>Endpoint URI</li>
+     *  <li>MMSI</li>
+     *  <li>IMO</li>
+     *  <li>Service Type</li>
+     * </ul>
      *
-     * @param searchText the text to be searched
-     * @return the full text query
+     * @param searchText    the text to be searched
+     * @param sort          the sorting operation to be applied
+     * @return the constructed hibernate search query object
      */
-    protected FullTextQuery searchInstanceQuery(String searchText) {
-        FullTextEntityManager fullTextEntityManager = Search.getFullTextEntityManager(entityManager);
-        QueryBuilder queryBuilder = fullTextEntityManager.getSearchFactory()
-                .buildQueryBuilder()
-                .forEntity(Instance.class)
-                .get();
+    protected SearchQuery<Instance> getSearchInstanceQueryByText(String searchText, Sort sort) {
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( scope.predicate().wildcard()
+                        .fields( this.searchFields )
+                        .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
+                        .toPredicate() )
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
+    }
 
-        Query luceneQuery = queryBuilder
-                .keyword()
-                .wildcard()
-                .onFields(this.searchFields)
-                .matching(Optional.ofNullable(searchText).orElse("").toLowerCase() + "*")
-                .createQuery();
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search query string and the geo-spatial geometry. This query string
+     * should follow the Lucene query syntax and the search will include the
+     * following fields:
+     * <ul>
+     *  <li>Name</li>
+     *  <li>Version</li>
+     *  <li>Last Updated At</li>
+     *  <li>Instance ID</li>
+     *  <li>Status</li>
+     *  <li>Organization ID</li>
+     *  <li>Endpoint URI</li>
+     *  <li>MMSI</li>
+     *  <li>IMO</li>
+     *  <li>Service Type</li>
+     * </ul>
+     * The geo-spatial geometry is a LocationTech Geometry Collection that will
+     * be evaluated if it intersects with any of the available instances.
+     *
+     * @param queryString   The lucene query string to use for the search
+     * @param geometry      The geo-spatial geometry to use for the search
+     * @param sort          The sorting operation to be applied
+     * @return the constructed hibernate search query object
+     */
+    protected SearchQuery<Instance> getSearchInstanceQueryByQueryString(String queryString, Geometry geometry, Sort sort) {
+        // First parse the input string to make sure it's right
+        final Query luceneQuery = this.createLuceneQuery(queryString);
 
-        return fullTextEntityManager.createFullTextQuery(luceneQuery, Instance.class);
+        // Also look out for a geometry query that needs to be handled differently
+        final Query geoQuery = this.createGeoSpatialQuery(geometry);
+
+        // Then build and return the hibernate-search query
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Instance> scope = searchSession.scope( Instance.class );
+        return searchSession.search( scope )
+                .where( f -> f.bool()
+                        .must(q1 -> Optional.ofNullable(luceneQuery)
+                                .map(q1.extension(LuceneExtension.get())::fromLuceneQuery)
+
+                                .orElseGet(() -> q1.matchAll())
+                        )
+                        .must(q2 -> Optional.ofNullable(geoQuery)
+                                .map(q2.extension(LuceneExtension.get())::fromLuceneQuery)
+                                .orElseGet(() -> q2.matchAll())
+                        )
+                )
+                .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
+                .toQuery();
+    }
+
+    /**
+     * Creates a Lucene query based on the query string provided. The query
+     * string should follow the Lucene query syntax.
+     *
+     * @param queryString   The query string that follows the Lucene query syntax
+     * @return The Lucene query constructed
+     */
+    protected Query createLuceneQuery(String queryString) {
+        // First parse the input string to make sure it's right
+        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
+        parser.setDefaultOperator( QueryParser.Operator.AND );
+        return Optional.ofNullable(queryString)
+                .filter(StringUtils::isNotBlank)
+                .map(q -> {
+                    try {
+                        return parser.parse(q);
+                    } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
+                        this.log.error(ex.getMessage());
+                        throw new InvalidRequestException(ex.getMessage(), ex);
+                    }
+                })
+                .orElse(null);
+    }
+
+    /**
+     * Creates a Lucene geo-spatial query based on the provided geometry. The
+     * query isa recursive one based on the maxLevels defined (in this case 11,
+     * which result in a sub-meter precision).
+     *
+     * @param geometry      The geometry to generate the spatial query for
+     * @return The Lucene geo-spatial query constructed
+     */
+    protected Query createGeoSpatialQuery(Geometry geometry) {
+        // Initialise the spatial strategy
+        JtsSpatialContext ctx = JtsSpatialContext.GEO;
+        int maxLevels = 12; //results in sub-meter precision for geohash
+        SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
+        RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid,"geometry");
+
+        // Create the Lucene GeoSpatial Query
+        return Optional.ofNullable(geometry)
+                .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
+                .map(strategy::makeQuery)
+                .orElse(null);
     }
 
 }

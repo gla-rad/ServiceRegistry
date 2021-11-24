@@ -14,25 +14,26 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.utils;
+package net.maritimeconnectivity.serviceregistry.components;
 
-import org.efficiensea2.maritime_cloud.service_registry.v1.servicespecificationschema.ServiceStatus;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
 
 /**
- * The Sting to Service Status Converter.
+ * The Sting to G1128 Schemas Converter.
  *
- * This utility class can convert strings to G1128 Service Instance status
- * enumeration entries.
+ * This utility class can convert strings to G1128 Schemas enumeration entries.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class StringToServiceStatusConverter implements Converter<String, ServiceStatus> {
+@Component
+public class StringToG1128SchemaConverter implements Converter<String, G1128Schemas> {
 
     @Override
-    public ServiceStatus convert(String source) {
-        for (ServiceStatus s : ServiceStatus.values()) {
-            if (s.value().equalsIgnoreCase(source)) {
+    public G1128Schemas convert(String source) {
+        for (G1128Schemas s : G1128Schemas.values()) {
+            if (s.getName().equalsIgnoreCase(source)) {
                 return s;
             }
         }

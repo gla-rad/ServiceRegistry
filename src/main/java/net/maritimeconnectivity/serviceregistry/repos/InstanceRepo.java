@@ -21,6 +21,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Spring Data JPA repository for the Instance entity.
@@ -36,7 +37,8 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
      */
     @Query("select distinct instance " +
             "from Instance instance " +
-            "left join fetch instance.docs")
+            "left join fetch instance.docs " +
+            "left join fetch instance.ledgerRequest")
     List<Instance> findAllWithEagerRelationships();
 
     /**
@@ -48,6 +50,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
     @Query("select distinct instance " +
             "from Instance instance " +
             "left join fetch instance.docs " +
+            "left join fetch instance.ledgerRequest " +
             "where instance.instanceId = :id ")
     List<Instance> findByDomainIdEagerRelationships(@Param("id") String id);
 
@@ -60,6 +63,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
     @Query("select instance " +
             "from Instance instance " +
             "left join fetch instance.docs " +
+            "left join fetch instance.ledgerRequest " +
             "where instance.id =:id")
     Instance findOneWithEagerRelationships(@Param("id") Long id);
 
@@ -85,7 +89,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
             "from Instance instance " +
             "where instance.instanceId = :id " +
             "and instance.version = :version")
-    Instance findByDomainIdAndVersion(@Param("id") String id, @Param("version") String version);
+    Optional<Instance> findByDomainIdAndVersion(@Param("id") String id, @Param("version") String version);
 
     /**
      * Find by domain id and version eager relationships list.
@@ -97,8 +101,9 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
     @Query("select distinct instance " +
             "from Instance instance " +
             "left join fetch instance.docs " +
+            "left join fetch instance.ledgerRequest " +
             "where instance.instanceId = :id " +
             "and instance.version = :version")
-    Instance findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
+    Optional<Instance> findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
 
 }
