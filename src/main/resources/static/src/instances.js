@@ -283,7 +283,10 @@ $(() => {
     // Link the download instance doc button functionality
     $('#instanceEditPanel').on('click', '.btn-download-instance-doc', (e) => {
         var $modalDiv = $(e.delegateTarget);
-        downloadDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
+        var selectedRow = instancesTable.row({selected : true}).data();
+        if(selectedRow) {
+            downloadDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
+        }
     });
 
     // On confirmation of the instance saving, we need to make an AJAX
@@ -432,7 +435,6 @@ function clearInstanceEditPanel() {
 function loadInstanceEditPanel($modalDiv, isNewInstance) {
     // First always clear to be sure
     clearInstanceEditPanel();
-    clearInstanceDoc($modalDiv);
 
     // Note if a new or an existing instance is to be loaded
     newInstance = isNewInstance;
@@ -440,16 +442,24 @@ function loadInstanceEditPanel($modalDiv, isNewInstance) {
     // If a row has been selected load the data into the form
     if(!isNewInstance && instancesTable.row({selected : true})) {
         // Populate the form
-        rowData = instancesTable.row({selected : true}).data();
+        var rowData = instancesTable.row({selected : true}).data();
         var g1128Compliant = rowData['instanceAsXml'] != null;
         $('#g1128CompliantButton').prop('checked', g1128Compliant);
 
         // Populate all the form fields
         $('form[name="instanceEditPanelForm"] :input').each(function() {
+            // Make sure the input element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
             $(this).val(rowData[$(this).attr('id')]);
             $(this).filter('[data-g1128="true"]').attr('readonly', g1128Compliant);
         });
         $('form[name="instanceEditPanelForm"] select').each(function() {
+            // Make sure the select element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
             $(this).val(rowData[$(this).attr('id')]);
             $(this).filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
         });
@@ -479,10 +489,19 @@ function loadInstanceEditPanel($modalDiv, isNewInstance) {
  * @param {Boolean}     isNewInstance   Whether this is a new instance or not
  */
 function saveInstanceEditPanel($modalDiv, isNewInstance) {
+    var g1128Compliant = $modalDiv.find("#g1128CompliantButton").prop('checked');
+
+    // First check the form configuration
+    if (!g1128Compliant && !$('#instanceEditPanelForm')[0].checkValidity()) {
+        $modalDiv.removeClass('loading');
+        $('#instanceTabs button:first').tab('show');
+        setTimeout(() => $('#instanceEditPanelForm')[0].reportValidity(), 250);
+        return;
+    }
+
     // Load the data to be stored/updated
     var columnDefData = columnDefs.map((e) => e["data"]);
     var rowData = initialiseInstanceData(g1128Compliant);
-    var g1128Compliant = $modalDiv.find("#g1128CompliantButton").prop('checked');
 
     // If an existing row has been selected, copy the data for an update
     if(!isNewInstance && instancesTable.row({selected : true}).length != 0) {
@@ -534,9 +553,11 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
         }
         saveInstanceThroughDatatables(rowData);
     }
-    // Finally remove the loading from the dialog, with a small timeout
-    setTimeout(() => $modalDiv.removeClass('loading'), 50);
-
+    // Finally remove the loading from the dialog and hide it, with a small timeout
+    setTimeout(() => {
+        $modalDiv.removeClass('loading');
+        $modalDiv.modal("toggle");
+    }, 50);
 }
 
 /**
