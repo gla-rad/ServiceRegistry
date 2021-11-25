@@ -140,6 +140,32 @@
         <div class="map-container">
             <div id="searchMap" class="h-100 border shadow"></div>
         </div>
+        <div class="modal fade" id="instanceViewPanel" tabindex="-1" role="dialog" aria-labelledby="instanceViewPanelHeader"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="instanceViewPanelHeader">Instance Definition</h5>
+                        <div class="ms-3">
+                            <input id="g1128CompliantButton" type="checkbox" class="btn-check" autocomplete="off" data-target="#g1128SideBar" checked disabled>
+                            <label class="btn btn-outline-primary" for="g1128CompliantButton">G-1128 Compliant</label><br>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form th:replace="fragments/instance-editor.html :: instanceEditPanelForm"></form>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="float-right">
+                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Cancel Changes">
+                                <i class="fas">&times</i>&nbsp;
+                                <span class="btn-label">Close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div th:replace="fragments/general.html :: error-dialog"></div>
         <div th:replace="fragments/general.html :: footer"></div>
     </div>

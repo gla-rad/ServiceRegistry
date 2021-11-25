@@ -104,17 +104,19 @@ function initDrawControlEditOnly(drawnItems) {
  * @param  {GeoJSON}        geometry        The geometry to be loaded onto the map
  * @param  {Map}            map             The map to load the geometry into
  * @param  {FeatureGroup}   drawnItems      The feature items drawn on the map
+ * @param  {Booleran}       fitBounds       If to fit to the bounds of the loaded geometry
  */
-function loadGeometryOnMap(geometry, map, drawnItems) {
+function loadGeometryOnMap(geometry, map, drawnItems, fitBounds=true) {
     // Recreate the drawn items feature group
     drawnItems.clearLayers();
     if(geometry) {
         var geomLayer = L.geoJson(geometry);
         addNonGroupLayers(geomLayer, drawnItems);
-        map.setView(geomLayer.getBounds().getCenter(), 5);
-        setTimeout(function() {
-            map.fitBounds(geomLayer.getBounds());
-        }, 700);
+        if(fitBounds) {
+            setTimeout(() => map.fitBounds(geomLayer.getBounds()), 50);
+        } else {
+            map.setView(geomLayer.getBounds().getCenter());
+        }
     }
 }
 
