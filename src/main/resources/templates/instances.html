@@ -51,7 +51,7 @@
                     <div class="modal-header">
                         <h5 class="modal-title" id="instanceEditPanelHeader">Instance Definition</h5>
                         <div class="ms-3">
-                            <input id="g1128CompliantButton" type="checkbox" class="btn-check" autocomplete="off" data-target="#g1128SideBar" checked>
+                            <input id="g1128CompliantButton" type="checkbox" class="btn-check" autocomplete="off" data-target="#g1128SideBar" checked onclick="toggleG1128Compliant()">
                             <label class="btn btn-outline-primary" for="g1128CompliantButton">G-1128 Compliant</label><br>
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -68,28 +68,6 @@
                             <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Changes">
                                 <i class="fas fa-save"></i>&nbsp;
                                 <span class="btn-label">Save</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="instanceCoveragePanel" tabindex="-1" role="dialog" aria-labelledby="instanceCoveragePanelLabel"
-             aria-hidden="true">
-            <div class="modal-dialog modal-xl" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="instanceCoveragePanelLabel">Instance Coverage</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="instanceMap" class="map border shadow"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <div class="float-right">
-                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
-                                <i class="fas">&times</i>&nbsp;
-                                <span class="btn-label">Close</span>
                             </button>
                         </div>
                     </div>

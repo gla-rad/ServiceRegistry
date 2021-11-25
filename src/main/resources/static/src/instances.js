@@ -7,10 +7,9 @@ var newInstance = true;
 /**
  * Global map variables
  */
-var instanceMap = undefined;
-var drawnMapItems = undefined;
 var instanceEditCoverageMap = undefined;
 var drawnEditMapItems = undefined;
+var firstInstanceMapView = true;
 
 /**
  * The Instances Table Column Definitions
@@ -25,130 +24,106 @@ var columnDefs = [{
 }, {
     data: "name",
     title: "Name",
-    readonly : true,
-    hoverMsg: "Name of service",
-    placeholder: "Name of the service"
 }, {
     data: "version",
     title: "Version",
-    readonly : true,
-    hoverMsg: "Version of service",
-    placeholder: "Version of the service"
 }, {
     data: "serviceType",
     title: "Type",
-    readonly : true,
-    hoverMsg: "Type of service",
-    placeholder: "Type of the service"
 }, {
     data: "status",
     title: "Status",
-    readonly : true,
-    hoverMsg: "Status of service",
-    placeholder: "Status of the service"
 }, {
     data: "endpointUri",
     title: "Endpoint URI",
-    readonly : true,
-    hoverMsg: "Access point of service",
-    placeholder: "Access point of the service"
 }, {
     data: "organizationId",
     title: "Organization",
-    readonly : true,
-    hoverMsg: "MRN of service provider",
-    placeholder: "MRN of the service provider (organization)"
 }, {
     data: "keywords",
     title: "Keywords",
-    readonly : true,
-    hoverMsg: "Keywords of service",
-    placeholder: "Keywords of the service"
 }, {
     data: "instanceId",
     title: "Instance ID",
-    readonly : true,
-    hoverMsg: "MRN of service instance description",
-    placeholder: "MRN of the service instance description"
 }, {
     data: "lastUpdatedAt",
     title: "Last Update",
-    hoverMsg: "Recent updated date",
-    readonly : true,
     searchable: false,
-    disabled: true
 }, {
     data: "publishedAt",
+    title: "Published",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "comment",
+    title: "Comment",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "geometry",
+    title: "Geometry",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "unlocode",
+    title: "UnLoCode",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "mmsi",
+    title: "MMSI",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "imo",
+    title: "IMO",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "endpointType",
+    title: "Endpoint Type",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "ledgerRequestId",
+    title: "Ledger Request ID",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
 }, {
     data: "ledgerRequestStatus",
+    title: "Ledger Request Status",
     type: "hidden",
-    readonly : true,
     visible: false,
     searchable: false
  }, {
     data: "instanceAsDocId",
     title: "Doc",
     type: "file",
-    readonly : true,
     visible: true,
     searchable: false,
     className: 'dt-body-center',
     render: function ( data, type, row ) {
-        return (data ? `<i class="fas fa-file-alt" style="color:green" onclick="downloadDoc(${data})"></i>` : `<i class="fas fa-times-circle" style="color:red"></i>`);
+        return (data ?
+            `<i class="fas fa-file-alt" style="color:green" onclick="downloadDoc(${data})"></i>`:
+            `<i class="fas fa-times-circle" style="color:red"></i>`);
     },
  }, {
     data: "implementsServiceDesign",
+    title: "Implements Service Design",
     type: "hidden",
     visible: false,
     searchable: false,
 }, {
     data: "implementsServiceDesignVersion",
+    title: "Implements Service Design Versin",
     type: "hidden",
     visible: false,
     searchable: false,
@@ -186,7 +161,7 @@ $(() => {
             className: 'instance-edit-panel-toggle',
             name: 'add-instance', // do not change name
             action: (e, dt, node, config) => {
-                loadInstanceEditPanel(true);
+                loadInstanceEditPanel($('#instanceEditPanel'), true);
             }
         }, {
             extend: 'selected', // Bind to Selected row
@@ -195,24 +170,13 @@ $(() => {
             className: 'instance-edit-panel-toggle',
             name: 'edit-instance', // do not change name
             action: (e, dt, node, config) => {
-                loadInstanceEditPanel(false);
+                loadInstanceEditPanel($('#instanceEditPanel'), false);
             }
         }, {
             extend: 'selected', // Bind to Selected row
             text: '<i class="fas fa-trash-alt"></i>',
             titleAttr: 'Delete Instance',
             name: 'delete' // do not change name
-        }, {
-            extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-map-marked-alt"></i>',
-            titleAttr: 'Instance Coverage',
-            name: 'instance-coverage', // do not change name
-            className: 'instance-coverage-toggle',
-            action: (e, dt, node, config) => {
-                if(dt.row({selected : true})) {
-                    loadGeometryOnMap(dt.row({selected : true}).data().geometry, instanceMap, drawnMapItems);
-                }
-            }
         }, {
             extend: 'selected', // Bind to Selected row
             text: '<i class="fas fa-paperclip"></i>',
@@ -280,72 +244,34 @@ $(() => {
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#attachmentsPanel" });
 
+    // We also need to link the instance status toggle button with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
+    instancesTable.buttons('.instance-status-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceStatusPanel" });
+
+    // We also need to link the instance ledger toggle button with the the
+    // modal panel so that by clicking the button the panel pops up. It's easier
+    // done with jQuery.
+    instancesTable.buttons('.instance-ledger-toggle')
+        .nodes()
+        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceLedgerPanel" });
+
+    // On confirmation of the instance saving, we need to make an AJAX
+    // call back to the service to save the entry.
+    $('#instanceEditPanel').on('click', '.btn-ok', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        $modalDiv.addClass('loading');
+        saveInstanceEditPanel($modalDiv, newInstance);
+    });
+
     // On confirmation of the XML validation, we need to make an AJAX
     // call back to the service to perform the G-1128 compliance validation.
     $('#instanceEditPanel').on('click', '.btn-validate-xml', (e) => {
         var $modalDiv = $(e.delegateTarget);
         $modalDiv.addClass('loading');
         validateXml($modalDiv);
-    });
-
-    // On confirmation of the instance saving, we need to make an AJAX
-    // call back to the service to save the entry.
-    $('#instanceEditPanel').on('click', '.btn-ok', (e) => {
-        var $modalDiv = $(e.delegateTarget);
-        var columnDefData = columnDefs.map((e) => e["data"]);
-        var g1128Compliant = $("#g1128CompliantButton").prop('checked');
-        var rowData = initialiseInstanceData(g1128Compliant);
-
-        // If an existing row has been selected, copy the data for an update
-        if(!newInstance && instancesTable.row({selected : true}).length != 0) {
-            rowData = {...instancesTable.row({selected : true}).data()};
-        }
-
-        // Getting the inputs from the modal
-        $('form[name="instanceEditPanelForm"] :input').each(function() {
-            rowData = alignData(rowData, $(this).attr('id'), $(this).val(), columnDefData);
-        });
-
-        // For G1128-compliant entries, augmenting xml content on the data
-        if(g1128Compliant) {
-            var xmlContent = $modalDiv.find("#xml-input").val();
-            if (xmlContent && xmlContent.length>0) {
-                rowData["instanceAsXml"]["content"] = xmlContent;
-            }
-        } else {
-            rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
-        }
-
-        // Adding the attached documents
-        var uploadFiles = $modalDiv.find("#instanceAsDoc").prop('files');
-
-        // If we have any documents attached, first read them and then save
-        if(uploadFiles && uploadFiles.length == 1) {
-            showLoader();
-            // Initialise the File Reader
-            encodeFileToBase64(uploadFiles[0])
-                .then((attachment) => {
-                    rowData["instanceAsDoc"] = {
-                        'name': attachment.file.name,
-                        'mimetype': attachment.file.type,
-                        'filecontent': attachment.content,
-                        'filecontentContentType': attachment.file.type,
-                        'instanceId': rowData["id"]
-                    };
-                    saveInstanceThroughDatatables(rowData);
-                });
-        }
-        // Otherwise save directly using the datatables
-        else {
-            // Make sure we don't delete any existing instance as doc files
-            // To dot his, we need to translate between the InstanceDtDto and
-            // the InstanceDto objects.
-            if($modalDiv.find("#instanceAsDocWithValue").is(":visible")) {
-                rowData["instanceAsDoc"] = {};
-                rowData["instanceAsDoc"]["id"] = rowData["instanceAsDocId"];
-            }
-            saveInstanceThroughDatatables(rowData);
-        }
     });
 
     // Link the clear instance doc button functionality
@@ -356,15 +282,9 @@ $(() => {
 
     // Link the download instance doc button functionality
     $('#instanceEditPanel').on('click', '.btn-download-instance-doc', (e) => {
+        var $modalDiv = $(e.delegateTarget);
         downloadDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
     });
-
-    // We also need to link the instance status toggle button with the the
-    // modal panel so that by clicking the button the panel pops up. It's easier
-    // done with jQuery.
-    instancesTable.buttons('.instance-status-toggle')
-        .nodes()
-        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceStatusPanel" });
 
     // On confirmation of the instance saving, we need to make an AJAX
     // call back to the service to save the entry.
@@ -376,13 +296,6 @@ $(() => {
             $("#instanceStatusPanel").find("#instanceStatusSelect").val());
     });
 
-    // We also need to link the instance ledger toggle button with the the
-    // modal panel so that by clicking the button the panel pops up. It's easier
-    // done with jQuery.
-    instancesTable.buttons('.instance-ledger-toggle')
-        .nodes()
-        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceLedgerPanel" });
-
     // On confirmation of the instance saving, we need to make an AJAX
     // call back to the service to save the entry.
     $('#instanceLedgerPanel').on('click', '.btn-ok', (e) => {
@@ -393,27 +306,9 @@ $(() => {
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
     });
 
-    // We also need to link the instance coverage toggle button with the the
-    // modal panel so that by clicking the button the panel pops up. It's easier
-    // done with jQuery.
-    instancesTable.buttons('.instance-coverage-toggle')
-        .nodes()
-        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceCoveragePanel" });
-
     // Also initialise the instance map before we need it
-    drawnMapItems = new L.FeatureGroup();
-    instanceMap = initMapWithDrawnItems('instanceMap', drawnMapItems, false);
-
-    // Also initialise the instance edit coverage map before we need it
     drawnEditMapItems = new L.FeatureGroup();
     instanceEditCoverageMap = initMapWithDrawnItems('instanceEditCoverageMap', drawnEditMapItems, true);
-
-    // Invalidate the instance map size on show to fix the presentation
-    $('#instanceCoveragePanel').on('shown.bs.modal', function() {
-        setTimeout(function() {
-            instanceMap.invalidateSize();
-        }, 50);
-    });
 
     // Invalidate the instance edit coverage map size on tab show to fix the presentation
     $('button[data-bs-toggle="tab"]').on('shown.bs.tab', function() {
@@ -424,22 +319,16 @@ $(() => {
         // And if so fix the map presentation
         setTimeout(function() {
             instanceEditCoverageMap.invalidateSize();
-            // If we have an instance selected
-            if(!newInstance && instancesTable.row({selected : true})) {
-                // Get the currently selected instance's geometry
-                var geometry = instancesTable.row({selected : true}).data().geometry;
-                // If nothing is drawn yet, try to reload the instance's coverage
-                if(geometry && drawnEditMapItems.getLayers().length == 0) {
+            // Only load the geometry the first time and only on existing instances
+            if(firstInstanceMapView && !newInstance) {
+                // Make sure we got a table row selected
+                if(instancesTable.row({selected : true})) {
+                    var geometry = instancesTable.row({selected : true}).data().geometry;
                     loadGeometryOnMap(geometry, instanceEditCoverageMap, drawnEditMapItems);
                 }
             }
+            firstInstanceMapView = false;
         }, 50);
-    });
-
-    // When G-1128 Compliant ask for the XML otherwise the user has to fill
-    // in the input fields directly.
-    $("#g1128CompliantButton").click(function() {
-        toggleG1128Compliant();
     });
 });
 
@@ -452,17 +341,12 @@ function toggleG1128Compliant() {
     var selector = $("#g1128CompliantButton").data("target");
 
     // Enable/Disable the form
+    g1128Compliant ? $(selector).removeClass('d-none') : $(selector).addClass('d-none');
     $('form[name="instanceEditPanelForm"] :input').filter('[data-g1128="true"]').attr('readonly', g1128Compliant);
     $('form[name="instanceEditPanelForm"] select').filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
 
     // Control the drawing
-    if(g1128Compliant) {
-        $(selector).removeClass('d-none');
-        drawControlFull.remove(instanceEditCoverageMap);
-    } else {
-        $(selector).addClass('d-none');
-        drawControlFull.addTo(instanceEditCoverageMap);
-    }
+    g1128Compliant ? drawControlFull.remove(instanceEditCoverageMap) : drawControlFull.addTo(instanceEditCoverageMap);
 
     // Refresh the map size due to the change
     setTimeout(function() {
@@ -509,62 +393,6 @@ function validateXml($modalDiv) {
 }
 
 /**
- * Performs the instance saving operation through the instances datatables
- * structure so that it table will also be updated on success.
- */
-function saveInstanceThroughDatatables(instance) {
-    // And call back to the datatables to handle the create/update
-    if(newInstance) {
-        instancesTable.context[0].oInit.onAddRow(instancesTable,
-                instance,
-                (data) => { instancesTable.row.add(data).draw(false); },
-                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while saving the instance.")); hideLoader(); });
-    } else {
-        instancesTable.context[0].oInit.onEditRow(instancesTable,
-                instance,
-                (data,b,c,d,e) => { instancesTable.ajax.reload(); },
-                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while updating the instance.")); hideLoader(); });
-    }
-}
-
-/**
- * Using an AJAX call we ask the server to update the instance status and if
- * proven successful, we can request the instances datatables to reload.
- *
- * @param {Component}   $modalDiv   The modal component performing the update
- * @param {number}      id          The ID of the instance to be updated
- * @param {String}      status      The new status value
- */
-function onStatusUpdate($modalDiv, id, status) {
-    api.instancesApi.setStatus(id, status, () => {
-        $modalDiv.removeClass('loading');
-        instancesTable.draw('page');
-    }, (response, status, more) => {
-        $modalDiv.removeClass('loading');
-        showError(getErrorFromHeader(response, "Error while trying to update the instance status!"));
-    });
-}
-
-/**
- * Using an AJAX call we ask the server to update the instance ledger request
- * status and if proven successful, we can request the instances datatables to
- * reload.
- *
- * @param {Component}   $modalDiv   The modal component performing the update
- * @param {number}      id          The ID of the ledger request to be updated
- * @param {String}      status      The new status value
- */
-function onLedgerRequestUpdate($modalDiv, id, status) {
-    api.instancesApi.setLedgerStatus(id, status, () => {
-        $modalDiv.removeClass('loading');
-        instancesTable.draw('page');
-    }, (response, status, more) => {
-        $modalDiv.removeClass('loading');
-        showError(getErrorFromHeader(response, "Error while trying to update the instance global ledger status!"));
-    });
-}
-
-/**
  * The instances edit dialog form should be clear every time before it is used
  * so that new entries are not polluted by old data.
  */
@@ -582,6 +410,7 @@ function clearInstanceEditPanel() {
     // And the map
     drawnEditMapItems.clearLayers();
     resetMapView(instanceEditCoverageMap);
+    firstInstanceMapView = true;
 
     // Don't forget the XML content
     $('#instanceEditPanel').find('#xml-input').val(null);
@@ -596,11 +425,11 @@ function clearInstanceEditPanel() {
 /**
  * This helper function loads the XML and field data from the selected instance
  * in the instance table onto the edit dialog.
+ *
+ * @param {Component}   $modalDiv       The modal component performing the operation
+ * @param {Boolean}     isNewInstance   Whether this is a new instance or not
  */
-function loadInstanceEditPanel(isNewInstance) {
-    // Get the instance edit panel modal dialog
-    var $modalDiv = $('#instanceEditPanel');
-
+function loadInstanceEditPanel($modalDiv, isNewInstance) {
     // First always clear to be sure
     clearInstanceEditPanel();
     clearInstanceDoc($modalDiv);
@@ -641,13 +470,104 @@ function loadInstanceEditPanel(isNewInstance) {
 }
 
 /**
+ * This function read all the provided instance information from the edit
+ * instance modal dialog for both the G1128 compliant and non-compliant
+ * instances and then uses the datatables functionality of the instances
+ * table to save the changes and update the table itself.
+ *
+ * @param {Component}   $modalDiv       The modal component performing the operation
+ * @param {Boolean}     isNewInstance   Whether this is a new instance or not
+ */
+function saveInstanceEditPanel($modalDiv, isNewInstance) {
+    // Load the data to be stored/updated
+    var columnDefData = columnDefs.map((e) => e["data"]);
+    var rowData = initialiseInstanceData(g1128Compliant);
+    var g1128Compliant = $modalDiv.find("#g1128CompliantButton").prop('checked');
+
+    // If an existing row has been selected, copy the data for an update
+    if(!isNewInstance && instancesTable.row({selected : true}).length != 0) {
+        rowData = {...instancesTable.row({selected : true}).data()};
+    }
+
+    // Getting the inputs from the modal
+    $('form[name="instanceEditPanelForm"] :input').each(function() {
+        rowData = alignInstanceData(rowData, $(this).attr('id'), $(this).val(), columnDefData);
+    });
+
+    // For G1128-compliant entries, augmenting xml content on the data
+    if(g1128Compliant) {
+        var xmlContent = $modalDiv.find("#xml-input").val();
+        if (xmlContent && xmlContent.length>0) {
+            rowData["instanceAsXml"]["content"] = xmlContent;
+        }
+    } else if(!firstInstanceMapView){
+        rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
+    }
+
+    // Adding the attached documents
+    var uploadFiles = $modalDiv.find("#instanceAsDoc").prop('files');
+
+    // If we have any documents attached, first read them and then save
+    if(uploadFiles && uploadFiles.length == 1) {
+        showLoader();
+        // Initialise the File Reader
+        encodeFileToBase64(uploadFiles[0])
+            .then((attachment) => {
+                rowData["instanceAsDoc"] = {
+                    'name': attachment.file.name,
+                    'mimetype': attachment.file.type,
+                    'filecontent': attachment.content,
+                    'filecontentContentType': attachment.file.type,
+                    'instanceId': rowData["id"]
+                };
+                saveInstanceThroughDatatables(rowData);
+            });
+    }
+    // Otherwise save directly using the datatables
+    else {
+        // Make sure we don't delete any existing instance as doc files
+        // To dot his, we need to translate between the InstanceDtDto and
+        // the InstanceDto objects.
+        if($modalDiv.find("#instanceAsDocWithValue").is(":visible")) {
+            rowData["instanceAsDoc"] = {};
+            rowData["instanceAsDoc"]["id"] = rowData["instanceAsDocId"];
+        }
+        saveInstanceThroughDatatables(rowData);
+    }
+    // Finally remove the loading from the dialog, with a small timeout
+    setTimeout(() => $modalDiv.removeClass('loading'), 50);
+
+}
+
+/**
+ * Performs the instance saving operation through the instances datatables
+ * structure so that it table will also be updated on success.
+ *
+ * @param {Instance}      instance      The instance to bve saved through datatables
+ */
+function saveInstanceThroughDatatables(instance) {
+    // And call back to the datatables to handle the create/update
+    if(newInstance) {
+        instancesTable.context[0].oInit.onAddRow(instancesTable,
+                instance,
+                (data) => { instancesTable.row.add(data).draw(false); },
+                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while saving the instance.")); hideLoader(); });
+    } else {
+        instancesTable.context[0].oInit.onEditRow(instancesTable,
+                instance,
+                (data,b,c,d,e) => { instancesTable.ajax.reload(); },
+                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while updating the instance.")); hideLoader(); });
+    }
+}
+
+/**
  * This function will load the instance status onto the instance status select
  * input of the DOM.
  *
- * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN type table
- * @param {Node}          button        The button node that was pressed
- * @param {Configuration} config        The table configuration
+ * @param {Event}       event       The event that took place
+ * @param {DataTable}   table       The AtoN type table
+ * @param {Node}        button      The button node that was pressed
+ * @param {any}         config      The table configuration
  */
 function loadInstanceStatus(event, table, button, config) {
     // If a row has been selected load the data into the form
@@ -658,14 +578,32 @@ function loadInstanceStatus(event, table, button, config) {
 }
 
 /**
+ * Using an AJAX call we ask the server to update the instance status and if
+ * proven successful, we can request the instances datatables to reload.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the update
+ * @param {number}      id          The ID of the instance to be updated
+ * @param {String}      status      The new status value
+ */
+function onStatusUpdate($modalDiv, id, status) {
+    api.instancesApi.setStatus(id, status, () => {
+        $modalDiv.removeClass('loading');
+        instancesTable.draw('page');
+    }, (response, status, more) => {
+        $modalDiv.removeClass('loading');
+        showError(getErrorFromHeader(response, "Error while trying to update the instance status!"));
+    });
+}
+
+/**
  * This function will load the instance ledger status onto the instance ledger
  * status select input of the DOM. Always read the ledger status value from
  * the server to pick up successes and failures.
  *
- * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN type table
- * @param {Node}          button        The button node that was pressed
- * @param {Configuration} config        The table configuration
+ * @param {Event}       event       The event that took place
+ * @param {DataTable}   table       The AtoN type table
+ * @param {Node}        button      The button node that was pressed
+ * @param {any}         config      The table configuration
  */
 function loadInstanceLedgerStatus(event, table, button, config) {
     // If a row has been selected load the data into the form
@@ -681,6 +619,25 @@ function loadInstanceLedgerStatus(event, table, button, config) {
             $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
         });
     }
+}
+
+/**
+ * Using an AJAX call we ask the server to update the instance ledger request
+ * status and if proven successful, we can request the instances datatables to
+ * reload.
+ *
+ * @param {Component}   $modalDiv   The modal component performing the update
+ * @param {number}      id          The ID of the ledger request to be updated
+ * @param {String}      status      The new status value
+ */
+function onLedgerRequestUpdate($modalDiv, id, status) {
+    api.instancesApi.setLedgerStatus(id, status, () => {
+        $modalDiv.removeClass('loading');
+        instancesTable.draw('page');
+    }, (response, status, more) => {
+        $modalDiv.removeClass('loading');
+        showError(getErrorFromHeader(response, "Error while trying to update the instance global ledger status!"));
+    });
 }
 
 /**
@@ -712,12 +669,12 @@ function initialiseInstanceData(g1128Compliant) {
  * This helper function corrects the type of data being read from the instance
  * dialog form since most of it comes back as a string.
  *
- * @param {Array}       rowData         The row data
- * @param {String}      field           The field to be parsed
- * @param {String}      value           The value of the field
- * @param {Array}       columnDefs      The definitions of the column data
+ * @param {Array}       rowData     The row data
+ * @param {String}      field       The field to be parsed
+ * @param {String}      value       The value of the field
+ * @param {Array}       columnDefs  The definitions of the column data
  */
-function alignData(rowData, field, value, columnDefs){
+function alignInstanceData(rowData, field, value, columnDefs){
     if (field && columnDefs.includes(field)){
         if (field === 'id'){
             rowData[field] = parseInt(value);
