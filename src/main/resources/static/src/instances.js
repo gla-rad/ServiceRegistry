@@ -214,8 +214,10 @@ $(() => {
         onAddRow: (datatable, rowdata, success, error) => {
             api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
         },
-        onDeleteRow: (datatable, rowdata, success, error) => {
-            api.instancesApi.deleteInstance(rowdata["id"], success, error);
+        onDeleteRow: (datatable, selectedRows, success, error) => {
+            selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
+                api.instancesApi.deleteInstance(this.data()["id"], success, error);
+            });
         },
         onEditRow: (datatable, rowdata, success, error) => {
             api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
