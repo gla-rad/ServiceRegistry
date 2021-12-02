@@ -31,11 +31,11 @@
 	<repositories>
 		<repository>
 			<id>grad</id>
-			<url>http://gla-rrnav1.dyndns.org:8081/repository/grad/</url>
+			<url>https://gla-rrnav1.dyndns.org:8081/repository/grad/</url>
 		</repository>
 		<repository>
 			<id>grad-snapshots</id>
-			<url>http://gla-rrnav1.dyndns.org:8081/repository/grad-snapshots/</url>
+			<url>https://gla-rrnav1.dyndns.org:8081/repository/grad-snapshots/</url>
 		</repository>
 	</repositories>
 
