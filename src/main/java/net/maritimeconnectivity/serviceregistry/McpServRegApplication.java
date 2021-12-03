@@ -16,8 +16,11 @@
 
 package net.maritimeconnectivity.serviceregistry;
 
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.security.Security;
 
 /**
  * The MCP Service Registry Application.
@@ -28,6 +31,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class McpServRegApplication {
 
 	public static void main(String[] args) {
+		Security.addProvider(new BouncyCastleProvider());
 		SpringApplication.run(McpServRegApplication.class, args);
 	}
 
