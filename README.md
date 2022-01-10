@@ -68,3 +68,7 @@ information.
 ## Maintainer
 Nikolaos Vastardis - Nikolaos.Vastardis@gla-rad.org
 Jinki Jung - jinki@dmc.international
+
+## Acknowledgement
+
+The development is a part of the project titled “Development of Open Platform Technologies for Smart Maritime Safety and Industries” funded by the Korea Research Institute of Ships and Ocean Engineering (PES4070).
