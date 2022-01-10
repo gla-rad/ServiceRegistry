@@ -22,10 +22,10 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 
-import java.io.IOException;
-
 /**
- * The type Wkt util.
+ * The WKTUtil class.
+ *
+ * A helper utility that manipulates the WKT geometry strings.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
@@ -33,20 +33,27 @@ import java.io.IOException;
 public class WKTUtil {
 
     /**
+     * Converts a WKT geometry into a JTS geometry
+     *
+     * @param geometryAsWKT The geometry in WKT format
+     * @return a JTS geometry
+     * @throws ParseException if the WKT geometry was invalid
+     */
+    public static Geometry convertWKTtoGeometry(String geometryAsWKT) throws ParseException {
+        WKTReader wktReader = new WKTReader();
+        Geometry geometry = wktReader.read(geometryAsWKT);
+        return geometry;
+    }
+
+    /**
      * Converts a WKT geometry into GeoJson format, via JTS geometry
      *
      * @param geometryAsWKT The geometry in WKT format
      * @return JsonNode with the geometry expressed in GeoJson format
      * @throws ParseException if the WKT geometry was invalid
-     * @throws IOException    if the geoJson string could not be read by the Json parser
      */
     public static JsonNode convertWKTtoGeoJson(String geometryAsWKT) throws ParseException {
-        WKTReader wktReader = new WKTReader();
-        Geometry geometry = wktReader.read(geometryAsWKT);
-        if (geometry == null) {
-            log.debug("WKT geometry parsing error");
-        }
-        return GeometryJSONConverter.convertFromGeometry(geometry);
+        return GeometryJSONConverter.convertFromGeometry(WKTUtil.convertWKTtoGeometry(geometryAsWKT));
     }
 
 }
