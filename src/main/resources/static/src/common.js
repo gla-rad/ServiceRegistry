@@ -158,14 +158,16 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
                 downloadDoc(data["id"]);
             }
         }],
-        onDeleteRow: function (datatable, rowdata, success, error) {
-            $.ajax({
-                url: `${ajaxUrl}/${rowdata["id"]}`,
-                type: 'DELETE',
-                contentType: 'application/json',
-                crossDomain: true,
-                success: success,
-                error: error
+        onDeleteRow: function (datatable, selectedRows, success, error) {
+            selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
+                $.ajax({
+                    url: `${ajaxUrl}/${this.data()["id"]}`,
+                    type: 'DELETE',
+                    contentType: 'application/json',
+                    crossDomain: true,
+                    success: success,
+                    error: error
+                });
             });
         }
     });

@@ -34,6 +34,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.xml.sax.SAXException;
 
 import javax.validation.Valid;
 import javax.xml.bind.JAXBException;
@@ -195,6 +196,10 @@ public class XmlController {
         try {
             return ResponseEntity.ok()
                     .body(this.xmlService.validate(content, schema));
+        } catch (IOException | SAXException ex) {
+            return ResponseEntity.badRequest()
+                    .headers(HeaderUtil.createFailureAlert("xml", ex.getMessage(), ex.toString()))
+                    .build();
         } catch (JAXBException ex) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("xml", ex.getCause().getMessage(), ex.toString()))
