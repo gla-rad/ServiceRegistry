@@ -654,6 +654,7 @@ public class InstanceService {
         MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
         parser.setDefaultOperator( QueryParser.Operator.AND );
         return Optional.ofNullable(queryString)
+                .filter(StringUtils::isNotBlank)
                 .map(q -> {
                     try {
                         return parser.parse(q);
@@ -676,7 +677,7 @@ public class InstanceService {
     protected Query createGeoSpatialQuery(Geometry geometry) {
         // Initialise the spatial strategy
         JtsSpatialContext ctx = JtsSpatialContext.GEO;
-        int maxLevels = 11; //results in sub-meter precision for geohash
+        int maxLevels = 12; //results in sub-meter precision for geohash
         SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
         RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid,"geometry");
 
