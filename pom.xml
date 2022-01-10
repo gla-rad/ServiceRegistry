@@ -203,7 +203,6 @@
 			<artifactId>bootstrap</artifactId>
 			<version>${bootstrap.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.webjars</groupId>
 			<artifactId>font-awesome</artifactId>
@@ -228,6 +227,11 @@
 					<artifactId>bootstrap</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.bowergithub.esri</groupId>
+			<artifactId>terraformer-wkt-parser</artifactId>
+			<version>1.2.0</version>
 		</dependency>
 
 		<!-- Testing -->
