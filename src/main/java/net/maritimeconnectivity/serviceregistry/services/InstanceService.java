@@ -408,6 +408,12 @@ public class InstanceService {
                     .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found.", null); });
         }
 
+        // Non G1128-compliant instance are allowed, where no XML description
+        // is provided. In those cases... just let this through
+        if(Objects.isNull(instance.getInstanceAsXml())) {
+            return;
+        }
+
         try {
             XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), G1128Utils.SOURCES_LIST);
         } catch (SAXException e) {

@@ -49,7 +49,11 @@
             <div class="modal-dialog modal-xl" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="instanceEditPanelHeader">G-1128 Instance Definition</h5>
+                        <h5 class="modal-title" id="instanceEditPanelHeader">Instance Definition</h5>
+                        <div class="ms-3">
+                            <input id="g1128CompliantButton" type="checkbox" class="btn-check" autocomplete="off" data-target="#g1128SideBar" checked onclick="toggleG1128Compliant()">
+                            <label class="btn btn-outline-primary" for="g1128CompliantButton">G-1128 Compliant</label><br>
+                        </div>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -61,32 +65,9 @@
                                 <i class="fas">&times</i>&nbsp;
                                 <span class="btn-label">Close</span>
                             </button>
-                            <button type="button" class="btn btn-primary btn-ok" data-bs-dismiss="modal" title="Save Changes">
+                            <button type="button" class="btn btn-primary btn-ok" title="Save Changes">
                                 <i class="fas fa-save"></i>&nbsp;
                                 <span class="btn-label">Save</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="modal fade" id="instanceCoveragePanel" tabindex="-1" role="dialog" aria-labelledby="instanceCoveragePanelLabel"
-             aria-hidden="true">
-            <div class="modal-dialog modal-xl" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="instanceCoveragePanelLabel">Instance Coverage</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <!-- map container -->
-                        <div id="instanceMap" class="map border shadow"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <div class="float-right">
-                            <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close Dialog">
-                                <i class="fas">&times</i>&nbsp;
-                                <span class="btn-label">Close</span>
                             </button>
                         </div>
                     </div>
@@ -181,6 +162,8 @@
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
     <script th:src="@{/webjars/leaflet/dist/leaflet.js}"></script>
     <script th:src="@{/webjars/leaflet-draw/dist/leaflet.draw.js}"></script>
+    <script th:src="@{/webjars/terraformer/terraformer.min.js}"></script>
+    <script th:src="@{/webjars/terraformer-wkt-parser/terraformer-wkt-parser.min.js}"></script>
     <script th:src="@{/webjars/bootstrap-fileinput/js/fileinput.min.js}"></script>
     <script th:src="@{/webjars/bootstrap-fileinput/themes/fas/theme.min.js}"></script>
     <script src="https://cdn.datatables.net/1.11.0/js/jquery.dataTables.js" ></script>
@@ -192,6 +175,7 @@
     <script src="https://cdn.datatables.net/responsive/2.2.5/js/dataTables.responsive.js" ></script>
     <script th:src="@{/static/lib/dataTables.msrEditor.free.js}"></script>
     <script th:src="@{/static/src/file-utils.js}"></script>
+    <script th:src="@{/static/src/map-utils.js}"></script>
     <script th:src="@{/static/src/api/instances-api.js}"></script>
     <script th:src="@{/static/src/api/xmls-api.js}"></script>
     <script th:src="@{/static/src/api/docs-api.js}"></script>

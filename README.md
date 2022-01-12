@@ -1,9 +1,18 @@
 # Maritime Connectivity Platform Service Registry
-This is the implementation of the MCP Service Registry. It is under the Apache 
+This is the implementation of the MCP Service Registry (MSR). It is under the Apache 
 2.0 License.
 
 The Maritime Connectivity Platform was formerly known as the Maritime Cloud and 
 therefore there might still be references to that in this project.
+
+This implementation is a reboot version of 
+[Service registry from Efficiensea2](https://github.com/maritimeconnectivity/mc-serviceregistry) 
+motivated by newly introduced requirements of MSR.
+
+## Background
+We are maintaining 
+[Wiki pages](https://github.com/maritimeconnectivity/ServiceRegistry/wiki) for 
+explaining backgrounds and issues.
 
 ## General
 The MCP Service Registry is built using the Java Sprinboot frameworks and
@@ -189,5 +198,9 @@ Please make sure to update tests as appropriate.
 Distributed under the Apache License. See [LICENSE](./LICENSE) for more
 information.
 
-## Contact
+## Maintainer
 Nikolaos Vastardis - Nikolaos.Vastardis@gla-rad.org
+
+## Acknowledgement
+
+The development is a part of the project titled “Development of Open Platform Technologies for Smart Maritime Safety and Industries” funded by the Korea Research Institute of Ships and Ocean Engineering (PES4070).
