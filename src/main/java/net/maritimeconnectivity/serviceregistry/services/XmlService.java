@@ -22,14 +22,17 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
 import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
+import net.maritimeconnectivity.serviceregistry.utils.XmlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
+import java.io.IOException;
 import java.util.Optional;
 
 /**
@@ -109,12 +112,14 @@ public class XmlService {
      * @param schema    the G1128 schema to validate the content with
      * @return the generated G1128 specification object
      */
-    public Object validate(String content, G1128Schemas schema) throws JAXBException {
+    public Object validate(String content, G1128Schemas schema) throws IOException, SAXException, JAXBException {
         // Make sure we have a valid G1128 schema class to work with
         Class schemaClass = Optional.of(schema)
                 .map(G1128Schemas::getSchemaClass)
                 .orElseThrow(() -> new DataNotFoundException("Invalid G1128 schema selection", null));
-        // And validate the content
+        // Make sure it's a valid XML
+        XmlUtil.validateXml(content, G1128Utils.SOURCES_LIST);
+        // And parse the G1128 content
         return new G1128Utils<>(schemaClass).unmarshallG1128(content);
     }
 

@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.xml.sax.SAXException;
 
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -218,7 +219,7 @@ class XmlServiceTest {
      * @throws JAXBException for any JAXB parsing exceptions
      */
     @Test
-    void testValidate() throws IOException, JAXBException, DataNotFoundException {
+    void testValidate() throws IOException, SAXException, JAXBException {
         // Read a test service instance specification
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
@@ -252,7 +253,7 @@ class XmlServiceTest {
         // Create a test invalid input
         String xml = "Some random input";
 
-        // Perform the serviec call
+        // Perform the service call
         assertThrows(DataNotFoundException.class, () ->
                 this.xmlService.validate(xml, G1128Schemas.BASE)
         );
@@ -260,15 +261,15 @@ class XmlServiceTest {
 
     /**
      * Test that for an invalid input, the validation function will throw
-     * a JAXBException which can then be caught.
+     * a SAXException or a JAXBException which can then be caught.
      */
     @Test
     void testValidateFails() {
         // Create a test invalid input
         String xml = "Some invalid input";
 
-        // Perform the serviec call
-        assertThrows(JAXBException.class, () ->
+        // Perform the service call
+        assertThrows(SAXException.class, () ->
                 this.xmlService.validate(xml, G1128Schemas.INSTANCE)
         );
     }
