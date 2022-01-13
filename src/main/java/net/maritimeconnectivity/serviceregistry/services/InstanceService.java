@@ -133,6 +133,7 @@ public class InstanceService {
             "name",
             "version",
             "lastUpdatedAt",
+            "comment",
             "instanceId",
             "keywords",
             "status",
@@ -145,6 +146,9 @@ public class InstanceService {
     private final String[] searchFieldsWithSort = new String[] {
             "id",
             "name",
+            "lastUpdatedAt",
+            "comment",
+            "instanceId",
             "keywords",
             "serviceType"
     };
@@ -455,8 +459,7 @@ public class InstanceService {
         // Create the search query
         SearchQuery searchQuery = this.getSearchInstanceQueryByText(
                 dtPagingRequest.getSearch().getValue(),
-                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
-                        .collect(Collectors.toList())));
+                dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort)));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
