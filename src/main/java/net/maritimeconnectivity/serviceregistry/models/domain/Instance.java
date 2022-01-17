@@ -74,16 +74,19 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "version")
     private String version;
 
-    @KeywordField(sortable = Sortable.YES)
+    @FullTextField
+    @KeywordField(name = "publishedAt_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "published_at")
     private String publishedAt;
 
-    @KeywordField(sortable = Sortable.YES)
+    @FullTextField
+    @KeywordField(name = "lastUpdatedAt_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "last_updated_at")
     private String lastUpdatedAt;
 
     @NotNull
-    @KeywordField(sortable = Sortable.YES)
+    @FullTextField
+    @KeywordField(name = "comment_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
@@ -95,7 +98,8 @@ public class Instance implements Serializable, JsonSerializable {
     private String geometryContentType;
 
     @NotNull
-    @KeywordField(sortable = Sortable.YES)
+    @FullTextField
+    @KeywordField(name = "instanceId_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "instance_id", updatable = false)
     private String instanceId; //MRN
 
