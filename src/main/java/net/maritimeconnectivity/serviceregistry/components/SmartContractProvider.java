@@ -33,6 +33,7 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.ConnectException;
 import java.util.Collections;
 import java.util.Optional;
@@ -145,9 +146,11 @@ public class SmartContractProvider {
                 instance.getVersion(),
                 Optional.ofNullable(instance.getKeywords()).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")),
                 Optional.ofNullable(instance.getGeometry()).map(Geometry::toString).orElse(null),
+                BigInteger.valueOf(instance.getStatus().ordinal()),
                 "designMrn",
                 "designVersion",
-                new MsrContract.Msr(msrName, msrUrl)
+                "",
+                ""
         );
     }
 
