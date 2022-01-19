@@ -1,0 +1,66 @@
+<!--
+  ~ Copyright (c) 2021 Maritime Connectivity Platform Consortium
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <th:block th:include="fragments/general.html :: headerfiles"></th:block>
+</head>
+<body>
+    <div class="sky-bg d-flex flex-column vh-100">
+        <div th:replace="fragments/general.html :: navbar"></div>
+        <div class="flex-fill flex-grow-1 flex-shrink-0">
+            <div id="main-content" class="container mt-3">
+                <div th:replace="fragments/general.html :: login-card"></div>
+                <div class="card shadow" sec:authorize="isAuthenticated()">
+                    <div class="card-header">
+                        <h2>Maritime Service Registry Information</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="row p-1">
+                            <div class="col-sm-2"><h5>Name:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${MSRName}]] </span></div>
+                        </div>
+                        <div class="row p-1">
+                            <div class="col-sm-2"><h5>End point (MRN):</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${MSRMRN}]] </span></div>
+                        </div>
+                        <div class="row p-1">
+                            <div class="col-sm-2"><h5>End point (URL):</h5></div>
+                            <div class="col-sm-10">&nbsp<span>[[${MSRURL}]]</span></div>
+                        </div>
+                        <div class="row p-1">
+                            <div class="col-sm-2"><h5>Operator name:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${operatorName}]] </span></div>
+                        </div>
+                        <div class="row p-1">
+                            <div class="col-sm-2"><h5>Operator MRN:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${operatorMRN}]] </span></div>
+                        </div>
+                        <div class="row p-1">
+                            <div class="col-sm-2"><h5>Contact:</h5></div>
+                            <div class="col-sm-10"><span>&nbsp;[[${contact}]] </span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:replace="fragments/general.html :: footer"></div>
+    </div>
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+</body>
+</html>

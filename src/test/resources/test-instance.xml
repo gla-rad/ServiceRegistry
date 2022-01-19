@@ -1,0 +1,44 @@
+<serviceInstance
+        xmlns="http://iala-aism.org/g1128/v1.3/ServiceInstanceSchema.xsd"
+        xmlns:ServiceSpecificationSchema="http://iala-aism.org/g1128/v1.3/ServiceSpecificationSchema.xsd">
+    <id>urn:mrn:mcp:service:test:org:instance:100</id>
+    <version>1</version>
+    <name>Test Service Instance No1</name>
+    <status>released</status>
+    <description>A simple service implementing a custom service specification</description>
+    <keywords>test mcp navigation</keywords>
+    <endpoint>https://testservice.mcp.enav.org/service/endpoint/</endpoint>
+    <MMSI>123456789</MMSI>
+    <IMO>1234567</IMO>
+    <serviceType>other:test</serviceType>
+    <requiresAuthorization>true</requiresAuthorization>
+    <offersServiceLevel>
+        <availability>0</availability>
+        <name>Development</name>
+        <description>This service implementation is under active development, 0% availability is guaranteed.</description>
+    </offersServiceLevel>
+    <coversAreas>
+        <coversArea>
+            <name>Europe</name>
+            <description>The european continent area</description>
+            <geometryAsWKT>POLYGON(( 31.186908334967697 33.71178391630271,34.55847444567805 34.47881011158775,35.151277278330426 35.96184882751069,32.48366453139476 35.69148963780171,28.926847535480537 35.90184862258765,27.40779027680883 36.7079981113711,26.92613797527878 37.85764385294807,26.25923478854486 38.38230574385747,26.407435496707958 38.78776493369995,26.77793726711569 39.075975237887974,26.18513443446332 39.50609170876109,25.96283337221868 40.047106676253094,28.371094879868938 40.808586227265124,29.260299128847493 40.808586227265124,29.542670416982663 41.744571451829074,33.28923099523858 43.26820043025808,39.56548716769531 42.71842624254495,41.6743388576883 42.10791437489041,50.71976845548203 40.408102589901205,49.58908975575781 43.89213551167191,51.195843697471176 46.409636029646066,47.44675116680667 49.167513422591895,47.38724176155802 55.75098247184047,47.6252793825526 61.09828514013819,44.05471506763403 66.32624738500164,41.19826361569917 68.64835095466961,26.916006356024845 71.55951953026491,21.67917869414426 71.10236492196327,12.038655043864095 68.58325605229123,10.907976344139879 66.13436088796479,4.540469982535094 62.116878599506464,-4.981034857247794 62.14469655797956,-11.824616460841733 64.44332920204971,-14.978614939019815 66.79961895704497,-19.144273306424825 67.69707186573942,-25.273742047035054 66.51667920186824,-25.690307883775553 65.02747097859682,-22.000724758359688 62.7230016084485,-14.383520886533386 57.03541134791547,-8.968165008906869 57.13242531505466,-8.016014524928579 55.61678693078713,-10.634428355868874 54.42282491757851,-10.991484787360735 52.65489725412482,-10.931975382112089 51.26151365800922,-5.873675935977438 48.85525276058897,-4.326431399512718 47.062192332559675,-2.1245834053129227 43.89213551167191,-8.135033335425872 44.191575449239025,-9.503749656144661 44.10617561980149,-10.396390734874306 37.06705123511696,-8.432580361669087 36.015226687378146,-5.992694746474722 35.870690006250186,-3.1425452786499424 36.345688953699465,-1.597109979510271 36.28444620392278,2.3298157805987225 37.31900628897904,11.019722462646364 37.88103574013559,11.501087555821014 37.137453593495835,11.551757565628872 36.20271439269223,12.210467693131026 34.67535192386529,15.073323247275004 35.33938781602154,23.788564934226574 34.633670991092714,31.186908334967697 33.71178391630271 ))</geometryAsWKT>
+        </coversArea>
+    </coversAreas>
+    <implementsServiceDesign>
+        <id>urn:mrn:mcp:service:test:org:design:100</id>
+        <version>1</version>
+    </implementsServiceDesign>
+    <producedBy>
+        <ServiceSpecificationSchema:id>urn:mrn:mcp:service:test:org:specification:100</ServiceSpecificationSchema:id>
+        <ServiceSpecificationSchema:name>someName</ServiceSpecificationSchema:name>
+        <ServiceSpecificationSchema:description>Somedescription</ServiceSpecificationSchema:description>
+        <ServiceSpecificationSchema:contactInfo>unknown@test.org</ServiceSpecificationSchema:contactInfo>
+        <ServiceSpecificationSchema:isCommercial>false</ServiceSpecificationSchema:isCommercial>
+    </producedBy>
+    <providedBy>
+        <ServiceSpecificationSchema:id>Provider ID</ServiceSpecificationSchema:id>
+        <ServiceSpecificationSchema:name>Provider Name</ServiceSpecificationSchema:name>
+        <ServiceSpecificationSchema:description>Provider Description</ServiceSpecificationSchema:description>
+        <ServiceSpecificationSchema:contactInfo>provider@email.com</ServiceSpecificationSchema:contactInfo>
+    </providedBy>
+</serviceInstance>

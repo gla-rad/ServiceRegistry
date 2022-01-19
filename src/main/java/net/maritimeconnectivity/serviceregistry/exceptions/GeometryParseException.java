@@ -17,17 +17,17 @@
 package net.maritimeconnectivity.serviceregistry.exceptions;
 
 /**
- * The type Geometry parse exception.
+ * The type Geometry Parse exception.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public class GeometryParseException extends Exception {
 
-    private static final long serialVersionUID = -2171229941490315105L;
-
     /**
-     * Instantiates a new Geometry parse exception.
+     * Instantiates a new Geometry Parse exception.
      *
      * @param message the message
-     * @param t       the t
+     * @param t       the throwable
      */
     public GeometryParseException(String message, Throwable t) {
         super(message, t);

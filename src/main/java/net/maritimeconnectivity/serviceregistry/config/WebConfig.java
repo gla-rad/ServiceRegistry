@@ -16,7 +16,12 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
+import net.maritimeconnectivity.serviceregistry.components.GeoJsonStringToGeometryConverter;
+import net.maritimeconnectivity.serviceregistry.components.StringToG1128SchemaConverter;
+import net.maritimeconnectivity.serviceregistry.components.StringToServiceStatusConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.format.FormatterRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
@@ -34,14 +39,34 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     /**
+     * The String to G1128 Schema Converter.
+     */
+    @Autowired
+    StringToG1128SchemaConverter stringToG1128SchemaConverter;
+
+    /**
+     * The String to Service Status Converter.
+     */
+    @Autowired
+    StringToServiceStatusConverter stringToServiceStatusConverter;
+
+    /**
+     * The GeoJSON string to Geometry Converter.
+     */
+    @Autowired
+    GeoJsonStringToGeometryConverter geoJsonStringToGeometryConverter;
+
+    /**
      * Add the static resources and webjars to the web resources.
      *
      * @param registry the resource handler registry
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/static/**", "/webjars/**")
-                .addResourceLocations("classpath:/static/", "/webjars/")
+        registry.addResourceHandler("/webjars/**",
+                        "/static/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/",
+                        "classpath:/static/")
                 .resourceChain(false);
         registry.setOrder(1);
     }
@@ -55,6 +80,19 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/").setViewName("forward:/index.html");
+    }
+
+    /**
+     * Add the converters between strings and the G1128 Service Instance status
+     * and the G1128 Schemas enumerations.
+     *
+     * @param registry the Formatter Registry
+     */
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(stringToG1128SchemaConverter);
+        registry.addConverter(stringToServiceStatusConverter);
+        registry.addConverter(geoJsonStringToGeometryConverter);
     }
 
 }

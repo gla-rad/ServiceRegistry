@@ -32,7 +32,7 @@ public class GeometryJSONSerializer extends JsonSerializer<Geometry> {
     public void serialize(Geometry geometry,
                           JsonGenerator jsonGenerator,
                           SerializerProvider serializerProvider) throws IOException {
-        jsonGenerator.writeObject(GeometryJSONConverter.convertFromGeometry(geometry).asText());
+        jsonGenerator.writeObject(GeometryJSONConverter.convertFromGeometry(geometry));
     }
 
 }

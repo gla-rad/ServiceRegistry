@@ -1,0 +1,343 @@
+<!--
+  ~ Copyright (c) 2021 Maritime Connectivity Platform Consortium
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<form th:fragment="instanceEditPanelForm" name="instanceEditPanelForm" id="instanceEditPanelForm" role='form'>
+    <div class='row'>
+        <div id="g1128SideBar" class="col">
+            <div>
+                <label for="xml-input" class="col-form-label col-form-label-sm">Please enter the G1128-compliant XML for service instance</label>
+            </div>
+            <div class='input-group input-group-sm'>
+                <textarea class='form-control input-sm' id='xml-input' rows=30></textarea>
+            </div>
+            <div style="clear:both;"></div>
+            <div class='d-flex justify-content-center'>
+                <button type='button' id='validateXml' class='btn btn-primary btn-sm m-1 btn-validate-xml'>Validate</button>
+            </div>
+        </div>
+        <div class='col'>
+            <ul class="nav nav-tabs" id="instanceTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="info-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#info"
+                            type="button"
+                            role="tab"
+                            aria-controls="info"
+                            aria-selected="true">
+                        Info
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="coverage-tab"
+                            data-bs-toggle="tab"
+                            data-bs-target="#coverage"
+                            type="button" role="tab"
+                            aria-controls="coverage"
+                            aria-selected="false">
+                        Coverage
+                    </button>
+                </li>
+            </ul>
+            <div class="tab-content" id="instanceContent">
+                <div class="tab-pane fade show active" id="info" role="tabpanel" aria-labelledby="info-tab">
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-name">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right" style="padding-top:4px;">
+                            <label for="name" class="col-form-label col-form-label-sm">Name:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text" id="name"
+                                   pattern=".*"
+                                   title="Name of service"
+                                   name="Name" step="" min="" max=""
+                                   value=""
+                                   placeholder="Name of the service"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   required
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-version">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right" style="padding-top:4px;">
+                            <label for="version" class="col-form-label col-form-label-sm">Version:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text" id="version"
+                                   pattern=".*"
+                                   title="Version of service"
+                                   name="Version" step="" min=""
+                                   max="" value=""
+                                   placeholder="Version of the service"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   required
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-serviceType">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="serviceType" class="col-form-label col-form-label-sm">Service Type:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text" id="serviceType"
+                                   pattern=".*"
+                                   title="Type of service"
+                                   name="Service Type" step=""
+                                   min="" max="" value=""
+                                   placeholder="Type of the service"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   required
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-status">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="status" class="col-form-label col-form-label-sm">Status:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <select class="form-control form-control-sm"
+                                    name="status" id="status"
+                                    placeholder="Status"
+                                    data-special=""
+                                    data-unique="false"
+                                    data-g1128="true"
+                                    required>
+                                <option value="PROVISIONAL">Provisional</option>
+                                <option value="RELEASED">Released</option>
+                                <option value="DEPRECATED">Deprecated</option>
+                                <option value="DELETED">Deleted</option>
+                            </select>
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-endpointUri">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="endpointUri" class="col-form-label col-form-label-sm">Endpoint URI:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="endpointUri" pattern=".*"
+                                   title="Access point of service"
+                                   name="Endpoint URI" step=""
+                                   min="" max="" value=""
+                                   placeholder="Access point of the service"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   required
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-organizationId">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="organizationId" class="col-form-label col-form-label-sm">Organization ID:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="organizationId" pattern=".*"
+                                   title="MRN of service provider"
+                                   name="Organization ID" step=""
+                                   min="" max="" value=""
+                                   placeholder="MRN of the service provider (organization)"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   required
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-keywords">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="keywords" class="col-form-label col-form-label-sm">Keywords:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="keywords" pattern=".*"
+                                   title="Keywords of service"
+                                   name="Keywords" step="" min=""
+                                   max="" value=""
+                                   placeholder="Keywords of the service"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-instanceId">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="instanceId" class="col-form-label col-form-label-sm">Instance ID:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="instanceId" pattern=".*"
+                                   title="MRN of service instance description"
+                                   name="Instance ID" step="" min=""
+                                   max="" value=""
+                                   placeholder="MRN of the service instance description"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-implementsServiceDesign">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="implementsServiceDesign" class="col-form-label col-form-label-sm">Design ID:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="implementsServiceDesign" pattern=".*"
+                                   title="Reference to the service design description"
+                                   name="Design ID" step="" min=""
+                                   max="" value=""
+                                   placeholder="Reference to the service design MRN"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-implementsServiceDesignVersion">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="implementsServiceDesignVersion" class="col-form-label col-form-label-sm">Design Version:</label>
+                        </div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="implementsServiceDesignVersion" pattern=".*"
+                                   title="Reference to the service design description"
+                                   name="Design Version" step="" min=""
+                                   max="" value=""
+                                   placeholder="Reference to the service design version"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   data-g1128="true"
+                                   style="overflow:hidden;">
+                        </div>
+                        <div style="clear:both;"></div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-lastUpdatedAt">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="lastUpdatedAt" class="col-form-label col-form-label-sm">Last Update:</label></div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm"
+                                   type="text"
+                                   id="lastUpdatedAt" pattern=".*"
+                                   title="Recent updated date"
+                                   name="Last Update" step="" min=""
+                                   max="" value=""
+                                   placeholder="Last Update"
+                                   data-special="" data-errormsg=""
+                                   data-uniquemsg=""
+                                   data-unique="false" readonly=""
+                                   style="overflow:hidden;">
+                        </div>
+                    </div>
+                    <div style="margin-left: initial;margin-right: initial;"
+                         class="form-group row"
+                         id="editor-row-files">
+                        <div class="col-sm-3 col-md-3 col-lg-3 text-right"
+                             style="padding-top:4px;">
+                            <label for="instanceAsDoc" class="col-form-label col-form-label-sm">Instance Doc:</label></div>
+                        <div class="col-sm-8 col-md-8 col-lg-8">
+                            <input class="form-control form-control-sm" type="file" id="instanceAsDoc" style="display: none;"/>
+                            <div class="input-group" id="instanceAsDocWithValue">
+                                <input class="form-control form-control-sm" type="text" id="instanceAsDocName"/>
+                                <button class="btn btn-secondary btn-sm btn-clear-instance-doc" type="button">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm btn-download-instance-doc" type="button">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="coverage" role="tabpanel" aria-labelledby="coverage-tab">
+                    <div style="margin-left: initial;margin-right: initial; margin-top: 10px;"
+                         class="form-group row"
+                         id="editor-coverage-map">
+                        <div id="instanceEditCoverageMap" class="map border shadow"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+</html>

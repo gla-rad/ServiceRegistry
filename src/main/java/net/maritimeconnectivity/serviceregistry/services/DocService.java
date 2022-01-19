@@ -17,19 +17,28 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
-import net.maritimeconnectivity.serviceregistry.repos.DesignRepo;
+import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.DocRepo;
-import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
-import net.maritimeconnectivity.serviceregistry.repos.SpecificationRepo;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Service Implementation for managing Doc.
@@ -41,63 +50,28 @@ import java.util.Optional;
 @Transactional
 public class DocService {
 
+    /**
+     * The Entity Manager.
+     */
     @Autowired
-    private DocRepo docRepo;
-
-    @Autowired
-    private DesignRepo designRepo;
-
-    @Autowired
-    private SpecificationRepo specificationRepo;
-
-    @Autowired
-    private InstanceRepo instanceRepo;
+    EntityManager entityManager;
 
     /**
-     * Save a doc.
-     *
-     * @param doc the entity to save
-     * @return the persisted entity
+     * The Doc Repository.
      */
-    public Doc save(Doc doc){
-        log.debug("Request to save Doc : {}", doc);
-        this.docRepo.save(doc);
+    @Autowired
+    DocRepo docRepo;
 
-        // Save the linked designed, if any
-        Optional.of(this.designRepo)
-                .map(DesignRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(d -> d.getDesignAsDoc() != null && d.getDesignAsDoc().getId() == doc.getId())
-                .forEach(d -> {
-                    log.debug("Updating Linked Specification: {}", d);
-                    this.designRepo.save(d);
-                });
-
-        // Save the linked specifications, if any
-        Optional.of(this.specificationRepo)
-                .map(SpecificationRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(s -> s.getSpecAsDoc() != null && s.getSpecAsDoc().getId() == doc.getId())
-                .forEach(s -> {
-                    log.debug("Updating Linked Specification: {}", s);
-                    this.specificationRepo.save(s);
-                });
-
-        // Save the linked instances, if any
-        Optional.of(this.instanceRepo)
-                .map(InstanceRepo::findAllWithEagerRelationships)
-                .orElse(Collections.emptyList())
-                .stream()
-                .filter(i -> i.getInstanceAsDoc() != null && i.getInstanceAsDoc().getId() == doc.getId())
-                .forEach(i -> {
-                    log.debug("Updating Linked Instance: {}", i);
-                    this.instanceRepo.save(i);
-                });
-
-        return doc;
-    }
+    // Service Variables
+    private final String[] searchFields = new String[] {
+            "name",
+            "comment",
+            "mimetype"
+    };
+    private final String[] searchFieldsWithSort = new String[] {
+            "id",
+            "comment",
+    };
 
     /**
      *  Get all the docs.
@@ -108,31 +82,107 @@ public class DocService {
     @Transactional(readOnly = true)
     public Page<Doc> findAll(Pageable pageable) {
         this.log.debug("Request to get all Docs");
-        Page<Doc> result = this.docRepo.findAll(pageable);
+        return this.docRepo.findAll(pageable);
+    }
+
+    /**
+     *  Get one doc by ID.
+     *
+     *  @param id       the ID of the entity
+     *  @return the entity
+     */
+    @Transactional(readOnly = true)
+    public Doc findOne(Long id) throws DataNotFoundException {
+        this.log.debug("Request to get Doc : {}", id);
+        return this.docRepo.findById(id)
+                .orElseThrow(() -> new DataNotFoundException("No doc found for the provided ID", null));
+    }
+
+    /**
+     * Save a doc.
+     *
+     * @param doc       the entity to save
+     * @return the persisted entity
+     */
+    @Transactional
+    public Doc save(Doc doc){
+        log.debug("Request to save Doc : {}", doc);
+        Doc result = this.docRepo.save(doc);
+
         return result;
     }
 
     /**
-     *  Get one doc by id.
+     *  Delete the doc by ID.
      *
-     *  @param id the id of the entity
-     *  @return the entity
+     *  @param id       the ID of the entity
      */
-    @Transactional(readOnly = true)
-    public Doc findOne(Long id) {
-        this.log.debug("Request to get Doc : {}", id);
-        Doc doc = this.docRepo.findById(id).orElse(null);
-        return doc;
+    @Transactional
+    public void delete(Long id) throws DataNotFoundException {
+        log.debug("Request to delete Doc : {}", id);
+        if(this.docRepo.existsById(id)) {
+            this.docRepo.deleteById(id);
+        } else {
+            throw new DataNotFoundException("No doc found for the provided ID", null);
+        }
     }
 
     /**
-     *  Delete the  doc by id.
+     * Handles a datatables pagination request and returns the results list in
+     * an appropriate format to be viewed by a datatables jQuery table.
      *
-     *  @param id the id of the entity
+     * @param dtPagingRequest the Datatables pagination request
+     * @return the paged response
      */
-    public void delete(Long id) {
-        log.debug("Request to delete Doc : {}", id);
-        this.docRepo.deleteById(id);
+    @Transactional(readOnly = true)
+    public Page<Doc> handleDatatablesPagingRequest(Long instanceId, DtPagingRequest dtPagingRequest) {
+        // Create the search query
+        SearchQuery searchQuery = this.getSearchDocQueryByText(instanceId,
+                dtPagingRequest.getSearch().getValue(),
+                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
+                        .collect(Collectors.toList())));
+
+        // Map the results to a paged response
+        return Optional.of(searchQuery)
+                .map(query -> query.fetch(dtPagingRequest.getStart(), dtPagingRequest.getLength()))
+                .map(searchResult -> new PageImpl<Doc>(searchResult.hits(), dtPagingRequest.toPageRequest(), searchResult.total().hitCount()))
+                .orElseGet(() -> new PageImpl<>(Collections.emptyList(), dtPagingRequest.toPageRequest(), 0));
     }
 
+    /**
+     * Constructs a hibernate search query using Lucene based on the provided
+     * search test. This query will be based solely on the docs table and
+     * will include the following fields:
+     * <ul>
+     *  <li>Name</li>Name
+     *  <li>Comment</li>
+     *  <li>MIME TYpe</li>
+     * </ul>
+     *
+     * @param searchText    the text to be searched
+     * @return the full text query
+     */
+    protected SearchQuery<Doc> getSearchDocQueryByText(Long instanceId, String searchText, org.apache.lucene.search.Sort sort) {
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<Doc> scope = searchSession.scope( Doc.class );
+        return searchSession.search( scope )
+                .extension(LuceneExtension.get())
+                .where( f -> f.bool(b -> {
+                    b.must( f.matchAll() );
+                    if(searchText != null && StringUtils.isNotBlank(searchText)) {
+                        b.must(f.wildcard()
+                                .fields(this.searchFields)
+                                .matching( Optional.ofNullable(searchText).map(st -> "*"+st).orElse("") + "*" )
+                                .toPredicate());
+                    }
+                    if(instanceId != null) {
+                        b.must(f.match()
+                                .field( "instance.id_sort" )
+                                .matching( instanceId )
+                                .toPredicate());
+                    }
+                }))
+                .sort(f -> f.fromLuceneSort(sort))
+                .toQuery();
+    }
 }

@@ -24,6 +24,7 @@ import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticatio
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
 import org.springframework.core.Ordered;
@@ -53,6 +54,7 @@ import java.security.Principal;
 @Configuration
 @EnableWebSecurity
 @ComponentScan(basePackageClasses = KeycloakSecurityComponents.class)
+@ConditionalOnProperty(value = "keycloak.enabled", matchIfMissing = true)
 class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
 
     /**
@@ -146,9 +148,10 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .ignoring()
                 .antMatchers(
                     "/webjars/**",  //bootstrap
-                    "/css/**",                  //css files
-                    "/js/**",                   //js files
-                    "/favicon.ico"              //the favicon
+                    "/static/src/**",            //js files
+                    "/static/css/**",           //css files
+                    "/static/images/**",        //the images
+                    "/api/xmls/schemas/*"       //the G1128 schemas
                 );
     }
 
@@ -159,7 +162,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
      * and login endpoints without any authorisation requirements.
      *
      * @param httpSecurity The HTTP security
-     * @throws Exception Exception thrown while configuring the security
+     * @throws Exception thrown while configuring the security
      */
     @Override
     protected void configure(HttpSecurity httpSecurity) throws Exception {
@@ -169,9 +172,10 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(
                         "/webjars/**",   //bootstrap
-                        "/js/**", 				    //js files
-                        "/css/**", 				    //css files
-                        "/favicon.ico"              //the favicon
+                        "/static/src/**", 		     //js files
+                        "/static/css/**", 			 //css files
+                        "/static/images/**",         //the images
+                        "/" , "index.html"           //the home page
                 ).permitAll()
                 .anyRequest()
                 .authenticated();
