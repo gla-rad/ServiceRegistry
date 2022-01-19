@@ -17,13 +17,15 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.Objects;
 
 /**
  * The type Doc.
@@ -32,29 +34,36 @@ import java.util.Set;
  * objects.This could be an office document containing guidelines linked,to a
  * service specification, or a Getting Started PDF attached to a service
  * instance.
+ * </p>
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
 @Table(name = "document")
+@Indexed
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class Doc implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GenericField(name = "id_sort", sortable = Sortable.YES)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "name", nullable = false)
     private String name;
 
+    @FullTextField()
+    @KeywordField(name = "comment_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
     @NotNull
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "mimetype", nullable = false)
     private String mimetype;
 
@@ -66,10 +75,11 @@ public class Doc implements Serializable {
     @Column(name = "filecontent_content_type", nullable = false)
     private String filecontentContentType;
 
-    @ManyToMany(mappedBy = "docs")
+    @OneToOne(fetch = FetchType.EAGER)
+    @IndexedEmbedded(includePaths = "id_sort")
     @JsonIgnore
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    private Set<Specification> specifications = new HashSet<>();
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+    private Instance instance;
 
     /**
      * Instantiates a new Doc.
@@ -187,20 +197,43 @@ public class Doc implements Serializable {
     }
 
     /**
-     * Gets specifications.
+     * Gets instance.
      *
-     * @return the specifications
+     * @return the instance
      */
-    public Set<Specification> getSpecifications() {
-        return specifications;
+    public Instance getInstance() {
+        return instance;
     }
 
     /**
-     * Sets specifications.
+     * Sets instance.
      *
-     * @param specifications the specifications
+     * @param instance the instance
      */
-    public void setSpecifications(Set<Specification> specifications) {
-        this.specifications = specifications;
+    public void setInstance(Instance instance) {
+        this.instance = instance;
+    }
+
+    /**
+     * Overrides the hashcode generation of the object.
+     *
+     * @return the generated hashcode
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Doc)) return false;
+        Doc doc = (Doc) o;
+        return id.equals(doc.id);
+    }
+
+    /**
+     * Overrides the string representation of the object.
+     *
+     * @return the string representation
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

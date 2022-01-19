@@ -1,0 +1,205 @@
+<!--
+  ~ Copyright (c) 2021 Maritime Connectivity Platform Consortium
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="headerfiles">
+    <meta charset="UTF-8">
+    <title>MCP Service Registry</title>
+    <link rel="icon" type="image/png" href="static/images/favicon.ico" />
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
+    <link rel="stylesheet" th:href="@{/webjars/font-awesome/5.11.2/css/all.min.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/common.css}"/>
+    <style th:inline="text">
+        .sky-bg {
+          /*! min-height: 100%; */
+          /*! position: relative; */
+          /*! font: 14px/16px "Roboto", sans-serif; */
+          /*! color: #ffffff; */
+          /*! background-color: #F0F3F4; */ }
+          .sky-bg::before {
+            content: '';
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: url("static/images/sky-bg.jpg") no-repeat center center;
+            background-size: cover;
+            will-change: transform;
+            z-index: -1;
+        }
+
+        .sky-bg .additional-bg {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div th:fragment="navbar">
+        <div th:if="${appProfile != ''}" class="ribbon dev">
+            <a href="" translate="global.ribbon.dev" class="ng-scope ng-binding">[[${profile}]]</a>
+        </div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+            <div class="container-fluid">
+                <span class="navbar-brand">MCP Service Registry</span>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown"
+                        aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="/">
+                                Home
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="/instances.html">
+                                Instances
+                            </a>
+                        </li>
+                        <li class="nav-item" sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="/about.html">
+                                About
+                            </a>
+                        </li>
+                    </ul>
+                    <ul class="nav navbar-nav">
+                        <li class="nav-item" sec:authorize="!isAuthenticated()">
+                            <a class="nav-link" href="/login" th:href="@{/sso/login}">
+                                <i class="fas fa-sign-in-alt"></i>&nbsp;Sign in
+                            </a>
+                        </li>
+                        <li sec:authorize="isAuthenticated()">
+                            <a class="nav-link" href="/logout" th:href="@{/logout}">
+                                <i class="fas fa-sign-out-alt"></i> Logout
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </div>
+    <p>Checkout fragments in action!</p>
+    <div th:fragment="login-card" class="card shadow login-card" sec:authorize="!isAuthenticated()">
+        <div class="card-header">
+            <h2>Welcome to the MCP Service Registry</h2>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <p class="m-2">Please sign-in to access the service facilities.</p>
+            </div>
+            <div class="row">
+                <div class="d-flex justify-content-center">
+                    <button type="button" class="btn btn-primary" title="Sign In" onclick="window.location.href='/sso/login'">
+                        <i class="fas fa-sign-in-alt"></i>&nbsp;
+                        <span class="btn-label">Sign In</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:fragment="error-dialog" class="modal fade" id="error-dialog" tabindex="-1" role="dialog" aria-labelledby="errorDialogLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="errorDialogLabel">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Unknown Error!</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:fragment="attachment-dialog" class="modal fade" id="attachmentsPanel" tabindex="-1" role="dialog" aria-labelledby="attachmentsPanelHeader"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="attachmentsPanelHeader">Attachments</h5>
+                    <button type="button" class="btn-close float-end" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="">
+                        <table datatable id="attachmentsTable" class="table table-striped table-bordered table-sm row-border hover w-100">
+                        </table>
+                        <br/>
+                        <form id="attachmentForm">
+                            <div class="row">
+                                <div class="col-8">
+                                    <div class="form-group">
+                                        <input id="file-uploader-id" type="file" class="file" multiple>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label for="file-uploader-comment-id">Comment</label>
+                                        <textarea class="form-control" id="file-uploader-comment-id" rows="12" style="resize:none;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="float-end">
+                        <button type="button" class="btn btn-default" data-bs-dismiss="modal" title="Close">
+                            <i class="fas">&times</i>&nbsp;
+                            <span class="btn-label">Close</span>
+                        </button>
+                        <button id="attachmentUploadButton" type="button" class="btn btn-primary" title="Upload">
+                            <i class="fas fa-upload"></i>&nbsp;
+                            <span class="btn-label">Upload</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div th:fragment="footer" class="flex-fill flex-grow-0 flex-shrink-1">
+        <footer class="footer bg-dark">
+            <div class="row">
+                <div class="col-sm-4 footer-left">
+                    <a th:href="@{${operatorUrl}}" target="_blank">
+                        [[${copyright}]]
+                    </a>
+                </div>
+                <div class="col-sm-4 footer-center">
+                    <a th:href="@{${operatorUrl}}" target="_blank">
+                        <img th:src="@{static/images/company_logo.svg}" height="34"/>
+                    </a>
+                </div>
+                <div class="col-sm-4 footer-right">
+
+                </div>
+            </div>
+        </footer>
+    </div>
+    <div th:fragment="loader" id="pageLoader" class="loader-overlay">
+        <div id="pageLoaderBackground" class="loader-overlay-background"></div>
+        <div id="pageLoaderSpinner" class="loader-overlay-spinner">
+            <div class="spinner-border text-dark" role="status" style="width: 5rem; height: 5rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
