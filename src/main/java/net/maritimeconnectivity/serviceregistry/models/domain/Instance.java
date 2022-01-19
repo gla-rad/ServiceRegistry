@@ -16,73 +16,81 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryBinder;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
-import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
+import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
+import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
+import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.geojson.GeoJsonReader;
-import org.locationtech.jts.io.geojson.GeoJsonWriter;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * The type Instance.
- *
+ * <p>
  * Holds a description of an service instance.An instance can be compatible to
  * one or more specification templates. It has at least a technical
  * representation of the description in form of an XML and a filled out
  * template as e.g. word document.
- *
+ * </p>
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
-@Table(name = "instance")
+@Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
+@Indexed
 @Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class Instance implements Serializable {
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
+public class Instance implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = 1L;
 
-    public static final String SERVICESTATUS_LIVE = "live";
-
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GenericField(name = "id_sort", sortable = Sortable.YES)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @Column(name = "name", nullable = true)
+    @FullTextField
+    @KeywordField(name = "name_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @Column(name = "name")
     private String name;
 
     @NotNull
-    @Column(name = "version", nullable = true)
+    @KeywordField(sortable = Sortable.YES)
+    @Column(name = "version")
     private String version;
 
-    @Column(name = "published_at", nullable = true)
+    @FullTextField
+    @KeywordField(name = "publishedAt_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @Column(name = "published_at")
     private String publishedAt;
 
-    @Column(name = "last_updated_at", nullable = true)
+    @FullTextField
+    @KeywordField(name = "lastUpdatedAt_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @Column(name = "last_updated_at")
     private String lastUpdatedAt;
 
     @NotNull
-    @Column(name = "comment", nullable = true)
+    @FullTextField
+    @KeywordField(name = "comment_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @Column(name = "comment")
     private String comment;
 
-    @JsonSerialize(using = GeometryJSONSerializer.class, as=String.class)
-    @JsonDeserialize(using = GeometryJSONDeserializer.class, as=String.class)
+    @NonStandardField(valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     @Column(name = "geometry")
     private Geometry geometry;
 
@@ -90,77 +98,85 @@ public class Instance implements Serializable {
     private String geometryContentType;
 
     @NotNull
-    @Column(name = "instance_id", nullable = true)
-    @JsonProperty("instanceId")
-    private String instanceId;
+    @FullTextField
+    @KeywordField(name = "instanceId_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @Column(name = "instance_id", updatable = false)
+    private String instanceId; //MRN
 
-    @Column(name = "keywords")
-    private String keywords;
+    @FullTextField
+    @GenericField(name="keywords_sort",
+                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+                  sortable = Sortable.YES)
+    @ElementCollection
+    private List<String> keywords;
 
-    @Column(name = "status")
-    private String status;
+    @NotNull
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
+    private ServiceStatus status;
 
-    @Column(name = "organization_id")
-    @JsonProperty("organizationId")
-    private String organizationId;
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
+    private String organizationId; // Use the JWT auth token for that
 
-    @Column(name = "unlocode")
-    private String unlocode;
+    @FullTextField
+    @ElementCollection
+    private List<String> unlocode;
 
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_uri")
-    @JsonProperty("endpointUri")
     private String endpointUri;
 
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "endpoint_type")
-    @JsonProperty("endpointType")
     private String endpointType;
 
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "mmsi")
     private String mmsi;
 
+    @KeywordField(sortable = Sortable.YES)
     @Column(name = "imo")
     private String imo;
 
-    @Column(name = "service_type")
-    @JsonProperty("serviceType")
-    private String serviceType;
+    @FullTextField
+    @GenericField(name="serviceType_sort",
+                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+                  sortable = Sortable.YES)
+    @ElementCollection
+    private List<String> serviceType;
 
-    @Column(name = "design_id")
-    @JsonProperty("designId")
-    private String designId;
-
-    @Column(name = "specification_id")
-    @JsonProperty("specificationId")
-    private String specificationId;
-
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
     private Xml instanceAsXml;
 
-    @OneToOne
+    @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true, fetch=FetchType.LAZY)
     @JoinColumn(unique = true)
     private Doc instanceAsDoc;
 
-    @ManyToOne
-    private SpecificationTemplate implementedSpecificationVersion;
-
-    @ManyToMany(fetch=FetchType.LAZY)
-    @JsonIgnore
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_designs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="designs_id", referencedColumnName="ID"))
-    private Set<Design> designs = new HashSet<>();
-
-    @ManyToMany(fetch=FetchType.LAZY)
-    @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
-    @JoinTable(name = "instance_docs",
-            joinColumns = @JoinColumn(name="instances_id", referencedColumnName="ID"),
-            inverseJoinColumns = @JoinColumn(name="docs_id", referencedColumnName="ID"))
+    @OneToMany(mappedBy = "instance", cascade = {CascadeType.ALL}, orphanRemoval = true, fetch=FetchType.LAZY)
+    @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Doc> docs = new HashSet<>();
 
-    @Column(name = "compliant")
-    private boolean compliant;
+    /**
+     * The Ledger Request.
+     */
+    @OneToOne(mappedBy = "serviceInstance")
+    private LedgerRequest ledgerRequest;
+
+    /**
+     * The Designs.
+     */
+    @ElementCollection
+    Map<String, String> designs = new HashMap<>();
+
+    /**
+     * The Specifications.
+     */
+    @ElementCollection
+    Map<String, String> specifications = new HashMap<>();
 
     /**
      * Gets id.
@@ -329,7 +345,7 @@ public class Instance implements Serializable {
      *
      * @return the keywords
      */
-    public String getKeywords() {
+    public List<String> getKeywords() {
         return keywords;
     }
 
@@ -338,7 +354,7 @@ public class Instance implements Serializable {
      *
      * @param keywords the keywords
      */
-    public void setKeywords(String keywords) {
+    public void setKeywords(List<String> keywords) {
         this.keywords = keywords;
     }
 
@@ -347,7 +363,7 @@ public class Instance implements Serializable {
      *
      * @return the status
      */
-    public String getStatus() {
+    public ServiceStatus getStatus() {
         return status;
     }
 
@@ -356,7 +372,7 @@ public class Instance implements Serializable {
      *
      * @param status the status
      */
-    public void setStatus(String status) {
+    public void setStatus(ServiceStatus status) {
         this.status = status;
     }
 
@@ -383,7 +399,7 @@ public class Instance implements Serializable {
      *
      * @return the unlocode
      */
-    public String getUnlocode() {
+    public List<String> getUnlocode() {
         return unlocode;
     }
 
@@ -392,7 +408,7 @@ public class Instance implements Serializable {
      *
      * @param unlocode the unlocode
      */
-    public void setUnlocode(String unlocode) {
+    public void setUnlocode(List<String> unlocode) {
         this.unlocode = unlocode;
     }
 
@@ -473,7 +489,7 @@ public class Instance implements Serializable {
      *
      * @return the service type
      */
-    public String getServiceType() {
+    public List<String>  getServiceType() {
         return serviceType;
     }
 
@@ -482,44 +498,8 @@ public class Instance implements Serializable {
      *
      * @param serviceType the service type
      */
-    public void setServiceType(String serviceType) {
+    public void setServiceType(List<String>  serviceType) {
         this.serviceType = serviceType;
-    }
-
-    /**
-     * Gets design id.
-     *
-     * @return the design id
-     */
-    public String getDesignId() {
-        return designId;
-    }
-
-    /**
-     * Sets design id.
-     *
-     * @param designId the design id
-     */
-    public void setDesignId(String designId) {
-        this.designId = designId;
-    }
-
-    /**
-     * Gets specification id.
-     *
-     * @return the specification id
-     */
-    public String getSpecificationId() {
-        return specificationId;
-    }
-
-    /**
-     * Sets specification id.
-     *
-     * @param specificationId the specification id
-     */
-    public void setSpecificationId(String specificationId) {
-        this.specificationId = specificationId;
     }
 
     /**
@@ -559,39 +539,21 @@ public class Instance implements Serializable {
     }
 
     /**
-     * Gets implemented specification version.
+     * Gets ledger request.
      *
-     * @return the implemented specification version
+     * @return the ledger request
      */
-    public SpecificationTemplate getImplementedSpecificationVersion() {
-        return implementedSpecificationVersion;
+    public LedgerRequest getLedgerRequest() {
+        return ledgerRequest;
     }
 
     /**
-     * Sets implemented specification version.
+     * Sets ledger request.
      *
-     * @param implementedSpecificationVersion the implemented specification version
+     * @param ledgerRequest the ledger request
      */
-    public void setImplementedSpecificationVersion(SpecificationTemplate implementedSpecificationVersion) {
-        this.implementedSpecificationVersion = implementedSpecificationVersion;
-    }
-
-    /**
-     * Gets designs.
-     *
-     * @return the designs
-     */
-    public Set<Design> getDesigns() {
-        return designs;
-    }
-
-    /**
-     * Sets designs.
-     *
-     * @param designs the designs
-     */
-    public void setDesigns(Set<Design> designs) {
-        this.designs = designs;
+    public void setLedgerRequest(LedgerRequest ledgerRequest) {
+        this.ledgerRequest = ledgerRequest;
     }
 
     /**
@@ -613,21 +575,39 @@ public class Instance implements Serializable {
     }
 
     /**
-     * Is compliant boolean.
+     * Gets designs.
      *
-     * @return the boolean
+     * @return the designs
      */
-    public boolean isCompliant() {
-        return compliant;
+    public Map<String, String> getDesigns() {
+        return designs;
     }
 
     /**
-     * Sets compliant.
+     * Sets designs.
      *
-     * @param compliant the compliant
+     * @param designs the designs
      */
-    public void setCompliant(boolean compliant) {
-        this.compliant = compliant;
+    public void setDesigns(Map<String, String> designs) {
+        this.designs = designs;
+    }
+
+    /**
+     * Gets specifications.
+     *
+     * @return the specifications
+     */
+    public Map<String, String> getSpecifications() {
+        return specifications;
+    }
+
+    /**
+     * Sets specifications.
+     *
+     * @param specifications the specifications
+     */
+    public void setSpecifications(Map<String, String> specifications) {
+        this.specifications = specifications;
     }
 
     /**
@@ -643,6 +623,7 @@ public class Instance implements Serializable {
      * Sets the geometry from a JSON node object.
      *
      * @param geometry the geometry in a JSON format
+     * @throws ParseException the parse exception
      */
     public void setGeometryJson(JsonNode geometry) throws ParseException {
         this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
@@ -659,7 +640,7 @@ public class Instance implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Instance)) return false;
         Instance instance = (Instance) o;
-        return id.equals(instance.id);
+        return Objects.equals(id, instance.id);
     }
 
     /**
@@ -689,17 +670,50 @@ public class Instance implements Serializable {
                 ", geometry=" + geometry +
                 ", geometryContentType='" + geometryContentType + '\'' +
                 ", instanceId='" + instanceId + '\'' +
-                ", keywords='" + keywords + '\'' +
+                ", keywords='" + Optional.ofNullable(keywords).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", status='" + status + '\'' +
                 ", organizationId='" + organizationId + '\'' +
-                ", unlocode='" + unlocode + '\'' +
+                ", unlocode='" + Optional.ofNullable(unlocode).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", endpointUri='" + endpointUri + '\'' +
                 ", endpointType='" + endpointType + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
-                ", serviceType='" + serviceType + '\'' +
-                ", designId='" + designId + '\'' +
-                ", specificationId='" + specificationId + '\'' +
+                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 '}';
     }
+
+    /**
+     * Currently the G1128 Instance Specification guideline supports only one
+     * design reference per instance so this bypasses the database structure of
+     * a list.
+     *
+     * @return  The single design reference of the instance
+     */
+    public String getImplementsDesign() {
+        return Optional.ofNullable(this.getDesigns())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .findFirst()
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    /**
+     * Currently the G1128 Instance Specification guideline supports only one
+     * design reference per instance so this bypasses the database structure of
+     * a list.
+     *
+     * @return  The single design version reference of the instance
+     */
+    public String getImplementsDesignVersion() {
+        return Optional.ofNullable(this.getDesigns())
+                .orElse(Collections.emptyMap())
+                .entrySet()
+                .stream()
+                .findFirst()
+                .map(Map.Entry::getValue)
+                .orElse(null);
+    }
+
 }

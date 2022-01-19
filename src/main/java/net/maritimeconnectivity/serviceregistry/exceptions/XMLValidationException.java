@@ -17,11 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.exceptions;
 
 /**
- * The type Xml validation exception.
+ * The type Xml Validation exception.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public class XMLValidationException extends Exception {
-
-    private static final long serialVersionUID = -1801881599895016351L;
 
     /**
      * Instantiates a new Xml validation exception.
