@@ -1,0 +1,9 @@
+[Unit]
+Description=MCP Service Registry Service
+After=syslog.target
+
+[Service]
+ExecStart=/opt/e-nav/serviceRegistry/serviceRegistry.jar
+
+[Install]
+WantedBy=multi-user.target
