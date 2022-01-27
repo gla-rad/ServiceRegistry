@@ -24,6 +24,9 @@ import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticatio
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
@@ -177,6 +180,12 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                         "/static/images/**",         //the images
                         "/" , "index.html"           //the home page
                 ).permitAll()
+                .requestMatchers(EndpointRequest.to(
+                        InfoEndpoint.class,         //info endpoints
+                        HealthEndpoint.class        //health endpoints
+                )).permitAll()
+                .requestMatchers(EndpointRequest.toAnyEndpoint()) //
+                .hasRole("ACTUATOR")
                 .anyRequest()
                 .authenticated();
     }
