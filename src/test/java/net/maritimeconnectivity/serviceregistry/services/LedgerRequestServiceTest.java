@@ -25,6 +25,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.repos.LedgerRequestRepo;
 import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -107,9 +108,11 @@ class LedgerRequestServiceTest {
 
             // Add the instance link
             Instance instance = new Instance();
+            instance.setName("Test Instance No" + i);
             instance.setId(i+10);
             instance.setVersion("1.0.0");
             instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", instance.getId()));
+            instance.setStatus(ServiceStatus.RELEASED);
             ledgerRequest.setServiceInstance(instance);
 
             // And append to the list
@@ -125,6 +128,7 @@ class LedgerRequestServiceTest {
         this.instance.setId(123456L);
         this.instance.setVersion("1.0.0");
         this.instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", instance.getId()));
+        this.instance.setStatus(ServiceStatus.RELEASED);
 
         // Create a new ledger request
         this.newLedgerRequest = new LedgerRequest();
