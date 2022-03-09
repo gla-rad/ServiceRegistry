@@ -102,7 +102,7 @@ public class LedgerRequestService {
     public LedgerRequest findOne(@NotNull Long id) {
         log.debug("Request to delete LedgerRequest : {}", id);
         return this.ledgerRequestRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID {}", id), null));
+                .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID %s", id), null));
     }
 
     /**
@@ -115,7 +115,7 @@ public class LedgerRequestService {
     public LedgerRequest findByInstanceId(@NotNull Long instanceId){
         log.debug("Request to delete LedgerRequest related to Instance ID : {}", instanceId);
         return this.ledgerRequestRepo.findByInstanceId(instanceId)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided Instance ID {}", instanceId), null));
+                .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided Instance ID %s", instanceId), null));
     }
 
     /**
@@ -158,7 +158,7 @@ public class LedgerRequestService {
                 .ifPresentOrElse(i -> {
                     this.ledgerRequestRepo.deleteById(id);
                 }, () -> {
-                    throw new DataNotFoundException(String.format("No LedgerRequest found for the provided ID {}", id), null);
+                    throw new DataNotFoundException(String.format("No LedgerRequest found for the provided ID %s", id), null);
                 });
     }
 
@@ -213,7 +213,7 @@ public class LedgerRequestService {
 
         // Try to find if the instance does indeed exist
         LedgerRequest request = this.ledgerRequestRepo.findById(id)
-                .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID {}", id), null));
+                .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID %s", id), null));
 
         // For restricted statuses, leave it up to the registration process
         if(status.isRestricted() && !force) {
@@ -283,7 +283,7 @@ public class LedgerRequestService {
             Optional.of(request)
                     .map(LedgerRequest::getId)
                     .filter(this.ledgerRequestRepo::existsById)
-                    .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID {}", request.getId()), null));
+                    .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID %s", request.getId()), null));
         }
 
         // Validate the instance link
@@ -314,7 +314,7 @@ public class LedgerRequestService {
                 this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, "Failed registration", true);
             }
         } else {
-            log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED, ex.getMessage(), ex);
+            log.error(MsrErrorConstant.LEDGER_REGISTRATION_FAILED, ex);
             this.updateStatus(ledgerRequest.getId(), LedgerRequestStatus.FAILED, ex.getMessage(), true);
         }
     }
