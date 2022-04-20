@@ -53,6 +53,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import javax.persistence.EntityManagerFactory;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,6 +106,12 @@ class InstanceServiceTest {
      */
     @Mock
     private UserContext userContext;
+
+    /**
+     * The Entity Management Factory.
+     */
+    @Mock
+    private EntityManagerFactory entityManagerFactory;
 
     // Test Variables
     private List<Instance> instances;

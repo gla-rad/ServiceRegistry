@@ -65,7 +65,7 @@ public class Instance implements Serializable, JsonSerializable {
     private Long id;
 
     @NotNull
-    @FullTextField
+    @FullTextField(analyzer = "standard")
     @KeywordField(name = "name_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "name")
     private String name;
