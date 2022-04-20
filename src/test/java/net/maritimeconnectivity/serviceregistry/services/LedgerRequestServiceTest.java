@@ -529,7 +529,7 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedger() {
-        // Set the status to REQUESTING
+        // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
         doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
@@ -560,7 +560,7 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedgerFailed() {
-        // Set the status to REQUESTING
+        // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
         doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();

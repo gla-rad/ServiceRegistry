@@ -112,8 +112,8 @@ var columnDefs = [{
     className: 'dt-body-center',
     render: function ( data, type, row ) {
         return (data ?
-            `<i class="fas fa-file-alt" style="color:green" onclick="downloadDoc(${data})"></i>`:
-            `<i class="fas fa-times-circle" style="color:red"></i>`);
+            `<i class="fa-solid fa-file" style="color:green" onclick="downloadDoc(${data})"></i>`:
+            `<i class="fa-solid xmark" style="color:red"></i>`);
     },
  }, {
     data: "implementsServiceDesign",
@@ -156,7 +156,7 @@ $(() => {
         responsive: true,
         altEditor: true, // Enable altEditor
         buttons: [{
-            text: '<i class="fas fa-plus-circle"></i>',
+            text: '<i class="fa-solid fa-circle-plus"></i>',
             titleAttr: 'Add Instance',
             className: 'instance-edit-panel-toggle',
             name: 'add-instance', // do not change name
@@ -165,7 +165,7 @@ $(() => {
             }
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-edit"></i>',
+            text: '<i class="fa-solid fa-pen-to-square"></i>',
             titleAttr: 'Edit Instance',
             className: 'instance-edit-panel-toggle',
             name: 'edit-instance', // do not change name
@@ -174,12 +174,12 @@ $(() => {
             }
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-trash-alt"></i>',
+            text: '<i class="fa-solid fa-trash-can"></i>',
             titleAttr: 'Delete Instance',
             name: 'delete' // do not change name
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-paperclip"></i>',
+            text: '<i class="fa-solid fa-paperclip"></i>',
             titleAttr: 'Files Attachments',
             name: 'attachments', // do not change name
             className: 'instance-attachments-toggle',
@@ -194,7 +194,7 @@ $(() => {
             }
        }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-clipboard-check"></i>',
+            text: '<i class="fa-solid fa-clipboard-check"></i>',
             titleAttr: 'Instance Status',
             name: 'instance-status', // do not change name
             className: 'instance-status-toggle',
@@ -203,7 +203,7 @@ $(() => {
             }
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-cloud-upload-alt"></i>',
+            text: '<i class="fa-solid fa-cloud-arrow-up"></i>',
             titleAttr: 'Instance Global Ledger Status',
             name: 'instance-ledger-status', // do not change name
             className: 'instance-ledger-toggle',

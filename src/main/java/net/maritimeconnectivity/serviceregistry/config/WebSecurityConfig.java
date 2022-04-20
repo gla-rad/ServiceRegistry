@@ -97,19 +97,6 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     }
 
     /**
-     * On multi-tenant scenarios, Keycloak will defer the resolution of a
-     * KeycloakDeployment to the target application at the request-phase.
-     *
-     * A Request object is passed to the resolver and callers expect a complete
-     * KeycloakDeployment. Based on this KeycloakDeployment, Keycloak will
-     * resume authenticating and authorizing the request.
-     */
-    @Bean
-    public KeycloakSpringBootConfigResolver KeycloakConfigResolver() {
-        return new KeycloakSpringBootConfigResolver();
-    }
-
-    /**
      * Defines the session authentication strategy.
      */
     @Bean

@@ -110,6 +110,7 @@ public class InstanceService {
     /**
      * The LedgerRequest Service.
      */
+    @Lazy
     @Autowired(required = false)
     private LedgerRequestService ledgerRequestService;
 

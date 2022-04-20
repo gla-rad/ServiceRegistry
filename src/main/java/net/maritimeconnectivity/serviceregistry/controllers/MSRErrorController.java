@@ -43,9 +43,4 @@ public class MSRErrorController implements ErrorController {
         return new ModelAndView("redirect:" + "/");
     }
 
-    @Override
-    public String getErrorPath() {
-        return null;
-    }
-
 }
