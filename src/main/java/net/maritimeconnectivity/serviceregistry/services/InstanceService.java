@@ -27,7 +27,6 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
@@ -39,6 +38,7 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.hibernate.search.backend.lucene.LuceneBackend;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -66,6 +66,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -128,6 +129,12 @@ public class InstanceService {
      */
     @Autowired
     private UserContext userContext;
+
+    /**
+     * The Entity Management Factory.
+     */
+    @Autowired
+    EntityManagerFactory entityManagerFactory;
 
     // Service Variables
     private final String[] searchFields = new String[] {
@@ -661,7 +668,11 @@ public class InstanceService {
      */
     protected Query createLuceneQuery(String queryString) {
         // First parse the input string to make sure it's right
-        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
+        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, Search.mapping(entityManagerFactory)
+                .backend()
+                .unwrap(LuceneBackend.class)
+                .analyzer( "standard" )
+                .orElse(null));
         parser.setDefaultOperator( QueryParser.Operator.AND );
         return Optional.ofNullable(queryString)
                 .filter(StringUtils::isNotBlank)
