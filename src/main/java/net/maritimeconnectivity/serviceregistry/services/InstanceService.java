@@ -142,7 +142,9 @@ public class InstanceService {
             "endpointUri",
             "mmsi",
             "imo",
-            "serviceType"
+            "serviceType",
+            "designId",
+            "specificationId"
     };
     private final String[] searchFieldsWithSort = new String[] {
             "id",
