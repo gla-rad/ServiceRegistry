@@ -40,6 +40,8 @@ import org.springframework.data.domain.Pageable;
 import org.web3j.protocol.core.RemoteFunctionCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -78,6 +80,7 @@ class LedgerRequestServiceTest {
     LedgerRequestRepo ledgerRequestRepo;
 
     // Test Variables
+    private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
     private List<LedgerRequest> ledgerRequests;
     private Pageable pageable;
     private Instance instance;
@@ -95,7 +98,7 @@ class LedgerRequestServiceTest {
      * Common setup for all the tests.
      */
     @BeforeEach
-    void setUp() throws JsonProcessingException {
+    void setUp() throws ParseException {
         // Initialise the ledger requests list
         this.ledgerRequests = new ArrayList<>();
         for(long i=0; i<10; i++) {
@@ -103,8 +106,8 @@ class LedgerRequestServiceTest {
             ledgerRequest.setId(i);
             ledgerRequest.setStatus(LedgerRequestStatus.CREATED);
             ledgerRequest.setReason("Some reason");
-            ledgerRequest.setLastUpdatedAt("02/01/2001");
-            ledgerRequest.setCreatedAt("01/01/2001");
+            ledgerRequest.setLastUpdatedAt(dateFormatter.parse("02/01/2001"));
+            ledgerRequest.setCreatedAt(dateFormatter.parse("01/01/2001"));
 
             // Add the instance link
             Instance instance = new Instance();
@@ -141,8 +144,8 @@ class LedgerRequestServiceTest {
         this.existingLedgerRequest.setId(100L);
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.CREATED);
         this.existingLedgerRequest.setReason("Some reason");
-        this.existingLedgerRequest.setLastUpdatedAt("02/01/2001");
-        this.existingLedgerRequest.setCreatedAt("01/01/2001");
+        this.existingLedgerRequest.setLastUpdatedAt(dateFormatter.parse("02/01/2001"));
+        this.existingLedgerRequest.setCreatedAt(dateFormatter.parse("01/01/2001"));
         this.existingLedgerRequest.setServiceInstance(instance);
 
         // Mock an MSR smart contract

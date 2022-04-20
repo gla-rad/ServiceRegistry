@@ -244,13 +244,11 @@ public class InstanceService {
     public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
         this.instanceRepo.findById(id)
-                .ifPresentOrElse(i -> {
-                    Optional.ofNullable(this.ledgerRequestService)
-                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getId()));
-                    this.instanceRepo.deleteById(i.getId());
-                }, () -> {
-                    throw new DataNotFoundException("No instance found for the provided ID", null);
-                });
+                .map(Instance::getId)
+                .ifPresentOrElse(
+                        this.instanceRepo::deleteById,
+                        () -> {throw new DataNotFoundException("No instance found for the provided ID", null);}
+                );
     }
 
     /**

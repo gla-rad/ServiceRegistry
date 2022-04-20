@@ -163,7 +163,7 @@ public class Instance implements Serializable, JsonSerializable {
     /**
      * The Ledger Request.
      */
-    @OneToOne(mappedBy = "serviceInstance")
+    @OneToOne(mappedBy = "serviceInstance", cascade = CascadeType.REMOVE)
     private LedgerRequest ledgerRequest;
 
     /**
