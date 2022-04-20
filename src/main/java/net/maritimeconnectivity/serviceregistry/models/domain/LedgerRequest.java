@@ -53,7 +53,7 @@ public class LedgerRequest implements Serializable {
 
     @NotNull
     @OneToOne(cascade = {CascadeType.REMOVE})
-    @JoinColumn(name = "id")
+    @JoinColumn(name = "instance_id")
     private Instance serviceInstance;
 
     @Enumerated(EnumType.STRING)
