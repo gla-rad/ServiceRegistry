@@ -19,7 +19,6 @@ package net.maritimeconnectivity.serviceregistry.components;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -96,11 +95,11 @@ public class SmartContractProvider {
             final Web3ClientVersion web3ClientVersion = web3j.web3ClientVersion().send();
             Optional.of(loadedContract)
                     .ifPresent(contract -> {
-                        log.info(String.format("Web3j {}: successfully connected to the ledger", web3ClientVersion.getWeb3ClientVersion()));
+                        log.info("Web3j {}: successfully connected to the ledger", web3ClientVersion.getWeb3ClientVersion());
                         this.msrContract = contract;
                     });
         } catch (Exception ex) {
-            this.log.error(ex.getMessage());
+            log.error(ex.getMessage());
         }
     }
 
@@ -145,11 +144,11 @@ public class SmartContractProvider {
         return new MsrContract.ServiceInstance(instance.getName(),
                 instance.getInstanceId(),
                 instance.getVersion(),
-                Optional.ofNullable(instance.getKeywords()).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")),
+                String.join(",", Optional.ofNullable(instance.getKeywords()).orElse(Collections.emptyList())),
                 Optional.ofNullable(instance.getGeometry()).map(Geometry::toString).orElse(null),
-                Optional.ofNullable(instance.getStatus()).map(ServiceStatus::ordinal).map(BigInteger::valueOf).orElse(BigInteger.valueOf(-1)),
-                "designMrn",
-                "designVersion",
+                BigInteger.valueOf(instance.getStatus().ordinal()),
+                instance.getImplementsDesign(),
+                instance.getImplementsDesignVersion(),
                 "",
                 ""
         );
