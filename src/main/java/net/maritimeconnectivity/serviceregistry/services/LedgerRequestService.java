@@ -129,19 +129,6 @@ public class LedgerRequestService {
         // First validate the object
         this.validateRequestForSave(request);
 
-        // If the submission date is missing
-        if(StringUtils.isBlank(request.getCreatedAt())) {
-            request.setCreatedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        }
-
-        // And don't forget the last update
-        if(StringUtils.isBlank(request.getLastUpdatedAt())) {
-            request.setLastUpdatedAt(request.getCreatedAt());
-        }
-        else{
-            request.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        }
-
         // The save and return
         return this.ledgerRequestRepo.save(request);
     }
@@ -167,7 +154,7 @@ public class LedgerRequestService {
      *
      * @param instanceId the instance ID to delete the entity for
      */
-    @Transactional(propagation = Propagation.NESTED)
+    @Transactional
     public void deleteByInstanceId(@NotNull Long instanceId) {
         log.debug("Request to delete LedgerRequest related to instance ID : {}", instanceId);
         Optional.of(instanceId)
