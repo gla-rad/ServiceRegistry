@@ -84,6 +84,12 @@ public class InstanceController {
      */
     @PostConstruct
     void setup() {
+        this.instanceDtoToDomainMapper.getModelMapper().addMappings(new PropertyMap<InstanceDto, Instance>() {
+            @Override
+            protected void configure() {
+                map(source.getLedgerRequestId()).setLedgerRequest(null);
+            }
+        });
         this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
             @Override
             protected void configure() {
