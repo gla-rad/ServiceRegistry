@@ -20,7 +20,6 @@ import org.apache.lucene.analysis.charfilter.HTMLStripCharFilterFactory;
 import org.apache.lucene.analysis.core.LowerCaseFilterFactory;
 import org.apache.lucene.analysis.core.WhitespaceTokenizerFactory;
 import org.apache.lucene.analysis.miscellaneous.ASCIIFoldingFilterFactory;
-import org.apache.lucene.analysis.snowball.SnowballPorterFilterFactory;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurationContext;
 import org.hibernate.search.backend.lucene.analysis.LuceneAnalysisConfigurer;
 
@@ -36,12 +35,14 @@ public class MSRLuceneAnalysisConfigurer implements LuceneAnalysisConfigurer {
                 .tokenizer( WhitespaceTokenizerFactory.class )
                 .charFilter( HTMLStripCharFilterFactory.class )
                 .tokenFilter( LowerCaseFilterFactory.class )
-                .tokenFilter( SnowballPorterFilterFactory.class )
-                .param( "language", "English" )
+                //.tokenFilter( SnowballPorterFilterFactory.class )
+                //.param( "language", "English" )
                 .tokenFilter( ASCIIFoldingFilterFactory.class );
 
         context.normalizer( "lowercase" ).custom()
                 .tokenFilter( LowerCaseFilterFactory.class )
+                //.tokenFilter( SnowballPorterFilterFactory.class )
+                //.param( "language", "English" )
                 .tokenFilter( ASCIIFoldingFilterFactory.class );
     }
 }
