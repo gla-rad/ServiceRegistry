@@ -29,7 +29,7 @@
             <div sec:authorize="!isAuthenticated()" class="position-absolute start-50 translate-middle-x mt-5" style="z-index: 2">
                 <div th:replace="fragments/general.html :: login-card"></div>
             </div>
-            <div sec:authorize="isAuthenticated()" class="search-overlay position-absolute" style="z-index: 2; width: 45%;">
+            <div sec:authorize="isAuthenticated()" class="search-overlay position-absolute">
                 <div id="accordion">
                     <div class="accordion-item shadow">
                         <div class="accordion-header" id="indexGreeting">

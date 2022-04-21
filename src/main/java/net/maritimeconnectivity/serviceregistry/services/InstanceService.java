@@ -142,7 +142,6 @@ public class InstanceService {
     private final String[] searchFields = new String[] {
             "name",
             "version",
-            "lastUpdatedAt",
             "comment",
             "instanceId",
             "keywords",
@@ -228,18 +227,6 @@ public class InstanceService {
         // For new entries
         if(instance.getId() == null) {
             instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
-        }
-
-        // If the publication date is missing
-        if(StringUtils.isBlank(instance.getPublishedAt())) {
-            instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        }
-
-        // And don't forget the last update
-        if(StringUtils.isBlank(instance.getLastUpdatedAt())) {
-            instance.setLastUpdatedAt(instance.getPublishedAt());
-        } else {
-            instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
         }
 
         // The save and return

@@ -189,8 +189,8 @@ public class DtPagingRequest {
                 .map(dtOrder -> {
                     String field = this.getColumns().get(dtOrder.getColumn()).getData();
                     field = Optional.ofNullable(diffSortFields).orElseGet(() -> Collections.emptyList()).contains(field) ? field + "_sort" : field;
-                    if(field.equals("id_sort")) {
-                        return new SortedNumericSortField(field, SortField.Type.LONG,  dtOrder.getDir() == DtDirection.desc);
+                    if(field.equals("id_sort") || field.equals("publishedAt_sort") || field.equals("lastUpdatedAt_sort")) {
+                        return new SortedNumericSortField(field, SortField.Type.LONG, dtOrder.getDir() == DtDirection.desc);
                     } else {
                         return new SortedSetSortField(field, dtOrder.getDir() == DtDirection.desc);
                     }
