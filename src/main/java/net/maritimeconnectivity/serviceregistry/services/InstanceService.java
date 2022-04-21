@@ -27,6 +27,8 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
@@ -672,7 +674,8 @@ public class InstanceService {
                 .backend()
                 .unwrap(LuceneBackend.class)
                 .analyzer( "standard" )
-                .orElse(null));
+                .map(Analyzer.class::cast)
+                .orElseGet(() -> new StandardAnalyzer()));
         parser.setDefaultOperator( QueryParser.Operator.AND );
         return Optional.ofNullable(queryString)
                 .filter(StringUtils::isNotBlank)
