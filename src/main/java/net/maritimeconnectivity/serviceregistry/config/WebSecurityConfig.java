@@ -171,7 +171,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                         "/" , "index.html"           //the home page
                 ).permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-                .antMatchers(HttpMethod.GET, "/v2/api-docs").permitAll() // Allow request to Swagger file
+                .antMatchers(HttpMethod.GET, "/v3/api-docs").permitAll() // Allow request to Swagger file
                 .requestMatchers(EndpointRequest.to(
                         InfoEndpoint.class,         //info endpoints
                         HealthEndpoint.class        //health endpoints
