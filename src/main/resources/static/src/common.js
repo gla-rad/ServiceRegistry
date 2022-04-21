@@ -144,12 +144,12 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
         altEditor: true, // Enable altEditor
         buttons: [{
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-trash-alt"></i>',
+            text: '<i class="fa-solid fa-trash-can"></i>',
             titleAttr: 'Delete Attachment',
             name: 'delete' // do not change name
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-download"></i>',
+            text: '<i class="fa-solid fa-download"></i>',
             titleAttr: 'Download Attachment',
             name: 'download', // do not change name
             action: (e, dt, node, config) => {

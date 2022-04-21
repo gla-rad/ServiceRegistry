@@ -24,6 +24,9 @@ import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticatio
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
@@ -91,19 +94,6 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
         filterRegistrationBean.setDispatcherTypes(DispatcherType.REQUEST, DispatcherType.ASYNC, DispatcherType.ERROR);
         filterRegistrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return filterRegistrationBean;
-    }
-
-    /**
-     * On multi-tenant scenarios, Keycloak will defer the resolution of a
-     * KeycloakDeployment to the target application at the request-phase.
-     *
-     * A Request object is passed to the resolver and callers expect a complete
-     * KeycloakDeployment. Based on this KeycloakDeployment, Keycloak will
-     * resume authenticating and authorizing the request.
-     */
-    @Bean
-    public KeycloakSpringBootConfigResolver KeycloakConfigResolver() {
-        return new KeycloakSpringBootConfigResolver();
     }
 
     /**
@@ -181,7 +171,13 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                         "/" , "index.html"           //the home page
                 ).permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
-                .antMatchers(HttpMethod.GET, "/v2/api-docs").permitAll() // Allow request to Swagger file
+                .antMatchers(HttpMethod.GET, "/v3/api-docs").permitAll() // Allow request to Swagger file
+                .requestMatchers(EndpointRequest.to(
+                        InfoEndpoint.class,         //info endpoints
+                        HealthEndpoint.class        //health endpoints
+                )).permitAll()
+                .requestMatchers(EndpointRequest.toAnyEndpoint()) //
+                .hasRole("ACTUATOR")
                 .anyRequest()
                 .authenticated();
     }

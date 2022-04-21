@@ -17,20 +17,14 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -44,17 +38,13 @@ import java.util.Objects;
  * @author Jinki Jung (email: jinki@dmc.international)
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "ledgerrequest")
 public class LedgerRequest implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotNull
-    @OneToOne(cascade = {CascadeType.REMOVE})
-    @JoinColumn(name = "id")
-    private Instance serviceInstance;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", columnDefinition = "varchar(30) default 'created'")
@@ -63,11 +53,18 @@ public class LedgerRequest implements Serializable {
     @Column(name = "reason", nullable = true)
     private String reason;
 
+    @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = true)
-    private String createdAt;
+    private Date createdAt;
 
+    @LastModifiedDate
     @Column(name = "last_updated_at", nullable = true)
-    private String lastUpdatedAt;
+    private Date lastUpdatedAt;
+
+    @NotNull
+    @OneToOne(cascade = {CascadeType.PERSIST})
+    @JoinColumn(name = "instance_id")
+    private Instance serviceInstance;
 
     /**
      * Gets id.
@@ -146,7 +143,7 @@ public class LedgerRequest implements Serializable {
      *
      * @return the created at
      */
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
@@ -155,7 +152,7 @@ public class LedgerRequest implements Serializable {
      *
      * @param submittedAt the submitted at
      */
-    public void setCreatedAt(String submittedAt) {
+    public void setCreatedAt(Date submittedAt) {
         this.createdAt = submittedAt;
     }
 
@@ -164,7 +161,7 @@ public class LedgerRequest implements Serializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public Date getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -173,7 +170,7 @@ public class LedgerRequest implements Serializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(Date lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

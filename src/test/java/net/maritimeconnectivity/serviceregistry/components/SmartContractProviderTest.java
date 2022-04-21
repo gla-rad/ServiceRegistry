@@ -38,6 +38,7 @@ import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.tx.gas.ContractGasProvider;
 
 import java.io.IOException;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -91,6 +92,7 @@ class SmartContractProviderTest {
         this.instance.setComment("No comment");
         this.instance.setStatus(ServiceStatus.RELEASED);
         this.instance.setGeometry(point);
+        this.instance.setDesigns(Collections.singletonMap("designMrn", "designVersion"));
     }
 
     /**

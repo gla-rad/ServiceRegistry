@@ -16,7 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
@@ -43,9 +42,10 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -75,6 +75,7 @@ class LedgerRequestControllerTest {
     private LedgerRequestService ledgerRequestService;
 
     // Test Variables
+    private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
     private List<LedgerRequest> ledgerRequests;
     private Pageable pageable;
     private Instance instance;
@@ -85,7 +86,7 @@ class LedgerRequestControllerTest {
      * Common setup for all the tests.
      */
     @BeforeEach
-    void setUp() throws JsonProcessingException {
+    void setUp() throws ParseException {
         // Initialise the ledger requests list
         this.ledgerRequests = new ArrayList<>();
         for(long i=0; i<10; i++) {
@@ -93,8 +94,8 @@ class LedgerRequestControllerTest {
             ledgerRequest.setId(i);
             ledgerRequest.setStatus(LedgerRequestStatus.CREATED);
             ledgerRequest.setReason("Some reason");
-            ledgerRequest.setLastUpdatedAt(objectMapper.writeValueAsString(new Date()));
-            ledgerRequest.setCreatedAt(objectMapper.writeValueAsString(new Date()));
+            ledgerRequest.setLastUpdatedAt(dateFormatter.parse("02/01/2011"));
+            ledgerRequest.setCreatedAt(dateFormatter.parse("01/01/2011"));
 
             // Add the instance link
             Instance instance = new Instance();
@@ -120,8 +121,6 @@ class LedgerRequestControllerTest {
         this.newLedgerRequest = new LedgerRequest();
         this.newLedgerRequest.setStatus(LedgerRequestStatus.CREATED);
         this.newLedgerRequest.setReason("Some reason");
-        this.newLedgerRequest.setLastUpdatedAt(objectMapper.writeValueAsString(new Date()));
-        this.newLedgerRequest.setCreatedAt(objectMapper.writeValueAsString(new Date()));
         this.newLedgerRequest.setServiceInstance(instance);
 
         // Create an existing ledger request
@@ -129,8 +128,6 @@ class LedgerRequestControllerTest {
         this.existingLedgerRequest.setId(100L);
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.CREATED);
         this.existingLedgerRequest.setReason("Some reason");
-        this.existingLedgerRequest.setLastUpdatedAt(objectMapper.writeValueAsString(new Date()));
-        this.existingLedgerRequest.setCreatedAt(objectMapper.writeValueAsString(new Date()));
         this.existingLedgerRequest.setServiceInstance(instance);
     }
 
