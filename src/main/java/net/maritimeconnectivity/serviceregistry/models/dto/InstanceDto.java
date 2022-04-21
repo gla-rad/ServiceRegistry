@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
@@ -45,8 +46,10 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String name;
     @NotNull
     private String version;
-    private String publishedAt;
-    private String lastUpdatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.S")
+    private Date publishedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.S")
+    private Date lastUpdatedAt;
     @NotNull
     private String comment;
     @JsonSerialize(using = GeometryJSONSerializer.class)
@@ -139,7 +142,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public String getPublishedAt() {
+    public Date getPublishedAt() {
         return publishedAt;
     }
 
@@ -148,7 +151,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(String publishedAt) {
+    public void setPublishedAt(Date publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -157,7 +160,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public Date getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -166,7 +169,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(Date lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

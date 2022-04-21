@@ -48,6 +48,7 @@ var columnDefs = [{
 }, {
     data: "lastUpdatedAt",
     title: "Last Update",
+    type: "date",
     searchable: false,
 }, {
     data: "publishedAt",
