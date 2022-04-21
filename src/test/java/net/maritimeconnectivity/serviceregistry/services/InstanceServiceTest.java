@@ -53,6 +53,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import javax.persistence.EntityManagerFactory;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,6 +106,12 @@ class InstanceServiceTest {
      */
     @Mock
     private UserContext userContext;
+
+    /**
+     * The Entity Management Factory.
+     */
+    @Mock
+    private EntityManagerFactory entityManagerFactory;
 
     // Test Variables
     private List<Instance> instances;
@@ -356,7 +363,6 @@ class InstanceServiceTest {
     @Test
     void testDelete() {
         doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
-        doNothing().when(this.ledgerRequestService).deleteByInstanceId(this.existingInstance.getId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
 
         // Perform the service call

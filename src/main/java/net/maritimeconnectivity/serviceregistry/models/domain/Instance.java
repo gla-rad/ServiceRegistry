@@ -26,6 +26,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
+import org.hibernate.search.mapper.pojo.extractor.builtin.BuiltinContainerExtractors;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
@@ -64,7 +65,7 @@ public class Instance implements Serializable, JsonSerializable {
     private Long id;
 
     @NotNull
-    @FullTextField
+    @FullTextField(analyzer = "standard")
     @KeywordField(name = "name_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "name")
     private String name;
@@ -163,19 +164,27 @@ public class Instance implements Serializable, JsonSerializable {
     /**
      * The Ledger Request.
      */
-    @OneToOne(mappedBy = "serviceInstance")
+    @OneToOne(mappedBy = "serviceInstance", cascade = CascadeType.REMOVE)
     private LedgerRequest ledgerRequest;
 
     /**
      * The Designs.
      */
     @ElementCollection
+    @GenericField(
+            name = "designId",
+            extraction = @ContainerExtraction(BuiltinContainerExtractors.MAP_KEY)
+    )
     Map<String, String> designs = new HashMap<>();
 
     /**
      * The Specifications.
      */
     @ElementCollection
+    @GenericField(
+            name = "specificationId",
+            extraction = @ContainerExtraction(BuiltinContainerExtractors.MAP_KEY)
+    )
     Map<String, String> specifications = new HashMap<>();
 
     /**
