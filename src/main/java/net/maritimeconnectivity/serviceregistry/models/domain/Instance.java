@@ -24,6 +24,7 @@ import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
+import org.hibernate.search.mapper.pojo.bridge.builtin.impl.DefaultJavaUtilDateBridge;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.extractor.builtin.BuiltinContainerExtractors;
@@ -33,6 +34,9 @@ import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -51,6 +55,7 @@ import java.util.stream.Collectors;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
 @Indexed
 @Cacheable
@@ -75,15 +80,19 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "version")
     private String version;
 
-    @FullTextField
-    @KeywordField(name = "publishedAt_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @GenericField(name="publishedAt_sort",
+                  sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = DefaultJavaUtilDateBridge.class))
+    @CreatedDate
     @Column(name = "published_at")
-    private String publishedAt;
+    private Date publishedAt;
 
-    @FullTextField
-    @KeywordField(name = "lastUpdatedAt_sort", normalizer = "lowercase", sortable = Sortable.YES)
+    @GenericField(name="lastUpdatedAt_sort",
+                  sortable = Sortable.YES,
+                  valueBridge = @ValueBridgeRef(type = DefaultJavaUtilDateBridge.class))
+    @LastModifiedDate
     @Column(name = "last_updated_at")
-    private String lastUpdatedAt;
+    private Date lastUpdatedAt;
 
     @NotNull
     @FullTextField
@@ -246,7 +255,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public String getPublishedAt() {
+    public Date getPublishedAt() {
         return publishedAt;
     }
 
@@ -255,7 +264,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(String publishedAt) {
+    public void setPublishedAt(Date publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -264,7 +273,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public Date getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -273,7 +282,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(Date lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
