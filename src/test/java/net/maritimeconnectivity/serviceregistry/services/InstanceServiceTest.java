@@ -306,8 +306,6 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals(this.newInstance.getGeometry(), result.getGeometry());
         assertEquals("org", this.newInstance.getOrganizationId());
-        assertNotNull(this.newInstance.getLastUpdatedAt());
-        assertNotNull(this.newInstance.getPublishedAt());
 
         // Also that a saving call took place in the repository
         verify(this.instanceRepo, times(1)).save(this.newInstance);
@@ -345,8 +343,6 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getServiceType(), result.getServiceType());
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals("org", this.newInstance.getOrganizationId());
-        assertNotNull(this.newInstance.getLastUpdatedAt());
-        assertNotNull(this.newInstance.getPublishedAt());
 
         // Check the geometry
         assertNotNull(result.getGeometry());

@@ -177,6 +177,12 @@
 			<version>${springdoc.version}</version>
 		</dependency>
 
+		<!-- Flyway Database Migration-->
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-core</artifactId>
+		</dependency>
+
 		<!-- The Webjars -->
 		<dependency>
 			<groupId>org.webjars</groupId>
