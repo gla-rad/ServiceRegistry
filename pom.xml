@@ -18,9 +18,9 @@
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-cloud.version>2021.0.1</spring-cloud.version>
-		<hibernate.spatial.version>5.4.30.Final</hibernate.spatial.version>
+		<spring-cloud.version>2021.0.2</spring-cloud.version>
 		<hibernate.search-orm.version>6.1.4.Final</hibernate.search-orm.version>
+		<hibernate.spatial.version>5.4.30.Final</hibernate.spatial.version>
 		<keycloak.version>17.0.1</keycloak.version>
 		<springdoc.version>1.6.7</springdoc.version>
 		<bootstrap.version>5.1.3</bootstrap.version>
