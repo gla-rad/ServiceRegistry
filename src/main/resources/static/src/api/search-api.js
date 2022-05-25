@@ -19,7 +19,7 @@ class SearchApi {
      */
     searchInstances(queryString, callback, errorCallback) {
         $.ajax({
-            url: '/api/_search/instances',
+            url: 'api/_search/instances',
             type: 'GET',
             contentType: 'application/json',
             crossDomain: true,
