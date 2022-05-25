@@ -139,7 +139,7 @@ $(() => {
         serverSide: true,
         ajax: {
             type: "POST",
-            url: "/api/instances/dt",
+            url: "api/instances/dt",
             contentType: "application/json",
             crossDomain: true,
             data: function (d) {
@@ -189,7 +189,7 @@ $(() => {
                 var data = dt.row(idx.row).data();
                 loadFileUploader(
                     data["id"],
-                    "/api/docs",
+                    "api/docs",
                     () => { }
                 );
             }
