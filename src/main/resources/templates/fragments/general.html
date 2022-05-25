@@ -21,9 +21,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MCP Service Registry</title>
     <link rel="icon" type="image/png" href="static/images/favicon.ico" />
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" >
-    <link rel="stylesheet" th:href="@{/webjars/font-awesome/6.1.0/css/all.min.css}"/>
-    <link rel="stylesheet" th:href="@{/static/css/common.css}"/>
+    <link rel="stylesheet" th:href="@{./webjars/bootstrap/css/bootstrap.min.css}" >
+    <link rel="stylesheet" th:href="@{./webjars/font-awesome/6.1.0/css/all.min.css}"/>
+    <link rel="stylesheet" th:href="@{./static/css/common.css}"/>
     <style th:inline="text">
         .sky-bg {
           /*! min-height: 100%; */
@@ -81,12 +81,12 @@
                     </ul>
                     <ul class="nav navbar-nav">
                         <li class="nav-item" sec:authorize="!isAuthenticated()">
-                            <a class="nav-link" href="/login" th:href="@{/sso/login}">
+                            <a class="nav-link" href="/login" th:href="@{./sso/login}">
                                 <i class="fa-solid fa-right-to-bracket"></i>&nbsp;Sign in
                             </a>
                         </li>
                         <li sec:authorize="isAuthenticated()">
-                            <a class="nav-link" href="/logout" th:href="@{/logout}">
+                            <a class="nav-link" href="/logout" th:href="@{./logout}">
                                 <i class="fa-solid fa-right-from-bracket"></i>&nbsp;Logout
                             </a>
                         </li>
