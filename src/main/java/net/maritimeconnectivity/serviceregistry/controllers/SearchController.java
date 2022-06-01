@@ -103,7 +103,7 @@ public class SearchController {
                 .orElseGet(() -> geometryWKT.orElse("None "));
         log.debug("REST request to search for a page of Instances for query {} and geometry {}", queryString, searchGeometryString);
         // Perform the search
-        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, searchGeometry, pageable);
+        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, null, searchGeometry, pageable);
         // And build the response
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/_search/instances"))
