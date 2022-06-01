@@ -28,6 +28,17 @@
 		<fa.version>6.1.0</fa.version>
 	</properties>
 
+	<repositories>
+		<repository>
+			<id>grad</id>
+			<url>https://rnavlab.gla-rad.org:8081/repository/grad/</url>
+		</repository>
+		<repository>
+			<id>grad-snapshots</id>
+			<url>https://rnavlab.gla-rad.org:8081/repository/grad-snapshots/</url>
+		</repository>
+	</repositories>
+
 	<build>
 		<plugins>
 			<plugin>
