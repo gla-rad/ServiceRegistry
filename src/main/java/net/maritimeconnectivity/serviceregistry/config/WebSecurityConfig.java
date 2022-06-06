@@ -140,10 +140,11 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .ignoring()
                 .antMatchers(
                     "/webjars/**",  //bootstrap
-                    "/static/src/**",            //js files
+                    "/static/src/**",           //js files
                     "/static/css/**",           //css files
                     "/static/images/**",        //the images
-                    "/api/xmls/schemas/*"       //the G1128 schemas
+                    "/api/xmls/schemas/*",      //the G1128 schemas
+                    "/api/secom/**"             //the SECOM endpoints
                 );
     }
 
@@ -164,11 +165,13 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .csrf().disable()
                 .authorizeRequests()
                 .antMatchers(
-                        "/webjars/**",   //bootstrap
-                        "/static/src/**", 		     //js files
-                        "/static/css/**", 			 //css files
-                        "/static/images/**",         //the images
-                        "/" , "index.html"           //the home page
+                        "/webjars/**",  //bootstrap
+                        "/static/src/**",           //js files
+                        "/static/css/**",           //css files
+                        "/static/images/**",        //the images
+                        "/api/xmls/schemas/*",      //the G1128 schemas
+                        "/api/secom/**",            //the SECOM endpoints
+                        "/" , "index.html"          //the home page
                 ).permitAll()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
                 .antMatchers(HttpMethod.GET, "/v3/api-docs").permitAll() // Allow request to Swagger file
