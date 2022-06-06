@@ -108,7 +108,7 @@ public class Instance implements Serializable, JsonSerializable {
     private String geometryContentType;
 
     @NotNull
-    @FullTextField
+    @KeywordField(normalizer = "lowercase")
     @KeywordField(name = "instanceId_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "instance_id", updatable = false)
     private String instanceId; //MRN
