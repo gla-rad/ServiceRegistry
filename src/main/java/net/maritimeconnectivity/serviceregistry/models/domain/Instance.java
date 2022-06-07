@@ -24,7 +24,6 @@ import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
-import org.hibernate.search.mapper.pojo.bridge.builtin.impl.DefaultJavaUtilDateBridge;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
 import org.hibernate.search.mapper.pojo.extractor.builtin.BuiltinContainerExtractors;
@@ -41,6 +40,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -80,19 +80,15 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "version")
     private String version;
 
-    @GenericField(name="publishedAt_sort",
-                  sortable = Sortable.YES,
-                  valueBridge = @ValueBridgeRef(type = DefaultJavaUtilDateBridge.class))
+    @GenericField(name="publishedAt_sort", sortable = Sortable.YES)
     @CreatedDate
     @Column(name = "published_at")
-    private Date publishedAt;
+    private LocalDateTime publishedAt;
 
-    @GenericField(name="lastUpdatedAt_sort",
-                  sortable = Sortable.YES,
-                  valueBridge = @ValueBridgeRef(type = DefaultJavaUtilDateBridge.class))
+    @GenericField(name="lastUpdatedAt_sort", sortable = Sortable.YES)
     @LastModifiedDate
     @Column(name = "last_updated_at")
-    private Date lastUpdatedAt;
+    private LocalDateTime lastUpdatedAt;
 
     @NotNull
     @FullTextField
@@ -255,7 +251,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public Date getPublishedAt() {
+    public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
@@ -264,7 +260,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(Date publishedAt) {
+    public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -273,7 +269,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public Date getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -282,7 +278,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(Date lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

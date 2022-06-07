@@ -24,7 +24,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /**
@@ -55,11 +55,11 @@ public class LedgerRequest implements Serializable {
 
     @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = true)
-    private Date createdAt;
+    private LocalDateTime createdAt;
 
     @LastModifiedDate
     @Column(name = "last_updated_at", nullable = true)
-    private Date lastUpdatedAt;
+    private LocalDateTime lastUpdatedAt;
 
     @NotNull
     @OneToOne(cascade = {CascadeType.PERSIST})
@@ -143,7 +143,7 @@ public class LedgerRequest implements Serializable {
      *
      * @return the created at
      */
-    public Date getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -152,7 +152,7 @@ public class LedgerRequest implements Serializable {
      *
      * @param submittedAt the submitted at
      */
-    public void setCreatedAt(Date submittedAt) {
+    public void setCreatedAt(LocalDateTime submittedAt) {
         this.createdAt = submittedAt;
     }
 
@@ -161,7 +161,7 @@ public class LedgerRequest implements Serializable {
      *
      * @return the last updated at
      */
-    public Date getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -170,7 +170,7 @@ public class LedgerRequest implements Serializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(Date lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 

@@ -21,6 +21,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerReques
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * The Ledger Request DTO Class.
@@ -35,8 +36,8 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
     private Long serviceInstanceId;
     private LedgerRequestStatus status;
     private String reason;
-    private String createdAt;
-    private String lastUpdatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime lastUpdatedAt;
 
     /**
      * Instantiates a new Ledger request dto.
@@ -122,7 +123,7 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
      *
      * @return the created at
      */
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -131,7 +132,7 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
      *
      * @param createdAt the created at
      */
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -140,7 +141,7 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -149,7 +150,7 @@ public class LedgerRequestDto implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
