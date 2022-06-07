@@ -48,7 +48,8 @@ var columnDefs = [{
 }, {
     data: "lastUpdatedAt",
     title: "Last Update",
-    type: "date",
+    type: "hidden",
+    visible: false,
     searchable: false,
 }, {
     data: "publishedAt",
@@ -215,13 +216,13 @@ $(() => {
         onAddRow: (datatable, rowdata, success, error) => {
             api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
         },
+        onEditRow: (datatable, rowdata, success, error) => {
+            api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
+        },
         onDeleteRow: (datatable, selectedRows, success, error) => {
             selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
                 api.instancesApi.deleteInstance(this.data()["id"], success, error);
             });
-        },
-        onEditRow: (datatable, rowdata, success, error) => {
-            api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
         },
         initComplete: (settings, json) => {
             hideLoader();
