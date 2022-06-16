@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -75,7 +75,6 @@ class LedgerRequestControllerTest {
     private LedgerRequestService ledgerRequestService;
 
     // Test Variables
-    private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
     private List<LedgerRequest> ledgerRequests;
     private Pageable pageable;
     private Instance instance;
@@ -94,8 +93,8 @@ class LedgerRequestControllerTest {
             ledgerRequest.setId(i);
             ledgerRequest.setStatus(LedgerRequestStatus.CREATED);
             ledgerRequest.setReason("Some reason");
-            ledgerRequest.setLastUpdatedAt(dateFormatter.parse("02/01/2011"));
-            ledgerRequest.setCreatedAt(dateFormatter.parse("01/01/2011"));
+            ledgerRequest.setCreatedAt(LocalDateTime.now());
+            ledgerRequest.setLastUpdatedAt(LocalDateTime.now());
 
             // Add the instance link
             Instance instance = new Instance();

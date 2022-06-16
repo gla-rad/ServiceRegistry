@@ -18,13 +18,16 @@ package net.maritimeconnectivity.serviceregistry;
 
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
+import net.maritimeconnectivity.serviceregistry.config.GlobalConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.*;
+import org.grad.secom.models.SearchObjectResult;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 
 import static org.mockito.Mockito.mock;
 
@@ -35,17 +38,8 @@ import static org.mockito.Mockito.mock;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @TestConfiguration
+@Import(GlobalConfig.class)
 public class TestingConfiguration {
-
-    /**
-     * The Model Mapper Bean.
-     *
-     * @return  the model mapper bean.
-     */
-    @Bean
-    public ModelMapper modelMapper() {
-        return new ModelMapper();
-    }
 
     /**
      * Instance Mapper from Domain to DTO.
@@ -125,6 +119,14 @@ public class TestingConfiguration {
     @Bean
     public DomainDtoMapper ledgerRequestDtoToDomainMapper() {
         return new DomainDtoMapper<InstanceDto, Instance>();
+    }
+
+    /**
+     * From Instance to Search Object Result.
+     */
+    @Bean
+    public DomainDtoMapper searchObjectResultMapper() {
+        return new DomainDtoMapper<Instance, SearchObjectResult>();
     }
 
     /**

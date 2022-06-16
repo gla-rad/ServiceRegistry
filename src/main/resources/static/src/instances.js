@@ -48,7 +48,8 @@ var columnDefs = [{
 }, {
     data: "lastUpdatedAt",
     title: "Last Update",
-    type: "date",
+    type: "hidden",
+    visible: false,
     searchable: false,
 }, {
     data: "publishedAt",
@@ -139,7 +140,7 @@ $(() => {
         serverSide: true,
         ajax: {
             type: "POST",
-            url: "/api/instances/dt",
+            url: "api/instances/dt",
             contentType: "application/json",
             crossDomain: true,
             data: function (d) {
@@ -189,7 +190,7 @@ $(() => {
                 var data = dt.row(idx.row).data();
                 loadFileUploader(
                     data["id"],
-                    "/api/docs",
+                    "api/docs",
                     () => { }
                 );
             }
@@ -215,13 +216,13 @@ $(() => {
         onAddRow: (datatable, rowdata, success, error) => {
             api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
         },
+        onEditRow: (datatable, rowdata, success, error) => {
+            api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
+        },
         onDeleteRow: (datatable, selectedRows, success, error) => {
             selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
                 api.instancesApi.deleteInstance(this.data()["id"], success, error);
             });
-        },
-        onEditRow: (datatable, rowdata, success, error) => {
-            api.instancesApi.updateInstance(rowdata["id"], JSON.stringify(rowdata), success, error);
         },
         initComplete: (settings, json) => {
             hideLoader();
