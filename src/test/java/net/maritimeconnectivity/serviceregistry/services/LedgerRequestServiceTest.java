@@ -16,7 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.LedgerRegistrationError;
@@ -41,7 +40,7 @@ import org.web3j.protocol.core.RemoteFunctionCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -80,7 +79,6 @@ class LedgerRequestServiceTest {
     LedgerRequestRepo ledgerRequestRepo;
 
     // Test Variables
-    private SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy");
     private List<LedgerRequest> ledgerRequests;
     private Pageable pageable;
     private Instance instance;
@@ -106,8 +104,8 @@ class LedgerRequestServiceTest {
             ledgerRequest.setId(i);
             ledgerRequest.setStatus(LedgerRequestStatus.CREATED);
             ledgerRequest.setReason("Some reason");
-            ledgerRequest.setLastUpdatedAt(dateFormatter.parse("02/01/2001"));
-            ledgerRequest.setCreatedAt(dateFormatter.parse("01/01/2001"));
+            ledgerRequest.setCreatedAt(LocalDateTime.now());
+            ledgerRequest.setLastUpdatedAt(LocalDateTime.now());
 
             // Add the instance link
             Instance instance = new Instance();
@@ -144,8 +142,8 @@ class LedgerRequestServiceTest {
         this.existingLedgerRequest.setId(100L);
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.CREATED);
         this.existingLedgerRequest.setReason("Some reason");
-        this.existingLedgerRequest.setLastUpdatedAt(dateFormatter.parse("02/01/2001"));
-        this.existingLedgerRequest.setCreatedAt(dateFormatter.parse("01/01/2001"));
+        this.existingLedgerRequest.setCreatedAt(LocalDateTime.now());
+        this.existingLedgerRequest.setLastUpdatedAt(LocalDateTime.now());
         this.existingLedgerRequest.setServiceInstance(instance);
 
         // Mock an MSR smart contract

@@ -19,7 +19,7 @@ class InstancesApi {
      */
     getInstance(id, callback, errorCallback) {
         $.ajax({
-            url: `/api/instances/${id}`,
+            url: `api/instances/${id}`,
             type: 'GET',
             contentType: 'application/json',
             crossDomain: true,
@@ -37,7 +37,7 @@ class InstancesApi {
      */
     createInstance(instance, callback, errorCallback) {
         $.ajax({
-            url: '/api/instances',
+            url: 'api/instances',
             type: 'POST',
             contentType: 'application/json',
             crossDomain: true,
@@ -58,7 +58,7 @@ class InstancesApi {
      */
     updateInstance(id, instance, callback, errorCallback) {
         $.ajax({
-            url: `/api/instances/${id}`,
+            url: `api/instances/${id}`,
             type: 'PUT',
             contentType: 'application/json',
             crossDomain: true,
@@ -78,7 +78,7 @@ class InstancesApi {
      */
     deleteInstance(id, callback, errorCallback) {
         $.ajax({
-            url: `/api/instances/${id}`,
+            url: `api/instances/${id}`,
             type: 'DELETE',
             contentType: 'application/json',
             crossDomain: true,
@@ -97,7 +97,7 @@ class InstancesApi {
      */
     setStatus(id, status, callback, errorCallback) {
         $.ajax({
-            url: `/api/instances/${id}/status?status=${status}`,
+            url: `api/instances/${id}/status?status=${status}`,
             type: 'PUT',
             contentType: 'application/json',
             crossDomain: true,
@@ -116,7 +116,7 @@ class InstancesApi {
       */
     setLedgerStatus(id, status, callback, errorCallback) {
         $.ajax({
-            url: `/api/instances/${id}/ledger-status?ledgerStatus=${status}`,
+            url: `api/instances/${id}/ledger-status?ledgerStatus=${status}`,
             type: 'PUT',
             contentType: 'application/json',
             crossDomain: true,

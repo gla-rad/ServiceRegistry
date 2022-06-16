@@ -16,11 +16,9 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
@@ -29,7 +27,10 @@ import org.locationtech.jts.geom.Geometry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The Instance DTO Class.
@@ -46,10 +47,8 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String name;
     @NotNull
     private String version;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.S")
-    private Date publishedAt;
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss.S")
-    private Date lastUpdatedAt;
+    private LocalDateTime publishedAt;
+    private LocalDateTime lastUpdatedAt;
     @NotNull
     private String comment;
     @JsonSerialize(using = GeometryJSONSerializer.class)
@@ -68,7 +67,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String mmsi;
     private String imo;
     private List<String> serviceType;
-    private Xml instanceAsXml;
+    private XmlDto instanceAsXml;
     private DocDto instanceAsDoc;
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
@@ -142,7 +141,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public Date getPublishedAt() {
+    public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
@@ -151,7 +150,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(Date publishedAt) {
+    public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -160,7 +159,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public Date getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -169,7 +168,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(Date lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
@@ -412,7 +411,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the instance as xml
      */
-    public Xml getInstanceAsXml() {
+    public XmlDto getInstanceAsXml() {
         return instanceAsXml;
     }
 
@@ -421,7 +420,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param instanceAsXml the instance as xml
      */
-    public void setInstanceAsXml(Xml instanceAsXml) {
+    public void setInstanceAsXml(XmlDto instanceAsXml) {
         this.instanceAsXml = instanceAsXml;
     }
 
