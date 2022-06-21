@@ -19,39 +19,41 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import org.grad.secom.exceptions.SecomValidationException;
-import org.grad.secom.interfaces.DiscoveryServiceInterface;
-import org.grad.secom.models.SearchFilterObject;
-import org.grad.secom.models.SearchObjectResult;
+import org.grad.secom.core.exceptions.SecomValidationException;
+import org.grad.secom.core.interfaces.DiscoveryServiceSecomInterface;
+import org.grad.secom.core.models.SearchFilterObject;
+import org.grad.secom.core.models.SearchObjectResult;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Optional;
 
-@RestController
-@RequestMapping("/api/secom")
+/**
+ * The SECOM Discovery Service Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@Component
+@Path("/")
+@Validated
 @Slf4j
-public class SecomDiscoveryServiceController implements DiscoveryServiceInterface {
+public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInterface {
 
     /**
      * The Object Mapper.
@@ -79,11 +81,22 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceInterfac
      * @param pageable              the pageable information
      * @return the result list of the search
      */
-    @Override
-    @SneakyThrows
-    @PostMapping(value = DISCOVERY_SERVICE_INTERFACE_PATH, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<SearchObjectResult>> search(@RequestBody @Valid SearchFilterObject searchFilterObject,
-                                                           @PageableDefault(size = Integer.MAX_VALUE) Pageable pageable)  {
+    /**
+     * POST /v1/searchService : The purpose of this interface is to search for
+     * service instances to consume.
+     *
+     * @param searchFilterObject    The search filter object
+     * @param page the page number to be retrieved
+     * @param pageSize the maximum page size
+     * @return the result list of the search
+     */
+    @Path(DISCOVERY_SERVICE_INTERFACE_PATH)
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
+    @Produces(MediaType.APPLICATION_JSON)
+    public List<SearchObjectResult> search(@Valid SearchFilterObject searchFilterObject,
+                                           @QueryParam("page") @Min(0) Integer page,
+                                           @QueryParam("pageSize") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
@@ -93,16 +106,15 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceInterfac
                 .orElse(null);
 
         // Perform the search
-        final Page<Instance> page = instanceService.handleSearchQueryRequest(
+        final Page<Instance> instancesPage = instanceService.handleSearchQueryRequest(
                 searchFilterObject.getQuery(),
                 searchFilterObject.getFreetext(),
                 searchGeometry,
-                pageable);
+                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
+        );
 
         // And build the response
-        return ResponseEntity.ok()
-                .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/secom/"  + DISCOVERY_SERVICE_INTERFACE_PATH))
-                .body(this.searchObjectResultMapper.convertToList(page.getContent(), SearchObjectResult.class));
+        return this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResult.class);
     }
 
     /**
