@@ -49,6 +49,12 @@ var columnDefs = [{
     readonly : true,
     hoverMsg: "Access point of service",
     placeholder: "Access point of the service"
+}, {
+    data: "instanceAsXml",
+    title: "Instance as XML",
+    type: "hidden",
+    visible: false,
+    searchable: false
 }];
 
 /**
@@ -394,7 +400,7 @@ function loadInstanceEditPanel($modalDiv) {
         // Augmenting xml content on the data
         if(g1128Compliant) {
             $("#g1128SideBar").removeClass('d-none');
-            $("#g1128SideBar").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
+            $("#g1128SideBar").find("#xml-input").val(rowData["instanceAsXml"]);
         } else {
             $("#g1128SideBar").addClass('d-none');
         }
