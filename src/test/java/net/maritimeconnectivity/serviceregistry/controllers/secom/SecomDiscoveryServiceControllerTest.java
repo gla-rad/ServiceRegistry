@@ -22,9 +22,9 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import org.grad.secom.models.SearchFilterObject;
-import org.grad.secom.models.SearchObjectResult;
-import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.models.SearchFilterObject;
+import org.grad.secom.core.models.SearchObjectResult;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,8 +32,9 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -42,26 +43,28 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.grad.secom.interfaces.DiscoveryServiceInterface.DISCOVERY_SERVICE_INTERFACE_PATH;
+import static org.grad.secom.core.interfaces.DiscoveryServiceSecomInterface.DISCOVERY_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("test")
-@WebMvcTest(controllers = SecomDiscoveryServiceController.class, excludeAutoConfiguration = {SecurityAutoConfiguration.class})
-@Import(TestingConfiguration.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
 class SecomDiscoveryServiceControllerTest {
 
+    /**
+     * The Reactive Web Test Client.
+     */
     @Autowired
-    private MockMvc mockMvc;
+    WebTestClient webTestClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -127,30 +130,32 @@ class SecomDiscoveryServiceControllerTest {
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
 
-        // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(post("/api/secom/" + DISCOVERY_SERVICE_INTERFACE_PATH)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .param("queryString", "name:Test")
-                        .param("geometry", "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}")
-                        .param("page", "0")
-                        .param("size", "10")
-                        .content(this.objectMapper.writeValueAsString(searchFilterObject)))
-                .andExpect(status().isOk())
-                .andReturn();
+        // Perform the web request
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom/" + DISCOVERY_SERVICE_INTERFACE_PATH)
+                        .queryParam("page", 0)
+                        .queryParam("pageSize", Integer.MAX_VALUE)
+                        .build())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SearchObjectResult[].class)
+                .consumeWith(response -> {
+                    SearchObjectResult[] result = response.getResponseBody();
+                    assertEquals(this.instances.size(), result.length);
 
-        // Parse and validate the response
-        SearchObjectResult[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), SearchObjectResult[].class);
-        assertEquals(this.instances.size(), result.length);
-
-        // Test each of the result entries
-        for(int i=0; i < result.length; i++){
-            assertEquals(this.instances.get(i).getInstanceId(), result[i].getInstanceId());
-            assertEquals(this.instances.get(i).getName(), result[i].getName());
-            assertEquals(this.instances.get(i).getStatus().toString(), result[i].getStatus());
-            assertEquals(this.instances.get(i).getVersion(), result[i].getVersion());
-            assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), result[i].getInstanceAsXml());
-            assertEquals(SECOM_DataProductType.OTHER, result[i].getDataProductType());
-        }
+                    // Test each of the result entries
+                    for(int i=0; i < result.length; i++){
+                        assertEquals(this.instances.get(i).getInstanceId(), result[i].getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), result[i].getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), result[i].getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), result[i].getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), result[i].getInstanceAsXml());
+                        assertEquals(SECOM_DataProductType.OTHER, result[i].getDataProductType());
+                    }
+                });
     }
 
     /**
@@ -170,29 +175,31 @@ class SecomDiscoveryServiceControllerTest {
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
 
-        // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(post("/api/secom/" + DISCOVERY_SERVICE_INTERFACE_PATH)
-                        .contentType(MediaType.APPLICATION_JSON_VALUE)
-                        .param("queryString", "name:Test")
-                        .param("geometry", "{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}")
-                        .param("page", "0")
-                        .param("size", "10")
-                        .content(this.objectMapper.writeValueAsString(searchFilterObject)))
-                .andExpect(status().isOk())
-                .andReturn();
+        // Perform the web request
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom/" + DISCOVERY_SERVICE_INTERFACE_PATH)
+                        .queryParam("page", 0)
+                        .queryParam("pageSize", Integer.MAX_VALUE)
+                        .build())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SearchObjectResult[].class)
+                .consumeWith(response -> {
+                    SearchObjectResult[] result = response.getResponseBody();
+                    assertEquals(this.instances.size(), result.length);
 
-        // Parse and validate the response
-        SearchObjectResult[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), SearchObjectResult[].class);
-        assertEquals(this.instances.size(), result.length);
-
-        // Test each of the result entries
-        for(int i=0; i < result.length; i++){
-            assertEquals(this.instances.get(i).getInstanceId(), result[i].getInstanceId());
-            assertEquals(this.instances.get(i).getName(), result[i].getName());
-            assertEquals(this.instances.get(i).getStatus().toString(), result[i].getStatus());
-            assertEquals(this.instances.get(i).getVersion(), result[i].getVersion());
-            assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), result[i].getInstanceAsXml());
-            assertEquals(SECOM_DataProductType.OTHER, result[i].getDataProductType());
-        }
+                    // Test each of the result entries
+                    for(int i=0; i < result.length; i++){
+                        assertEquals(this.instances.get(i).getInstanceId(), result[i].getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), result[i].getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), result[i].getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), result[i].getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), result[i].getInstanceAsXml());
+                        assertEquals(SECOM_DataProductType.OTHER, result[i].getDataProductType());
+                    }
+                });
     }
 }
