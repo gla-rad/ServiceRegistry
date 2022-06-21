@@ -14,8 +14,8 @@ var geoSpatialSearchMode = "geoJson";
  * @type {Array}
  */
 var columnDefs = [{
-    data: "id",
-    title: "ID",
+    data: "instanceId",
+    title: "InstanceID",
     type: "hidden",
     visible: false,
     searchable: false
@@ -32,7 +32,7 @@ var columnDefs = [{
     hoverMsg: "Version of service",
     placeholder: "Version of the service"
 }, {
-    data: "serviceType",
+    data: "dataProductType",
     title: "Type",
     readonly : true,
     hoverMsg: "Type of service",
@@ -198,20 +198,23 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instanceItems.clearLayers();
     destroyInstancesTable();
 
+    // Construct the SECOM search filter object
+    let alphanumericPattern = /^[a-z0-9]+$/i
+    let searchFilterObject = {
+        'query': !alphanumericPattern.test(queryString) ? queryString : null,
+        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
+        'freetext': alphanumericPattern.test(queryString) ? queryString : null
+    }
+
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         ajax: {
-            url: 'api/_search/instances',
-            type: 'GET',
-            contentType: 'application/json',
+            url: `api/secom/v1/searchService`,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
             crossDomain: true,
-            data: {
-                queryString: queryString,
-                geometry: geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : null,
-                geometryWKT: geoSpatialSearchMode === 'WKT' ? queryWKT.trim() : null,
-                globalSearch: globalSearch,
-                page: 0,
-                size: 100
+            data: function (d) {
+                return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
                 return json;

@@ -35,6 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import javax.validation.Valid;
@@ -90,6 +91,7 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
      * @param pageSize the maximum page size
      * @return the result list of the search
      */
+    @Transactional
     @Path(DISCOVERY_SERVICE_INTERFACE_PATH)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
