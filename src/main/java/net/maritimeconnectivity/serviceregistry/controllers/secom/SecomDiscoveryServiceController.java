@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -91,6 +92,7 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
      * @param pageSize the maximum page size
      * @return the result list of the search
      */
+    @Tag(name = "SECOM")
     @Transactional
     @Path(DISCOVERY_SERVICE_INTERFACE_PATH)
     @POST
