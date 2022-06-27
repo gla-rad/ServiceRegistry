@@ -213,11 +213,10 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     destroyInstancesTable();
 
     // Construct the SECOM search filter object
-    let alphanumericPattern = /^[a-z0-9]+$/i
     let searchFilterObject = {
-        'query': !alphanumericPattern.test(queryString) ? queryString : null,
+        'query': null,
         'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
-        'freetext': alphanumericPattern.test(queryString) ? queryString : null
+        'freetext': queryString
     }
 
     // Now initialise the instances table
