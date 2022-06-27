@@ -21,6 +21,7 @@ import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryBinder;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
@@ -63,7 +64,6 @@ import java.util.stream.Collectors;
 public class Instance implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = 1L;
-
     @Id
     @GenericField(name = "id_sort", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -109,7 +109,7 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "instance_id", updatable = false)
     private String instanceId; //MRN
 
-    @FullTextField
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @GenericField(name="keywords_sort",
                   valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
@@ -126,7 +126,7 @@ public class Instance implements Serializable, JsonSerializable {
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     private String organizationId; // Use the JWT auth token for that
 
-    @FullTextField
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @ElementCollection
     private List<String> unlocode;
 
@@ -146,13 +146,18 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "imo")
     private String imo;
 
-    @FullTextField
+    @KeywordField(sortable = Sortable.YES)
     @GenericField(name="serviceType_sort",
                   valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
                   sortable = Sortable.YES)
     @ElementCollection
     private List<String> serviceType;
+
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
+    @ElementCollection
+    @Enumerated(EnumType.STRING)
+    private List<SECOM_DataProductType> dataProductType;
 
     @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
@@ -514,6 +519,24 @@ public class Instance implements Serializable, JsonSerializable {
      */
     public void setServiceType(List<String>  serviceType) {
         this.serviceType = serviceType;
+    }
+
+    /**
+     * Gets data product type.
+     *
+     * @return the data product type
+     */
+    public List<SECOM_DataProductType> getDataProductType() {
+        return dataProductType;
+    }
+
+    /**
+     * Sets data product type.
+     *
+     * @param dataProductType the data product type
+     */
+    public void setDataProductType(List<SECOM_DataProductType> dataProductType) {
+        this.dataProductType = dataProductType;
     }
 
     /**
