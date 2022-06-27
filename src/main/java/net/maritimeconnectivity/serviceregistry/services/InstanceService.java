@@ -475,12 +475,9 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handleSearchQueryRequest(String queryString, String freeText, Geometry geometry, Pageable pageable) {
+    public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
-        SearchQuery searchQuery = Optional.ofNullable(queryString)
-                .map(qs -> this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false))))
-                .orElseGet(() -> this.getSearchInstanceQueryByText(freeText, new Sort(new SortedSetSortField("name_sort", false))));
-
+        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))

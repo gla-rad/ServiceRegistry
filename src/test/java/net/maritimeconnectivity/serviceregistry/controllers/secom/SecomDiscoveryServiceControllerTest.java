@@ -24,6 +24,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
+import org.grad.secom.core.models.SearchParameters;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -121,14 +122,16 @@ class SecomDiscoveryServiceControllerTest {
     void testSearchGeoJSON() throws Exception {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
-        searchFilterObject.setQuery("name:Test");
+        SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setName("Test");
+        searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
@@ -167,13 +170,15 @@ class SecomDiscoveryServiceControllerTest {
     void testSearchWKT() throws Exception {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
-        searchFilterObject.setQuery("name:Test");
+        SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setName("Test");
+        searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
