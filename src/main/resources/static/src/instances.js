@@ -31,6 +31,10 @@ var columnDefs = [{
     data: "serviceType",
     title: "Type",
 }, {
+    data: "dataProductType",
+    title: "Product Type",
+    visible: false
+}, {
     data: "status",
     title: "Status",
 }, {
@@ -337,6 +341,14 @@ $(() => {
             firstInstanceMapView = false;
         }, 50);
     });
+
+    // Also initialise the data product type multi-select
+    $('#dataProductType').select2({
+        placeholder: "Data Product Type",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
 });
 
 /**
@@ -413,6 +425,7 @@ function clearInstanceEditPanel() {
 
     // Do the form
     $('form[name="instanceEditPanelForm"]').trigger("reset");
+    $("#dataProductType").select2('val', null);
 
     // And the map
     drawnEditMapItems.clearLayers();
@@ -464,7 +477,7 @@ function loadInstanceEditPanel($modalDiv, isNewInstance) {
             if(!$(this).attr('id')) {
                 return;
             }
-            $(this).val(rowData[$(this).attr('id')]);
+            $(this).val(rowData[$(this).attr('id')]).trigger('change');
             $(this).filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
         });
 
@@ -526,6 +539,9 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
     } else if(!firstInstanceMapView){
         rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
     }
+
+    // Adding the data product types
+    rowData["dataProductType"] = $('#dataProductType').val();
 
     // Adding the attached documents
     var uploadFiles = $modalDiv.find("#instanceAsDoc").prop('files');

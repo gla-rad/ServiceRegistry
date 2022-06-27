@@ -139,6 +139,14 @@ $(() => {
         }
     });
 
+    // Also initialise the data product type multi-select
+    $('#dataProductType').select2({
+        placeholder: "Data Product Type",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
     // Initialise the instance edit panel as read-only
     initInstanceEditPanel($('#instanceViewPanel'));
 });
@@ -395,6 +403,13 @@ function loadInstanceEditPanel($modalDiv) {
                     $(this).val(rowData["instanceAsDoc"].name);
                 }
             }
+        });
+        $('form[name="instanceEditPanelForm"] select').each(function() {
+            // Make sure the select element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
+            $(this).val(rowData[$(this).attr('id')]).trigger('change');
         });
 
         // Augmenting xml content on the data

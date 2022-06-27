@@ -151,6 +151,7 @@ public class InstanceService {
             "mmsi",
             "imo",
             "serviceType",
+            "dataProductType",
             "designId",
             "specificationId"
     };
@@ -288,11 +289,11 @@ public class InstanceService {
     /**
      * Update the ledger status of an instance by ID.
      *
-     * @param id            the ID of the entity
-     * @param ledgerStatus  the ledger status of the entity
+     * @param id                    the ID of the entity
+     * @param ledgerRequestStatus   the ledger request status of the entity
      */
     @Transactional
-    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
+    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerRequestStatus, String reason) {
         return Optional.ofNullable(this.ledgerRequestService)
                 .map(lss -> {
                     // First make sure the instance is valid
@@ -310,7 +311,7 @@ public class InstanceService {
                             });
 
                     // Finally, update the status
-                    return lss.updateStatus(request.getId(), ledgerStatus, reason);
+                    return lss.updateStatus(request.getId(), ledgerRequestStatus, reason);
                 })
                 .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
     }

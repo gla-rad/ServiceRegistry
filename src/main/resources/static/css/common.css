@@ -201,9 +201,17 @@ body {
  *        Datatables         *
  *****************************/
 table.dataTable tbody tr.odd.selected {
- background-color:#acbad4
+    background-color:#acbad4
 }
 
 table.dataTable tbody tr.even.selected {
- background-color:#acbad5
+    background-color:#acbad5
+}
+
+/*****************************
+ *          Select2          *
+ *****************************/
+
+.select2-selection--multiple {
+    margin-bottom: 2px;
 }
