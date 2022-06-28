@@ -209,7 +209,7 @@
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-core</artifactId>
-			<version>0.0.5T</version>
+			<version>0.0.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
