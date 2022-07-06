@@ -151,6 +151,7 @@ public class InstanceService {
             "mmsi",
             "imo",
             "serviceType",
+            "dataProductType",
             "designId",
             "specificationId"
     };
@@ -288,11 +289,11 @@ public class InstanceService {
     /**
      * Update the ledger status of an instance by ID.
      *
-     * @param id            the ID of the entity
-     * @param ledgerStatus  the ledger status of the entity
+     * @param id                    the ID of the entity
+     * @param ledgerRequestStatus   the ledger request status of the entity
      */
     @Transactional
-    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
+    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerRequestStatus, String reason) {
         return Optional.ofNullable(this.ledgerRequestService)
                 .map(lss -> {
                     // First make sure the instance is valid
@@ -310,7 +311,7 @@ public class InstanceService {
                             });
 
                     // Finally, update the status
-                    return lss.updateStatus(request.getId(), ledgerStatus, reason);
+                    return lss.updateStatus(request.getId(), ledgerRequestStatus, reason);
                 })
                 .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
     }
@@ -474,12 +475,9 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handleSearchQueryRequest(String queryString, String freeText, Geometry geometry, Pageable pageable) {
+    public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
-        SearchQuery searchQuery = Optional.ofNullable(queryString)
-                .map(qs -> this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false))))
-                .orElseGet(() -> this.getSearchInstanceQueryByText(freeText, new Sort(new SortedSetSortField("name_sort", false))));
-
+        SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))

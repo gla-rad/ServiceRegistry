@@ -19,8 +19,8 @@ package net.maritimeconnectivity.serviceregistry.config;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import org.grad.secom.models.SearchObjectResult;
-import org.grad.secom.models.enums.SECOM_DataProductType;
+import org.grad.secom.core.models.SearchObjectResult;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.spi.MappingContext;
@@ -28,8 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
@@ -75,22 +74,16 @@ public class GlobalConfig {
                                     .orElse(null))
                             .map(Instance::getGeometry, SearchObjectResult::setGeometry);
                     mapper.using(ctx -> Stream.of(Optional.of(ctx)
-                                            .map(MappingContext::getSource)
-                                            .orElse(Stream.empty()))
-                                .filter(source -> source instanceof List)
-                                .map(Object::toString)
-                                .map(type -> {
-                                    try {
-                                        return SECOM_DataProductType.valueOf(type);
-                                    } catch (Exception ex){
-                                        return SECOM_DataProductType.OTHER;
-                                    }
-                                })
-                                .filter(not(SECOM_DataProductType.OTHER::equals))
-                                .findAny()
-                                .orElse(SECOM_DataProductType.OTHER)
+                                    .map(MappingContext::getSource)
+                                    .filter(List.class::isInstance)
+                                    .map(List.class::cast)
+                                    .map(List::toArray)
+                                    .orElseGet(() -> new SECOM_DataProductType[]{}))
+                                    .findFirst()
+                                    .filter(not(SECOM_DataProductType.OTHER::equals))
+                                    .orElse(SECOM_DataProductType.OTHER)
                              )
-                            .map(Instance::getServiceType, SearchObjectResult::setDataProductType);
+                            .map(Instance::getDataProductType, SearchObjectResult::setDataProductType);
                 });
         // ================================================================== //
 

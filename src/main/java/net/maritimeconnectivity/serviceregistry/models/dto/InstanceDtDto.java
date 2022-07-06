@@ -22,6 +22,7 @@ import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
@@ -67,6 +68,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String mmsi;
     private String imo;
     private List<String> serviceType;
+    private List<SECOM_DataProductType> dataProductType;
     private XmlDto instanceAsXml;
     private Long instanceAsDocId;
     private String instanceAsDocName;
@@ -405,6 +407,24 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      */
     public void setServiceType(List<String> serviceType) {
         this.serviceType = serviceType;
+    }
+
+    /**
+     * Gets data product type.
+     *
+     * @return the data product type
+     */
+    public List<SECOM_DataProductType> getDataProductType() {
+        return dataProductType;
+    }
+
+    /**
+     * Sets data product type.
+     *
+     * @param dataProductType the data product type
+     */
+    public void setDataProductType(List<SECOM_DataProductType> dataProductType) {
+        this.dataProductType = dataProductType;
     }
 
     /**

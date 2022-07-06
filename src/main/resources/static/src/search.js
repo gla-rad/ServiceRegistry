@@ -14,8 +14,8 @@ var geoSpatialSearchMode = "geoJson";
  * @type {Array}
  */
 var columnDefs = [{
-    data: "id",
-    title: "ID",
+    data: "instanceId",
+    title: "InstanceID",
     type: "hidden",
     visible: false,
     searchable: false
@@ -32,7 +32,7 @@ var columnDefs = [{
     hoverMsg: "Version of service",
     placeholder: "Version of the service"
 }, {
-    data: "serviceType",
+    data: "dataProductType",
     title: "Type",
     readonly : true,
     hoverMsg: "Type of service",
@@ -49,6 +49,12 @@ var columnDefs = [{
     readonly : true,
     hoverMsg: "Access point of service",
     placeholder: "Access point of the service"
+}, {
+    data: "instanceAsXml",
+    title: "Instance as XML",
+    type: "hidden",
+    visible: false,
+    searchable: false
 }];
 
 /**
@@ -133,6 +139,14 @@ $(() => {
         }
     });
 
+    // Also initialise the data product type multi-select
+    $('#dataProductType').select2({
+        placeholder: "Data Product Type",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
     // Initialise the instance edit panel as read-only
     initInstanceEditPanel($('#instanceViewPanel'));
 });
@@ -198,20 +212,22 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instanceItems.clearLayers();
     destroyInstancesTable();
 
+    // Construct the SECOM search filter object
+    let searchFilterObject = {
+        'query': null,
+        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
+        'freetext': queryString
+    }
+
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         ajax: {
-            url: 'api/_search/instances',
-            type: 'GET',
-            contentType: 'application/json',
+            url: `api/secom/v1/searchService`,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
             crossDomain: true,
-            data: {
-                queryString: queryString,
-                geometry: geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : null,
-                geometryWKT: geoSpatialSearchMode === 'WKT' ? queryWKT.trim() : null,
-                globalSearch: globalSearch,
-                page: 0,
-                size: 100
+            data: function (d) {
+                return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
                 return json;
@@ -387,11 +403,18 @@ function loadInstanceEditPanel($modalDiv) {
                 }
             }
         });
+        $('form[name="instanceEditPanelForm"] select').each(function() {
+            // Make sure the select element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
+            $(this).val(rowData[$(this).attr('id')]).trigger('change');
+        });
 
         // Augmenting xml content on the data
         if(g1128Compliant) {
             $("#g1128SideBar").removeClass('d-none');
-            $("#g1128SideBar").find("#xml-input").val(rowData["instanceAsXml"]["content"]);
+            $("#g1128SideBar").find("#xml-input").val(rowData["instanceAsXml"]);
         } else {
             $("#g1128SideBar").addClass('d-none');
         }

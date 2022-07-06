@@ -34,6 +34,7 @@ build/
 
 ### Lucence Index ###
 /lucene/
+/lucene-test/
 
 ### macOS ###
 .DS_Store
