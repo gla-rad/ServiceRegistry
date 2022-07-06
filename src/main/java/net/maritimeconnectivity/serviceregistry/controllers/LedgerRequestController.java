@@ -139,7 +139,7 @@ public class LedgerRequestController {
      * @return the ResponseEntity with status 200 (OK)
      */
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> deleteRequest(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteLedgerRequest(@PathVariable Long id) {
         log.debug("REST request to delete ledger request : {}", id);
         this.ledgerRequestService.delete(id);
         return ResponseEntity.ok()

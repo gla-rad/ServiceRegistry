@@ -138,8 +138,8 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 //This will not attempt to authenticate these end points.
                 //Saves on validation requests.
                 .ignoring()
-                .antMatchers(
-                    "/webjars/**",  //bootstrap
+                .antMatchers("/swagger/*.json",
+                    "/webjars/**",              //bootstrap
                     "/static/src/**",           //js files
                     "/static/css/**",           //css files
                     "/static/images/**",        //the images
@@ -164,7 +164,7 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 .addFilterBefore(new SimpleCorsFilter(), ChannelProcessingFilter.class)
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers(
+                .antMatchers("/swagger/*.json",
                         "/webjars/**",  //bootstrap
                         "/static/src/**",           //js files
                         "/static/css/**",           //css files

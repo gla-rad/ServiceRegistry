@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
@@ -46,6 +47,8 @@ import java.util.Optional;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
+@Deprecated
+@Hidden
 @RestController
 @RequestMapping("/api/_search")
 @Slf4j
@@ -103,7 +106,7 @@ public class SearchController {
                 .orElseGet(() -> geometryWKT.orElse("None "));
         log.debug("REST request to search for a page of Instances for query {} and geometry {}", queryString, searchGeometryString);
         // Perform the search
-        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, null, searchGeometry, pageable);
+        final Page<Instance> page = instanceService.handleSearchQueryRequest(queryString, searchGeometry, pageable);
         // And build the response
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/_search/instances"))

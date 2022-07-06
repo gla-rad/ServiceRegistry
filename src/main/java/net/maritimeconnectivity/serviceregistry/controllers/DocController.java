@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
@@ -104,6 +105,7 @@ public class DocController {
      * @param dtPagingRequest the datatables paging request
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
+    @Hidden
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<DocDtDto>> getDocsForDatatables(@RequestParam Long instanceId, @RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of Instances for datatables");

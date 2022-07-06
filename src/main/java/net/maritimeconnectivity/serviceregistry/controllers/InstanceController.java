@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
@@ -129,6 +130,7 @@ public class InstanceController {
      * @param dtPagingRequest the datatables paging request
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
+    @Hidden
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<InstanceDtDto>> getInstancesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of Instances for datatables");
@@ -239,16 +241,16 @@ public class InstanceController {
      * status.
      *
      * @param id the ID of the instance to be updated
-     * @param ledgerStatus the new ledger status value
+     * @param ledgerRequestStatus the new ledger status value
      * @return the ResponseEntity with status 200 (OK), or with status 400 (Bad Request) if the instance ledger status couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{id}/ledger-status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerStatus) {
-        log.debug("REST request to update instance {} ledger status : {}", id, ledgerStatus.value());
+    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerRequestStatus) {
+        log.debug("REST request to update instance {} ledger status : {}", id, ledgerRequestStatus.value());
 
         // Update the instance's ledger status
-        this.instanceService.updateLedgerStatus(id, ledgerStatus, null);
+        this.instanceService.updateLedgerStatus(id, ledgerRequestStatus, null);
 
         // Return an OK response
         return ResponseEntity.ok()

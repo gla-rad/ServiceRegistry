@@ -97,7 +97,7 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
@@ -124,7 +124,7 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
@@ -151,7 +151,7 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any(), any());
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/_search/instances")

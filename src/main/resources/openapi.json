@@ -1,0 +1,31 @@
+{
+  "openAPI": {
+    "info": {
+      "version": 1.0,
+      "title": "MCP Service Registry (MSR) - SECOM Interfaces",
+      "description": "Maritime Connectivity Platform Service Registry, developed by the MCC MSR WG",
+      "termsOfService": "https://gla-rad.org/",
+      "contact": {
+        "email": "Nikolaos.Vastardis@gla-rad.org"
+      },
+      "license": {
+        "name": "Apache 2.0",
+        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+      }
+    },
+    "servers": [
+      {
+        "url": "http://rnavlab.gla-rad.org/msr/"
+      }, {
+        "url": "http://palatia:8444"
+      }, {
+        "url": "http://localhost:8444"
+      }
+    ]
+  },
+  "resourcePackages": [
+    "net.maritimeconnectivity.serviceregistry.controllers.secom"
+  ],
+  "prettyPrint": true,
+  "cacheTTL": 0
+}
