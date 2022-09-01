@@ -84,12 +84,13 @@ class InstanceControllerTest {
      */
     @BeforeEach
     void setUp() {
-        // Initialise the instances list
+        // Initialise the instances list having same instance ID but different versions
         this.instances = new ArrayList<>();
         for(long i=0; i<10; i++) {
             Instance instance = new Instance();
             instance.setId(i);
-            instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", i));
+            instance.setInstanceId(String.format("urn:mrn:mcp:service:core:test:instance:test%d", 100L));
+            instance.setVersion(String.format("1.0.%d", i));
             instance.setName(String.format("Test Instance %d", i));
             this.instances.add(instance);
         }
@@ -99,7 +100,7 @@ class InstanceControllerTest {
 
         // Create a new instance
         this.newInstance = new Instance();
-        this.newInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", 100L));
+        this.newInstance.setInstanceId(String.format("urn:mrn:mcp:service:core:test:instance:test%d", 100L));
         this.newInstance.setName("Instance Name");
         this.newInstance.setVersion("1.0.0");
         this.newInstance.setComment("No comment");
@@ -108,7 +109,7 @@ class InstanceControllerTest {
         // Create an instance with an ID
         this.existingInstance = new Instance();
         this.existingInstance.setId(100L);
-        this.existingInstance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", 100L));
+        this.existingInstance.setInstanceId(String.format("urn:mrn:mcp:service:core:test:instance:test%d", 100L));
         this.existingInstance.setName("Instance Name");
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
@@ -214,6 +215,53 @@ class InstanceControllerTest {
         // Perform the MVC request
         this.mockMvc.perform(get("/api/instances/{id}", id))
                 .andExpect(status().isNotFound());
+    }
+
+    /**
+     * Test that we can correctly retrieve instances based on the
+     * provided mrn but different version.
+     */
+    @Test
+    void testGetInstanceByMRN() throws Exception {
+        doReturn(this.instances).when(this.instanceService).findAllByDomainId(this.existingInstance.getInstanceId());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/mrn/{mrn}", this.existingInstance.getInstanceId(), this.existingInstance.getVersion()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        InstanceDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto[].class);
+        assertEquals(this.instances.size(), result.length);
+        assertEquals(10, result.length);
+        for(int i=0; i < result.length ; i++) {
+            assertEquals(this.existingInstance.getInstanceId(), result[i].getInstanceId());
+        }
+    }
+
+    /**
+     * Test that we can correctly retrieve a single instance based on the
+     * provided mrn and version.
+     */
+    @Test
+    void testGetInstanceByMRNAndVersion() throws Exception {
+        doReturn(this.existingInstance).when(this.instanceService).findByDomainIdAndVersion(this.existingInstance.getInstanceId(), this.existingInstance.getVersion());
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/mrn/{mrn}/{version}", this.existingInstance.getInstanceId(), this.existingInstance.getVersion()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        // Parse and validate the response
+        InstanceDto result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto.class);
+        assertNotNull(result);
+        assertEquals(this.existingInstance.getId(), result.getId());
+        assertEquals(this.existingInstance.getInstanceId(), result.getInstanceId());
+        assertEquals(this.existingInstance.getVersion(), result.getVersion());
+        assertEquals(this.existingInstance.getName(), result.getName());
+        assertEquals(this.existingInstance.getStatus(), result.getStatus());
+        assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
 
     /**
