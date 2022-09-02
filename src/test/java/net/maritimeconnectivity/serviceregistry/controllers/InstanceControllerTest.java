@@ -226,7 +226,7 @@ class InstanceControllerTest {
         doReturn(this.instances).when(this.instanceService).findAllByDomainId(this.existingInstance.getInstanceId());
 
         // Perform the MVC request
-        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/mrn/{mrn}", this.existingInstance.getInstanceId(), this.existingInstance.getVersion()))
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/mrn/{mrn}", this.existingInstance.getInstanceId()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
@@ -237,6 +237,26 @@ class InstanceControllerTest {
         for(int i=0; i < result.length ; i++) {
             assertEquals(this.existingInstance.getInstanceId(), result[i].getInstanceId());
         }
+    }
+
+    /**
+     * Test that if we get an empty result with a wrong mrn
+     */
+    @Test
+    void testGetInstanceWithMRNEmptyResult() throws Exception {
+        String testString = "notExist";
+        List<Instance> empty = new ArrayList<>();
+        doReturn(empty).when(this.instanceService).findAllByDomainId(testString);
+
+        // Perform the MVC request
+        MvcResult mvcResult = this.mockMvc.perform(get("/api/instances/mrn/{mrn}", testString))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andReturn();
+
+        InstanceDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto[].class);
+        assertEquals(0, result.length);
+        assertEquals(empty.size(), result.length);
     }
 
     /**
@@ -262,6 +282,20 @@ class InstanceControllerTest {
         assertEquals(this.existingInstance.getName(), result.getName());
         assertEquals(this.existingInstance.getStatus(), result.getStatus());
         assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
+    }
+
+    /**
+     * Test that if we do NOT find the instance with mrn and version, an HTTP
+     * NOT_FOUND response will be returned.
+     */
+    @Test
+    void testGetInstanceWithMRNAndVersionNotFound() throws Exception {
+        String testString = "notExist";
+        doThrow(new DataNotFoundException()).when(this.instanceService).findByDomainIdAndVersion(testString, testString);
+
+        // Perform the MVC request
+        this.mockMvc.perform(get("/api/instances/mrn/{mrn}/{version}", testString, testString))
+                .andExpect(status().isNotFound());
     }
 
     /**
