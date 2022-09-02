@@ -277,9 +277,9 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append(query);
         if (stringBuilder.isEmpty() || query.endsWith("(")) {
-            stringBuilder.append(String.format("%s:%s", filterName, filterValue));
+            stringBuilder.append(String.format("%s:%s", filterName, filterValue.replaceAll(":","\\\\:")));
         } else {
-            stringBuilder.append(String.format(" %s %s:%s", operator.name(), filterName, filterValue));
+            stringBuilder.append(String.format(" %s %s:%s", operator.name(), filterName, filterValue.replaceAll(":","\\\\:")));
         }
         return stringBuilder.toString();
     }
