@@ -154,6 +154,35 @@ public class InstanceController {
     }
 
     /**
+     * GET /api/instances/mrn/{mrn} : get instances by MRN
+     *
+     * @param mrn the instance ID of the instances to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the instance
+     */
+    @GetMapping(value = "/mrn/{mrn}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<InstanceDto>> getInstancesByMRN(@PathVariable String mrn) {
+        log.debug("REST request to get a list of Instances with mrn {}", mrn);
+        final List<Instance> result = this.instanceService.findAllByDomainId(mrn);
+        return ResponseEntity.ok()
+                .body(this.instanceDomainToDtoMapper.convertToList(result, InstanceDto.class));
+    }
+
+    /**
+     * GET /api/instances/mrn/{mrn}/{version} : get an instance by MRN and version.
+     *
+     * @param mrn the instance ID of the instance to retrieve
+     * @param version the instance ID of the instance to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the instance
+     */
+    @GetMapping(value = "/mrn/{mrn}/{version}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<InstanceDto> getInstanceByMRNAndVersion(@PathVariable String mrn, @PathVariable String version) {
+        log.debug("REST request to get Instance with mrn {} and version {}", mrn, version);
+        final Instance result = this.instanceService.findByDomainIdAndVersion(mrn, version);
+        return ResponseEntity.ok()
+                .body(this.instanceDomainToDtoMapper.convertTo(result, InstanceDto.class));
+    }
+
+    /**
      * POST /api/instances : Create a new instance.
      *
      * @param instanceDto the instance to create
