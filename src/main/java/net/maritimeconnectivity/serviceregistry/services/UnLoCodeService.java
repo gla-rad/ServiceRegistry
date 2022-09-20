@@ -23,6 +23,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.UnLoCodeMapEntry;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.text.NumberFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -73,13 +77,16 @@ public class UnLoCodeService {
      * @param unLoCode the UN LoCode
      */
     public void applyUnLoCodeMapping(Instance instance, List<String> unLoCode) {
+        // Get proper locale for the WKT conversion
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.US);
+        DecimalFormat formatter = new DecimalFormat("###.##", symbols);
         // Convert the UnLoCodes to geometries
         List unLoCodeGeometries = Optional.ofNullable(unLoCode)
                 .orElse(Collections.emptyList())
                 .stream()
                 .filter(UnLoCodeMap::containsKey)
                 .map(UnLoCodeMap::get)
-                .map(e -> String.format("POINT (%.2f %.2f)", e.getLongitude(), e.getLatitude()))
+                .map(e -> String.format("POINT (%s %s)", formatter.format(e.getLongitude()), formatter.format(e.getLatitude())))
                 .map(p -> { try { return WKTUtil.convertWKTtoGeometry(p); } catch (ParseException e) { return null; } })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());

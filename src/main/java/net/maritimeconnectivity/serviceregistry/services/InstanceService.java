@@ -323,8 +323,8 @@ public class InstanceService {
      * @param domainId      the domain specific ID of the instance
      * @return the list of matching entities
      */
-    public List<Instance> findAllByDomainId(String domainId) {
-        log.debug("Request to get Instance by domain id {} and version {} without restriction");
+    public List<Instance> findAllByDomainId(String domainId){
+        log.debug("Request to get Instances by domain id {}", domainId);
         return this.instanceRepo.findByDomainId(domainId);
     }
 
@@ -337,13 +337,10 @@ public class InstanceService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findByDomainIdAndVersion(String domainId, String version) {
+    public Instance findByDomainIdAndVersion(String domainId, String version) throws DataNotFoundException {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
         return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version)
-                .orElseGet(() -> {
-                    log.debug("Could not find instance for domain id {} and version {}", domainId, version);
-                    return null;
-                });
+            .orElseThrow(() -> new DataNotFoundException("No instance found for the provided domain ID and version", null));
     }
 
     /**
@@ -354,14 +351,11 @@ public class InstanceService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findLatestVersionByDomainId(String domainId) {
+    public Instance findLatestVersionByDomainId(String domainId) throws DataNotFoundException {
         log.debug("Request to get Instance by domain id {}", domainId);
         return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
                 .max(Comparator.comparing(i -> new DefaultArtifactVersion(i.getVersion())))
-                .orElseGet(() -> {
-                    log.debug("Could not find a live instance for domain id {}", domainId);
-                    return null;
-                });
+                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided domain ID", null));
     }
 
     /**
