@@ -45,7 +45,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -523,10 +525,11 @@ class LedgerRequestServiceTest {
      * the response will distance the new ledger request status.
      */
     @Test
-    void testRegisterInstanceToLedger() {
+    void testRegisterInstanceToLedger() throws InterruptedException {
         // Create a future task to mimic the ledger response
         this.completableFuture = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
+        ExecutorService execServ =  Executors.newCachedThreadPool();
+        execServ.submit(() -> completableFuture.complete(this.transactionReceipt));
 
         // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
@@ -547,6 +550,10 @@ class LedgerRequestServiceTest {
         // Perform the service call
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
 
+        // Shutdown the executor service
+        execServ.shutdown();
+        execServ.awaitTermination(10, TimeUnit.SECONDS);
+
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with succeeded after the ledger Web3j call.
         verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
@@ -558,10 +565,11 @@ class LedgerRequestServiceTest {
      * ledger, the final status of the ledger request will be set to failed.
      */
     @Test
-    void testRegisterInstanceToLedgerFailed() {
+    void testRegisterInstanceToLedgerFailed() throws InterruptedException {
         // Create a future task to mimic the ledger response
         this.completableFuture = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
+        ExecutorService execServ =  Executors.newCachedThreadPool();
+        execServ.submit(() -> completableFuture.complete(this.transactionReceipt));
 
         // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
@@ -582,6 +590,10 @@ class LedgerRequestServiceTest {
         // Perform the service call
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
 
+        // Shutdown the executor service
+        execServ.shutdown();
+        execServ.awaitTermination(10, TimeUnit.SECONDS);
+
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with failure after the ledger Web3j call.
         verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
@@ -594,10 +606,11 @@ class LedgerRequestServiceTest {
      * set to failed.
      */
     @Test
-    void testRegisterInstanceToLedgerWithException() {
+    void testRegisterInstanceToLedgerWithException() throws InterruptedException {
         // Create a future task to mimic the ledger response
         this.completableFutureWithEx = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFutureWithEx.completeExceptionally(new Throwable("Something went wrong")));
+        ExecutorService execServ =  Executors.newCachedThreadPool();
+        execServ.submit(() -> completableFutureWithEx.completeExceptionally(new Throwable("Something went wrong")));
 
         // Set the status to REQUESTING
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
@@ -616,6 +629,10 @@ class LedgerRequestServiceTest {
 
         // Perform the service call
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Shutdown the executor service
+        execServ.shutdown();
+        execServ.awaitTermination(10, TimeUnit.SECONDS);
 
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with failure after the ledger Web3j call.
