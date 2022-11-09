@@ -29,6 +29,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.services.DocService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -90,7 +91,7 @@ public class DocController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<DocDto>> getDocs(Pageable pageable) throws URISyntaxException {
+    public ResponseEntity<List<DocDto>> getDocs(@ParameterObject Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of Docs");
         final Page<Doc> page = this.docService.findAll(pageable);
         return ResponseEntity.ok()

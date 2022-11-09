@@ -32,6 +32,7 @@ import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.modelmapper.PropertyMap;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -115,7 +116,7 @@ public class InstanceController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<InstanceDto>> getInstances(Pageable pageable) throws URISyntaxException {
+    public ResponseEntity<List<InstanceDto>> getInstances(@ParameterObject Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
         final Page<Instance> page = this.instanceService.findAll(pageable);
         return ResponseEntity.ok()
