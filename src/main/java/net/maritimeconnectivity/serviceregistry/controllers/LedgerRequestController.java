@@ -26,6 +26,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.LedgerRequestDto;
 import net.maritimeconnectivity.serviceregistry.services.LedgerRequestService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.data.domain.Page;
@@ -72,7 +73,7 @@ public class LedgerRequestController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<LedgerRequestDto>> getLedgerRequests(Pageable pageable) throws URISyntaxException {
+    public ResponseEntity<List<LedgerRequestDto>> getLedgerRequests(@ParameterObject Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of LedgerRequests");
         final Page<LedgerRequest> page = this.ledgerRequestService.findAll(pageable);
         return ResponseEntity.ok()
