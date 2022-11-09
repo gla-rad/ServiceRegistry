@@ -152,12 +152,6 @@ class LedgerRequestServiceTest {
         // Mock the Web3j remote function call and response
         this.remoteFunctionCall = mock(RemoteFunctionCall.class);
         this.transactionReceipt = mock(TransactionReceipt.class);
-
-        // Create a couple of completable future tasks to mimic the ledger response
-        this.completableFuture = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
-        this.completableFutureWithEx = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFutureWithEx.completeExceptionally(new RuntimeException("Something went wrong")));
     }
 
     /**
@@ -530,6 +524,10 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedger() {
+        // Create a future task to mimic the ledger response
+        this.completableFuture = new CompletableFuture<>();
+        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
+
         // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
@@ -561,6 +559,10 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedgerFailed() {
+        // Create a future task to mimic the ledger response
+        this.completableFuture = new CompletableFuture<>();
+        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
+
         // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
@@ -593,6 +595,10 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedgerWithException() {
+        // Create a future task to mimic the ledger response
+        this.completableFutureWithEx = new CompletableFuture<>();
+        Executors.newCachedThreadPool().submit(() -> completableFutureWithEx.completeExceptionally(new Throwable("Something went wrong")));
+
         // Set the status to REQUESTING
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
