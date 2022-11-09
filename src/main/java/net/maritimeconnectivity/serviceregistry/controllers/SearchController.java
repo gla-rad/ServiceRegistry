@@ -28,6 +28,7 @@ import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.locationtech.jts.geom.Geometry;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,7 +82,7 @@ public class SearchController {
                                                              @RequestParam(value = "geometry") Optional<Geometry> geometry,
                                                              @RequestParam(value = "geometryWKT") Optional<String> geometryWKT,
                                                              @RequestParam(value = "globalSearch") Optional<Boolean> globalSearch,
-                                                             Pageable pageable) throws URISyntaxException {
+                                                             @ParameterObject Pageable pageable) throws URISyntaxException {
         // We only allow one geometry specification method
         if(geometry.isPresent() && geometryWKT.filter(StringUtils::isNotBlank).isPresent()) {
             return ResponseEntity.badRequest()
