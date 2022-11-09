@@ -203,7 +203,7 @@ public class LedgerRequestService {
                 .orElseThrow(() -> new DataNotFoundException(String.format("No LedgerRequest found for the provided ID %s", id), null));
 
         // For restricted statuses, leave it up to the registration process
-        if(status.isRestricted() && Objects.equals(force, Boolean.TRUE)) {
+        if(status.isRestricted() && !Objects.equals(force, Boolean.TRUE)) {
             return this.registerInstanceToLedger(request.getId());
         }
         // Otherwise, set the status, save and return the updated entity
