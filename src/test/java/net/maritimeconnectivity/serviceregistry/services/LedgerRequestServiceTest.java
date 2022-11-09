@@ -621,5 +621,6 @@ class LedgerRequestServiceTest {
         // requesting and once with failure after the ledger Web3j call.
         verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
         //verify(this.ledgerRequestService).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
+        verify(this.ledgerRequestService, times(2)).updateStatus(any(), any(), any());
     }
 }

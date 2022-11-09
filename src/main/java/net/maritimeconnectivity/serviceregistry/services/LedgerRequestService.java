@@ -291,6 +291,7 @@ public class LedgerRequestService {
      * @param ex            any exception that might have been thrown during the transaction
      */
     protected void handleLedgerRegistrationResponse(LedgerRequest ledgerRequest, TransactionReceipt receipt, Throwable ex) {
+        log.info("Handling ledger response...");
         if (Objects.isNull(ex)) {
             final Instance instance = ledgerRequest.getServiceInstance();
             if (receipt.getStatus().equals("0x1")) {
