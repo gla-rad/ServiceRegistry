@@ -144,12 +144,12 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
         altEditor: true, // Enable altEditor
         buttons: [{
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-trash-alt"></i>',
+            text: '<i class="fa-solid fa-trash-can"></i>',
             titleAttr: 'Delete Attachment',
             name: 'delete' // do not change name
         }, {
             extend: 'selected', // Bind to Selected row
-            text: '<i class="fas fa-download"></i>',
+            text: '<i class="fa-solid fa-download"></i>',
             titleAttr: 'Download Attachment',
             name: 'download', // do not change name
             action: (e, dt, node, config) => {
@@ -158,14 +158,16 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
                 downloadDoc(data["id"]);
             }
         }],
-        onDeleteRow: function (datatable, rowdata, success, error) {
-            $.ajax({
-                url: `${ajaxUrl}/${rowdata["id"]}`,
-                type: 'DELETE',
-                contentType: 'application/json',
-                crossDomain: true,
-                success: success,
-                error: error
+        onDeleteRow: function (datatable, selectedRows, success, error) {
+            selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
+                $.ajax({
+                    url: `${ajaxUrl}/${this.data()["id"]}`,
+                    type: 'DELETE',
+                    contentType: 'application/json',
+                    crossDomain: true,
+                    success: success,
+                    error: error
+                });
             });
         }
     });

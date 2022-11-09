@@ -27,6 +27,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.QueryParser;
@@ -39,6 +40,7 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.hibernate.search.backend.lucene.LuceneBackend;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
 import org.hibernate.search.engine.search.query.SearchQuery;
@@ -66,6 +68,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.xml.sax.SAXException;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
@@ -110,6 +113,7 @@ public class InstanceService {
     /**
      * The LedgerRequest Service.
      */
+    @Lazy
     @Autowired(required = false)
     private LedgerRequestService ledgerRequestService;
 
@@ -128,11 +132,17 @@ public class InstanceService {
     @Autowired
     private UserContext userContext;
 
+    /**
+     * The Entity Management Factory.
+     */
+    @Autowired
+    EntityManagerFactory entityManagerFactory;
+
     // Service Variables
     private final String[] searchFields = new String[] {
             "name",
             "version",
-            "lastUpdatedAt",
+            "comment",
             "instanceId",
             "keywords",
             "status",
@@ -140,11 +150,17 @@ public class InstanceService {
             "endpointUri",
             "mmsi",
             "imo",
-            "serviceType"
+            "serviceType",
+            "dataProductType",
+            "designId",
+            "specificationId"
     };
     private final String[] searchFieldsWithSort = new String[] {
             "id",
             "name",
+            "lastUpdatedAt",
+            "comment",
+            "instanceId",
             "keywords",
             "serviceType"
     };
@@ -214,18 +230,6 @@ public class InstanceService {
             instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
         }
 
-        // If the publication date is missing
-        if(StringUtils.isBlank(instance.getPublishedAt())) {
-            instance.setPublishedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        }
-
-        // And don't forget the last update
-        if(StringUtils.isBlank(instance.getLastUpdatedAt())) {
-            instance.setLastUpdatedAt(instance.getPublishedAt());
-        } else {
-            instance.setLastUpdatedAt(EntityUtils.getCurrentUTCTimeISO8601());
-        }
-
         // The save and return
         return this.instanceRepo.save(instance);
     }
@@ -239,13 +243,11 @@ public class InstanceService {
     public void delete(Long id) throws DataNotFoundException {
         log.debug("Request to delete Instance : {}", id);
         this.instanceRepo.findById(id)
-                .ifPresentOrElse(i -> {
-                    Optional.ofNullable(this.ledgerRequestService)
-                            .ifPresent(lrs -> lrs.deleteByInstanceId(i.getId()));
-                    this.instanceRepo.deleteById(i.getId());
-                }, () -> {
-                    throw new DataNotFoundException("No instance found for the provided ID", null);
-                });
+                .map(Instance::getId)
+                .ifPresentOrElse(
+                        this.instanceRepo::deleteById,
+                        () -> {throw new DataNotFoundException("No instance found for the provided ID", null);}
+                );
     }
 
     /**
@@ -287,11 +289,11 @@ public class InstanceService {
     /**
      * Update the ledger status of an instance by ID.
      *
-     * @param id            the ID of the entity
-     * @param ledgerStatus  the ledger status of the entity
+     * @param id                    the ID of the entity
+     * @param ledgerRequestStatus   the ledger request status of the entity
      */
     @Transactional
-    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerStatus, String reason) {
+    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerRequestStatus, String reason) {
         return Optional.ofNullable(this.ledgerRequestService)
                 .map(lss -> {
                     // First make sure the instance is valid
@@ -309,7 +311,7 @@ public class InstanceService {
                             });
 
                     // Finally, update the status
-                    return lss.updateStatus(request.getId(), ledgerStatus, reason);
+                    return lss.updateStatus(request.getId(), ledgerRequestStatus, reason);
                 })
                 .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
     }
@@ -321,8 +323,8 @@ public class InstanceService {
      * @param domainId      the domain specific ID of the instance
      * @return the list of matching entities
      */
-    public List<Instance> findAllByDomainId(String domainId) {
-        log.debug("Request to get Instance by domain id {} and version {} without restriction");
+    public List<Instance> findAllByDomainId(String domainId){
+        log.debug("Request to get Instances by domain id {}", domainId);
         return this.instanceRepo.findByDomainId(domainId);
     }
 
@@ -335,13 +337,10 @@ public class InstanceService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findByDomainIdAndVersion(String domainId, String version) {
+    public Instance findByDomainIdAndVersion(String domainId, String version) throws DataNotFoundException {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
         return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version)
-                .orElseGet(() -> {
-                    log.debug("Could not find instance for domain id {} and version {}", domainId, version);
-                    return null;
-                });
+            .orElseThrow(() -> new DataNotFoundException("No instance found for the provided domain ID and version", null));
     }
 
     /**
@@ -352,14 +351,11 @@ public class InstanceService {
      * @return the entity
      */
     @Transactional(readOnly = true)
-    public Instance findLatestVersionByDomainId(String domainId) {
+    public Instance findLatestVersionByDomainId(String domainId) throws DataNotFoundException {
         log.debug("Request to get Instance by domain id {}", domainId);
         return this.instanceRepo.findByDomainIdEagerRelationships(domainId).stream()
                 .max(Comparator.comparing(i -> new DefaultArtifactVersion(i.getVersion())))
-                .orElseGet(() -> {
-                    log.debug("Could not find a live instance for domain id {}", domainId);
-                    return null;
-                });
+                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided domain ID", null));
     }
 
     /**
@@ -408,6 +404,12 @@ public class InstanceService {
                     .ifPresent(i -> { throw new DuplicateDataException("Duplicated instance with the same MRN and version found.", null); });
         }
 
+        // Non G1128-compliant instance are allowed, where no XML description
+        // is provided. In those cases... just let this through
+        if(Objects.isNull(instance.getInstanceAsXml())) {
+            return;
+        }
+
         try {
             XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), G1128Utils.SOURCES_LIST);
         } catch (SAXException e) {
@@ -449,8 +451,7 @@ public class InstanceService {
         // Create the search query
         SearchQuery searchQuery = this.getSearchInstanceQueryByText(
                 dtPagingRequest.getSearch().getValue(),
-                dtPagingRequest.getLucenceSort(Arrays.stream(searchFieldsWithSort)
-                        .collect(Collectors.toList())));
+                dtPagingRequest.getLucenceSort(Arrays.asList(searchFieldsWithSort)));
 
         // Map the results to a paged response
         return Optional.of(searchQuery)
@@ -471,7 +472,6 @@ public class InstanceService {
     public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
-
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
@@ -651,7 +651,12 @@ public class InstanceService {
      */
     protected Query createLuceneQuery(String queryString) {
         // First parse the input string to make sure it's right
-        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, new StandardAnalyzer());
+        MultiFieldQueryParser parser = new MultiFieldQueryParser(this.searchFields, Search.mapping(entityManagerFactory)
+                .backend()
+                .unwrap(LuceneBackend.class)
+                .analyzer( "standard" )
+                .map(Analyzer.class::cast)
+                .orElseGet(() -> new StandardAnalyzer()));
         parser.setDefaultOperator( QueryParser.Operator.AND );
         return Optional.ofNullable(queryString)
                 .filter(StringUtils::isNotBlank)
@@ -659,7 +664,7 @@ public class InstanceService {
                     try {
                         return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
-                        this.log.error(ex.getMessage());
+                        log.error(ex.getMessage());
                         throw new InvalidRequestException(ex.getMessage(), ex);
                     }
                 })

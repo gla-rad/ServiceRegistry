@@ -53,6 +53,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import javax.persistence.EntityManagerFactory;
 import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -105,6 +106,12 @@ class InstanceServiceTest {
      */
     @Mock
     private UserContext userContext;
+
+    /**
+     * The Entity Management Factory.
+     */
+    @Mock
+    private EntityManagerFactory entityManagerFactory;
 
     // Test Variables
     private List<Instance> instances;
@@ -299,8 +306,6 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals(this.newInstance.getGeometry(), result.getGeometry());
         assertEquals("org", this.newInstance.getOrganizationId());
-        assertNotNull(this.newInstance.getLastUpdatedAt());
-        assertNotNull(this.newInstance.getPublishedAt());
 
         // Also that a saving call took place in the repository
         verify(this.instanceRepo, times(1)).save(this.newInstance);
@@ -338,8 +343,6 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getServiceType(), result.getServiceType());
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals("org", this.newInstance.getOrganizationId());
-        assertNotNull(this.newInstance.getLastUpdatedAt());
-        assertNotNull(this.newInstance.getPublishedAt());
 
         // Check the geometry
         assertNotNull(result.getGeometry());
@@ -356,7 +359,6 @@ class InstanceServiceTest {
     @Test
     void testDelete() {
         doReturn(Optional.of(this.existingInstance)).when(this.instanceRepo).findById(this.existingInstance.getId());
-        doNothing().when(this.ledgerRequestService).deleteByInstanceId(this.existingInstance.getId());
         doNothing().when(this.instanceRepo).deleteById(this.existingInstance.getId());
 
         // Perform the service call
@@ -673,7 +675,7 @@ class InstanceServiceTest {
         doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByQueryString(any(), any(), any());
 
         // Perform the service call
-        Page<Instance> result = this.instanceService.handleSearchQueryRequest("search-term", this.point, this.pageable);
+        Page<Instance> result = this.instanceService.handleSearchQueryRequest("search-field:search-value", this.point, this.pageable);
 
         // Validate the result
         assertNotNull(result);

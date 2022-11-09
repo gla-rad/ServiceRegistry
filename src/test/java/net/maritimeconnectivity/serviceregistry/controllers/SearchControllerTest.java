@@ -137,8 +137,8 @@ class SearchControllerTest {
                 .andReturn();
 
         // Parse and validate the response
-        List<InstanceDto> result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), List.class);
-        assertEquals(this.instances.size(), result.size());
+        InstanceDto[] result = this.objectMapper.readValue(mvcResult.getResponse().getContentAsString(), InstanceDto[].class);
+        assertEquals(this.instances.size(), result.length);
     }
 
     /**

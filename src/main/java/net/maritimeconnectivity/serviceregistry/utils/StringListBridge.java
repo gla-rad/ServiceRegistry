@@ -24,13 +24,11 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * The Service Status Bridge Class.
+ * The String List Bridge Class.
  *
- * The Service Status is actually represented by an enum but in the datatables
- * server-side processing we need to be able to manipulate it as a string for
- * the searching, ordering the paging operations. Therefore, the hibernate
- * search ORM package provides the notion of bridges that connect the object
- * with a string.
+ * In the case of lists of strings, we first need to exract the individual
+ * values and index them separately. Therefore, the hibernate search ORM package
+ * provides the notion of bridges that connect the object with a string.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */

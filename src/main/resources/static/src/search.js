@@ -14,8 +14,8 @@ var geoSpatialSearchMode = "geoJson";
  * @type {Array}
  */
 var columnDefs = [{
-    data: "id",
-    title: "ID",
+    data: "instanceId",
+    title: "InstanceID",
     type: "hidden",
     visible: false,
     searchable: false
@@ -32,7 +32,7 @@ var columnDefs = [{
     hoverMsg: "Version of service",
     placeholder: "Version of the service"
 }, {
-    data: "serviceType",
+    data: "dataProductType",
     title: "Type",
     readonly : true,
     hoverMsg: "Type of service",
@@ -49,6 +49,12 @@ var columnDefs = [{
     readonly : true,
     hoverMsg: "Access point of service",
     placeholder: "Access point of the service"
+}, {
+    data: "instanceAsXml",
+    title: "Instance as XML",
+    type: "hidden",
+    visible: false,
+    searchable: false
 }];
 
 /**
@@ -56,10 +62,7 @@ var columnDefs = [{
  */
 $(() => {
     // Now also initialise the search map before we need it
-    searchMap = L.map('searchMap').setView([54.910, -3.432], 5);
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(searchMap);
+    searchMap = initMap('searchMap');
 
     // FeatureGroup is to store editable layers
     drawnItems = new L.FeatureGroup();
@@ -67,27 +70,9 @@ $(() => {
     instanceItems = new L.FeatureGroup();
     searchMap.addLayer(instanceItems);
 
-    // Add the draw toolbar
-    drawControlFull = new L.Control.Draw({
-        draw: {
-            marker: false,
-            polyline: true,
-            polygon: true,
-            rectangle: true,
-            circle: false,
-            circlemarker: false,
-        },
-        edit: {
-            featureGroup: drawnItems
-        }
-    });
-    drawControlEditOnly = new L.Control.Draw({
-        edit: {
-            featureGroup: drawnItems,
-            remove: true
-        },
-        draw: false
-    });
+    // Initialise the draw controls
+    initDrawControlFull(drawnItems);
+    initDrawControlEditOnly(drawnItems);
 
     // Handle the leaflet draw create events
     searchMap.on('draw:created', function (e) {
@@ -153,6 +138,17 @@ $(() => {
             }
         }
     });
+
+    // Also initialise the data product type multi-select
+    $('#dataProductType').select2({
+        placeholder: "Data Product Type",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
+    // Initialise the instance edit panel as read-only
+    initInstanceEditPanel($('#instanceViewPanel'));
 });
 
 /**
@@ -163,7 +159,7 @@ function searchForInstances() {
     var queryString =  $("#queryString").val();
 
     // Get the search query geometry
-    var queryGeometry = getGeoSpatialSearchGeometry();
+    var queryGeometry = getSingleGeometryFromMap(drawnItems);
 
     // Get the global/local search selection
     var globalSearch = $("#searchType :selected").val() === "global";
@@ -216,20 +212,22 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instanceItems.clearLayers();
     destroyInstancesTable();
 
+    // Construct the SECOM search filter object
+    let searchFilterObject = {
+        'query': null,
+        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
+        'freetext': queryString
+    }
+
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         ajax: {
-            url: '/api/_search/instances',
-            type: 'GET',
-            contentType: 'application/json',
+            url: `api/secom/v1/searchService`,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
             crossDomain: true,
-            data: {
-                queryString: queryString,
-                geometry: geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : null,
-                geometryWKT: geoSpatialSearchMode === 'WKT' ? queryWKT.trim() : null,
-                globalSearch: globalSearch,
-                page: 0,
-                size: 100
+            data: function (d) {
+                return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
                 return json;
@@ -257,10 +255,20 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     // On an instance selection, draw the area on the map
     instancesTable.on( 'select', function ( e, dt, type, indexes ) {
         if ( type === 'row' ) {
-            var idx = dt.cell('.selected', 0).index();
-            var data = dt.row(idx.row).data();
-            loadInstanceCoverage( e, dt, type, indexes );
+            loadGeometryOnMap(dt.row({selected : true}).data().geometry, searchMap, instanceItems, false);
         }
+    });
+
+    // Handle double clicks on instance to open the view dialog
+    instancesTable.on('dblclick', 'tr', function(e) {
+        // Select the double-clicked row in the table
+        e.stopPropagation();
+        instancesTable.row(this).select();
+
+        // Load and show the instance view dialog
+        var $modalDiv = $('#instanceViewPanel');
+        loadInstanceEditPanel($modalDiv);
+        $modalDiv.modal("toggle");
     });
 }
 
@@ -274,57 +282,6 @@ function destroyInstancesTable() {
         instancesTable = undefined;
         $("#instancesTable").empty();
     }
-}
-
-/**
- * This function will load the station geometry onto the instanceItems variable
- * so that it is shown in the station maps layers.
- *
- * @param {Event}         event         The event that took place
- * @param {DataTable}     table         The AtoN type table
- * @param {Node}          button        The button node that was pressed
- * @param {Configuration} config        The table configuration
- */
-function loadInstanceCoverage(event, table, button, config) {
-    var idx = table.cell('.selected', 0).index();
-    var data = instancesTable.row({selected : true}).data();
-    var geometry = data.geometry;
-
-    // Recreate the drawn items feature group
-    instanceItems.clearLayers();
-    if(geometry) {
-        var geomLayer = L.geoJson(geometry);
-        addNonGroupLayers(geomLayer, instanceItems);
-        searchMap.fitBounds(geomLayer.getBounds());
-    }
-}
-
-/**
- * Would benefit from https://github.com/Leaflet/Leaflet/issues/4461
- */
-function addNonGroupLayers(sourceLayer, targetGroup) {
-    if (sourceLayer instanceof L.LayerGroup) {
-        sourceLayer.eachLayer(function(layer) {
-            addNonGroupLayers(layer, targetGroup);
-        });
-    } else {
-        targetGroup.addLayer(sourceLayer);
-    }
-}
-
-/**
- * A helper function that picks up all the drawn items and translates then into
- * a GeoJSON format and combines them into a geometry collection.
- */
-function getGeoSpatialSearchGeometry() {
-    // Initialise a geometry collection
-    var queryGeometry = undefined;
-    // Add all the draw items GeoJSON definition - We only allow one!!!
-    drawnItems.toGeoJSON().features.forEach(feature => {
-        queryGeometry = feature.geometry;
-    });
-    // And return
-    return queryGeometry;
 }
 
 /**
@@ -360,7 +317,7 @@ function setGeoSpatialSearchMode(searchType) {
  * support parsing GEOMETRYCOLLECTION WKT strings.
  */
 function populateWKTTextArea() {
-    var geometry = getGeoSpatialSearchGeometry();
+    var geometry = getSingleGeometryFromMap(drawnItems);
     if(geometry) {
         $("#geometryWKT").val(Terraformer.WKT.convert(geometry));
     } else {
@@ -374,3 +331,110 @@ function populateWKTTextArea() {
 function clearWTKTextArea() {
     $("#geometryWKT").val("");
 }
+
+/**
+ * A helper function that sort out the instance edit panel dialog so that it is
+ * shown as read-only and no functionality buttons are available. Also note
+ * that the instance coverage tab is hidden since we can see the instance's
+ * coverage area in the search map.
+ */
+function initInstanceEditPanel($modalDiv) {
+    // Always init in the info tab
+    $('#instanceTabs button:first').tab('show');
+
+    // Hide the coverage and all functionality buttons
+    $('#instanceTabs button:last').addClass('d-none');
+
+    // Disable all the input fields
+    $('form[name="instanceEditPanelForm"] :input').each(function() {
+        $(this).attr('disabled', true);
+    });
+
+    // Hide all the functionality buttons, apart from downloading documents
+    $('#g1128SideBar button').addClass('d-none');
+    $('.btn-clear-instance-doc').addClass('d-none');
+    $('.btn-download-instance-doc').attr('disabled', false);
+
+    // Don't allow users to upload new instance documents
+    $modalDiv.find("#instanceAsDocWithValue").show();
+    $modalDiv.find("#instanceAsDoc").hide();
+
+    // Link the download instance doc button functionality
+    $('#instanceViewPanel').on('click', '.btn-download-instance-doc', (e) => {
+        var $modalDiv = $(e.delegateTarget);
+        var selectedRow = instancesTable.row({selected : true});
+        if(selectedRow && selectedRow.data()["instanceAsDoc"]) {
+            downloadDoc(selectedRow.data()["instanceAsDoc"].id);
+        }
+    });
+}
+
+/**
+ * This helper function loads the XML and field data from the selected instance
+ * in the instance table onto the edit dialog.
+ *
+ * @param {Component}   $modalDiv       The modal component performing the operation
+ */
+function loadInstanceEditPanel($modalDiv) {
+    // First always clear to be sure
+    clearInstanceEditPanel($modalDiv);
+
+    // If a row has been selected load the data into the form
+    if(instancesTable.row({selected : true})) {
+        // Populate the form
+        var rowData = instancesTable.row({selected : true}).data();
+        var g1128Compliant = rowData['instanceAsXml'] != null;
+        $('#g1128CompliantButton').prop('checked', g1128Compliant);
+
+        // Populate all the form fields
+        $('form[name="instanceEditPanelForm"] :input').each(function() {
+            // Make sure the input element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
+            // Populate all the input fields with the respective values
+            if(!$(this).attr('id').startsWith("instanceAsDoc")) {
+                $(this).val(rowData[$(this).attr('id')]);
+            }
+            // Handle the instance as doc case separately
+            else if($(this).attr('id') == "instanceAsDocName") {
+                if(rowData["instanceAsDoc"]) {
+                    $(this).val(rowData["instanceAsDoc"].name);
+                }
+            }
+        });
+        $('form[name="instanceEditPanelForm"] select').each(function() {
+            // Make sure the select element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
+            $(this).val(rowData[$(this).attr('id')]).trigger('change');
+        });
+
+        // Augmenting xml content on the data
+        if(g1128Compliant) {
+            $("#g1128SideBar").removeClass('d-none');
+            $("#g1128SideBar").find("#xml-input").val(rowData["instanceAsXml"]);
+        } else {
+            $("#g1128SideBar").addClass('d-none');
+        }
+    }
+}
+
+/**
+ * The instances edit dialog form should be clear every time before it is used
+ * so that new entries are not polluted by old data.
+ *
+ * @param {Component}   $modalDiv       The modal component performing the operation
+ */
+function clearInstanceEditPanel($modalDiv) {
+    // Reset to G1128 Compliant
+    $modalDiv.find('#g1128CompliantButton').prop('checked',  true);
+
+    // Do the form
+    $modalDiv.find('form[name="instanceEditPanelForm"]').trigger("reset");
+
+    // Don't forget the XML content
+    $modalDiv.find('#xml-input').val(null);
+}
+

@@ -24,16 +24,21 @@ import org.keycloak.adapters.springsecurity.authentication.KeycloakAuthenticatio
 import org.keycloak.adapters.springsecurity.config.KeycloakWebSecurityConfigurerAdapter;
 import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.*;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.authority.mapping.SimpleAuthorityMapper;
 import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.firewall.HttpFirewall;
@@ -92,19 +97,6 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     }
 
     /**
-     * On multi-tenant scenarios, Keycloak will defer the resolution of a
-     * KeycloakDeployment to the target application at the request-phase.
-     *
-     * A Request object is passed to the resolver and callers expect a complete
-     * KeycloakDeployment. Based on this KeycloakDeployment, Keycloak will
-     * resume authenticating and authorizing the request.
-     */
-    @Bean
-    public KeycloakSpringBootConfigResolver KeycloakConfigResolver() {
-        return new KeycloakSpringBootConfigResolver();
-    }
-
-    /**
      * Defines the session authentication strategy.
      */
     @Bean
@@ -146,12 +138,13 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
                 //This will not attempt to authenticate these end points.
                 //Saves on validation requests.
                 .ignoring()
-                .antMatchers(
-                    "/webjars/**",  //bootstrap
-                    "/static/src/**",            //js files
+                .antMatchers("/swagger/*.json",
+                    "/webjars/**",              //bootstrap
+                    "/static/src/**",           //js files
                     "/static/css/**",           //css files
                     "/static/images/**",        //the images
-                    "/api/xmls/schemas/*"       //the G1128 schemas
+                    "/api/xmls/schemas/*",      //the G1128 schemas
+                    "/api/secom/**"             //the SECOM endpoints
                 );
     }
 
@@ -168,15 +161,26 @@ class WebSecurityConfig extends KeycloakWebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity httpSecurity) throws Exception {
         super.configure(httpSecurity);
         httpSecurity
+                .addFilterBefore(new SimpleCorsFilter(), ChannelProcessingFilter.class)
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers(
-                        "/webjars/**",   //bootstrap
-                        "/static/src/**", 		     //js files
-                        "/static/css/**", 			 //css files
-                        "/static/images/**",         //the images
-                        "/" , "index.html"           //the home page
+                .antMatchers("/swagger/*.json",
+                        "/webjars/**",  //bootstrap
+                        "/static/src/**",           //js files
+                        "/static/css/**",           //css files
+                        "/static/images/**",        //the images
+                        "/api/xmls/schemas/*",      //the G1128 schemas
+                        "/api/secom/**",            //the SECOM endpoints
+                        "/" , "index.html"          //the home page
                 ).permitAll()
+                .antMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow preflight requests
+                .antMatchers(HttpMethod.GET, "/v3/api-docs").permitAll() // Allow request to Swagger file
+                .requestMatchers(EndpointRequest.to(
+                        InfoEndpoint.class,         //info endpoints
+                        HealthEndpoint.class        //health endpoints
+                )).permitAll()
+                .requestMatchers(EndpointRequest.toAnyEndpoint()) //
+                .hasRole("ACTUATOR")
                 .anyRequest()
                 .authenticated();
     }

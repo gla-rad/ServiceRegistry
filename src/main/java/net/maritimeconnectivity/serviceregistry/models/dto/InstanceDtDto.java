@@ -22,12 +22,16 @@ import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The Instance Datatables DTO Class.
@@ -44,8 +48,8 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String name;
     @NotNull
     private String version;
-    private String publishedAt;
-    private String lastUpdatedAt;
+    private LocalDateTime publishedAt;
+    private LocalDateTime lastUpdatedAt;
     @NotNull
     private String comment;
     @JsonSerialize(using = GeometryJSONSerializer.class)
@@ -64,6 +68,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String mmsi;
     private String imo;
     private List<String> serviceType;
+    private List<SECOM_DataProductType> dataProductType;
     private XmlDto instanceAsXml;
     private Long instanceAsDocId;
     private String instanceAsDocName;
@@ -139,7 +144,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public String getPublishedAt() {
+    public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
@@ -148,7 +153,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(String publishedAt) {
+    public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -157,7 +162,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -166,7 +171,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
@@ -402,6 +407,24 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      */
     public void setServiceType(List<String> serviceType) {
         this.serviceType = serviceType;
+    }
+
+    /**
+     * Gets data product type.
+     *
+     * @return the data product type
+     */
+    public List<SECOM_DataProductType> getDataProductType() {
+        return dataProductType;
+    }
+
+    /**
+     * Sets data product type.
+     *
+     * @param dataProductType the data product type
+     */
+    public void setDataProductType(List<SECOM_DataProductType> dataProductType) {
+        this.dataProductType = dataProductType;
     }
 
     /**

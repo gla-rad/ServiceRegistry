@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
@@ -31,6 +32,7 @@ import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.modelmapper.PropertyMap;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +86,12 @@ public class InstanceController {
      */
     @PostConstruct
     void setup() {
+        this.instanceDtoToDomainMapper.getModelMapper().addMappings(new PropertyMap<InstanceDto, Instance>() {
+            @Override
+            protected void configure() {
+                map(source.getLedgerRequestId()).setLedgerRequest(null);
+            }
+        });
         this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
             @Override
             protected void configure() {
@@ -108,7 +116,7 @@ public class InstanceController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<InstanceDto>> getInstances(Pageable pageable) throws URISyntaxException {
+    public ResponseEntity<List<InstanceDto>> getInstances(@ParameterObject Pageable pageable) throws URISyntaxException {
         log.debug("REST request to get a page of Instances");
         final Page<Instance> page = this.instanceService.findAll(pageable);
         return ResponseEntity.ok()
@@ -123,6 +131,7 @@ public class InstanceController {
      * @param dtPagingRequest the datatables paging request
      * @return the ResponseEntity with status 200 (OK) and the list of stations in body
      */
+    @Hidden
     @PostMapping(value = "/dt", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<DtPage<InstanceDtDto>> getInstancesForDatatables(@RequestBody DtPagingRequest dtPagingRequest) {
         log.debug("REST request to get page of Instances for datatables");
@@ -141,6 +150,35 @@ public class InstanceController {
     public ResponseEntity<InstanceDto> getInstance(@PathVariable Long id) {
         log.debug("REST request to get Instance : {}", id);
         final Instance result = this.instanceService.findOne(id);
+        return ResponseEntity.ok()
+                .body(this.instanceDomainToDtoMapper.convertTo(result, InstanceDto.class));
+    }
+
+    /**
+     * GET /api/instances/mrn/{mrn} : get instances by MRN
+     *
+     * @param mrn the instance ID of the instances to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the instance
+     */
+    @GetMapping(value = "/mrn/{mrn}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<InstanceDto>> getInstancesByMRN(@PathVariable String mrn) {
+        log.debug("REST request to get a list of Instances with mrn {}", mrn);
+        final List<Instance> result = this.instanceService.findAllByDomainId(mrn);
+        return ResponseEntity.ok()
+                .body(this.instanceDomainToDtoMapper.convertToList(result, InstanceDto.class));
+    }
+
+    /**
+     * GET /api/instances/mrn/{mrn}/{version} : get an instance by MRN and version.
+     *
+     * @param mrn the instance ID of the instance to retrieve
+     * @param version the instance ID of the instance to retrieve
+     * @return the ResponseEntity with status 200 (OK) and with body the instance
+     */
+    @GetMapping(value = "/mrn/{mrn}/{version}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<InstanceDto> getInstanceByMRNAndVersion(@PathVariable String mrn, @PathVariable String version) {
+        log.debug("REST request to get Instance with mrn {} and version {}", mrn, version);
+        final Instance result = this.instanceService.findByDomainIdAndVersion(mrn, version);
         return ResponseEntity.ok()
                 .body(this.instanceDomainToDtoMapper.convertTo(result, InstanceDto.class));
     }
@@ -233,16 +271,16 @@ public class InstanceController {
      * status.
      *
      * @param id the ID of the instance to be updated
-     * @param ledgerStatus the new ledger status value
+     * @param ledgerRequestStatus the new ledger status value
      * @return the ResponseEntity with status 200 (OK), or with status 400 (Bad Request) if the instance ledger status couldn't be updated
      * @throws URISyntaxException if the Location URI syntax is incorrect
      */
     @PutMapping(value = "/{id}/ledger-status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerStatus) {
-        log.debug("REST request to update instance {} ledger status : {}", id, ledgerStatus.value());
+    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerRequestStatus) {
+        log.debug("REST request to update instance {} ledger status : {}", id, ledgerRequestStatus.value());
 
         // Update the instance's ledger status
-        this.instanceService.updateLedgerStatus(id, ledgerStatus, null);
+        this.instanceService.updateLedgerStatus(id, ledgerRequestStatus, null);
 
         // Return an OK response
         return ResponseEntity.ok()

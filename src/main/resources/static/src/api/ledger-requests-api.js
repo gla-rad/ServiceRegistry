@@ -19,7 +19,7 @@ class LedgerRequestsApi {
      */
     getLedgerRequest(id, status, callback, errorCallback) {
         $.ajax({
-            url: `/api/ledgerrequests/${id}`,
+            url: `api/ledgerrequests/${id}`,
             type: 'GET',
             contentType: 'application/json',
             crossDomain: true,

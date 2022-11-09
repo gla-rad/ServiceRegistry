@@ -21,21 +21,27 @@ import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryBinder;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
+import org.hibernate.search.mapper.pojo.extractor.builtin.BuiltinContainerExtractors;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +56,7 @@ import java.util.stream.Collectors;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Entity
+@EntityListeners(AuditingEntityListener.class)
 @Table(name = "instance", uniqueConstraints = {@UniqueConstraint(name="mrn_version_constraint", columnNames = {"instance_id", "version"})} )
 @Indexed
 @Cacheable
@@ -57,14 +64,13 @@ import java.util.stream.Collectors;
 public class Instance implements Serializable, JsonSerializable {
 
     private static final long serialVersionUID = 1L;
-
     @Id
     @GenericField(name = "id_sort", sortable = Sortable.YES)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
-    @FullTextField
+    @FullTextField(analyzer = "standard")
     @KeywordField(name = "name_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "name")
     private String name;
@@ -74,16 +80,19 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "version")
     private String version;
 
-    @KeywordField(sortable = Sortable.YES)
+    @GenericField(name="publishedAt_sort", sortable = Sortable.YES)
+    @CreatedDate
     @Column(name = "published_at")
-    private String publishedAt;
+    private LocalDateTime publishedAt;
 
-    @KeywordField(sortable = Sortable.YES)
+    @GenericField(name="lastUpdatedAt_sort", sortable = Sortable.YES)
+    @LastModifiedDate
     @Column(name = "last_updated_at")
-    private String lastUpdatedAt;
+    private LocalDateTime lastUpdatedAt;
 
     @NotNull
-    @KeywordField(sortable = Sortable.YES)
+    @FullTextField
+    @KeywordField(name = "comment_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "comment")
     private String comment;
 
@@ -95,11 +104,12 @@ public class Instance implements Serializable, JsonSerializable {
     private String geometryContentType;
 
     @NotNull
-    @KeywordField(sortable = Sortable.YES)
+    @KeywordField(normalizer = "lowercase")
+    @KeywordField(name = "instanceId_sort", normalizer = "lowercase", sortable = Sortable.YES)
     @Column(name = "instance_id", updatable = false)
     private String instanceId; //MRN
 
-    @FullTextField
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @GenericField(name="keywords_sort",
                   valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
@@ -116,7 +126,7 @@ public class Instance implements Serializable, JsonSerializable {
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     private String organizationId; // Use the JWT auth token for that
 
-    @FullTextField
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @ElementCollection
     private List<String> unlocode;
 
@@ -136,13 +146,18 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "imo")
     private String imo;
 
-    @FullTextField
+    @KeywordField(sortable = Sortable.YES)
     @GenericField(name="serviceType_sort",
                   valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
                   sortable = Sortable.YES)
     @ElementCollection
     private List<String> serviceType;
+
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
+    @ElementCollection
+    @Enumerated(EnumType.STRING)
+    private List<SECOM_DataProductType> dataProductType;
 
     @OneToOne(cascade = {CascadeType.ALL}, orphanRemoval = true)
     @JoinColumn(unique = true)
@@ -159,19 +174,27 @@ public class Instance implements Serializable, JsonSerializable {
     /**
      * The Ledger Request.
      */
-    @OneToOne(mappedBy = "serviceInstance")
+    @OneToOne(mappedBy = "serviceInstance", cascade = CascadeType.REMOVE)
     private LedgerRequest ledgerRequest;
 
     /**
      * The Designs.
      */
     @ElementCollection
+    @GenericField(
+            name = "designId",
+            extraction = @ContainerExtraction(BuiltinContainerExtractors.MAP_KEY)
+    )
     Map<String, String> designs = new HashMap<>();
 
     /**
      * The Specifications.
      */
     @ElementCollection
+    @GenericField(
+            name = "specificationId",
+            extraction = @ContainerExtraction(BuiltinContainerExtractors.MAP_KEY)
+    )
     Map<String, String> specifications = new HashMap<>();
 
     /**
@@ -233,7 +256,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public String getPublishedAt() {
+    public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
@@ -242,7 +265,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(String publishedAt) {
+    public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -251,7 +274,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -260,7 +283,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
@@ -496,6 +519,24 @@ public class Instance implements Serializable, JsonSerializable {
      */
     public void setServiceType(List<String>  serviceType) {
         this.serviceType = serviceType;
+    }
+
+    /**
+     * Gets data product type.
+     *
+     * @return the data product type
+     */
+    public List<SECOM_DataProductType> getDataProductType() {
+        return dataProductType;
+    }
+
+    /**
+     * Sets data product type.
+     *
+     * @param dataProductType the data product type
+     */
+    public void setDataProductType(List<SECOM_DataProductType> dataProductType) {
+        this.dataProductType = dataProductType;
     }
 
     /**

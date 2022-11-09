@@ -81,7 +81,7 @@ public class DocService {
      */
     @Transactional(readOnly = true)
     public Page<Doc> findAll(Pageable pageable) {
-        this.log.debug("Request to get all Docs");
+        log.debug("Request to get all Docs");
         return this.docRepo.findAll(pageable);
     }
 
@@ -93,7 +93,7 @@ public class DocService {
      */
     @Transactional(readOnly = true)
     public Doc findOne(Long id) throws DataNotFoundException {
-        this.log.debug("Request to get Doc : {}", id);
+        log.debug("Request to get Doc : {}", id);
         return this.docRepo.findById(id)
                 .orElseThrow(() -> new DataNotFoundException("No doc found for the provided ID", null));
     }

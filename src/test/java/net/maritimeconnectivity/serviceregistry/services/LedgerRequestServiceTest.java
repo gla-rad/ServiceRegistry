@@ -16,7 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.LedgerRegistrationError;
@@ -25,6 +24,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.repos.LedgerRequestRepo;
 import net.maritimeconnectivity.serviceregistry.utils.MsrContract;
+import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,6 +39,8 @@ import org.springframework.data.domain.Pageable;
 import org.web3j.protocol.core.RemoteFunctionCall;
 import org.web3j.protocol.core.methods.response.TransactionReceipt;
 
+import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -94,7 +96,7 @@ class LedgerRequestServiceTest {
      * Common setup for all the tests.
      */
     @BeforeEach
-    void setUp() throws JsonProcessingException {
+    void setUp() throws ParseException {
         // Initialise the ledger requests list
         this.ledgerRequests = new ArrayList<>();
         for(long i=0; i<10; i++) {
@@ -102,14 +104,16 @@ class LedgerRequestServiceTest {
             ledgerRequest.setId(i);
             ledgerRequest.setStatus(LedgerRequestStatus.CREATED);
             ledgerRequest.setReason("Some reason");
-            ledgerRequest.setLastUpdatedAt("02/01/2001");
-            ledgerRequest.setCreatedAt("01/01/2001");
+            ledgerRequest.setCreatedAt(LocalDateTime.now());
+            ledgerRequest.setLastUpdatedAt(LocalDateTime.now());
 
             // Add the instance link
             Instance instance = new Instance();
+            instance.setName("Test Instance No" + i);
             instance.setId(i+10);
             instance.setVersion("1.0.0");
             instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", instance.getId()));
+            instance.setStatus(ServiceStatus.RELEASED);
             ledgerRequest.setServiceInstance(instance);
 
             // And append to the list
@@ -125,6 +129,7 @@ class LedgerRequestServiceTest {
         this.instance.setId(123456L);
         this.instance.setVersion("1.0.0");
         this.instance.setInstanceId(String.format("net.maritimeconnectivity.service-registry.instance.%d", instance.getId()));
+        this.instance.setStatus(ServiceStatus.RELEASED);
 
         // Create a new ledger request
         this.newLedgerRequest = new LedgerRequest();
@@ -137,8 +142,8 @@ class LedgerRequestServiceTest {
         this.existingLedgerRequest.setId(100L);
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.CREATED);
         this.existingLedgerRequest.setReason("Some reason");
-        this.existingLedgerRequest.setLastUpdatedAt("02/01/2001");
-        this.existingLedgerRequest.setCreatedAt("01/01/2001");
+        this.existingLedgerRequest.setCreatedAt(LocalDateTime.now());
+        this.existingLedgerRequest.setLastUpdatedAt(LocalDateTime.now());
         this.existingLedgerRequest.setServiceInstance(instance);
 
         // Mock an MSR smart contract
@@ -525,7 +530,7 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedger() {
-        // Set the status to REQUESTING
+        // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
         doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
@@ -556,7 +561,7 @@ class LedgerRequestServiceTest {
      */
     @Test
     void testRegisterInstanceToLedgerFailed() {
-        // Set the status to REQUESTING
+        // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
         doReturn(this.msrContract).when(this.smartContractProvider).getMsrContract();
@@ -609,6 +614,6 @@ class LedgerRequestServiceTest {
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with failure after the ledger Web3j call.
         verify(this.ledgerRequestService, times(1)).updateStatus(this.existingLedgerRequest.getId(), LedgerRequestStatus.REQUESTING, null, Boolean.TRUE);
-        verify(this.ledgerRequestService, times(1)).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
+        verify(this.ledgerRequestService).updateStatus(eq(this.existingLedgerRequest.getId()), eq(LedgerRequestStatus.FAILED), any(String.class), eq(Boolean.TRUE));
     }
 }

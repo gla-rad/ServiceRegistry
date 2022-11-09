@@ -33,6 +33,7 @@ import org.web3j.tx.gas.DefaultGasProvider;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.ConnectException;
 import java.util.Collections;
 import java.util.Optional;
@@ -94,11 +95,11 @@ public class SmartContractProvider {
             final Web3ClientVersion web3ClientVersion = web3j.web3ClientVersion().send();
             Optional.of(loadedContract)
                     .ifPresent(contract -> {
-                        log.info(String.format("Web3j {}: successfully connected to the ledger", web3ClientVersion.getWeb3ClientVersion()));
+                        log.info("Web3j {}: successfully connected to the ledger", web3ClientVersion.getWeb3ClientVersion());
                         this.msrContract = contract;
                     });
         } catch (Exception ex) {
-            this.log.error(ex.getMessage());
+            log.error(ex.getMessage());
         }
     }
 
@@ -143,11 +144,13 @@ public class SmartContractProvider {
         return new MsrContract.ServiceInstance(instance.getName(),
                 instance.getInstanceId(),
                 instance.getVersion(),
-                Optional.ofNullable(instance.getKeywords()).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")),
+                String.join(",", Optional.ofNullable(instance.getKeywords()).orElse(Collections.emptyList())),
                 Optional.ofNullable(instance.getGeometry()).map(Geometry::toString).orElse(null),
-                "designMrn",
-                "designVersion",
-                new MsrContract.Msr(msrName, msrUrl)
+                BigInteger.valueOf(instance.getStatus().ordinal()),
+                instance.getImplementsDesign(),
+                instance.getImplementsDesignVersion(),
+                "",
+                ""
         );
     }
 

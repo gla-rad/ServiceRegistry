@@ -40,8 +40,17 @@ body {
     top: 80px;
     right: 20px;
     z-index: 2;
+    width: 45%;
     max-height: 80%;
     overflow: auto;
+}
+
+@media only screen and (max-width: 800px) {
+    .search-overlay {
+        right: null;
+        width: 90%;
+        max-height: 60%;
+    }
 }
 
 /** Ribbon **/
@@ -192,9 +201,17 @@ body {
  *        Datatables         *
  *****************************/
 table.dataTable tbody tr.odd.selected {
- background-color:#acbad4
+    background-color:#acbad4
 }
 
 table.dataTable tbody tr.even.selected {
- background-color:#acbad5
+    background-color:#acbad5
+}
+
+/*****************************
+ *          Select2          *
+ *****************************/
+
+.select2-selection--multiple {
+    margin-bottom: 2px;
 }

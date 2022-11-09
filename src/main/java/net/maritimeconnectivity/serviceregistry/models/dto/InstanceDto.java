@@ -19,16 +19,19 @@ package net.maritimeconnectivity.serviceregistry.models.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
+import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * The Instance DTO Class.
@@ -45,8 +48,8 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String name;
     @NotNull
     private String version;
-    private String publishedAt;
-    private String lastUpdatedAt;
+    private LocalDateTime publishedAt;
+    private LocalDateTime lastUpdatedAt;
     @NotNull
     private String comment;
     @JsonSerialize(using = GeometryJSONSerializer.class)
@@ -65,7 +68,8 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String mmsi;
     private String imo;
     private List<String> serviceType;
-    private Xml instanceAsXml;
+    private List<SECOM_DataProductType> dataProductType;
+    private XmlDto instanceAsXml;
     private DocDto instanceAsDoc;
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
@@ -139,7 +143,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the published at
      */
-    public String getPublishedAt() {
+    public LocalDateTime getPublishedAt() {
         return publishedAt;
     }
 
@@ -148,7 +152,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param publishedAt the published at
      */
-    public void setPublishedAt(String publishedAt) {
+    public void setPublishedAt(LocalDateTime publishedAt) {
         this.publishedAt = publishedAt;
     }
 
@@ -157,7 +161,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the last updated at
      */
-    public String getLastUpdatedAt() {
+    public LocalDateTime getLastUpdatedAt() {
         return lastUpdatedAt;
     }
 
@@ -166,7 +170,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param lastUpdatedAt the last updated at
      */
-    public void setLastUpdatedAt(String lastUpdatedAt) {
+    public void setLastUpdatedAt(LocalDateTime lastUpdatedAt) {
         this.lastUpdatedAt = lastUpdatedAt;
     }
 
@@ -405,11 +409,29 @@ public class InstanceDto implements Serializable, JsonSerializable {
     }
 
     /**
+     * Gets data product type.
+     *
+     * @return the data product type
+     */
+    public List<SECOM_DataProductType> getDataProductType() {
+        return dataProductType;
+    }
+
+    /**
+     * Sets data product type.
+     *
+     * @param dataProductType the data product type
+     */
+    public void setDataProductType(List<SECOM_DataProductType> dataProductType) {
+        this.dataProductType = dataProductType;
+    }
+
+    /**
      * Gets instance as xml.
      *
      * @return the instance as xml
      */
-    public Xml getInstanceAsXml() {
+    public XmlDto getInstanceAsXml() {
         return instanceAsXml;
     }
 
@@ -418,7 +440,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @param instanceAsXml the instance as xml
      */
-    public void setInstanceAsXml(Xml instanceAsXml) {
+    public void setInstanceAsXml(XmlDto instanceAsXml) {
         this.instanceAsXml = instanceAsXml;
     }
 

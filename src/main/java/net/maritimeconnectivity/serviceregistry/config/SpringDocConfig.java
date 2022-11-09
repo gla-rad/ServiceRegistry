@@ -16,17 +16,13 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.info.Contact;
+import io.swagger.v3.oas.models.info.Info;
+import io.swagger.v3.oas.models.info.License;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import springfox.documentation.builders.PathSelectors;
-import springfox.documentation.builders.RequestHandlerSelectors;
-import springfox.documentation.service.ApiInfo;
-import springfox.documentation.service.Contact;
-import springfox.documentation.spi.DocumentationType;
-import springfox.documentation.spring.web.plugins.Docket;
-
-import java.util.Collections;
 
 /**
  * The SpringFoxConfig Class.
@@ -36,7 +32,7 @@ import java.util.Collections;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Configuration
-public class SpringFoxConfig {
+public class SpringDocConfig {
 
     @Value("${swagger.title:Maritime Connectivity Platform Service Registry API}" )
     private String swaggerTitle;
@@ -71,13 +67,9 @@ public class SpringFoxConfig {
      * @return the docket
      */
     @Bean
-    public Docket api() {
-        return new Docket(DocumentationType.SWAGGER_2)
-                .select()
-                .apis(RequestHandlerSelectors.any())
-                .paths(PathSelectors.any())
-                .build()
-                .apiInfo(this.apiInfo());
+    public OpenAPI api() {
+        return new OpenAPI()
+                .info(this.apiInfo());
     }
 
     /**
@@ -85,17 +77,26 @@ public class SpringFoxConfig {
      *
      * @return the API information object
      */
-    private ApiInfo apiInfo() {
-        return new ApiInfo(
-            this.swaggerTitle,
-            this.swaggerDescription,
-            this.swaggerVersion,
-            this.swaggerTermsOfServiceUrl,
-            new Contact(this.swaggerContactName, this.swaggerContactUrl, this.swaggerContactEmail),
-            this.swaggerLicence,
-            this.swaggerLicenceUrl,
-            Collections.emptyList()
-        );
+    private Info apiInfo() {
+        // Create the contact info
+        Contact contact = new Contact();
+        contact.setName(this.swaggerContactName);
+        contact.setUrl(this.swaggerContactUrl);
+        contact.setEmail(this.swaggerContactEmail);
+
+        //Create the licence
+        License license = new License();
+        license.setName(this.swaggerLicence);
+        license.setUrl(this.swaggerLicenceUrl);
+
+        // And return the API info
+        return new Info()
+                .title(this.swaggerTitle)
+                .description(this.swaggerDescription)
+                .version(this.swaggerVersion)
+                .termsOfService(this.swaggerTermsOfServiceUrl)
+                .contact(contact)
+                .license(license);
     }
 
 }
