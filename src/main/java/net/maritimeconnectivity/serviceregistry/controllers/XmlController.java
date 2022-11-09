@@ -27,6 +27,7 @@ import net.maritimeconnectivity.serviceregistry.services.XmlService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.apache.commons.io.IOUtils;
+import org.springdoc.api.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -81,7 +82,7 @@ public class XmlController {
      * @throws URISyntaxException if there is an error to generate the pagination HTTP headers
      */
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<XmlDto>> getAllXmls(Pageable pageable)
+    public ResponseEntity<List<XmlDto>> getAllXmls(@ParameterObject Pageable pageable)
             throws URISyntaxException {
         log.debug("REST request to get a page of Xmls");
         final Page<Xml> page = this.xmlService.findAll(pageable);
