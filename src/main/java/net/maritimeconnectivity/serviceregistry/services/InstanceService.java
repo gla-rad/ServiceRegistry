@@ -664,7 +664,7 @@ public class InstanceService {
                     try {
                         return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
-                        this.log.error(ex.getMessage());
+                        log.error(ex.getMessage());
                         throw new InvalidRequestException(ex.getMessage(), ex);
                     }
                 })

@@ -138,7 +138,7 @@ public class UnLoCodeService {
                     this.UnLoCodeMap.put(country + location, unLoCode);
                 }
             } catch (Exception ex) {
-                this.log.error("Error parsing UnLoCode mapping file: ", ex);
+                log.error("Error parsing UnLoCode mapping file: ", ex);
             }
         }
     }
