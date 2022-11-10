@@ -22,6 +22,7 @@ import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.massindexing.MassIndexer;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.hibernate.search.util.common.SearchException;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
@@ -40,6 +41,7 @@ import javax.transaction.Transactional;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Component
+@ConditionalOnProperty(value = "lucene.indexing", matchIfMissing = true)
 @Slf4j
 public class HibernateSearchInit implements ApplicationListener<ContextRefreshedEvent> {
 
@@ -68,7 +70,7 @@ public class HibernateSearchInit implements ApplicationListener<ContextRefreshed
         try {
             indexer.startAndWait();
         } catch (InterruptedException | SearchException e) {
-            this.log.error(e.getMessage());
+            log.error(e.getMessage());
         }
     }
 

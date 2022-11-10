@@ -45,7 +45,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -88,8 +90,6 @@ class LedgerRequestServiceTest {
 
     // For the We3j transaction calls
     private RemoteFunctionCall remoteFunctionCall;
-    private CompletableFuture completableFuture;
-    private CompletableFuture completableFutureWithEx;
     private TransactionReceipt transactionReceipt;
 
     /**
@@ -152,12 +152,6 @@ class LedgerRequestServiceTest {
         // Mock the Web3j remote function call and response
         this.remoteFunctionCall = mock(RemoteFunctionCall.class);
         this.transactionReceipt = mock(TransactionReceipt.class);
-
-        // Create a couple of completable future tasks to mimic the ledger response
-        this.completableFuture = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFuture.complete(this.transactionReceipt));
-        this.completableFutureWithEx = new CompletableFuture<>();
-        Executors.newCachedThreadPool().submit(() -> completableFutureWithEx.completeExceptionally(new RuntimeException("Something went wrong")));
     }
 
     /**
@@ -529,7 +523,12 @@ class LedgerRequestServiceTest {
      * the response will distance the new ledger request status.
      */
     @Test
-    void testRegisterInstanceToLedger() {
+    void testRegisterInstanceToLedger() throws InterruptedException {
+        // Create a future task to mimic the ledger response
+        final CompletableFuture completableFuture = new CompletableFuture<>();
+        ExecutorService execServ =  Executors.newCachedThreadPool();
+        execServ.submit(() -> completableFuture.complete(this.transactionReceipt));
+
         // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
@@ -543,11 +542,15 @@ class LedgerRequestServiceTest {
 
         // Mock the We3j transaction calls
         doReturn(this.remoteFunctionCall).when(this.msrContract).registerServiceInstance(any(), any());
-        doReturn(this.completableFuture).when(this.remoteFunctionCall).sendAsync();
+        doReturn(completableFuture).when(this.remoteFunctionCall).sendAsync();
         doReturn("0x1").when(this.transactionReceipt).getStatus();
 
         // Perform the service call
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Shutdown the executor service
+        execServ.shutdown();
+        execServ.awaitTermination(10, TimeUnit.SECONDS);
 
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with succeeded after the ledger Web3j call.
@@ -560,7 +563,12 @@ class LedgerRequestServiceTest {
      * ledger, the final status of the ledger request will be set to failed.
      */
     @Test
-    void testRegisterInstanceToLedgerFailed() {
+    void testRegisterInstanceToLedgerFailed() throws InterruptedException {
+        // Create a future task to mimic the ledger response
+        final CompletableFuture completableFuture = new CompletableFuture<>();
+        ExecutorService execServ =  Executors.newCachedThreadPool();
+        execServ.submit(() -> completableFuture.complete(this.transactionReceipt));
+
         // Set the status to VETTED
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
@@ -574,11 +582,15 @@ class LedgerRequestServiceTest {
 
         // Mock the We3j transaction calls
         doReturn(this.remoteFunctionCall).when(this.msrContract).registerServiceInstance(any(), any());
-        doReturn(this.completableFuture).when(this.remoteFunctionCall).sendAsync();
+        doReturn(completableFuture).when(this.remoteFunctionCall).sendAsync();
         doReturn("0x2").when(this.transactionReceipt).getStatus();
 
         // Perform the service call
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Shutdown the executor service
+        execServ.shutdown();
+        execServ.awaitTermination(10, TimeUnit.SECONDS);
 
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with failure after the ledger Web3j call.
@@ -592,7 +604,12 @@ class LedgerRequestServiceTest {
      * set to failed.
      */
     @Test
-    void testRegisterInstanceToLedgerWithException() {
+    void testRegisterInstanceToLedgerWithException() throws InterruptedException {
+        // Create a future task to mimic the ledger response
+        final CompletableFuture completableFutureWithEx = new CompletableFuture<>();
+        ExecutorService execServ =  Executors.newCachedThreadPool();
+        execServ.submit(() -> completableFutureWithEx.completeExceptionally(new Throwable("Something went wrong")));
+
         // Set the status to REQUESTING
         this.existingLedgerRequest.setStatus(LedgerRequestStatus.VETTED);
 
@@ -606,10 +623,14 @@ class LedgerRequestServiceTest {
 
         // Mock the We3j transaction calls
         doReturn(this.remoteFunctionCall).when(this.msrContract).registerServiceInstance(any(), any());
-        doReturn(this.completableFutureWithEx).when(this.remoteFunctionCall).sendAsync();
+        doReturn(completableFutureWithEx).when(this.remoteFunctionCall).sendAsync();
 
         // Perform the service call
         this.ledgerRequestService.registerInstanceToLedger(this.existingLedgerRequest.getId());
+
+        // Shutdown the executor service
+        execServ.shutdown();
+        execServ.awaitTermination(10, TimeUnit.SECONDS);
 
         // Make sure we updated the ledger request status twice, once with
         // requesting and once with failure after the ledger Web3j call.
