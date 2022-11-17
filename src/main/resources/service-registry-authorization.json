@@ -4,7 +4,7 @@
   "resources": [
     {
       "name": "logout_page",
-      "type": "urn:service-registry:resources:logout",
+      "type": "urn:mcp-service-registry:resources:logout",
       "ownerManagedAccess": false,
       "displayName": "Logout Page",
       "attributes": {},
@@ -20,7 +20,7 @@
     },
     {
       "name": "api_instances_dt",
-      "type": "urn:service-registry:resources:instances:dt",
+      "type": "urn:mcp-service-registry:resources:instances:dt",
       "ownerManagedAccess": false,
       "displayName": "API Instances DT Endpoint",
       "attributes": {},
@@ -36,7 +36,7 @@
     },
     {
       "name": "home_page",
-      "type": "urn:service-registry:resources:home-page",
+      "type": "urn:mcp-service-registry:resources:home-page",
       "ownerManagedAccess": false,
       "displayName": "Home Page",
       "attributes": {},
@@ -52,7 +52,7 @@
     },
     {
       "name": "html_pages",
-      "type": "urn:service-registry:resources:html",
+      "type": "urn:mcp-service-registry:resources:html",
       "ownerManagedAccess": false,
       "displayName": "HTML Pages",
       "attributes": {},
@@ -68,7 +68,7 @@
     },
     {
       "name": "api_docs",
-      "type": "urn:service-registry:resources:docs",
+      "type": "urn:mcp-service-registry:resources:docs",
       "ownerManagedAccess": false,
       "displayName": "API Docs Endpoint",
       "attributes": {},
@@ -87,7 +87,7 @@
     },
     {
       "name": "api_xml",
-      "type": "urn:service-registry:resources:xmls:id",
+      "type": "urn:mcp-service-registry:resources:xmls:id",
       "ownerManagedAccess": false,
       "displayName": "API XML Endpoint",
       "attributes": {},
@@ -109,7 +109,7 @@
     },
     {
       "name": "api_instance",
-      "type": "urn:service-registry:resources:instances:id",
+      "type": "urn:mcp-service-registry:resources:instances:id",
       "ownerManagedAccess": false,
       "displayName": "API Instance Endpoint",
       "attributes": {},
@@ -131,7 +131,7 @@
     },
     {
       "name": "api_instance_ledger_status",
-      "type": "urn:service-registry:resources:instance:id:ledger-status",
+      "type": "urn:mcp-service-registry:resources:instance:id:ledger-status",
       "ownerManagedAccess": false,
       "displayName": "API Instance Ledger Status Endpoint",
       "attributes": {},
@@ -147,7 +147,7 @@
     },
     {
       "name": "api_docs_dt",
-      "type": "urn:service-registry:resources:docs:dt",
+      "type": "urn:mcp-service-registry:resources:docs:dt",
       "ownerManagedAccess": false,
       "displayName": "API Docs DT Endpoint",
       "attributes": {},
@@ -163,7 +163,7 @@
     },
     {
       "name": "api_doc",
-      "type": "urn:service-registry:resources:docs:id",
+      "type": "urn:mcp-service-registry:resources:docs:id",
       "ownerManagedAccess": false,
       "displayName": "APi Doc Endpoint",
       "attributes": {},
@@ -185,7 +185,7 @@
     },
     {
       "name": "api_xmls",
-      "type": "urn:service-registry:resources:xmls",
+      "type": "urn:mcp-service-registry:resources:xmls",
       "ownerManagedAccess": false,
       "displayName": "API XMLs Endpoint",
       "attributes": {},
@@ -204,7 +204,7 @@
     },
     {
       "name": "webjars",
-      "type": "urn:service-registry:resources:webjars",
+      "type": "urn:mcp-service-registry:resources:webjars",
       "ownerManagedAccess": false,
       "displayName": "Webjars",
       "attributes": {},
@@ -220,7 +220,7 @@
     },
     {
       "name": "api_instance_status",
-      "type": "urn:service-registry:resources:instances:id:status",
+      "type": "urn:mcp-service-registry:resources:instances:id:status",
       "ownerManagedAccess": false,
       "displayName": "API Instance Status Endpoint",
       "attributes": {},
@@ -235,8 +235,34 @@
       ]
     },
     {
+      "name": "Default Resource",
+      "type": "urn:mcp-service-registry:resources:default",
+      "ownerManagedAccess": false,
+      "attributes": {},
+      "_id": "b1c59a19-f36f-4b53-a3fa-2da19f96db12",
+      "uris": [
+        "/*"
+      ]
+    },
+    {
+      "name": "api_search_service",
+      "type": "urn:mcp-service-registry:resources:searchService",
+      "ownerManagedAccess": false,
+      "attributes": {},
+      "_id": "b1d9cd45-ef64-4fe9-b6f4-cc46de8bb63c",
+      "uris": [
+        "/api/secom/v1/searchService"
+      ],
+      "scopes": [
+        {
+          "name": "POST"
+        }
+      ],
+      "icon_uri": ""
+    },
+    {
       "name": "static_sources",
-      "type": "urn:service-registry:resources:static",
+      "type": "urn:mcp-service-registry:resources:static",
       "ownerManagedAccess": false,
       "displayName": "Static Sources",
       "attributes": {},
@@ -252,7 +278,7 @@
     },
     {
       "name": "api_xmls_dt",
-      "type": "urn:service-registry:resources:xmls:dt",
+      "type": "urn:mcp-service-registry:resources:xmls:dt",
       "ownerManagedAccess": false,
       "displayName": "API XMLs DT Endpoint",
       "attributes": {},
@@ -268,7 +294,7 @@
     },
     {
       "name": "api_search_instances",
-      "type": "urn:service-registry:resources:search:instances",
+      "type": "urn:mcp-service-registry:resources:search:instances",
       "ownerManagedAccess": false,
       "displayName": "API Search Instances Endpoint",
       "attributes": {},
@@ -284,7 +310,7 @@
     },
     {
       "name": "api_instances",
-      "type": "urn:service-registry:resources:instances",
+      "type": "urn:mcp-service-registry:resources:instances",
       "ownerManagedAccess": false,
       "displayName": "API Instances Endpoint",
       "attributes": {},
@@ -304,6 +330,17 @@
   ],
   "policies": [
     {
+      "id": "0de8f97a-eacf-44b8-8fea-e6f70520d031",
+      "name": "Default Policy",
+      "description": "A policy that grants access only for users within this realm",
+      "type": "js",
+      "logic": "POSITIVE",
+      "decisionStrategy": "AFFIRMATIVE",
+      "config": {
+        "code": "// by default, grants any permission associated with this policy\n$evaluation.grant();\n"
+      }
+    },
+    {
       "id": "0f8e22cd-f79d-442d-a51e-5a4625d108a7",
       "name": "put_api_instance_status",
       "description": "Whether the user has the put_api_instance_status role",
@@ -311,7 +348,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/put_api_instance_status\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/put_api_instance_status\",\"required\":true}]"
       }
     },
     {
@@ -322,7 +359,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/put_api_instance\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/put_api_instance\",\"required\":true}]"
       }
     },
     {
@@ -333,7 +370,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/post_api_xmls\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/post_api_xmls\",\"required\":true}]"
       }
     },
     {
@@ -344,7 +381,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_instance\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_instance\",\"required\":true}]"
       }
     },
     {
@@ -355,7 +392,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_xml\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_xml\",\"required\":true}]"
       }
     },
     {
@@ -366,7 +403,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/delete_api_instance\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/delete_api_instance\",\"required\":true}]"
       }
     },
     {
@@ -377,7 +414,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_xmls\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_xmls\",\"required\":true}]"
       }
     },
     {
@@ -388,7 +425,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_search_instances\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_search_instances\",\"required\":true}]"
       }
     },
     {
@@ -399,7 +436,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_instances\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_instances\",\"required\":true}]"
       }
     },
     {
@@ -410,7 +447,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_xmls_dt\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_xmls_dt\",\"required\":true}]"
       }
     },
     {
@@ -421,7 +458,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_doc\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_doc\",\"required\":true}]"
       }
     },
     {
@@ -432,7 +469,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_docs\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_docs\",\"required\":true}]"
       }
     },
     {
@@ -443,7 +480,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/delete_api_doc\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/delete_api_doc\",\"required\":true}]"
       }
     },
     {
@@ -454,7 +491,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/post_api_docs\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/post_api_docs\",\"required\":true}]"
       }
     },
     {
@@ -465,7 +502,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/put_api_instance_ledger_status\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/put_api_instance_ledger_status\",\"required\":true}]"
       }
     },
     {
@@ -476,7 +513,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/delete_api_xml\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/delete_api_xml\",\"required\":true}]"
       }
     },
     {
@@ -487,7 +524,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_instances_dt\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_instances_dt\",\"required\":true}]"
       }
     },
     {
@@ -498,7 +535,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/get_api_docs_dt\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/get_api_docs_dt\",\"required\":true}]"
       }
     },
     {
@@ -509,7 +546,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/put_api_xml\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/put_api_xml\",\"required\":true}]"
       }
     },
     {
@@ -520,7 +557,7 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/post_api_instances\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/post_api_instances\",\"required\":true}]"
       }
     },
     {
@@ -531,7 +568,18 @@
       "logic": "POSITIVE",
       "decisionStrategy": "UNANIMOUS",
       "config": {
-        "roles": "[{\"id\":\"service-registry/put_api_doc\",\"required\":true}]"
+        "roles": "[{\"id\":\"mcp-service-registry/put_api_doc\",\"required\":true}]"
+      }
+    },
+    {
+      "id": "d6dcf5ac-1c06-4d0a-bfa6-770e707109a6",
+      "name": "post_api_search_service",
+      "description": "Allow Post SECOM Search",
+      "type": "role",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "roles": "[{\"id\":\"mcp-service-registry/post_api_search_service\",\"required\":false}]"
       }
     },
     {
@@ -584,6 +632,18 @@
         "resources": "[\"api_xml\"]",
         "scopes": "[\"DELETE\"]",
         "applyPolicies": "[\"delete_api_xml\"]"
+      }
+    },
+    {
+      "id": "2a9f53a7-9147-407e-a3ea-fc00a9761957",
+      "name": "Default Permission",
+      "description": "A permission that applies to the default resource type",
+      "type": "resource",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "defaultResourceType": "urn:mcp-service-registry:resources:default",
+        "applyPolicies": "[\"Default Policy\"]"
       }
     },
     {
@@ -675,6 +735,19 @@
         "resources": "[\"api_xmls\"]",
         "scopes": "[\"POST\"]",
         "applyPolicies": "[\"post_api_xmls\"]"
+      }
+    },
+    {
+      "id": "61fc2f13-6644-4135-bdcf-83a2874c6fdb",
+      "name": "Allow Post Search Service",
+      "description": "Allows users to search for instances using SECOM",
+      "type": "scope",
+      "logic": "POSITIVE",
+      "decisionStrategy": "UNANIMOUS",
+      "config": {
+        "resources": "[\"api_search_service\"]",
+        "scopes": "[\"POST\"]",
+        "applyPolicies": "[\"post_api_search_service\"]"
       }
     },
     {
