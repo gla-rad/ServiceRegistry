@@ -23,7 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@TestPropertySource("classpath:application.properties")
+@TestPropertySource("classpath:application.yaml")
 class McpServRegApplicationTest {
 
     @Test
