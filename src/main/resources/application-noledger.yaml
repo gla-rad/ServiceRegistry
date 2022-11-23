@@ -2,4 +2,5 @@
 # the MSR can be used as a stand-alone service.
 
 # Disable the ledger integration while developing
-ledger.enabled=false
+ledger:
+    enabled: false

@@ -1,0 +1,97 @@
+server:
+    port: '8444'
+
+# Springboot Configuration
+spring:
+    application:
+        name: mcp-service-registry
+    jpa:
+        properties:
+            hibernate:
+                dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
+                search:
+                    backend:
+                        lucene_version: LATEST
+                        directory:
+                            root: ./lucene/
+                        analysis:
+                            configurer: >-
+                                class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
+                    schema_management:
+                        strategy: create-or-update
+        generate-ddl: true
+        hibernate:
+            ddl-auto: update
+            show-sql: true
+    datasource:
+        url: 'jdbc:postgresql://localhost:5432/mcp_service_registry'
+        username: sysadmin
+        password: sysadmin
+    flyway:
+        enabled: false
+        url: 'jdbc:postgresql://localhost:5432/mcp_service_registry'
+        schemas: mcp_service_registry
+        user: sysadmin
+        password: sysadmin
+
+# Keycloak Configuration
+keycloak:
+    auth-server-url: 'http://localhost:8090/auth'
+    realm: MCP
+    resource: service-registry
+    credentials:
+        secret: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    ssl-required: none
+    principal-attribute: preferred_username
+    autodetect-bearer-only: true
+    use-resource-role-mappings: true
+    token-minimum-time-to-live: '30'
+
+# Springdoc Configuration
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html
+        display-query-params: true
+        url: /v3/api-docs
+    packagesToScan: net.maritimeconnectivity.serviceregistry.controllers
+
+# Springdoc Swagger Configuration
+swagger:
+    title: Maritime Connectivity Platform Service Registry API
+    description: 'Maritime Connectivity Platform Service Registry, developed by the MCC MSR WG'
+    version: '0.1'
+    termsOfServiceUrl: 'null'
+    contactName: MCP Consortium
+    contactUrl: 'https://mcp.discourse.group/'
+    contactEmail: Nikolaos.Vastardis@gla-rad.org
+    license: Apache-2.0
+    licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
+
+# MCP Service Registry Configuration
+net:
+    maritimeconnectivity:
+        serviceregistry:
+            allowedContentTypes: >-
+                application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
+            ledger:
+                server-url: 'ws://localhost:8546'
+                credentials: '0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f'
+                contract-address: f17f52151EbEF6C7334FAD080c5704D77216b732
+
+# Local Service Configuration
+info:
+    msr:
+        name: test MSR instance
+        mrn: 'urn:mrn:mcp:msr:test:testMSR1'
+        url: 'http://localhost:8444'
+        operatorName: test company
+        operatorMrn: 'urn:mrn:mcp:org:test:testMSROperator1'
+        operatorContact: test@test.org
+        operatorUrl: 'https://maritimeconnectivity.net/'
+        copyright: Copyright \u00A9 2021 Maritime Connectivity Platform Consortium
+        projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
+        profile: Testing
+
+eureka:
+    client:
+        enabled: false

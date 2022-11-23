@@ -1,0 +1,38 @@
+# This application profile should ony be used during development and controls
+# some non-production gadgets such as the spring dev-tools.
+
+# Update the application properties
+spring:
+    application:
+        name: mcp-service-registry-dev
+    thymeleaf:
+        prefix: 'file:src/main/resources/templates/'
+        cache: false
+    jpa:
+        show-sql: true
+        properties:
+            hibernate:
+                format_sql: true
+
+# Enable the devtools
+devtools:
+    livereload:
+        enabled: true
+
+# Reload the resource changes
+resources:
+    static-locations: 'file:src/main/resources/static/'
+    cache-period: '0'
+
+# Indicate the development tag
+info:
+    msr:
+        profile: Development
+
+# Control the logging level
+logging:
+    level:
+        org:
+            springframework:
+                web: INFO
+                hibernate: INFO
