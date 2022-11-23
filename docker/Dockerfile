@@ -21,4 +21,4 @@ ADD target/mcp-serviceregistry-core-0.0.1.jar .
 
 EXPOSE 8444
 
-CMD ["java", "-Dspring.profiles.active=docker", "-jar", "mcp-serviceregistry-core-0.0.1.jar", "--spring.config.location=/conf/application.yaml"]
+CMD ["java", "-Dspring.profiles.active=docker", "-jar", "mcp-serviceregistry-core-0.0.1.jar", "--spring.config.location=classpath:/application.yaml,/conf/"]
