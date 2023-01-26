@@ -664,7 +664,10 @@ public class InstanceService {
                     try {
                         // Careful, we add a catch-all clause here to account
                         // for lucene not knowing what to return in NOT cases
-                        return parser.parse(String.format("%:* AND %s", this.searchFields[0], q));
+                        if(q.contains("NOT")) {
+                            q = String.format("%s:* AND %s", this.searchFields[0], q);
+                        }
+                        return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
                         log.error(ex.getMessage());
                         throw new InvalidRequestException(ex.getMessage(), ex);
