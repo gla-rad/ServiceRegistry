@@ -17,11 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
@@ -37,7 +37,6 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -51,15 +50,16 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.grad.secom.core.interfaces.DiscoveryServiceSecomInterface.DISCOVERY_SERVICE_INTERFACE_PATH;
+import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
-class SecomDiscoveryServiceControllerTest {
+class SecomSearchServiceControllerTest {
 
     /**
      * The Reactive Web Test Client.
@@ -136,7 +136,7 @@ class SecomDiscoveryServiceControllerTest {
         // Perform the web request
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/api/secom/" + DISCOVERY_SERVICE_INTERFACE_PATH)
+                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
                         .queryParam("page", 0)
                         .queryParam("pageSize", Integer.MAX_VALUE)
                         .build())
@@ -144,19 +144,22 @@ class SecomDiscoveryServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(SearchObjectResult[].class)
+                .expectBody(ResponseSearchObject.class)
                 .consumeWith(response -> {
-                    SearchObjectResult[] result = response.getResponseBody();
-                    assertEquals(this.instances.size(), result.length);
+                    ResponseSearchObject result = response.getResponseBody();
+                    assertNotNull(result);
+                    assertNotNull(result.getSearchServiceResult());
+                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
 
                     // Test each of the result entries
-                    for(int i=0; i < result.length; i++){
-                        assertEquals(this.instances.get(i).getInstanceId(), result[i].getInstanceId());
-                        assertEquals(this.instances.get(i).getName(), result[i].getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), result[i].getStatus());
-                        assertEquals(this.instances.get(i).getVersion(), result[i].getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), result[i].getInstanceAsXml());
-                        assertEquals(SECOM_DataProductType.OTHER, result[i].getDataProductType());
+                    for(SearchObjectResult searchObjectResult: result.getSearchServiceResult()) {
+                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                        assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
+                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
                     }
                 });
     }
@@ -183,7 +186,7 @@ class SecomDiscoveryServiceControllerTest {
         // Perform the web request
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/api/secom/" + DISCOVERY_SERVICE_INTERFACE_PATH)
+                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
                         .queryParam("page", 0)
                         .queryParam("pageSize", Integer.MAX_VALUE)
                         .build())
@@ -191,19 +194,22 @@ class SecomDiscoveryServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(SearchObjectResult[].class)
+                .expectBody(ResponseSearchObject.class)
                 .consumeWith(response -> {
-                    SearchObjectResult[] result = response.getResponseBody();
-                    assertEquals(this.instances.size(), result.length);
+                    ResponseSearchObject result = response.getResponseBody();
+                    assertNotNull(result);
+                    assertNotNull(result.getSearchServiceResult());
+                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
 
                     // Test each of the result entries
-                    for(int i=0; i < result.length; i++){
-                        assertEquals(this.instances.get(i).getInstanceId(), result[i].getInstanceId());
-                        assertEquals(this.instances.get(i).getName(), result[i].getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), result[i].getStatus());
-                        assertEquals(this.instances.get(i).getVersion(), result[i].getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), result[i].getInstanceAsXml());
-                        assertEquals(SECOM_DataProductType.OTHER, result[i].getDataProductType());
+                    for(SearchObjectResult searchObjectResult: result.getSearchServiceResult()) {
+                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                        assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
+                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
                     }
                 });
     }
