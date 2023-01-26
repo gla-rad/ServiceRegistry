@@ -25,7 +25,6 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.services.UnLoCodeService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
@@ -114,7 +113,7 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
                 .orElse(null);
 
         // Check if free text
-        final boolean isFreeText = Strings.isNotBlank(searchFilterObject.getFreetext());
+        final boolean isFreeText = Strings.isNotBlank(searchFilterObject.getFreetext()) || Objects.isNull(searchFilterObject.getQuery());
         String query = new String();
 
         // Now build the query if we have to
@@ -217,7 +216,7 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
         }
 
         // Perform the search
-        final Page<Instance> instancesPage = instanceService.handleSearchQueryRequest(
+        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
                 query,
                 searchGeometry,
                 PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
