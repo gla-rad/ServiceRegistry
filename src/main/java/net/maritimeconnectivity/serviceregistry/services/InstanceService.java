@@ -666,7 +666,7 @@ public class InstanceService {
                         // Careful, we add a catch-all clause here to account
                         // for lucene not returning anything in unary NOT cases
                         if(q.trim().startsWith("NOT")) {
-                            q = String.format("* AND (%s)", q);
+                            q = String.format("name:* AND %s", q);
                         }
                         return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
