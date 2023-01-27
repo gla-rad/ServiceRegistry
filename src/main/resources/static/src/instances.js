@@ -32,7 +32,7 @@ var columnDefs = [{
     title: "Service Type",
 }, {
     data: "dataProductType",
-    title: "Product Type",
+    title: "Data Product Type",
     visible: false
 }, {
     data: "status",

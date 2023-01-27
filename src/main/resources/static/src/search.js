@@ -33,10 +33,10 @@ var columnDefs = [{
     placeholder: "Version of the service"
 }, {
     data: "dataProductType",
-    title: "Data Type",
+    title: "Data",
     readonly : true,
-    hoverMsg: "Type of service",
-    placeholder: "Type of the service"
+    hoverMsg: "Data product type",
+    placeholder: "Type of the data product"
 }, {
     data: "status",
     title: "Status",
