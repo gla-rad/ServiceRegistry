@@ -15,11 +15,11 @@
     },
     "servers": [
       {
-        "url": "http://rnavlab.gla-rad.org/msr/"
+        "url": "https://rnavlab.gla-rad.org/msr/mcp/"
       }, {
-        "url": "http://palatia:8444"
+        "url": "http://hermes:8444/mcp/msr/"
       }, {
-        "url": "http://localhost:8444"
+        "url": "http://localhost:8444/msr/mcp/"
       }
     ]
   },
