@@ -29,7 +29,7 @@ var columnDefs = [{
     title: "Version",
 }, {
     data: "serviceType",
-    title: "Type",
+    title: "Service Type",
 }, {
     data: "dataProductType",
     title: "Product Type",
