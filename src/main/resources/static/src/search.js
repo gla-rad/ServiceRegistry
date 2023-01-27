@@ -230,7 +230,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
                 return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
-                return json;
+                return  (json != undefined && json.hasOwnProperty('searchServiceResult'))? json.searchServiceResult : [];
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
                 showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));

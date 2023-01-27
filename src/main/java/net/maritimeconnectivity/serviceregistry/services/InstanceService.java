@@ -662,10 +662,11 @@ public class InstanceService {
                 .filter(StringUtils::isNotBlank)
                 .map(q -> {
                     try {
+                        // TODO: This is a big HACK!!!
                         // Careful, we add a catch-all clause here to account
-                        // for lucene not knowing what to return in NOT cases
-                        if(q.contains("NOT")) {
-                            q = String.format("%s:* AND %s", this.searchFields[0], q);
+                        // for lucene not returning anything in unary NOT cases
+                        if(q.trim().startsWith("NOT")) {
+                            q = String.format("* AND (%s)", q);
                         }
                         return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
