@@ -25,12 +25,12 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.services.UnLoCodeService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.interfaces.DiscoveryServiceSecomInterface;
+import org.grad.secom.core.interfaces.SearchServiceSecomInterface;
+import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.locationtech.jts.geom.Geometry;
@@ -46,7 +46,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -59,7 +58,7 @@ import java.util.Optional;
 @Path("/")
 @Validated
 @Slf4j
-public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInterface {
+public class SecomSearchServiceController implements SearchServiceSecomInterface {
 
     /**
      * The Object Mapper.
@@ -80,31 +79,23 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
     DomainDtoMapper<Instance, SearchObjectResult> searchObjectResultMapper;
 
     /**
-     * POST /api/searchService : search for the instance
-     * corresponding to the search query string provided.
-     *
-     * @param searchFilterObject    the search filter object
-     * @param pageable              the pageable information
-     * @return the result list of the search
-     */
-    /**
      * POST /v1/searchService : The purpose of this interface is to search for
      * service instances to consume.
      *
-     * @param searchFilterObject    The search filter object
-     * @param page the page number to be retrieved
-     * @param pageSize the maximum page size
+     * @param searchFilterObject The search filter object
+     * @param page               the page number to be retrieved
+     * @param pageSize           the maximum page size
      * @return the result list of the search
      */
     @Tag(name = "SECOM")
     @Transactional
-    @Path(DISCOVERY_SERVICE_INTERFACE_PATH)
+    @Path(SEARCH_SERVICE_INTERFACE_PATH)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public List<SearchObjectResult> search(@Valid SearchFilterObject searchFilterObject,
-                                           @QueryParam("page") @Min(0) Integer page,
-                                           @QueryParam("pageSize") @Min(0) Integer pageSize)  {
+    public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject,
+                                              @QueryParam("page") @Min(0) Integer page,
+                                              @QueryParam("pageSize") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
@@ -114,7 +105,7 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
                 .orElse(null);
 
         // Check if free text
-        final boolean isFreeText = Strings.isNotBlank(searchFilterObject.getFreetext());
+        final boolean isFreeText = Strings.isNotBlank(searchFilterObject.getFreetext()) || Objects.isNull(searchFilterObject.getQuery());
         String query = new String();
 
         // Now build the query if we have to
@@ -217,14 +208,16 @@ public class SecomDiscoveryServiceController implements DiscoveryServiceSecomInt
         }
 
         // Perform the search
-        final Page<Instance> instancesPage = instanceService.handleSearchQueryRequest(
+        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
                 query,
                 searchGeometry,
                 PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
         );
 
         // And build the response
-        return this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResult.class);
+        ResponseSearchObject responseSearchObject = new ResponseSearchObject();
+        responseSearchObject.setSearchServiceResult(this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResult.class));
+        return responseSearchObject;
     }
 
     /**

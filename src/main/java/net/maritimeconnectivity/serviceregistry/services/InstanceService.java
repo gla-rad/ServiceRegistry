@@ -627,15 +627,14 @@ public class InstanceService {
         SearchSession searchSession = Search.session( entityManager );
         SearchScope<Instance> scope = searchSession.scope( Instance.class );
         return searchSession.search( scope )
-                .where( f -> f.bool()
+                .where(f -> f.bool()
                         .must(q1 -> Optional.ofNullable(luceneQuery)
                                 .map(q1.extension(LuceneExtension.get())::fromLuceneQuery)
-
-                                .orElseGet(() -> q1.matchAll())
+                                .orElseGet(q1::matchAll)
                         )
                         .must(q2 -> Optional.ofNullable(geoQuery)
                                 .map(q2.extension(LuceneExtension.get())::fromLuceneQuery)
-                                .orElseGet(() -> q2.matchAll())
+                                .orElseGet(q2::matchAll)
                         )
                 )
                 .sort(f -> ((LuceneSearchSortFactory)f).fromLuceneSort(sort))
@@ -658,10 +657,17 @@ public class InstanceService {
                 .map(Analyzer.class::cast)
                 .orElseGet(() -> new StandardAnalyzer()));
         parser.setDefaultOperator( QueryParser.Operator.AND );
+        parser.setAllowLeadingWildcard(true);
         return Optional.ofNullable(queryString)
                 .filter(StringUtils::isNotBlank)
                 .map(q -> {
                     try {
+                        // TODO: This is a big HACK!!!
+                        // Careful, we add a catch-all clause here to account
+                        // for lucene not returning anything in unary NOT cases
+                        if(q.trim().startsWith("NOT")) {
+                            q = String.format("name:* AND %s", q);
+                        }
                         return parser.parse(q);
                     } catch (org.apache.lucene.queryparser.classic.ParseException ex) {
                         log.error(ex.getMessage());

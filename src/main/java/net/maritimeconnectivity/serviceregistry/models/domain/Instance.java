@@ -146,7 +146,7 @@ public class Instance implements Serializable, JsonSerializable {
     @Column(name = "imo")
     private String imo;
 
-    @KeywordField(sortable = Sortable.YES)
+    @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @GenericField(name="serviceType_sort",
                   valueBridge = @ValueBridgeRef(type = StringListBridge.class),
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),

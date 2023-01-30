@@ -1,0 +1,38 @@
+# This application profile turns on the keycloak policy enforcer so that
+# access to each endpoint is controlled separately through the keycloak
+# policy enforcement mode.
+
+# Start enforcing the policies defined in keycloak
+keycloak:
+    security-constraints:
+        - authRoles:
+              - '*'
+          securityCollections:
+              - patterns:
+                    - /api/*
+        - authRoles:
+              - '*'
+          securityCollections:
+              - patterns:
+                    - /sso/login
+    # Remove the html pages and sources from the policy enforcement
+    policy-enforcer-config:
+        enforcement-mode: PERMISSIVE
+        http-method-as-scope: true
+        lazy-load-paths: true
+        paths:
+            - name: home_page
+              path: /
+              methods:
+                  - method: GET
+              enforcement-mode: DISABLED
+            - name: webjars
+              path: /webjars/*
+              methods:
+                  - method: GET
+              enforcement-mode: DISABLED
+            - name: static_sources
+              path: /static/*
+              methods:
+                  - method: GET
+              enforcement-mode: DISABLED
