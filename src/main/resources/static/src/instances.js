@@ -29,10 +29,10 @@ var columnDefs = [{
     title: "Version",
 }, {
     data: "serviceType",
-    title: "Type",
+    title: "Service Type",
 }, {
     data: "dataProductType",
-    title: "Product Type",
+    title: "Data Product Type",
     visible: false
 }, {
     data: "status",

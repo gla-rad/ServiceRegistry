@@ -33,10 +33,10 @@ var columnDefs = [{
     placeholder: "Version of the service"
 }, {
     data: "dataProductType",
-    title: "Type",
+    title: "Data",
     readonly : true,
-    hoverMsg: "Type of service",
-    placeholder: "Type of the service"
+    hoverMsg: "Data product type",
+    placeholder: "Type of the data product"
 }, {
     data: "status",
     title: "Status",
@@ -230,7 +230,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
                 return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
-                return json;
+                return  (json != undefined && json.hasOwnProperty('searchServiceResult'))? json.searchServiceResult : [];
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
                 showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));
