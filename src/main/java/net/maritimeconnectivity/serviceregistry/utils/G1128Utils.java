@@ -18,7 +18,7 @@ package net.maritimeconnectivity.serviceregistry.utils;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 
-import javax.xml.bind.*;
+import jakarta.xml.bind.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
