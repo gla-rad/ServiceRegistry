@@ -70,7 +70,7 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The index page
      */
-    @GetMapping("/index.html")
+    @GetMapping("/index")
     public String index(Model model) {
         model.addAttribute("operatorUrl", this.operatorUrl);
         model.addAttribute("copyright", this.copyright);
@@ -85,7 +85,7 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The instance page
      */
-    @GetMapping("/instances.html")
+    @GetMapping("/instances")
     public String instances(Model model) {
         model.addAttribute("operatorUrl", this.operatorUrl);
         model.addAttribute("copyright", this.copyright);
@@ -99,7 +99,7 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The about page
      */
-    @GetMapping("/about.html")
+    @GetMapping("/about")
     public String about(Model model) {
         model.addAttribute("MSRName", msrName);
         model.addAttribute("MSRMRN", msrMrn);

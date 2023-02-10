@@ -43,7 +43,7 @@ class HTMLViewerControllerTest {
     @Test
     void testGetIndex() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(get("/index.html")
+        this.mockMvc.perform(get("/index")
                 .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }
@@ -54,7 +54,7 @@ class HTMLViewerControllerTest {
     @Test
     void testGetInstances() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(get("/instances.html")
+        this.mockMvc.perform(get("/instances")
                 .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }
@@ -65,7 +65,7 @@ class HTMLViewerControllerTest {
     @Test
     void testGetAbout() throws Exception {
         // Perform the MVC request
-        this.mockMvc.perform(get("/about.html")
+        this.mockMvc.perform(get("/about")
                 .contentType(MediaType.TEXT_HTML))
                 .andExpect(status().isOk());
     }
