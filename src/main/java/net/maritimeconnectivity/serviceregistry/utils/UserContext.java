@@ -17,14 +17,12 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.adapters.OidcKeycloakAccount;
-import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -52,11 +50,11 @@ public class UserContext {
 	public  Optional<String> getJwtString() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return Optional.ofNullable(authentication)
-				.filter(KeycloakAuthenticationToken.class::isInstance)
-				.map(KeycloakAuthenticationToken.class::cast)
-				.map(KeycloakAuthenticationToken::getAccount)
-				.map(OidcKeycloakAccount::getKeycloakSecurityContext)
-				.map(KeycloakSecurityContext::getTokenString);
+				.filter(OAuth2AuthenticationToken.class::isInstance)
+				.map(OAuth2AuthenticationToken.class::cast)
+				.map(OAuth2AuthenticationToken::getDetails)
+				.filter(String.class::isInstance)
+				.map(String.class::cast);
 	}
 
 	/**
@@ -67,12 +65,12 @@ public class UserContext {
 	public Optional<UserToken> getJwtToken() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return Optional.ofNullable(authentication)
-				.filter(KeycloakAuthenticationToken.class::isInstance)
-				.map(KeycloakAuthenticationToken.class::cast)
-				.map(KeycloakAuthenticationToken::getAccount)
-				.map(OidcKeycloakAccount::getKeycloakSecurityContext)
-				.map(KeycloakSecurityContext::getTokenString)
-				.map(jwtTokenUtility::getTokenFromString);
+				.filter(OAuth2AuthenticationToken.class::isInstance)
+				.map(OAuth2AuthenticationToken.class::cast)
+				.map(OAuth2AuthenticationToken::getDetails)
+				.filter(String.class::isInstance)
+				.map(String.class::cast)
+				.map(this.jwtTokenUtility::getTokenFromString);
 	}
 
 }

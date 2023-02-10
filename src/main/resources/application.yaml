@@ -8,7 +8,6 @@ spring:
     jpa:
         properties:
             hibernate:
-                dialect: org.hibernate.spatial.dialect.postgis.PostgisDialect
                 search:
                     backend:
                         lucene_version: LATEST
@@ -34,18 +33,26 @@ spring:
         user: sysadmin
         password: sysadmin
 
-# Keycloak Configuration
-keycloak:
-    auth-server-url: 'http://localhost:8090/auth'
-    realm: MCP
-    resource: service-registry
-    credentials:
-        secret: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    ssl-required: none
-    principal-attribute: preferred_username
-    autodetect-bearer-only: true
-    use-resource-role-mappings: true
-    token-minimum-time-to-live: '30'
+    # Keycloak Configuration
+    security:
+        oauth2:
+            client:
+                registration:
+                    keycloak:
+                        client-id: mcp-service-registry
+                        client-secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        client-name: Keycloak
+                        provider: keycloak
+                        authorization-grant-type: authorization_code
+                        scope: web-origins,openid
+                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                provider:
+                    keycloak:
+                        issuer-uri: 'http://localhost:8090/auth/realms/realm'
+                        user-name-attribute: preferred_username
+            resource-server:
+                jwt:
+                    issuer-uri: 'http://localhost:8090/auth/realms/realm'
 
 # Springdoc Configuration
 springdoc:

@@ -22,14 +22,12 @@ import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.adapters.OidcKeycloakAccount;
-import org.keycloak.adapters.spi.KeycloakAccount;
-import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 import java.security.Principal;
 import java.util.Collections;
@@ -39,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class UserContextTest {
@@ -50,12 +49,6 @@ class UserContextTest {
     UserContext userContext;
 
     /**
-     * They Keycloak Security Context.
-     */
-    @Mock
-    KeycloakSecurityContext context;
-
-    /**
      * The Client JWT Token Utility.
      */
     @Mock
@@ -63,36 +56,20 @@ class UserContextTest {
 
     //Test Variables
     private UserToken userToken;
-    private KeycloakAuthenticationToken keyCloakToken;
+    private Authentication authentication;
 
     /**
      * Common setup for all the tests.
      */
     @BeforeEach
     void setUp() {
-        userToken = new UserToken();
-        userToken.setUsername("username");
+        // Create a user token
+        this.userToken = new UserToken();
+        this.userToken.setUsername("username");
 
-        final KeycloakAccount keycloakAccount = new OidcKeycloakAccount() {
-
-            @Override
-            public Principal getPrincipal() {
-                return new BasicUserPrincipal("username");
-            }
-
-            @Override
-            public Set<String> getRoles() {
-                return Collections.emptySet();
-            }
-
-            @Override
-            public KeycloakSecurityContext getKeycloakSecurityContext() {
-                return context;
-            }
-        };
-
-        keyCloakToken = new KeycloakAuthenticationToken(keycloakAccount, false);
-        doReturn("dontCareAboutThisNow").when(context).getTokenString();
+        // Now mock the authentication
+        authentication = mock(OAuth2AuthenticationToken.class);
+        doReturn("dontCareAboutThisNow").when(authentication).getDetails();
     }
 
     /**
@@ -101,7 +78,7 @@ class UserContextTest {
      */
     @Test
     void testGetJwtString() {
-        SecurityContextHolder.getContext().setAuthentication(keyCloakToken);
+        SecurityContextHolder.getContext().setAuthentication(this.authentication);
         final String jwtString = userContext.getJwtString().get();
         Assert.assertEquals("dontCareAboutThisNow", jwtString);
     }
@@ -112,7 +89,7 @@ class UserContextTest {
      */
     @Test
     void testGetJwtToken() {
-        SecurityContextHolder.getContext().setAuthentication(keyCloakToken);
+        SecurityContextHolder.getContext().setAuthentication(this.authentication);
         doReturn(this.userToken).when(clientJwtTokenUtility).getTokenFromString(any());
         final UserToken userToken = userContext.getJwtToken().get();
         assertNotNull(userToken);

@@ -24,14 +24,15 @@ import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.spi.MappingContext;
-import org.springframework.boot.actuate.trace.http.HttpTraceRepository;
-import org.springframework.boot.actuate.trace.http.InMemoryHttpTraceRepository;
+import org.springframework.boot.actuate.web.exchanges.HttpExchangeRepository;
+import org.springframework.boot.actuate.web.exchanges.InMemoryHttpExchangeRepository;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static java.util.function.Predicate.not;
@@ -59,10 +60,10 @@ public class GlobalConfig {
      *
      * @return the in memory HTTP trance repository
      */
-    @ConditionalOnProperty(value = "management.trace.http.enabled", havingValue = "true")
+    @ConditionalOnProperty(value = "management.endpoint.httpexchanges.enabled", havingValue = "true")
     @Bean
-    public HttpTraceRepository httpTraceRepository() {
-        return new InMemoryHttpTraceRepository();
+    public HttpExchangeRepository httpTraceRepository() {
+        return new InMemoryHttpExchangeRepository();
     }
 
     /**
