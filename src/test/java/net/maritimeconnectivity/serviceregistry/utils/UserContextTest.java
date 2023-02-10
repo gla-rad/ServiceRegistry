@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
-import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -25,13 +24,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-
-import java.security.Principal;
-import java.util.Collections;
-import java.util.Set;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -54,9 +51,17 @@ class UserContextTest {
     @Mock
     ClientJwtTokenUtility clientJwtTokenUtility;
 
+    /**
+     * The OAuth Authorised Client Service mock.
+     */
+    @Mock
+    OAuth2AuthorizedClientService clientService;
+
     //Test Variables
     private UserToken userToken;
-    private Authentication authentication;
+    private OAuth2AuthenticationToken authentication;
+    private OAuth2AuthorizedClient oAuth2AuthorizedClient;
+    private OAuth2AccessToken oAuth2AccessToken;
 
     /**
      * Common setup for all the tests.
@@ -68,8 +73,14 @@ class UserContextTest {
         this.userToken.setUsername("username");
 
         // Now mock the authentication
+        this.oAuth2AccessToken = mock(OAuth2AccessToken.class);
+        doReturn("dontCareAboutThisNow").when(this.oAuth2AccessToken).getTokenValue();
+        this.oAuth2AuthorizedClient = mock(OAuth2AuthorizedClient.class);
+        doReturn(this.oAuth2AccessToken).when(this.oAuth2AuthorizedClient).getAccessToken();
         authentication = mock(OAuth2AuthenticationToken.class);
-        doReturn("dontCareAboutThisNow").when(authentication).getDetails();
+        doReturn("authorisedClientRegistrationId").when(authentication).getAuthorizedClientRegistrationId();
+        doReturn("name").when(authentication).getName();
+        doReturn(this.oAuth2AuthorizedClient).when(this.clientService).loadAuthorizedClient(any(), any());
     }
 
     /**
