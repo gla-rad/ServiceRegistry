@@ -234,6 +234,27 @@ spring:
         user: <flyway_database_username>
         password: <flyway_database_password>
 
+    # Keycloak Configuration
+    security:
+        oauth2:
+            client:
+                registration:
+                    keycloak:
+                        client-id: mcp-service-registry
+                        client-secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        client-name: Keycloak
+                        provider: keycloak
+                        authorization-grant-type: authorization_code
+                        scope: web-origins,openid
+                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                provider:
+                    keycloak:
+                        issuer-uri: 'http://localhost:8090/auth/realms/realm'
+                        user-name-attribute: preferred_username
+            resource-server:
+                jwt:
+                    issuer-uri: 'http://localhost:8090/auth/realms/realm'
+
 # Logging Configuration
 logging:
     file:
@@ -259,20 +280,6 @@ management:
     trace:
         http:
             enabled: true
-
-# Keycloak Configuration
-keycloak:
-    realm: MCP
-    auth-server-url: 'https://<keycloak-server>:8090/auth'
-    ssl-required: external
-    resource: mcp-service-registry
-    verify-token-audience: true
-    credentials:
-        secret: <auth_server_credentials_secret>
-    use-resource-role-mappings: true
-    confidential-port: '443'
-    truststore: <path_to_truststore>
-    truststore-password: <truststore_password>
 
 # MCP Service Registry Configuration
 net:
