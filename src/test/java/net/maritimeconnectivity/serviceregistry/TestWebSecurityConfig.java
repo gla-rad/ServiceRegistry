@@ -16,61 +16,33 @@
 
 package net.maritimeconnectivity.serviceregistry;
 
-import org.keycloak.representations.AccessToken;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.web.context.WebApplicationContext;
+import org.springframework.security.web.SecurityFilterChain;
 
 @Profile("test")
 @Configuration
 @EnableWebSecurity
-public class TestWebSecurityConfig extends WebSecurityConfigurerAdapter {
+public class TestWebSecurityConfig {
 
     /**
-     * Create a test access token for every incoming test request.
+     * Defines the security web-filter chains.
      *
-     * @return the test access token
+     * Allows open access to all endpoints.
      */
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     @Bean
-    @Scope(scopeName = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
-    public AccessToken accessToken() {
-        AccessToken accessToken = new AccessToken();
-        accessToken.setSubject("abc");
-        accessToken.setName("Tester");
-
-        return accessToken;
-
-    }
-
-    /**
-     * Override this method to configure {@link WebSecurity} so that we ignore
-     * all web security endpoints.
-     *
-     * @param webSecurity The web security
-     * @throws Exception Exception thrown while configuring the security
-     */
-    @Override
-    public void configure(WebSecurity webSecurity) throws Exception {
-        webSecurity.ignoring().antMatchers("/**");
-    }
-
-    /**
-     * The HTTP security configuration to notrequire authorisation to any
-     * endpoints.
-     *
-     * @param httpSecurity The HTTP security
-     * @throws Exception Exception thrown while configuring the security
-     */
-    @Override
-    protected void configure(HttpSecurity httpSecurity) throws Exception {
-        httpSecurity.csrf().disable()
-                .authorizeRequests()
-                .antMatchers("/**")
-                .permitAll();
-
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.csrf().disable()
+                .authorizeHttpRequests()
+                .requestMatchers("/**").permitAll()
+                .and()
+                .build();
     }
 
 }

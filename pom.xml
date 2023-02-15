@@ -6,23 +6,22 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.5</version>
+		<version>3.0.2</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>0.0.2</version>
+	<version>0.0.3</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-cloud.version>2021.0.5</spring-cloud.version>
-		<hibernate.search-orm.version>6.1.4.Final</hibernate.search-orm.version>
-		<hibernate.spatial.version>5.4.30.Final</hibernate.spatial.version>
-		<keycloak.version>20.0.1</keycloak.version>
-		<springdoc.version>1.6.7</springdoc.version>
+		<spring-cloud.version>2022.0.1</spring-cloud.version>
+		<hibernate.search-orm.version>6.1.6.Final</hibernate.search-orm.version>
+		<hibernate.spatial.version>5.6.10.Final</hibernate.spatial.version>
+		<springdoc.version>2.0.2</springdoc.version>
 		<bootstrap.version>5.1.3</bootstrap.version>
 		<jquery.version>3.6.0</jquery.version>
 		<fa.version>6.1.0</fa.version>
@@ -39,16 +38,21 @@
 		</repository>
 		<repository>
 			<id>grad</id>
-			<url>https://rnavlab.gla-rad.org:8081/repository/grad/</url>
+			<url>https://rnavlab.gla-rad.org/mvn/repository/grad/</url>
 		</repository>
 		<repository>
 			<id>grad-snapshots</id>
-			<url>https://rnavlab.gla-rad.org:8081/repository/grad-snapshots/</url>
+			<url>https://rnavlab.gla-rad.org/mvn/repository/grad-snapshots/</url>
 		</repository>
 	</repositories>
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-deploy-plugin</artifactId>
+				<version>3.0.0-M2</version>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
@@ -86,22 +90,11 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webflux</artifactId>
+			<artifactId>spring-boot-starter-oauth2-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.keycloak</groupId>
-			<artifactId>keycloak-spring-boot-starter</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-			<exclusions>
-				<!-- WARNING: This causes a problem with the resteasy integration -->
-				<exclusion>
-					<groupId>javax.ws.rs</groupId>
-					<artifactId>jsr311-api</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -109,39 +102,50 @@
 		</dependency>
 		<dependency>
 			<groupId>org.thymeleaf.extras</groupId>
-			<artifactId>thymeleaf-extras-springsecurity5</artifactId>
+			<artifactId>thymeleaf-extras-springsecurity6</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-envers</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate</groupId>
-			<artifactId>hibernate-ehcache</artifactId>
+			<groupId>org.hibernate.search</groupId>
+			<artifactId>hibernate-search-mapper-orm-orm6</artifactId>
+			<version>${hibernate.search-orm.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-spatial</artifactId>
-			<version>${hibernate.spatial.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.hibernate.search</groupId>
-			<artifactId>hibernate-search-mapper-orm</artifactId>
 			<version>${hibernate.search-orm.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.search</groupId>
 			<artifactId>hibernate-search-backend-lucene</artifactId>
 			<version>${hibernate.search-orm.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-spatial</artifactId>
+			<version>8.4.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-spatial-extras</artifactId>
+			<version>8.11.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>8.11.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.maven</groupId>
@@ -160,19 +164,24 @@
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt</artifactId>
-			<version>0.9.0</version>
+			<artifactId>jjwt-api</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>0.11.5</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>0.11.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
 			<artifactId>assertj-core</artifactId>
 			<version>3.18.1</version>
 			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>net.maritimeconnectivity.eNav</groupId>
-			<artifactId>g1128-schemas</artifactId>
-			<version>0.1.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.web3j</groupId>
@@ -185,25 +194,14 @@
 			<version>2.4.4</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-queryparser</artifactId>
-			<version>8.11.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-spatial</artifactId>
-			<version>8.4.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-spatial-extras</artifactId>
-			<version>8.11.1</version>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
 		</dependency>
 
 		<!-- Swagger -->
 		<dependency>
 			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>${springdoc.version}</version>
 		</dependency>
 
@@ -216,13 +214,21 @@
 		<!-- SECOM -->
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-core</artifactId>
-			<version>0.0.11</version>
+			<artifactId>secom-core-jakarta</artifactId>
+			<version>0.0.12</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-springboot</artifactId>
-			<version>0.0.11</version>
+			<artifactId>secom-springboot3</artifactId>
+			<version>0.0.12</version>
+		</dependency>
+
+		<!-- G-1128 Schemas -->
+		<dependency>
+			<groupId>net.maritimeconnectivity.eNav</groupId>
+			<artifactId>g1128-schemas</artifactId>
+			<version>0.1.5</version>
+			<classifier>jakarta</classifier>
 		</dependency>
 
 		<!-- The Webjars -->
@@ -331,14 +337,6 @@
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
 				<version>${spring-cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-
-			<dependency>
-				<groupId>org.keycloak.bom</groupId>
-				<artifactId>keycloak-adapter-bom</artifactId>
-				<version>${keycloak.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>

@@ -16,7 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 /**
  * The Doc Datatables DTO Class.

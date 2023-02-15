@@ -17,14 +17,15 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.adapters.OidcKeycloakAccount;
-import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -45,6 +46,12 @@ public class UserContext {
 	private ClientJwtTokenUtility jwtTokenUtility;
 
 	/**
+	 * The OAuth Authorised Client Service.
+	 */
+	@Autowired
+	OAuth2AuthorizedClientService clientService;
+
+	/**
 	 * Gets JWT string if it exists.
 	 *
 	 * @return the JWT string if it exists
@@ -52,11 +59,12 @@ public class UserContext {
 	public  Optional<String> getJwtString() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return Optional.ofNullable(authentication)
-				.filter(KeycloakAuthenticationToken.class::isInstance)
-				.map(KeycloakAuthenticationToken.class::cast)
-				.map(KeycloakAuthenticationToken::getAccount)
-				.map(OidcKeycloakAccount::getKeycloakSecurityContext)
-				.map(KeycloakSecurityContext::getTokenString);
+				.filter(OAuth2AuthenticationToken.class::isInstance)
+				.map(OAuth2AuthenticationToken.class::cast)
+				.map(t -> clientService.loadAuthorizedClient(t.getAuthorizedClientRegistrationId(), t.getName()))
+				.map(OAuth2AuthorizedClient.class::cast)
+				.map(OAuth2AuthorizedClient::getAccessToken)
+				.map(OAuth2AccessToken::getTokenValue);
 	}
 
 	/**
@@ -67,12 +75,13 @@ public class UserContext {
 	public Optional<UserToken> getJwtToken() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return Optional.ofNullable(authentication)
-				.filter(KeycloakAuthenticationToken.class::isInstance)
-				.map(KeycloakAuthenticationToken.class::cast)
-				.map(KeycloakAuthenticationToken::getAccount)
-				.map(OidcKeycloakAccount::getKeycloakSecurityContext)
-				.map(KeycloakSecurityContext::getTokenString)
-				.map(jwtTokenUtility::getTokenFromString);
+				.filter(OAuth2AuthenticationToken.class::isInstance)
+				.map(OAuth2AuthenticationToken.class::cast)
+				.map(t -> clientService.loadAuthorizedClient(t.getAuthorizedClientRegistrationId(), t.getName()))
+				.map(OAuth2AuthorizedClient.class::cast)
+				.map(OAuth2AuthorizedClient::getAccessToken)
+				.map(OAuth2AccessToken::getTokenValue)
+				.map(this.jwtTokenUtility::getTokenFromString);
 	}
 
 }

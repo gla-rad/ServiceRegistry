@@ -30,8 +30,8 @@ import org.web3j.protocol.core.methods.response.Web3ClientVersion;
 import org.web3j.protocol.websocket.WebSocketService;
 import org.web3j.tx.gas.DefaultGasProvider;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ConnectException;

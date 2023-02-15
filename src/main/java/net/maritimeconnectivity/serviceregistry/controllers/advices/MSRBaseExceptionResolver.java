@@ -16,9 +16,9 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.advices;
 
+import jakarta.servlet.http.HttpServletRequest;
 import net.maritimeconnectivity.serviceregistry.exceptions.MSRBaseException;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
-import net.maritimeconnectivity.serviceregistry.utils.StreamUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,16 +26,11 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static net.maritimeconnectivity.serviceregistry.utils.StreamUtils.catchExceptionToNull;
 
 /**
  * The MSR Base Exception Resolver Class.
