@@ -111,13 +111,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-			<exclusions>
-				<!-- WARNING: This causes a problem with the resteasy integration -->
-				<exclusion>
-					<groupId>javax.ws.rs</groupId>
-					<artifactId>jsr311-api</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.search</groupId>
@@ -230,11 +223,12 @@
 			<version>0.0.12</version>
 		</dependency>
 
-		<!-- G1128  Schemas -->
+		<!-- G-1128 Schemas -->
 		<dependency>
 			<groupId>net.maritimeconnectivity.eNav</groupId>
-			<artifactId>g1128-schemas-jakarta</artifactId>
-			<version>0.1.4</version>
+			<artifactId>g1128-schemas</artifactId>
+			<version>0.1.5</version>
+			<classifier>jakarta</classifier>
 		</dependency>
 
 		<!-- The Webjars -->
