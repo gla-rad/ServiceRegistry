@@ -18,7 +18,7 @@ package net.maritimeconnectivity.serviceregistry.models.dto;
 
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**

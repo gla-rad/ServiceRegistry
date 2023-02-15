@@ -17,28 +17,24 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.UserToken;
-import org.apache.http.auth.BasicUserPrincipal;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.keycloak.KeycloakSecurityContext;
-import org.keycloak.adapters.OidcKeycloakAccount;
-import org.keycloak.adapters.spi.KeycloakAccount;
-import org.keycloak.adapters.springsecurity.token.KeycloakAuthenticationToken;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.context.SecurityContextHolder;
-
-import java.security.Principal;
-import java.util.Collections;
-import java.util.Set;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 class UserContextTest {
@@ -50,49 +46,41 @@ class UserContextTest {
     UserContext userContext;
 
     /**
-     * They Keycloak Security Context.
-     */
-    @Mock
-    KeycloakSecurityContext context;
-
-    /**
      * The Client JWT Token Utility.
      */
     @Mock
     ClientJwtTokenUtility clientJwtTokenUtility;
 
+    /**
+     * The OAuth Authorised Client Service mock.
+     */
+    @Mock
+    OAuth2AuthorizedClientService clientService;
+
     //Test Variables
     private UserToken userToken;
-    private KeycloakAuthenticationToken keyCloakToken;
+    private OAuth2AuthenticationToken authentication;
+    private OAuth2AuthorizedClient oAuth2AuthorizedClient;
+    private OAuth2AccessToken oAuth2AccessToken;
 
     /**
      * Common setup for all the tests.
      */
     @BeforeEach
     void setUp() {
-        userToken = new UserToken();
-        userToken.setUsername("username");
+        // Create a user token
+        this.userToken = new UserToken();
+        this.userToken.setUsername("username");
 
-        final KeycloakAccount keycloakAccount = new OidcKeycloakAccount() {
-
-            @Override
-            public Principal getPrincipal() {
-                return new BasicUserPrincipal("username");
-            }
-
-            @Override
-            public Set<String> getRoles() {
-                return Collections.emptySet();
-            }
-
-            @Override
-            public KeycloakSecurityContext getKeycloakSecurityContext() {
-                return context;
-            }
-        };
-
-        keyCloakToken = new KeycloakAuthenticationToken(keycloakAccount, false);
-        doReturn("dontCareAboutThisNow").when(context).getTokenString();
+        // Now mock the authentication
+        this.oAuth2AccessToken = mock(OAuth2AccessToken.class);
+        doReturn("dontCareAboutThisNow").when(this.oAuth2AccessToken).getTokenValue();
+        this.oAuth2AuthorizedClient = mock(OAuth2AuthorizedClient.class);
+        doReturn(this.oAuth2AccessToken).when(this.oAuth2AuthorizedClient).getAccessToken();
+        authentication = mock(OAuth2AuthenticationToken.class);
+        doReturn("authorisedClientRegistrationId").when(authentication).getAuthorizedClientRegistrationId();
+        doReturn("name").when(authentication).getName();
+        doReturn(this.oAuth2AuthorizedClient).when(this.clientService).loadAuthorizedClient(any(), any());
     }
 
     /**
@@ -101,7 +89,7 @@ class UserContextTest {
      */
     @Test
     void testGetJwtString() {
-        SecurityContextHolder.getContext().setAuthentication(keyCloakToken);
+        SecurityContextHolder.getContext().setAuthentication(this.authentication);
         final String jwtString = userContext.getJwtString().get();
         Assert.assertEquals("dontCareAboutThisNow", jwtString);
     }
@@ -112,7 +100,7 @@ class UserContextTest {
      */
     @Test
     void testGetJwtToken() {
-        SecurityContextHolder.getContext().setAuthentication(keyCloakToken);
+        SecurityContextHolder.getContext().setAuthentication(this.authentication);
         doReturn(this.userToken).when(clientJwtTokenUtility).getTokenFromString(any());
         final UserToken userToken = userContext.getJwtToken().get();
         assertNotNull(userToken);

@@ -16,18 +16,13 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
-import org.keycloak.enums.TokenStore;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.ModelAndView;
-
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * The HTML Viewer Controller.
@@ -75,7 +70,7 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The index page
      */
-    @GetMapping("/index.html")
+    @GetMapping("/index")
     public String index(Model model) {
         model.addAttribute("operatorUrl", this.operatorUrl);
         model.addAttribute("copyright", this.copyright);
@@ -90,7 +85,7 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The instance page
      */
-    @GetMapping("/instances.html")
+    @GetMapping("/instances")
     public String instances(Model model) {
         model.addAttribute("operatorUrl", this.operatorUrl);
         model.addAttribute("copyright", this.copyright);
@@ -104,7 +99,7 @@ public class HTMLViewerController {
      * @param model The application UI model
      * @return The about page
      */
-    @GetMapping("/about.html")
+    @GetMapping("/about")
     public String about(Model model) {
         model.addAttribute("MSRName", msrName);
         model.addAttribute("MSRMRN", msrMrn);

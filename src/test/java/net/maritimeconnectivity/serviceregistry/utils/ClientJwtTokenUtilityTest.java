@@ -28,11 +28,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 
+import static io.jsonwebtoken.security.Keys.secretKeyFor;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ClientJwtTokenUtilityTest {
-
-    private  static final String SECRET = "c2VjcmV0";
 
     /**
      * The Test token util.
@@ -94,7 +93,7 @@ class ClientJwtTokenUtilityTest {
                 .claim("CLAIM_2", "Claim 2")
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(Date.from(LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.UTC)))
-                .signWith(SignatureAlgorithm.HS512, SECRET)
+                .signWith(SignatureAlgorithm.HS512, secretKeyFor(SignatureAlgorithm.HS512))
                 .compact();
 
         Claims claims = clientJwtTokenUtility.getAllClaimsFromToken(token);

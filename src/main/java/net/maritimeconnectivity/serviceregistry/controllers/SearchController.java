@@ -28,7 +28,7 @@ import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.locationtech.jts.geom.Geometry;
-import org.springdoc.api.annotations.ParameterObject;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

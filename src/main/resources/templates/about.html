@@ -17,14 +17,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-    <th:block th:include="fragments/general.html :: headerfiles"></th:block>
+    <th:block th:insert="~{fragments/general.html :: headerfiles}"></th:block>
 </head>
 <body>
     <div class="sky-bg d-flex flex-column vh-100">
-        <div th:replace="fragments/general.html :: navbar"></div>
+        <div th:replace="~{fragments/general.html :: navbar}"></div>
         <div class="flex-fill flex-grow-1 flex-shrink-0">
             <div id="main-content" class="container mt-3">
-                <div th:replace="fragments/general.html :: login-card"></div>
+                <div th:replace="~{fragments/general.html :: login-card}"></div>
                 <div class="card shadow" sec:authorize="isAuthenticated()">
                     <div class="card-header">
                         <h2>Maritime Service Registry Information</h2>
@@ -58,7 +58,7 @@
                 </div>
             </div>
         </div>
-        <div th:replace="fragments/general.html :: footer"></div>
+        <div th:replace="~{fragments/general.html :: footer}"></div>
     </div>
     <script th:src="@{webjars/jquery/jquery.min.js}"></script>
     <script th:src="@{webjars/bootstrap/js/bootstrap.min.js}"></script>

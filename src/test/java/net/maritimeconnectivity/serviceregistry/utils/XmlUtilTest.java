@@ -38,7 +38,7 @@ class XmlUtilTest {
     @Test
     void testValidateXmlTrue() throws IOException, SAXException {
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
-        String xml = IOUtils.toString(in, StandardCharsets.UTF_8.name());
+        String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
         assertTrue(XmlUtil.validateXml(xml, G1128Utils.SOURCES_LIST));
     }
 
