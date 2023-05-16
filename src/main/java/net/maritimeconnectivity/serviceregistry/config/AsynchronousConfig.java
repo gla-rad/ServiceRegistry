@@ -22,6 +22,8 @@ import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import java.util.concurrent.Executor;
+
 /**
  * The AsynchronousConfig Class
  *
@@ -40,10 +42,13 @@ public class AsynchronousConfig {
      * @return The default task executor for all asynchronous operations
      */
     @Bean("taskExecutor")
-    public TaskExecutor taskExecutor() {
+    public Executor taskExecutor() {
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(100);
+        taskExecutor.setCorePoolSize(2);
+        taskExecutor.setMaxPoolSize(10);
+        taskExecutor.setQueueCapacity(500);
         taskExecutor.setThreadNamePrefix("worker-");
+        taskExecutor.initialize();
         return taskExecutor;
     }
 
