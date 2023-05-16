@@ -39,7 +39,7 @@ spring:
             client:
                 registration:
                     keycloak:
-                        client-id: mcp-service-registry
+                        client-id: service-registry
                         client-secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
                         client-name: Keycloak
                         provider: keycloak
