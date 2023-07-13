@@ -208,6 +208,10 @@ table.dataTable tbody tr.even.selected {
     background-color:#acbad5
 }
 
+div.dataTables_processing {
+    z-index: 99999;
+}
+
 /*****************************
  *          Select2          *
  *****************************/
