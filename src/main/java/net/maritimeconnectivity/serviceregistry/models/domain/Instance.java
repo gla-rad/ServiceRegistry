@@ -24,6 +24,7 @@ import net.maritimeconnectivity.serviceregistry.utils.StringListBridge;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.search.engine.backend.types.Sortable;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBridgeRef;
@@ -120,7 +121,8 @@ public class Instance implements Serializable, JsonSerializable {
     @NotNull
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "varchar(30) default 'provisional'")
+    @ColumnDefault("'provisional'")
+    @Column(name = "status", columnDefinition = "varchar(30)")
     private ServiceStatus status;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)

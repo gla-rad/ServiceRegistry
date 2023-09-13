@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
+import org.hibernate.annotations.ColumnDefault;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -47,7 +48,8 @@ public class LedgerRequest implements Serializable {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "varchar(30) default 'created'")
+    @ColumnDefault("'created'")
+    @Column(name = "status", columnDefinition = "varchar(30)")
     private LedgerRequestStatus status = LedgerRequestStatus.CREATED;
 
     @Column(name = "reason", nullable = true)
