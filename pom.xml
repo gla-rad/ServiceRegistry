@@ -6,25 +6,25 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.2</version>
+		<version>3.1.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>0.0.3</version>
+	<version>0.0.4</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-cloud.version>2022.0.1</spring-cloud.version>
-		<hibernate.search-orm.version>6.1.6.Final</hibernate.search-orm.version>
-		<hibernate.spatial.version>5.6.10.Final</hibernate.spatial.version>
+		<spring-cloud.version>2022.0.3</spring-cloud.version>
+		<hibernate.search-orm.version>6.2.0.Final</hibernate.search-orm.version>
+		<hibernate.spatial.version>6.2.0.Final</hibernate.spatial.version>
 		<springdoc.version>2.0.2</springdoc.version>
-		<bootstrap.version>5.1.3</bootstrap.version>
-		<jquery.version>3.6.0</jquery.version>
-		<fa.version>6.1.0</fa.version>
+		<bootstrap.version>5.3.0</bootstrap.version>
+		<jquery.version>3.6.4</jquery.version>
+		<fa.version>6.4.0</fa.version>
 	</properties>
 
 	<repositories>
@@ -257,9 +257,14 @@
 			<version>${fa.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.webjars.bowergithub.leaflet</groupId>
-			<artifactId>leaflet.draw</artifactId>
-			<version>1.0.4</version>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>leaflet-draw</artifactId>
+			<version>1.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>leaflet</artifactId>
+			<version>1.9.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.webjars.bower</groupId>

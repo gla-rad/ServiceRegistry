@@ -17,8 +17,8 @@ RUN mkdir /conf
 
 RUN mkdir $LOADER_PATH
 
-ADD target/mcp-serviceregistry-core-0.0.3.jar .
+ADD target/mcp-serviceregistry-core-0.0.4.jar .
 
 EXPOSE 8444
 
-CMD ["java", "-Dspring.profiles.active=docker", "-jar", "mcp-serviceregistry-core-0.0.3.jar", "--spring.config.location=classpath:/application.yaml,/conf/"]
+CMD ["java", "-Dspring.profiles.active=docker", "-jar", "mcp-serviceregistry-core-0.0.4.jar", "--spring.config.location=classpath:/application.yaml,/conf/"]
