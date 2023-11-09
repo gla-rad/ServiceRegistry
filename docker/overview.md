@@ -91,14 +91,11 @@ As you can see, the service is called **mcp-service-registry** and uses the
 **8444** port when running.
 
 To run the image, along with the aforementioned environment variables, you can
-use the following command:
+use the following command. Please make sure to replace the appropriate variables
+with the correct values for your setup.
 
     docker run -t -i --rm \
         -p 8444:8444 \
-        -e ENAV_CLOUD_CONFIG_URI='<cloud config server url>' \
-        -e ENAV_CLOUD_CONFIG_BRANCH='<cloud config config repository branch>' \
-        -e ENAV_CLOUD_CONFIG_USERNAME='<config config repository username>' \
-        -e ENAV_CLOUD_CONFIG_PASSWORD='<config config repository passord>' \
         -e DATABASE_SERVER_TYPE='postgresql' \
         -e DATABASE_SERVER_HOST='localhost' \
         -e DATABASE_SERVER_PORT='5432' \
