@@ -97,7 +97,7 @@ info:
         operatorUrl: ${service.variable.info.operator.url}
         copyright: Copyright \u00A9 2021 Maritime Connectivity Platform Consortium
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
-        profile: ${spring.profiles.active}
+        profile: ${spring.profiles.active:test}
 
 eureka:
     client:
