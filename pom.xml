@@ -12,7 +12,7 @@
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>0.0.5</version>
+	<version>0.0.6</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
