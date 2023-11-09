@@ -23,15 +23,15 @@ spring:
             ddl-auto: update
             show-sql: true
     datasource:
-        url: 'jdbc:postgresql://localhost:5432/mcp_service_registry'
-        username: sysadmin
-        password: sysadmin
+        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
+        username: ${service.variable.datasource.database.username}
+        password: ${service.variable.datasource.database.password}
     flyway:
         enabled: false
-        url: 'jdbc:postgresql://localhost:5432/mcp_service_registry'
+        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
         schemas: mcp_service_registry
-        user: sysadmin
-        password: sysadmin
+        user: ${service.variable.datasource.database.username}
+        password: ${service.variable.datasource.database.password}
 
     # Keycloak Configuration
     security:
@@ -39,8 +39,8 @@ spring:
             client:
                 registration:
                     keycloak:
-                        client-id: mcp-service-registry
-                        client-secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        client-id: ${service.variable.keycloak.client.id}
+                        client-secret: ${service.variable.keycloak.client.secret}
                         client-name: Keycloak
                         provider: keycloak
                         authorization-grant-type: authorization_code
@@ -48,11 +48,11 @@ spring:
                         redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
                 provider:
                     keycloak:
-                        issuer-uri: 'http://localhost:8090/auth/realms/realm'
+                        issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
                         user-name-attribute: preferred_username
             resource-server:
                 jwt:
-                    issuer-uri: 'http://localhost:8090/auth/realms/realm'
+                    issuer-uri: http://${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
 
 # Springdoc Configuration
 springdoc:
@@ -66,7 +66,7 @@ springdoc:
 swagger:
     title: Maritime Connectivity Platform Service Registry API
     description: 'Maritime Connectivity Platform Service Registry, developed by the MCC MSR WG'
-    version: '0.2'
+    version: ${spring.application.version}
     termsOfServiceUrl: 'null'
     contactName: MCP Consortium
     contactUrl: 'https://mcp.discourse.group/'
@@ -81,23 +81,23 @@ net:
             allowedContentTypes: >-
                 application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
             ledger:
-                server-url: 'ws://localhost:8546'
-                credentials: '0xae6ae8e5ccbfb04590405997ee2d52d2b330726137b875053c36d94e974d162f'
-                contract-address: f17f52151EbEF6C7334FAD080c5704D77216b732
+                server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
+                credentials: ${service.variable.ledger.server.credentials}
+                contract-address: ${service.variable.ledger.server.address}
 
 # Local Service Configuration
 info:
     msr:
-        name: test MSR instance
-        mrn: 'urn:mrn:mcp:msr:test:testMSR1'
-        url: 'http://localhost:8444'
-        operatorName: test company
-        operatorMrn: 'urn:mrn:mcp:org:test:testMSROperator1'
-        operatorContact: test@test.org
-        operatorUrl: 'https://maritimeconnectivity.net/'
+        name: ${service.variable.info.name}
+        mrn: ${service.variable.info.mrn}'
+        url: ${service.variable.info.url}
+        operatorName: ${service.variable.info.operator.name}
+        operatorMrn: ${service.variable.info.operator.mrn}
+        operatorContact: ${service.variable.info.operator.contact}
+        operatorUrl: ${service.variable.info.operator.url}
         copyright: Copyright \u00A9 2021 Maritime Connectivity Platform Consortium
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
-        profile: Testing
+        profile: ${spring.profiles.active}
 
 eureka:
     client:
