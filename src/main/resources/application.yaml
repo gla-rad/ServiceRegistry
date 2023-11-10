@@ -56,6 +56,14 @@ spring:
                 jwt:
                     issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
 
+# Management Endpoints
+management:
+    endpoint:
+        health:
+            show-details: when_authorized
+            probes:
+                enabled: true
+
 # Springdoc Configuration
 springdoc:
     swagger-ui:
