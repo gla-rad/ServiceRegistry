@@ -9,6 +9,7 @@ spring:
 # Pick up the service environment variables
 service:
     variable:
+        contextPath: ${CONTEXT_PATH:}
         datasource:
             server:
                 type: ${DATABASE_SERVER_TYPE:postgresql}
