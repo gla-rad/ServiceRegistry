@@ -52,7 +52,7 @@ spring:
                         user-name-attribute: preferred_username
             resource-server:
                 jwt:
-                    issuer-uri: http://${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
+                    issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
 
 # Springdoc Configuration
 springdoc:
