@@ -26,6 +26,7 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import jakarta.persistence.EntityManager;
+import org.springframework.context.event.ContextRefreshedEvent;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -70,12 +71,12 @@ class HibernateSearchInitTest {
         try (MockedStatic<Search> mockedSearch = Mockito.mockStatic(Search.class)) {
             mockedSearch.when(() -> Search.session(this.entityManager)).thenReturn(this.searchSession);
 
-            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class));
+            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class), any(Class.class));
             doReturn(this.massIndexer).when(this.massIndexer).threadsToLoadObjects(anyInt());
             doNothing().when(this.massIndexer).startAndWait();
 
             // Perform the component call
-            this.hibernateSearchInit.onApplicationEvent(null);
+            this.hibernateSearchInit.onApplicationEvent(mock(ContextRefreshedEvent.class));
         }
 
         // Verify the indexing initialisation was performed
@@ -91,12 +92,12 @@ class HibernateSearchInitTest {
         try (MockedStatic<Search> mockedSearch = Mockito.mockStatic(Search.class)) {
             mockedSearch.when(() -> Search.session(this.entityManager)).thenReturn(this.searchSession);
 
-            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class));
+            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class), any(Class.class));
             doReturn(this.massIndexer).when(this.massIndexer).threadsToLoadObjects(anyInt());
             doThrow(InterruptedException.class).when(this.massIndexer).startAndWait();
 
             // Perform the component call
-            this.hibernateSearchInit.onApplicationEvent(null);
+            this.hibernateSearchInit.onApplicationEvent(mock(ContextRefreshedEvent.class));
         }
 
         // Verify the indexing initialisation was performed
