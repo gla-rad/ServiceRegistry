@@ -36,5 +36,5 @@ jobs:
       uses: docker/build-push-action@v3
       with:
         context: docker
-        tags: ghcr.io/gla-rad/serviceregistry
+        tags: ghcr.io/maritimeconnectivity/serviceregistry
         push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
