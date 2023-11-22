@@ -27,11 +27,7 @@ import java.security.Security;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@SpringBootApplication(scanBasePackages = {
-		"net.maritimeconnectivity.serviceregistry",
-		"org.grad.secom",
-		"org.jboss.resteasy.springboot",
-})
+@SpringBootApplication
 public class McpServRegApplication {
 
 	public static void main(String[] args) {

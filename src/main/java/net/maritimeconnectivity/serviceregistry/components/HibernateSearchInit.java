@@ -63,7 +63,7 @@ public class HibernateSearchInit implements ApplicationListener<ContextRefreshed
         SearchSession searchSession = Search.session( entityManager );
 
         // Create a mass indexer
-        MassIndexer indexer = searchSession.massIndexer( Instance.class, Doc.class )
+        MassIndexer indexer = searchSession.massIndexer(Instance.class, Doc.class)
                 .threadsToLoadObjects( 7 );
 
         // And perform the indexing

@@ -1,0 +1,44 @@
+server:
+    port: 8444
+
+spring:
+    application:
+        name: mcp-service-registry
+        version: 0.0.6
+
+# Pick up the service environment variables
+service:
+    variable:
+        contextPath: ${CONTEXT_PATH:}
+        datasource:
+            server:
+                type: ${DATABASE_SERVER_TYPE:postgresql}
+                host: ${DATABASE_SERVER_HOST:localhost}
+                port: ${DATABASE_SERVER_PORT:5432}
+            database:
+                name: ${DATABASE_NAME:mcp_service_registry}
+                username: ${DATABASE_USERNAME:admin}
+                password: ${DATABASE_PASSWORD:admin}
+        keycloak:
+            server:
+                url: ${KEYCLOAK_SERVER_URL:http://localhost:8080}
+                realm: ${KEYCLOAK_CLIENT_REALM:mcp}
+            client:
+                id: ${KEYCLOAK_CLIENT_ID:mcp_service_registry}
+                secret: ${KEYCLOAK_CLIENT_SECRET:secret}
+        ledger:
+            server:
+                host: ${MCP_LEDGER_HOST:localhost}
+                port: ${MCP_LEDGER_PORT:8546}
+                address: ${MCP_LEDGER_ADDRESS:0x0000000000000000000000000000000000000000}
+                credentials: ${MCP_LEDGER_CREDENTIALS:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890}
+        info:
+            name: ${SERVICE_INFO_NAME:Test MSR Instance}
+            mrn: ${SERVICE_INFO_MRN:urn:mrn:mcp:msr:test:testMSR1}
+            url: ${SERVICE_INFO_URL:http://localhost:8444}
+            operator:
+                name: ${SERVICE_INFO_OPERATOR:Maritime Connectivity Platform}
+                contact: ${SERVICE_INFO_OPERATOR_CONTACT:secretariat@maritimeconnectivity.net}
+                mrn: ${SERVICE_INFO_OPERATOR_MRN:urn:mrn:mcp:org:test:testMSROperator1}
+                url: ${SERVICE_INFO_OPERATOR_URL:https://maritimeconnectivity.net/}
+

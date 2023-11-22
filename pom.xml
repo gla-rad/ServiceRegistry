@@ -6,22 +6,22 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.1</version>
+		<version>3.1.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>0.0.4</version>
+	<version>0.0.6</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
 	<properties>
 		<java.version>17</java.version>
-		<spring-cloud.version>2022.0.3</spring-cloud.version>
+		<spring-cloud.version>2022.0.4</spring-cloud.version>
 		<hibernate.search-orm.version>6.2.0.Final</hibernate.search-orm.version>
 		<hibernate.spatial.version>6.2.0.Final</hibernate.spatial.version>
-		<springdoc.version>2.0.2</springdoc.version>
+		<springdoc.version>2.2.0</springdoc.version>
 		<bootstrap.version>5.3.0</bootstrap.version>
 		<jquery.version>3.6.4</jquery.version>
 		<fa.version>6.4.0</fa.version>
@@ -215,12 +215,12 @@
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-core-jakarta</artifactId>
-			<version>0.0.12</version>
+			<version>0.0.24</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-springboot3</artifactId>
-			<version>0.0.12</version>
+			<version>0.0.24</version>
 		</dependency>
 
 		<!-- G-1128 Schemas -->
