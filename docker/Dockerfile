@@ -14,8 +14,8 @@
 # the conf-folder and point to them in application.yaml.
 #
 
-# Use the official OpenJDK 17 image as the base image
-FROM openjdk:17-jdk-slim
+# Use the official OpenJDK 21 image as the base image
+FROM eclipse-temurin:21-jre-alpine
 
 LABEL org.opencontainers.image.source="https://github.com/maritimeconnectivity/ServiceRegistry"
 
@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.source="https://github.com/maritimeconnectivity/S
 WORKDIR /app
 
 # Copy the Spring Boot JAR file into the container
-COPY target/mcp-serviceregistry-core-0.0.6.jar /app/
+COPY target/mcp-serviceregistry-core-0.0.7.jar /app/
 
 # Create a modules path just in case
 ENV LOADER_PATH /modules
@@ -34,4 +34,4 @@ ENV CONFIG_DIR=/conf
 
 EXPOSE 8444
 
-CMD ["java", "-jar", "mcp-serviceregistry-core-0.0.6.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
+CMD ["java", "-jar", "mcp-serviceregistry-core-0.0.7.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
