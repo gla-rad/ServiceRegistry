@@ -114,6 +114,17 @@ public class HTMLViewerController {
     }
 
     /**
+     * Logs the user in an authenticated session and redirect to the home page.
+     *
+     * @param request The logout request
+     * @return The home page
+     */
+    @GetMapping(path = "/login")
+    public ModelAndView login(HttpServletRequest request) {
+        return new ModelAndView("redirect:" + "/");
+    }
+
+    /**
      * Logs the user out of the authenticated session.
      *
      * @param request The logout request
