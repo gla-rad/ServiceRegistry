@@ -105,7 +105,7 @@ info:
         operatorMrn: ${service.variable.info.operator.mrn}
         operatorContact: ${service.variable.info.operator.contact}
         operatorUrl: ${service.variable.info.operator.url}
-        copyright: Copyright \u00A9 2021 Maritime Connectivity Platform Consortium
+        copyright: 'Copyright © 2024 Maritime Connectivity Platform Consortium'
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
         profile: ${spring.profiles.active:test}
 

@@ -344,13 +344,13 @@ class XmlControllerTest {
 
     /**
      * Test that when we request an invalid G1128 Specification schema, then a
-     * 500 (INTERNAL_SERVER_ERROR) response will be returned.
+     * 400 (BAD_REQUEST) response will be returned.
      */
     @Test
     void testGetG1128SchemaInvalid() throws Exception {
         // Perform the MVC request
         this.mockMvc.perform(get("/api/xmls/schemas/{schema}", "invalid"))
-                .andExpect(status().isInternalServerError());
+                .andExpect(status().isBadRequest());
     }
 
     /**
