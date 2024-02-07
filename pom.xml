@@ -6,25 +6,26 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.4</version>
+		<version>3.2.1</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>0.0.6</version>
+	<version>0.0.7</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
 	<properties>
-		<java.version>17</java.version>
-		<spring-cloud.version>2022.0.4</spring-cloud.version>
-		<hibernate.search-orm.version>6.2.0.Final</hibernate.search-orm.version>
-		<hibernate.spatial.version>6.2.0.Final</hibernate.spatial.version>
-		<springdoc.version>2.2.0</springdoc.version>
-		<bootstrap.version>5.3.0</bootstrap.version>
-		<jquery.version>3.6.4</jquery.version>
-		<fa.version>6.4.0</fa.version>
+		<java.version>21</java.version>
+		<spring-cloud.version>2023.0.0</spring-cloud.version>
+		<springdoc.version>2.3.0</springdoc.version>
+		<bootstrap.version>5.3.2</bootstrap.version>
+		<jquery.version>3.7.1</jquery.version>
+		<fa.version>6.5.1</fa.version>
+		<hibernate.spatial.version>6.4.1.Final</hibernate.spatial.version>
+		<hibernate.search-orm.version>7.0.0.Final</hibernate.search-orm.version>
+		<lucene.spatial.version>9.8.0</lucene.spatial.version>
 	</properties>
 
 	<repositories>
@@ -113,13 +114,13 @@
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate.search</groupId>
-			<artifactId>hibernate-search-mapper-orm-orm6</artifactId>
-			<version>${hibernate.search-orm.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-spatial</artifactId>
+			<version>${hibernate.spatial.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.search</groupId>
+			<artifactId>hibernate-search-mapper-orm</artifactId>
 			<version>${hibernate.search-orm.version}</version>
 		</dependency>
 		<dependency>
@@ -129,18 +130,18 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-spatial</artifactId>
-			<version>8.4.1</version>
+			<artifactId>lucene-spatial3d</artifactId>
+			<version>${lucene.spatial.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-spatial-extras</artifactId>
-			<version>8.11.1</version>
+			<version>${lucene.spatial.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-queryparser</artifactId>
-			<version>8.11.1</version>
+			<version>${lucene.spatial.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -191,7 +192,7 @@
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
-			<version>2.4.4</version>
+			<version>3.2.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
