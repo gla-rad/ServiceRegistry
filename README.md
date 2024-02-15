@@ -35,7 +35,7 @@ spring:
 ```
 
 To create a local database for development/testing you should install a
-PostgreSQL server and the postGIS extension. On an ubuntu system this 
+PostgreSQL server and the postGIS extension. On an Ubuntu system this 
 can be done easily as follows:
 
 ```bash
@@ -62,8 +62,8 @@ If you, like me don't remember your PostgreSQL command
 cheatsheet.
 
 ## Keycloak Configuration
-The current version of the MSR is using the [Keycloak](https://www.keycloak.org/)
-for access management (version 20.0.1). The Spring Keycloak adapter is used to 
+The current version of the MSR is using [Keycloak](https://www.keycloak.org/)
+for access management (version 21.1.2+). The Spring OIDC client is used to 
 link the service to the authentication server. Therefore, before running the 
 service you will need to create a security realm in Keycloak and setup a client
 service. To get things going faster, the required client configuration can be
@@ -72,6 +72,11 @@ file. Note that the client's access type is *confidential*, so you might need
 to regenerate the client's secret. Once the service is ready in the Keycloak
 service, you will need to connect the service to it using the relevant section
 of the *application.yaml* configuration file.
+
+Note that an additional spring security entry is required for the feign client
+configuration. This is required if you need to link the MSR with an MCP MIR
+identity registry so that the service can also retrieve certificates for the
+registered instances.
 
 ```yaml
 # Keycloak Configuration
@@ -88,26 +93,349 @@ spring:
                         authorization-grant-type: authorization_code
                         scope: web-origins,openid
                         redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                    feign:
+                        client-id: mcp-service-registry
+                        client-secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+                        client-name: Feign
+                        provider: feign
+                        authorization-grant-type: client_credentials
+                        scope: web-origins,openid
                 provider:
                     keycloak:
                         issuer-uri: 'http://localhost:8090/auth/realms/realm'
                         user-name-attribute: preferred_username
+                    feign:
+                        token-uri: 'http://localhost:8090/auth/realms/realm/protocol/openid-connect/token'
             resource-server:
                 jwt:
                     issuer-uri: 'http://localhost:8090/auth/realms/realm'
 ```
 
+## Docker Container
+A version of the MCP Service Registry is also available via
+[DockerHub](https://hub.docker.com/repository/docker/glarad/mc-service-registry/general).
+This can be run as it is, or through a Docker-Compose script. The container
+assumes a *docker* yaml file is provided and runs on that profile. By default,
+all configurations should be provided under a *conf* directory linked to the
+root of the container. For example, to run the container you can use the
+following command:
+
+```bash
+sudo docker run -t -i --rm -p 8444:8444 -v /path/to/config-directory/on/machine:/conf <image-id>
+```
+
+For more information please have a look at the MSR docker
+[overview.md](docker/overview.md) file.
+An example docker-profile YAML configuration can be found below:
+
+```yaml
+server:
+    port: '8444'
+    servlet:
+        context-path: ${service.variable.contextPath}
+
+# Springboot Configuration
+spring:
+    application:
+        name: mcp-service-registry
+    jpa:
+        properties:
+            hibernate:
+                search:
+                    backend:
+                        lucene_version: LATEST
+                        directory:
+                            root: ./lucene/
+                        analysis:
+                            configurer: >-
+                                class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
+                    schema_management:
+                        strategy: create-or-update
+        generate-ddl: true
+        hibernate:
+            ddl-auto: update
+            show-sql: true
+    datasource:
+        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
+        username: ${service.variable.datasource.database.username}
+        password: ${service.variable.datasource.database.password}
+    flyway:
+        enabled: false
+        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
+        schemas: mcp_service_registry
+        user: ${service.variable.datasource.database.username}
+        password: ${service.variable.datasource.database.password}
+
+    # Keycloak Configuration
+    security:
+        oauth2:
+            client:
+                registration:
+                    keycloak:
+                        client-id: ${service.variable.keycloak.client.id}
+                        client-secret: ${service.variable.keycloak.client.secret}
+                        client-name: Keycloak
+                        provider: keycloak
+                        authorization-grant-type: authorization_code
+                        scope: web-origins,openid
+                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                    feign:
+                        client-id: ${service.variable.keycloak.client.id}
+                        client-secret: ${service.variable.keycloak.client.secret}
+                        client-name: Feign
+                        provider: feign
+                        authorization-grant-type: client_credentials
+                        scope: web-origins,openid
+                provider:
+                    keycloak:
+                        issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
+                        user-name-attribute: preferred_username
+                    feign:
+                        token-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}/protocol/openid-connect/token
+            resource-server:
+                jwt:
+                    issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
+
+# Management Endpoints
+management:
+    endpoint:
+        health:
+            show-details: when_authorized
+            probes:
+                enabled: true
+
+# Springdoc Configuration
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html
+        display-query-params: true
+        url: /v3/api-docs
+    packagesToScan: net.maritimeconnectivity.serviceregistry.controllers
+
+# Springdoc Swagger Configuration
+swagger:
+    title: Maritime Connectivity Platform Service Registry API
+    description: 'Maritime Connectivity Platform Service Registry, developed by the MCC MSR WG'
+    version: ${spring.application.version}
+    termsOfServiceUrl: 'null'
+    contactName: MCP Consortium
+    contactUrl: 'https://mcp.discourse.group/'
+    contactEmail: Nikolaos.Vastardis@gla-rad.org
+    license: Apache-2.0
+    licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
+
+# MCP Service Registry Configuration
+net:
+    maritimeconnectivity:
+        serviceregistry:
+            allowedContentTypes: >-
+                application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
+            ledger:
+                server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
+                credentials: ${service.variable.ledger.server.credentials}
+                contract-address: ${service.variable.ledger.server.address}
+
+# The Feign Client configuration
+feign:
+    client:
+        mir:
+            url: ${service.variable.mir.server.url}
+
+# Local Service Configuration
+info:
+    msr:
+        name: ${service.variable.info.name}
+        mrn: ${service.variable.info.mrn}'
+        url: ${service.variable.info.url}
+        operatorName: ${service.variable.info.operator.name}
+        operatorMrn: ${service.variable.info.operator.mrn}
+        operatorContact: ${service.variable.info.operator.contact}
+        operatorUrl: ${service.variable.info.operator.url}
+        copyright: 'Copyright © 2024 Maritime Connectivity Platform Consortium'
+        projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
+        profile: ${spring.profiles.active:test}
+
+eureka:
+    client:
+        enabled: false
+server:
+    port: '8444'
+    servlet:
+        context-path: ${service.variable.contextPath}
+
+# Springboot Configuration
+spring:
+    application:
+        name: mcp-service-registry
+    jpa:
+        properties:
+            hibernate:
+                search:
+                    backend:
+                        lucene_version: LATEST
+                        directory:
+                            root: ./lucene/
+                        analysis:
+                            configurer: >-
+                                class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
+                    schema_management:
+                        strategy: create-or-update
+        generate-ddl: true
+        hibernate:
+            ddl-auto: update
+            show-sql: true
+    datasource:
+        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
+        username: ${service.variable.datasource.database.username}
+        password: ${service.variable.datasource.database.password}
+    flyway:
+        enabled: false
+        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
+        schemas: mcp_service_registry
+        user: ${service.variable.datasource.database.username}
+        password: ${service.variable.datasource.database.password}
+
+    # Keycloak Configuration
+    security:
+        oauth2:
+            client:
+                registration:
+                    keycloak:
+                        client-id: ${service.variable.keycloak.client.id}
+                        client-secret: ${service.variable.keycloak.client.secret}
+                        client-name: Keycloak
+                        provider: keycloak
+                        authorization-grant-type: authorization_code
+                        scope: web-origins,openid
+                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                    feign:
+                        client-id: ${service.variable.keycloak.client.id}
+                        client-secret: ${service.variable.keycloak.client.secret}
+                        client-name: Feign
+                        provider: feign
+                        authorization-grant-type: client_credentials
+                        scope: web-origins,openid
+                provider:
+                    keycloak:
+                        issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
+                        user-name-attribute: preferred_username
+                    feign:
+                        token-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}/protocol/openid-connect/token
+            resource-server:
+                jwt:
+                    issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
+
+# Management Endpoints
+management:
+    endpoint:
+        health:
+            show-details: when_authorized
+            probes:
+                enabled: true
+
+# Springdoc Configuration
+springdoc:
+    swagger-ui:
+        path: /swagger-ui.html
+        display-query-params: true
+        url: /v3/api-docs
+    packagesToScan: net.maritimeconnectivity.serviceregistry.controllers
+
+# Springdoc Swagger Configuration
+swagger:
+    title: Maritime Connectivity Platform Service Registry API
+    description: 'Maritime Connectivity Platform Service Registry, developed by the MCC MSR WG'
+    version: ${spring.application.version}
+    termsOfServiceUrl: 'null'
+    contactName: MCP Consortium
+    contactUrl: 'https://mcp.discourse.group/'
+    contactEmail: Nikolaos.Vastardis@gla-rad.org
+    license: Apache-2.0
+    licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
+
+# MCP Service Registry Configuration
+net:
+    maritimeconnectivity:
+        serviceregistry:
+            allowedContentTypes: >-
+                application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
+            mir:
+                server-url: ${service.variable.mir.server.url}
+            ledger:
+                server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
+                credentials: ${service.variable.ledger.server.credentials}
+                contract-address: ${service.variable.ledger.server.address}
+
+# Local Service Configuration
+info:
+    msr:
+        name: ${service.variable.info.name}
+        mrn: ${service.variable.info.mrn}'
+        url: ${service.variable.info.url}
+        operatorName: ${service.variable.info.operator.name}
+        operatorMrn: ${service.variable.info.operator.mrn}
+        operatorContact: ${service.variable.info.operator.contact}
+        operatorUrl: ${service.variable.info.operator.url}
+        copyright: 'Copyright © 2024 Maritime Connectivity Platform Consortium'
+        projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
+        profile: ${spring.profiles.active:test}
+
+# Eureka Client Config
+eureka:
+    client:
+        enabled: false
+
+# SECOM OpenAPI Config
+swagger:
+    secomOpenApiConfig: 'openapi.json'
+```
+
+In the last line of the configuration you can also see how you can provide an
+SECOM OpenAPI configuration file. This will define how SpringDoc will also 
+generate the OpenAPI specification for the SECOM interfaces which are provided
+by the [SECOMLib](https://github.com/gla-rad/SECOMLib) library and are defined
+using [JAX-RS](https://www.baeldung.com/jax-rs-spec-and-implementations).
+
+## MIR Integration
+Another important point concerns the MCP MIR integration. This functionality
+is one of the latest features and allow the MSR to include the service instance
+certificates in the SECOM *search service* responses. These are retrieved 
+through internal calls to the MIR service, under OAuth2 authentication. In 
+terms of the implementation of this functionality, this is achieved simply
+using a Spring Feign client, which supports all types of MIR entity queries,
+such as services, devices, vessels, users and roles.
+
+To allow these calls in the MIR, we first need to configure our Keycloak
+server in order to enable a service account for the MSR. This account 
+should then be updates with the required attributes i.e.
+
+* **org** - containing the organisation ID (MRN) of the service, preferably the
+same as the MIR provider organisation
+* **permissions** - preferably this should be set to SITE_ADMIN to allow the
+MSR to perform all operations
+* **mrn** - the MRN of the service registry
+
+Finally, we need to make sure the *mcp-client-template* scope is allocated by
+default to the Keycloak client entry, so that all the attributes mappers are
+picked up correctly.
+
+On runtime, we need to provide the respective *application.yaml* property
+*net.maritimeconnectivity.serviceregistry.mir.server-url* with the api
+endpoint of the MIR and that should be it! Note that the service instances
+registered in the MIR and the MSR should match, i.e. they should have the same
+organisation and instance ID MRNs.
+
 ## Keycloak Policy Enforcer Configuration - Deprecated
 
-Please note that for greater access management granularity, in Springboot 2 the 
-resource policy enforcer could be used. **In the latest upgrade to Springboot 3 
+Please note that for greater access management granularity, in Springboot 2 the
+resource policy enforcer could be used. **In the latest upgrade to Springboot 3
 however this functionality has been removed and cannot be used for now**. This
-section is left here only as a reference for future development. 
+section is left here only as a reference for future development.
 
 In the Keycloak policy enforcer operation every API resource of the service
 should be registered with keycloak and a role, a policy and a permission
 should be defined for it. For example, let's have a look at the endpoint that
-returns the available instances: */api/instances*. 
+returns the available instances: */api/instances*.
 
 For this endpoint we have a resource registered in keycloak as follows:
 
@@ -133,7 +461,7 @@ For this endpoint we have a resource registered in keycloak as follows:
 }
 ```
 
-Notice that the same resource is used by both the GET and the POST HTTP REST 
+Notice that the same resource is used by both the GET and the POST HTTP REST
 requests to allow users to also create new instances. In our example, for the
 GET request, we have also defined a role called *get_api_instances*, a
 policy with the same name for simplicity (*get_api_instances*) that checks
@@ -157,12 +485,12 @@ access to the endpoint if the user has the *get_api_instances* role.
 ```
 
 In order to enable the resource-level access management you will need to turn
-on the *Authorization Enabled* setting in the main setting of the service 
+on the *Authorization Enabled* setting in the main setting of the service
 registry client. To keep things simple, the authorization configuration can be
 found [here](src/main/resources/service-registry-authorization.json).
 You can simply import the file in the *Authorization* tab of the client.
 
-The last trick that binds everything together is again found in the 
+The last trick that binds everything together is again found in the
 *application.yaml* file:
 
 ```yaml
@@ -176,7 +504,7 @@ keycloak:
 
 The *keycloak.policy-enforcer-config.http-method-as-scope* property tells the
 Keycloak adapter to use the REST request method as the scope for evaluating the
-resource request. Hence, when a user performs a GET on the */api/instances* 
+resource request. Hence, when a user performs a GET on the */api/instances*
 endpoint, the *get_api_instances* will be activated and allow access to the
 resource only if the user has the *get_api_instances* role. Awesome!!! Or at
 least it used to be :).
@@ -218,109 +546,6 @@ operation, a list of all currently used endpoint roles is provided below:
 | service_admin | Users are allows to create and upload new services and change their local status |
 | ledger_admin  | Users are allowed to control instances and upload them to the global MSR ledger  |
 | admin         | MSR site administrator role                                                      |
-
-## Docker Container
-A version of the MCP Service Registry is also available via
-[DockerHub](https://hub.docker.com/repository/docker/glarad/mc-service-registry/general).
-This can be run as it is, or through a Docker-Compose script. The container
-assumes a *docker* yaml file is provided and runs on that profile. By default,
-all configurations should be provided under a *conf* directory linked to the
-root of the container. For example, to run the container you can use the
-following command:
-
-```bash
-sudo docker run -t -i --rm -p 8444:8444 -v /path/to/config-directory/on/machine:/conf <image-id>
-```
-
-An example docker-profile YAML configuration can be found below:
-
-```yaml
-# Change the context to get everything working fine
-server:
-    servlet:
-        context-path: /mcp/msr
-
-# Springboot Configuration
-spring:
-    application:
-        name: msr
-    datasource:
-        url: 'jdbc:postgresql://<database_server>:<database_port>/<database_schema>'
-        username: <database_username>
-        password: <database_password>
-    flyway:
-        enabled: true
-        url: 'jdbc:postgresql://<database_server>:<database_port>/<flyway_database_schema>'
-        schemas: <flyway_database_schema>
-        user: <flyway_database_username>
-        password: <flyway_database_password>
-
-    # Keycloak Configuration
-    security:
-        oauth2:
-            client:
-                registration:
-                    keycloak:
-                        client-id: mcp-service-registry
-                        client-secret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-                        client-name: Keycloak
-                        provider: keycloak
-                        authorization-grant-type: authorization_code
-                        scope: web-origins,openid
-                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-                provider:
-                    keycloak:
-                        issuer-uri: 'http://localhost:8090/auth/realms/realm'
-                        user-name-attribute: preferred_username
-            resource-server:
-                jwt:
-                    issuer-uri: 'http://localhost:8090/auth/realms/realm'
-
-# Logging Configuration
-logging:
-    file:
-        name: '/var/log/${spring.application.name}.log'
-        max-size: 10MB
-    pattern:
-        rolling-file-name: '${spring.application.name}-%d{yyyy-MM-dd}.%i.log'
-eureka:
-    client:
-        enabled: false
-
-# Logging Management
-management:
-    endpoints:
-        web:
-            exposure:
-                include: '*'
-    endpoint:
-        health:
-            show-details: always
-        logfile:
-            external-file: '/var/log/${spring.application.name}.log'
-    trace:
-        http:
-            enabled: true
-
-# MCP Service Registry Configuration
-net:
-    maritimeconnectivity:
-        serviceregistry:
-            ledger:
-                server-url: 'ws://<smart_contract_server>:<smart_contract_port>'
-                contract-address: '<smart_contract_address>'
-                credentials: <smart_contract_credentials>
-                
-# SECOM OpenAPI Config
-swagger:
-    secomOpenApiConfig: '/conf/openapi.json'
-```
-
-In the last line of the configuration you can also see how you can provide an
-SECOM OpenAPI configuration file. This will define how SpringDoc will also 
-generate the OpenAPI specification for the SECOM interfaces which are provided
-by the [SECOMLib](https://github.com/gla-rad/SECOMLib) library and are defined
-using [JAX-RS](https://www.baeldung.com/jax-rs-spec-and-implementations).
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to
