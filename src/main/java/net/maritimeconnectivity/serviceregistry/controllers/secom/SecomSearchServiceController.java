@@ -19,11 +19,17 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import feign.FeignException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpDeviceDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
@@ -46,6 +52,8 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
+
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -71,6 +79,9 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
      */
     @Autowired
     InstanceService instanceService;
+
+    @Autowired
+    Optional<MirClient> mirClient;
 
     /**
      * Object Mapper from Domain to DTO.
@@ -214,15 +225,51 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
                 PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
         );
 
-        // And build the response
+        // Get the search object results and if possible also update the
+        // certificates through the MIR.
+        List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
+
+        // Careful cause depending on the configuration an MIR client might not
+        // be available.
+        if(this.mirClient.isPresent()) {
+            for (SearchObjectResult searchObject : searchObjectResults) {
+                try {
+                    // Retrieve the certificates from the MIR
+                    McpServiceDto mcpEntity = this.mirClient.get().getServiceEntity(
+                            Optional.of(searchObject)
+                                    .map(SearchObjectResult::getOrganizationId)
+                                    .map(Strings::trimToNull)
+                                    .orElse(null),
+                            Optional.of(searchObject)
+                                    .map(SearchObjectResult::getInstanceId)
+                                    .map(Strings::trimToNull)
+                                    .orElse(null),
+                            Optional.of(searchObject)
+                                    .map(SearchObjectResult::getVersion)
+                                    .map(Strings::trimToNull)
+                                    .orElse(null)
+                    );
+                    // And append them to the search object
+                    ((SearchObjectResultWithCert) searchObject).setCertificates(Optional.ofNullable(mcpEntity)
+                            .map(McpEntityBase::getCertificates)
+                            .orElse(null));
+                } catch (FeignException ex) {
+                    log.error("Error while retrieving certificate for entity {}: {}",
+                            searchObject.getInstanceId(),
+                            ex.getMessage());
+                }
+            }
+        }
+
+        // Finally build the response
         ResponseSearchObject responseSearchObject = new ResponseSearchObject();
-        responseSearchObject.setSearchServiceResult(this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResult.class));
+        responseSearchObject.setSearchServiceResult(searchObjectResults);
         return responseSearchObject;
     }
 
     /**
      * A useful utility function that is able to parse the provided geometry
-     * string as both the SECOM-compliant WKT format and the non compliant but
+     * string as both the SECOM-compliant WKT format and the non-compliant but
      * still pretty useful GeoJSON format.
      *
      * @param geometryString the geometry string in WKT or GeoJSON format

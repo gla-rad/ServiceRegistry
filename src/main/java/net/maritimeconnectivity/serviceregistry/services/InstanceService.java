@@ -48,6 +48,7 @@ import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
+import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageInfo;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
@@ -224,10 +225,12 @@ public class InstanceService {
             instance.setGeometryJson(new ObjectMapper().readTree(wholeWorldGeoJson));
         }
 
-        // Populate the save operation fields if required
-        // For new entries
-        if(instance.getId() == null) {
-            instance.setOrganizationId(this.userContext.getJwtToken().map(UserToken::getOrganisation).orElse(null));
+        // Populate the save operation fields if required.
+        // For new entries, and any that don't already have the organization ID
+        if(instance.getId() == null || instance.getOrganizationId() == null) {
+            instance.setOrganizationId(this.userContext.getJwtToken()
+                    .map(UserToken::getOrganisation)
+                    .orElse(null));
         }
 
         // The save and return
@@ -487,27 +490,37 @@ public class InstanceService {
      * @throws JAXBException if the XML is invalid or required attributes not present
      */
     protected void parseInstanceAttributesFromXML(Instance instance) throws JAXBException {
-        log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());
-        ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(instance.getInstanceAsXml().getContent());
+        // First safely retrieve the instance XML content
+        final String xmlContent = Optional.of(instance)
+                .map(Instance::getInstanceAsXml)
+                .map(Xml::getContent)
+                .orElse("");
+        log.debug("Parsing XML: " + xmlContent);
 
-        // Populate the instance object
+        // Create a new service instance from the XML content
+        ServiceInstance serviceInstance = new G1128Utils<>(ServiceInstance.class).unmarshallG1128(xmlContent);
+
+        // And update the original instance object
         instance.setName(serviceInstance.getName());
         instance.setVersion(serviceInstance.getVersion());
         instance.setInstanceId(serviceInstance.getId());
         instance.setKeywords(serviceInstance.getKeywords());
-        // instance.setStatus(InstanceStatus.fromString(serviceInstance.getStatus().value())); // Do we need this?
         instance.setComment(serviceInstance.getDescription());
         instance.setEndpointUri(serviceInstance.getEndpoint());
         instance.setMmsi(serviceInstance.getMMSI());
         instance.setImo(serviceInstance.getIMO());
         instance.setServiceType(serviceInstance.getServiceType());
-        instance.setUnlocode(serviceInstance.getCoversAreas()
-                .getCoversAreasAndUnLoCodes()
+        instance.setUnlocode(Optional.of(serviceInstance)
+                .map(ServiceInstance::getCoversAreas)
+                .map(CoverageInfo::getCoversAreasAndUnLoCodes)
+                .orElse(Collections.emptyList())
                 .stream()
                 .filter(String.class::isInstance)
                 .map(String.class::cast)
                 .collect(Collectors.toList()));
-        instance.setDesigns(Stream.of(serviceInstance.getImplementsServiceDesign())
+        instance.setDesigns(Optional.of(serviceInstance)
+                .map(ServiceInstance::getImplementsServiceDesign)
+                .stream()
                 .collect(Collectors.toMap(ServiceDesignReference::getId, ServiceDesignReference::getVersion)));
     }
 

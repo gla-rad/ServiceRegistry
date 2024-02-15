@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 
 import java.security.Security;
 
@@ -28,6 +29,7 @@ import java.security.Security;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @SpringBootApplication
+@EnableFeignClients
 public class McpServRegApplication {
 
 	public static void main(String[] args) {
