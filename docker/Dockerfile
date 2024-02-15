@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.source="https://github.com/maritimeconnectivity/S
 WORKDIR /app
 
 # Copy the Spring Boot JAR file into the container
-COPY target/mcp-serviceregistry-core-0.0.7.jar /app/
+COPY target/mcp-serviceregistry-core-0.0.8.jar /app/
 
 # Create a modules path just in case
 ENV LOADER_PATH /modules
