@@ -118,7 +118,7 @@ var columnDefs = [{
     className: 'dt-body-center',
     render: function ( data, type, row ) {
         return (data ?
-            `<i class="fa-solid fa-file" style="color:green" onclick="downloadDoc(${data})"></i>`:
+            `<i class="fa-solid fa-file" style="color:green" onclick="downloadDoc(${'instanceEditPanel'}, ${data})"></i>`:
             `<i class="fa-solid xmark" style="color:red"></i>`);
     },
  }, {
@@ -142,6 +142,7 @@ $(() => {
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         serverSide: true,
+        processing: true,
         ajax: {
             type: "POST",
             url: "api/instances/dt",
@@ -151,12 +152,11 @@ $(() => {
                 return JSON.stringify(d);
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
-                hideLoader();
                 console.error(thrownError);
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -227,15 +227,7 @@ $(() => {
             selectedRows.every(function (rowIdx, tableLoop, rowLoop) {
                 api.instancesApi.deleteInstance(this.data()["id"], success, error);
             });
-        },
-        initComplete: (settings, json) => {
-            hideLoader();
         }
-    });
-
-    // Show the loader on processing
-    instancesTable.on( 'processing.dt', function(e, settings, processing) {
-        processing ? showLoader(false) : hideLoader();
     });
 
     // We also need to link the instance create/edit toggle buttons with the the
@@ -293,7 +285,7 @@ $(() => {
         var $modalDiv = $(e.delegateTarget);
         var selectedRow = instancesTable.row({selected : true}).data();
         if(selectedRow) {
-            downloadDoc(instancesTable.row({selected : true}).data()["instanceAsDocId"]);
+            downloadDoc($modalDiv, instancesTable.row({selected : true}).data()["instanceAsDocId"]);
         }
     });
 
@@ -548,7 +540,6 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
 
     // If we have any documents attached, first read them and then save
     if(uploadFiles && uploadFiles.length == 1) {
-        showLoader();
         // Initialise the File Reader
         encodeFileToBase64(uploadFiles[0])
             .then((attachment) => {
@@ -559,7 +550,7 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
                     'filecontentContentType': attachment.file.type,
                     'instanceId': rowData["id"]
                 };
-                saveInstanceThroughDatatables(rowData);
+                saveInstanceThroughDatatables($modalDiv, rowData);
             });
     }
     // Otherwise save directly using the datatables
@@ -571,33 +562,45 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
             rowData["instanceAsDoc"] = {};
             rowData["instanceAsDoc"]["id"] = rowData["instanceAsDocId"];
         }
-        saveInstanceThroughDatatables(rowData);
+        saveInstanceThroughDatatables($modalDiv, rowData);
     }
-    // Finally remove the loading from the dialog and hide it, with a small timeout
-    setTimeout(() => {
-        $modalDiv.removeClass('loading');
-        $modalDiv.modal("toggle");
-    }, 50);
 }
 
 /**
  * Performs the instance saving operation through the instances datatables
  * structure so that it table will also be updated on success.
  *
- * @param {Instance}      instance      The instance to bve saved through datatables
+ * @param {Component}   $modalDiv       The modal component performing the operation
+ * @param {Instance}    instance        The instance to bve saved through datatables
  */
-function saveInstanceThroughDatatables(instance) {
+function saveInstanceThroughDatatables($modalDiv, instance) {
     // And call back to the datatables to handle the create/update
     if(newInstance) {
         instancesTable.context[0].oInit.onAddRow(instancesTable,
                 instance,
-                (data) => { instancesTable.row.add(data).draw(false); },
-                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while saving the instance.")); hideLoader(); });
+                (data) => {
+                    instancesTable.row.add(data).draw(false);
+                    $modalDiv.removeClass('loading');
+                    $modalDiv.modal("toggle");
+                },
+                (response, status, more) => {
+                    showError(getErrorFromHeader(response, "Unknown error while saving the instance."));
+                    $modalDiv.removeClass('loading');
+                    $modalDiv.modal("toggle");
+                });
     } else {
         instancesTable.context[0].oInit.onEditRow(instancesTable,
                 instance,
-                (data,b,c,d,e) => { instancesTable.ajax.reload(); },
-                (response, status, more) => { showError(getErrorFromHeader(response, "Unknown error while updating the instance.")); hideLoader(); });
+                (data,b,c,d,e) => {
+                    instancesTable.ajax.reload();
+                    $modalDiv.removeClass('loading');
+                    $modalDiv.modal("toggle");
+                },
+                (response, status, more) => {
+                    showError(getErrorFromHeader(response, "Unknown error while updating the instance."));
+                    $modalDiv.removeClass('loading');
+                    $modalDiv.modal("toggle");
+                 });
     }
 }
 
