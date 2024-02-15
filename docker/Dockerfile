@@ -34,4 +34,4 @@ ENV CONFIG_DIR=/conf
 
 EXPOSE 8444
 
-CMD ["java", "-jar", "mcp-serviceregistry-core-0.0.7.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
+CMD ["java", "-jar", "mcp-serviceregistry-core-0.0.8.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
