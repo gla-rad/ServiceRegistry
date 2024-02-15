@@ -26,6 +26,7 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertitifateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpDeviceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
@@ -53,9 +54,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static java.util.function.Predicate.not;
 
 /**
  * The SECOM Discovery Service Controller.
@@ -249,10 +254,13 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
                                     .map(Strings::trimToNull)
                                     .orElse(null)
                     );
-                    // And append them to the search object
+                    // And append the valid ones to the search object
                     ((SearchObjectResultWithCert) searchObject).setCertificates(Optional.ofNullable(mcpEntity)
                             .map(McpEntityBase::getCertificates)
-                            .orElse(null));
+                            .orElseGet(Collections::emptyList)
+                            .stream()
+                            .filter(not(McpCertitifateDto::isRevoked))
+                            .collect(Collectors.toList()));
                 } catch (FeignException ex) {
                     log.error("Error while retrieving certificate for entity {}: {}",
                             searchObject.getInstanceId(),

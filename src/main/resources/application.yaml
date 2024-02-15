@@ -99,16 +99,12 @@ net:
         serviceregistry:
             allowedContentTypes: >-
                 application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
+            mir:
+                server-url: ${service.variable.mir.server.url}
             ledger:
                 server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
                 credentials: ${service.variable.ledger.server.credentials}
                 contract-address: ${service.variable.ledger.server.address}
-
-# The Feign Client configuration
-feign:
-    client:
-        mir:
-            url: ${service.variable.mir.server.url}
 
 # Local Service Configuration
 info:

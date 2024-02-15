@@ -40,10 +40,10 @@ import org.springframework.web.bind.annotation.PathVariable;
  * @see net.maritimeconnectivity.serviceregistry.config.FeignClientConfig
  */
 @Component
-@FeignClient(value = "mir", url = "${feign.client.mir.url:https://localhost:8443}")
+@FeignClient(value = "mir", url = "${net.maritimeconnectivity.serviceregistry.mir.server-url:http://localhost:8443/oidc/api}")
 public interface MirClient {
 
-    @GetMapping("/org/{org}/device/{mrn}")
+    @GetMapping("/oidc/api/org/{org}/device/{mrn}")
     McpDeviceDto getDeviceEntity(@PathVariable("org") String org, @PathVariable("mrn") String mrn);
 
     @GetMapping("/org/{org}/service/{mrn}/{version}")
