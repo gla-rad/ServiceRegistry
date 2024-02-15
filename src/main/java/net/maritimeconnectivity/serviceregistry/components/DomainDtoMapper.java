@@ -62,7 +62,7 @@ public class DomainDtoMapper<F, T> {
      * @return the mapped TO object datatables page
      */
     @Transactional
-    public DtPage<T> convertToDtPage(Page<F> page, DtPagingRequest dtPagingRequest, Class<T> clazz) {
+    public DtPage<T> convertToDtPage(Page<F> page, DtPagingRequest dtPagingRequest, Class<? extends T> clazz) {
         return new DtPage<>(this.convertToPage(page, clazz), dtPagingRequest);
     }
 
@@ -74,7 +74,7 @@ public class DomainDtoMapper<F, T> {
      * @return the mapped TO object page
      */
     @Transactional
-    public Page<T> convertToPage(Page<F> page, Class<T> clazz) {
+    public Page<T> convertToPage(Page<F> page, Class<? extends T> clazz) {
         return page.map(obj -> this.convertTo(obj, clazz));
     }
 
@@ -86,7 +86,7 @@ public class DomainDtoMapper<F, T> {
      * @return the mapped TO object list
      */
     @Transactional
-    public List<T> convertToList(List<F> list, Class<T> clazz) {
+    public List<T> convertToList(List<F> list, Class<? extends T> clazz) {
         return list.stream()
                 .map(obj -> this.convertTo(obj, clazz))
                 .collect(Collectors.toList());
@@ -100,7 +100,7 @@ public class DomainDtoMapper<F, T> {
      * @return the mapped TO object
      */
     @Transactional
-    public T convertTo(F fromObj, Class<T> clazz) {
+    public T convertTo(F fromObj, Class<? extends T> clazz) {
         return this.modelMapper.map(fromObj, clazz);
     }
 

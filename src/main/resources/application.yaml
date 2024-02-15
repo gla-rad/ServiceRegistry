@@ -48,10 +48,19 @@ spring:
                         authorization-grant-type: authorization_code
                         scope: web-origins,openid
                         redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+                    feign:
+                        client-id: ${service.variable.keycloak.client.id}
+                        client-secret: ${service.variable.keycloak.client.secret}
+                        client-name: Feign
+                        provider: feign
+                        authorization-grant-type: client_credentials
+                        scope: web-origins,openid
                 provider:
                     keycloak:
                         issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
                         user-name-attribute: preferred_username
+                    feign:
+                        token-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}/protocol/openid-connect/token
             resource-server:
                 jwt:
                     issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
@@ -94,6 +103,12 @@ net:
                 server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
                 credentials: ${service.variable.ledger.server.credentials}
                 contract-address: ${service.variable.ledger.server.address}
+
+# The Feign Client configuration
+feign:
+    client:
+        mir:
+            url: ${service.variable.mir.server.url}
 
 # Local Service Configuration
 info:
