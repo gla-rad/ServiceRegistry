@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
@@ -77,6 +78,9 @@ class SecomSearchServiceControllerTest {
 
     @MockBean
     private InstanceService instanceService;
+
+    @MockBean
+    private MirClient mirClient;
 
     // Test Variables
     private List<Instance> instances;
