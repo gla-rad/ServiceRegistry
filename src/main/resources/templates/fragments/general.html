@@ -140,20 +140,20 @@
                 </div>
                 <div class="modal-body">
                     <div class="">
-                        <table datatable id="attachmentsTable" class="table table-striped table-bordered table-sm row-border hover w-100">
+                        <table datatable id="attachmentsTable" class="table table-sm table-striped row-border hover w-100">
                         </table>
                         <br/>
                         <form id="attachmentForm">
                             <div class="row">
-                                <div class="col-8">
-                                    <div class="form-group">
+                                <div class="col-8 pt-2">
+                                    <div class="form-group pt-3">
                                         <input id="file-uploader-id" type="file" class="file" multiple>
                                     </div>
                                 </div>
                                 <div class="col-4">
                                     <div class="form-group">
                                         <label for="file-uploader-comment-id">Comment</label>
-                                        <textarea class="form-control" id="file-uploader-comment-id" rows="12" style="resize:none;"></textarea>
+                                        <textarea class="form-control" id="file-uploader-comment-id" rows="14" style="resize:none;"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -194,7 +194,7 @@
             </div>
         </footer>
     </div>
-    <div th:fragment="loader" id="pageLoader" class="loader-overlay">
+    <div th:fragment="loader" id="pageLoader" class="loader-overlay" style="display: none;">
         <div id="pageLoaderBackground" class="loader-overlay-background"></div>
         <div id="pageLoaderSpinner" class="loader-overlay-spinner">
             <div class="spinner-border text-dark" role="status" style="width: 5rem; height: 5rem;">

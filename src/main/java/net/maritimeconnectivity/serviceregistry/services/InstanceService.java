@@ -227,7 +227,7 @@ public class InstanceService {
 
         // Populate the save operation fields if required.
         // For new entries, and any that don't already have the organization ID
-        if(instance.getId() == null || instance.getOrganizationId() == null) {
+        if(instance.getId() == null || StringUtils.isBlank(instance.getOrganizationId())) {
             instance.setOrganizationId(this.userContext.getJwtToken()
                     .map(UserToken::getOrganisation)
                     .orElse(null));
