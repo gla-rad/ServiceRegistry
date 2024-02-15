@@ -126,138 +126,10 @@ sudo docker run -t -i --rm -p 8444:8444 -v /path/to/config-directory/on/machine:
 
 For more information please have a look at the MSR docker
 [overview.md](docker/overview.md) file.
+
 An example docker-profile YAML configuration can be found below:
 
 ```yaml
-server:
-    port: '8444'
-    servlet:
-        context-path: ${service.variable.contextPath}
-
-# Springboot Configuration
-spring:
-    application:
-        name: mcp-service-registry
-    jpa:
-        properties:
-            hibernate:
-                search:
-                    backend:
-                        lucene_version: LATEST
-                        directory:
-                            root: ./lucene/
-                        analysis:
-                            configurer: >-
-                                class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
-                    schema_management:
-                        strategy: create-or-update
-        generate-ddl: true
-        hibernate:
-            ddl-auto: update
-            show-sql: true
-    datasource:
-        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
-        username: ${service.variable.datasource.database.username}
-        password: ${service.variable.datasource.database.password}
-    flyway:
-        enabled: false
-        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
-        schemas: mcp_service_registry
-        user: ${service.variable.datasource.database.username}
-        password: ${service.variable.datasource.database.password}
-
-    # Keycloak Configuration
-    security:
-        oauth2:
-            client:
-                registration:
-                    keycloak:
-                        client-id: ${service.variable.keycloak.client.id}
-                        client-secret: ${service.variable.keycloak.client.secret}
-                        client-name: Keycloak
-                        provider: keycloak
-                        authorization-grant-type: authorization_code
-                        scope: web-origins,openid
-                        redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
-                    feign:
-                        client-id: ${service.variable.keycloak.client.id}
-                        client-secret: ${service.variable.keycloak.client.secret}
-                        client-name: Feign
-                        provider: feign
-                        authorization-grant-type: client_credentials
-                        scope: web-origins,openid
-                provider:
-                    keycloak:
-                        issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
-                        user-name-attribute: preferred_username
-                    feign:
-                        token-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}/protocol/openid-connect/token
-            resource-server:
-                jwt:
-                    issuer-uri: ${service.variable.keycloak.server.url}/auth/realms/${service.variable.keycloak.server.realm}
-
-# Management Endpoints
-management:
-    endpoint:
-        health:
-            show-details: when_authorized
-            probes:
-                enabled: true
-
-# Springdoc Configuration
-springdoc:
-    swagger-ui:
-        path: /swagger-ui.html
-        display-query-params: true
-        url: /v3/api-docs
-    packagesToScan: net.maritimeconnectivity.serviceregistry.controllers
-
-# Springdoc Swagger Configuration
-swagger:
-    title: Maritime Connectivity Platform Service Registry API
-    description: 'Maritime Connectivity Platform Service Registry, developed by the MCC MSR WG'
-    version: ${spring.application.version}
-    termsOfServiceUrl: 'null'
-    contactName: MCP Consortium
-    contactUrl: 'https://mcp.discourse.group/'
-    contactEmail: Nikolaos.Vastardis@gla-rad.org
-    license: Apache-2.0
-    licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
-
-# MCP Service Registry Configuration
-net:
-    maritimeconnectivity:
-        serviceregistry:
-            allowedContentTypes: >-
-                application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
-            ledger:
-                server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
-                credentials: ${service.variable.ledger.server.credentials}
-                contract-address: ${service.variable.ledger.server.address}
-
-# The Feign Client configuration
-feign:
-    client:
-        mir:
-            url: ${service.variable.mir.server.url}
-
-# Local Service Configuration
-info:
-    msr:
-        name: ${service.variable.info.name}
-        mrn: ${service.variable.info.mrn}'
-        url: ${service.variable.info.url}
-        operatorName: ${service.variable.info.operator.name}
-        operatorMrn: ${service.variable.info.operator.mrn}
-        operatorContact: ${service.variable.info.operator.contact}
-        operatorUrl: ${service.variable.info.operator.url}
-        copyright: 'Copyright © 2024 Maritime Connectivity Platform Consortium'
-        projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
-        profile: ${spring.profiles.active:test}
-
-eureka:
-    client:
-        enabled: false
 server:
     port: '8444'
     servlet:
@@ -380,7 +252,6 @@ info:
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
         profile: ${spring.profiles.active:test}
 
-# Eureka Client Config
 eureka:
     client:
         enabled: false
@@ -390,7 +261,7 @@ swagger:
     secomOpenApiConfig: 'openapi.json'
 ```
 
-In the last line of the configuration you can also see how you can provide an
+In the last line of the configuration you can also see how you can provide a
 SECOM OpenAPI configuration file. This will define how SpringDoc will also 
 generate the OpenAPI specification for the SECOM interfaces which are provided
 by the [SECOMLib](https://github.com/gla-rad/SECOMLib) library and are defined
@@ -398,16 +269,16 @@ using [JAX-RS](https://www.baeldung.com/jax-rs-spec-and-implementations).
 
 ## MIR Integration
 Another important point concerns the MCP MIR integration. This functionality
-is one of the latest features and allow the MSR to include the service instance
+is one of the latest features and allows the MSR to include the service instance
 certificates in the SECOM *search service* responses. These are retrieved 
 through internal calls to the MIR service, under OAuth2 authentication. In 
-terms of the implementation of this functionality, this is achieved simply
-using a Spring Feign client, which supports all types of MIR entity queries,
-such as services, devices, vessels, users and roles.
+terms of the implementation of this functionality, it is achieved simply by
+using a Spring Feign client, which supports all types of MIR entity queries
+(such as services, devices, vessels, users and roles).
 
-To allow these calls in the MIR, we first need to configure our Keycloak
+To allow these calls into the MIR, we first need to configure our Keycloak
 server in order to enable a service account for the MSR. This account 
-should then be updates with the required attributes i.e.
+should then be updated with the required attributes like:
 
 * **org** - containing the organisation ID (MRN) of the service, preferably the
 same as the MIR provider organisation
@@ -416,14 +287,16 @@ MSR to perform all operations
 * **mrn** - the MRN of the service registry
 
 Finally, we need to make sure the *mcp-client-template* scope is allocated by
-default to the Keycloak client entry, so that all the attributes mappers are
+default to the Keycloak client entry, so that all the attribute mappers are
 picked up correctly.
 
-On runtime, we need to provide the respective *application.yaml* property
-*net.maritimeconnectivity.serviceregistry.mir.server-url* with the api
-endpoint of the MIR and that should be it! Note that the service instances
-registered in the MIR and the MSR should match, i.e. they should have the same
-organisation and instance ID MRNs.
+On runtime, we need to provide the respective *application.yaml* property:
+
+**net.maritimeconnectivity.serviceregistry.mir.server-url** 
+
+with the api endpoint of the MIR and that should be it! Note that the service
+instances registered in the MIR and the MSR should match, i.e. they should have
+the same organisation and instance ID MRNs.
 
 ## Keycloak Policy Enforcer Configuration - Deprecated
 
