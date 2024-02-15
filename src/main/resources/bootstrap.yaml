@@ -28,7 +28,7 @@ service:
                 secret: ${KEYCLOAK_CLIENT_SECRET:secret}
         mir:
             server:
-                url: ${MCP_MIR_URL}
+                url: ${MCP_MIR_URL:http://localhost:8443/oidc/api}
         ledger:
             server:
                 host: ${MCP_LEDGER_HOST:localhost}
