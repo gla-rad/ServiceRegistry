@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.config;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
@@ -80,7 +81,7 @@ public class GlobalConfig {
         // Provide a configuration for all the mappings here to keep tidy     //
         // ================================================================== //
         // Create a map between the instances and the SECOM search result object
-        modelMapper.createTypeMap(Instance.class, SearchObjectResult.class)
+        modelMapper.createTypeMap(Instance.class, SearchObjectResultWithCert.class)
                 .implicitMappings()
                 .addMappings(mapper -> {
                     mapper.using(ctx -> Optional.of(ctx)

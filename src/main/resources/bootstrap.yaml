@@ -4,7 +4,7 @@ server:
 spring:
     application:
         name: mcp-service-registry
-        version: 0.0.6
+        version: 0.0.8
 
 # Pick up the service environment variables
 service:
@@ -26,6 +26,9 @@ service:
             client:
                 id: ${KEYCLOAK_CLIENT_ID:mcp_service_registry}
                 secret: ${KEYCLOAK_CLIENT_SECRET:secret}
+        mir:
+            server:
+                url: ${MCP_MIR_URL}
         ledger:
             server:
                 host: ${MCP_LEDGER_HOST:localhost}
