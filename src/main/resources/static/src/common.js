@@ -118,12 +118,16 @@ var attachmentsTable = undefined;
  */
 function loadFileUploader(instanceId, ajaxUrl, callback) {
     if(attachmentsTable) {
+        attachmentsTable.clear();
         attachmentsTable.destroy();
+        attachmentsTable = undefined;
+        //$('#attachmentsTable').empty();
     }
 
     // First populate the attachments datatable
     attachmentsTable = $('#attachmentsTable').DataTable({
         serverSide: true,
+        processing: true,
         ajax: {
             type: "POST",
             url: `${ajaxUrl}/dt?instanceId=${instanceId}`,
@@ -137,7 +141,7 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
             }
         },
         columns: attachmentsTableColumnDefs,
-        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12't>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -155,7 +159,7 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
             action: (e, dt, node, config) => {
                 var idx = dt.cell('.selected', 0).index();
                 var data = dt.row(idx.row).data();
-                downloadDoc(data["id"]);
+                downloadDoc($('#attachmentsPanel'), data["id"]);
             }
         }],
         onDeleteRow: function (datatable, selectedRows, success, error) {
@@ -189,7 +193,8 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
         if(!uploadFiles || uploadFiles.length == 0) {
             return;
         }
-        showLoader();
+        var $modalDiv = $('#attachmentsPanel');
+        $modalDiv.addClass('loading');
         encodeFilesToBase64(uploadFiles)
             .then((attachments) => {
                 var completedUploads = 0;
@@ -211,7 +216,7 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
                             if(completedUploads == attachments.length) {
                                 $("#attachmentForm").trigger("reset");
                                 attachmentsTable.ajax.reload();
-                                hideLoader();
+                                $modalDiv.removeClass('loading');
                             }
                         },
                         (response, status, more) => {
@@ -220,7 +225,7 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
                            if(completedUploads == attachments.length) {
                                $("#attachmentForm").trigger("reset");
                                attachmentsTable.ajax.reload();
-                               hideLoader();
+                               $modalDiv.removeClass('loading');
                            }
                            showError(getErrorFromHeader(response, "Error while trying to upload the attachment!"));
                         }
@@ -234,15 +239,16 @@ function loadFileUploader(instanceId, ajaxUrl, callback) {
  * Download the selected document ID from the server, decode the data from
  * the provided Base64 format.
  *
- * @param {number}      docId           The ID of the document to be opened
+ * @param {Component}   $modalDiv   The modal component performing the operation
+ * @param {number}      docId       The ID of the document to be opened
  */
-function downloadDoc(docId) {
-    showLoader();
+function downloadDoc($modalDiv, docId) {
+    $modalDiv.addClass('loading');
     api.docsApi.getDoc(docId, (doc) => {
         downloadFile(doc.name, doc.filecontentContentType, doc.filecontent);
-        hideLoader();
+        $modalDiv.removeClass('loading');
     }, (response, status, more) => {
-        hideLoader();
+        $modalDiv.removeClass('loading');
         showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
     });
 }

@@ -221,6 +221,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
 
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
+        processing: true,
         ajax: {
             url: `api/secom/v1/searchService`,
             type: 'POST',
@@ -241,15 +242,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         dom: "Brtip",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
-        responsive: true,
-        initComplete: (settings, json) => {
-            hideLoader();
-        }
-    });
-
-    // Show the loader on processing
-    instancesTable.on( 'processing.dt', function(e, settings, processing) {
-        processing ? showLoader(false) : hideLoader();;
+        responsive: true
     });
 
     // On an instance selection, draw the area on the map
@@ -278,6 +271,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
  */
 function destroyInstancesTable() {
     if (instancesTable) {
+        instancesTable.clear();
         instancesTable.destroy();
         instancesTable = undefined;
         $("#instancesTable").empty();
