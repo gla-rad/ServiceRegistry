@@ -53,8 +53,8 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_SERVICE_INTERFACE_PATH;
@@ -136,6 +136,8 @@ class SecomSearchServiceControllerTest {
             mcpCertitifateDto.setId(BigInteger.valueOf(i));
             mcpCertitifateDto.setCertificate("certificate");
             mcpCertitifateDto.setSerialNumber("serialNumber");
+            mcpCertitifateDto.setStart(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+            mcpCertitifateDto.setEnd(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
             mcpCertitifateDto.setRevoked(false);
             mcpServiceDto.setCertificates(Collections.singletonList(mcpCertitifateDto));
 
@@ -153,7 +155,7 @@ class SecomSearchServiceControllerTest {
      * using GeoJSON geometries.
      */
     @Test
-    void testSearchGeoJSON() throws Exception {
+    void testSearchGeoJSON() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
@@ -206,7 +208,7 @@ class SecomSearchServiceControllerTest {
      * result services.
      */
     @Test
-    void testSearchGeoJSONWithCerts() throws Exception {
+    void testSearchGeoJSONWithCerts() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
@@ -275,7 +277,7 @@ class SecomSearchServiceControllerTest {
      * using WKT geometries.
      */
     @Test
-    void testSearchWKT() throws Exception {
+    void testSearchWKT() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
@@ -327,7 +329,7 @@ class SecomSearchServiceControllerTest {
      * services.
      */
     @Test
-    void testSearchWKTWithCerts() throws Exception {
+    void testSearchWKTWithCerts() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();

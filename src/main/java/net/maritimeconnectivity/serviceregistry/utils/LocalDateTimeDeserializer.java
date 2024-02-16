@@ -18,8 +18,7 @@ package net.maritimeconnectivity.serviceregistry.utils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import org.springframework.boot.jackson.JsonComponent;
+import org.grad.secom.core.base.DateTimeDeSerializer;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -30,7 +29,7 @@ import java.time.ZoneId;
  * The LocalDateDeserializer Class.
  * <p/>
  * This deserializer is used to easily decode the timestamp format of the
- * date fields coming from the MIR. We should probably keep them into
+ * timestamp fields coming from the MIR. We should probably keep them into
  * LocalDateTime format in our end so using this utility makes this quite easy.
  * <p/>
  * Note that for serializing back these objects we should use the standard
@@ -39,12 +38,17 @@ import java.time.ZoneId;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 
-public class LocalDateTimeDeserializer extends JsonDeserializer<LocalDateTime> {
+public class LocalDateTimeDeserializer extends DateTimeDeSerializer {
 
     @Override
     public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
-        long timestamp = jsonParser.getLongValue();
-        return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        try {
+            long timestamp = jsonParser.getLongValue();
+            return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime();
+        } catch (IOException ex) {
+            // In case of errors, try the standard SECOM approach
+            return super.deserialize(jsonParser, deserializationContext);
+        }
     }
 
 }
