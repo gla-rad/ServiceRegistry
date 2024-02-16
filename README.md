@@ -270,7 +270,7 @@ using [JAX-RS](https://www.baeldung.com/jax-rs-spec-and-implementations).
 ## MIR Integration
 Another important point concerns the MCP MIR integration. This functionality
 is one of the latest features and allows the MSR to include the service instance
-certificates in the SECOM *search service* responses. These are retrieved 
+certificates in the SECOM *searchService* responses. These are retrieved 
 through internal calls to the MIR service, under OAuth2 authentication. In 
 terms of the implementation of this functionality, it is achieved simply by
 using a Spring Feign client, which supports all types of MIR entity queries
@@ -294,9 +294,10 @@ On runtime, we need to provide the respective *application.yaml* property:
 
 **net.maritimeconnectivity.serviceregistry.mir.server-url** 
 
-with the api endpoint of the MIR and that should be it! Note that the service
-instances registered in the MIR and the MSR should match, i.e. they should have
-the same organisation and instance ID MRNs.
+with the API endpoint of the MIR and that should be it! Note that for the MSR to
+successfully retrieve the corresponding certificates, the services registered 
+in the MIR and the service instances in the MSR should match, i.e. they should
+have the same organisation and instance ID MRNs.
 
 ## Keycloak Policy Enforcer Configuration - Deprecated
 
@@ -319,7 +320,7 @@ For this endpoint we have a resource registered in keycloak as follows:
   "ownerManagedAccess": false,
   "displayName": "API Instances Endpoint",
   "attributes": {},
-  "_id": <some-id>>,
+  "_id": <some-id>,
   "uris": [
     "/api/instances"
   ],
