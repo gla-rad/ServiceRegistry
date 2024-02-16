@@ -17,6 +17,13 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.mcp;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeDeserializer;
+import org.grad.secom.core.base.DateTimeSerializer;
+
+import java.time.LocalDateTime;
+
 /**
  * The MCP Entity Attribute Class.
  *
@@ -27,8 +34,12 @@ public class McpEntityAttribute {
     // Class Variables
     private String attributeName;
     private String attributeValue;
-    private String createdAt;
-    private String updatedAt;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdAt;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime updatedAt;
 
     /**
      * Gets attribute name.
@@ -71,7 +82,7 @@ public class McpEntityAttribute {
      *
      * @return the created at
      */
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -80,7 +91,7 @@ public class McpEntityAttribute {
      *
      * @param createdAt the created at
      */
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -89,7 +100,7 @@ public class McpEntityAttribute {
      *
      * @return the updated at
      */
-    public String getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
@@ -98,7 +109,7 @@ public class McpEntityAttribute {
      *
      * @param updatedAt the updated at
      */
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 }

@@ -85,8 +85,8 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
     @Autowired
     InstanceService instanceService;
 
-    @Autowired
-    Optional<MirClient> mirClient;
+    @Autowired(required = false)
+    MirClient mirClient;
 
     /**
      * Object Mapper from Domain to DTO.
@@ -235,12 +235,12 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
 
         // Careful cause depending on the configuration an MIR client might not
-        // be available.
-        if(this.mirClient.isPresent()) {
+        // be available. In those case the mirClient will be null.
+        if(this.mirClient != null) {
             for (SearchObjectResult searchObject : searchObjectResults) {
                 try {
                     // Retrieve the certificates from the MIR
-                    McpServiceDto mcpEntity = this.mirClient.get().getServiceEntity(
+                    McpServiceDto mcpEntity = this.mirClient.getServiceEntity(
                             Optional.of(searchObject)
                                     .map(SearchObjectResult::getOrganizationId)
                                     .map(Strings::trimToNull)
