@@ -18,7 +18,7 @@ explaining backgrounds and issues.
 The MCP Service Registry is built using the Java Springboot framework and
 required a PostgreSQL database with a PostGIS extension. More information 
 on how to download and install PostGIS can he found 
-[here](https://postgis.net/source/).
+[here](https://postgis.net/documentation/getting_started/).
 
 ## Database Configuration
 The service uses hibernate to initialise the database structure. The database
