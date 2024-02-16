@@ -17,9 +17,14 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.mcp;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import jakarta.validation.constraints.NotNull;
+import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeDeserializer;
+import org.grad.secom.core.base.DateTimeSerializer;
 
 import java.math.BigInteger;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,8 +46,12 @@ public abstract class McpEntityBase {
     private String idOrganization;
     @NotNull
     private String mrn;
-    private String createdAt;
-    private String updatedAt;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime createdAt;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime updatedAt;
     private List<McpCertitifateDto> certificates;
 
     /**
@@ -119,7 +128,7 @@ public abstract class McpEntityBase {
      *
      * @return the created at
      */
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -128,7 +137,7 @@ public abstract class McpEntityBase {
      *
      * @param createdAt the created at
      */
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 
@@ -137,7 +146,7 @@ public abstract class McpEntityBase {
      *
      * @return the updated at
      */
-    public String getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
@@ -146,7 +155,7 @@ public abstract class McpEntityBase {
      *
      * @param updatedAt the updated at
      */
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
 

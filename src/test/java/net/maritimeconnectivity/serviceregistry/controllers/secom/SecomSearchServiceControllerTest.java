@@ -21,6 +21,10 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertitifateDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.ResponseSearchObjectWithCert;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
@@ -30,7 +34,6 @@ import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
@@ -45,18 +48,20 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.*;
 
 import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 @ActiveProfiles("test")
@@ -74,7 +79,7 @@ class SecomSearchServiceControllerTest {
     private ObjectMapper objectMapper;
 
     @Autowired
-    public DomainDtoMapper searchObjectResultMapper;
+    public DomainDtoMapper<?,?> searchObjectResultMapper;
 
     @MockBean
     private InstanceService instanceService;
@@ -84,6 +89,7 @@ class SecomSearchServiceControllerTest {
 
     // Test Variables
     private List<Instance> instances;
+    private Map<String, McpServiceDto> mcpServiceDtos;
     private Pageable pageable;
 
     /**
@@ -96,6 +102,7 @@ class SecomSearchServiceControllerTest {
 
         // Initialise the instances list
         this.instances = new ArrayList<>();
+        this.mcpServiceDtos = new HashMap<>();
         for (long i = 0; i < 10; i++) {
             Instance instance = new Instance();
             instance.setId(i);
@@ -112,7 +119,28 @@ class SecomSearchServiceControllerTest {
             xml.setContent("<xml></xml>");
             instance.setInstanceAsXml(xml);
 
+            // Add the instance to the list
             this.instances.add(instance);
+
+            // Also create MIR entries for this instance
+            McpServiceDto mcpServiceDto = new McpServiceDto();
+            mcpServiceDto.setId(BigInteger.valueOf(i));
+            mcpServiceDto.setName(instance.getName());
+            mcpServiceDto.setInstanceVersion(instance.getVersion());
+            mcpServiceDto.setCertDomainName("*");
+            mcpServiceDto.setOidcAccessType("confidential");
+            mcpServiceDto.setOidcClientSecret(String.format("secret%d", i));
+            mcpServiceDto.setIdOrganization(String.format("urn:mrn:org:service:instance:%d", i));
+            // Add a certificate entry
+            McpCertitifateDto mcpCertitifateDto = new McpCertitifateDto();
+            mcpCertitifateDto.setId(BigInteger.valueOf(i));
+            mcpCertitifateDto.setCertificate("certificate");
+            mcpCertitifateDto.setSerialNumber("serialNumber");
+            mcpCertitifateDto.setRevoked(false);
+            mcpServiceDto.setCertificates(Collections.singletonList(mcpCertitifateDto));
+
+            // Add the MCP service DTO to the respective map
+            this.mcpServiceDtos.put(instance.getInstanceId(), mcpServiceDto);
         }
 
         // Create a pageable definition
@@ -173,6 +201,77 @@ class SecomSearchServiceControllerTest {
     /**
      * Test that we can search for instances using the SECOM discovery service
      * search API endpoint that supports Lucene queries and a paged result
+     * using GeoJSON geometries.  In this test, we also include the MIR
+     * integration which will include the certificates of the matching search
+     * result services.
+     */
+    @Test
+    void testSearchGeoJSONWithCerts() throws Exception {
+        // Create the search filter object
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setName("Test");
+        searchFilterObject.setQuery(searchParameters);
+        searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the service call for creating a new instance
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
+        doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any(), any());
+        doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
+
+        // Perform the web request
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
+                        .queryParam("page", 0)
+                        .queryParam("pageSize", Integer.MAX_VALUE)
+                        .build())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ResponseSearchObjectWithCert.class)
+                .consumeWith(response -> {
+                    ResponseSearchObjectWithCert result = response.getResponseBody();
+                    assertNotNull(result);
+                    assertNotNull(result.getSearchServiceResult());
+                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
+
+                    // Test each of the result entries
+                    for(SearchObjectResultWithCert searchObjectResult : result.getSearchServiceResult()) {
+                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                        assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
+                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
+
+                        // Now also check the certificates
+                        assertNotNull((searchObjectResult).getCertificates());
+                        assertEquals(1, (searchObjectResult).getCertificates().size());
+
+                        // Try to compare the MIR/MSR certificate responses
+                        final McpCertitifateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
+                        final McpCertitifateDto msrResponse = searchObjectResult.getCertificates().getFirst();
+                        assertEquals(mirResponse.getId(), msrResponse.getId());
+                        assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
+                        assertEquals(mirResponse.getStart(), msrResponse.getStart());
+                        assertEquals(mirResponse.getEnd(), msrResponse.getEnd());
+                        assertEquals(mirResponse.getSerialNumber(), msrResponse.getSerialNumber());
+                        assertEquals(mirResponse.getRevokedAt(), msrResponse.getRevokedAt());
+                        assertEquals(mirResponse.getRevokeReason(), msrResponse.getRevokeReason());
+                        assertEquals(mirResponse.isRevoked(), msrResponse.isRevoked());
+                    }
+                });
+    }
+
+    /**
+     * Test that we can search for instances using the SECOM discovery service
+     * search API endpoint that supports Lucene queries and a paged result
      * using WKT geometries.
      */
     @Test
@@ -219,4 +318,74 @@ class SecomSearchServiceControllerTest {
                     }
                 });
     }
+
+    /**
+     * Test that we can search for instances using the SECOM discovery service
+     * search API endpoint that supports Lucene queries and a paged result
+     * using WKT geometries. In this test, we also include the MIR integration
+     * which will include the certificates of the matching search result
+     * services.
+     */
+    @Test
+    void testSearchWKTWithCerts() throws Exception {
+        // Create the search filter object
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setName("Test");
+        searchFilterObject.setQuery(searchParameters);
+        searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the service calls for creating a new instance
+        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
+        doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
+
+        // Perform the web request
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
+                        .queryParam("page", 0)
+                        .queryParam("pageSize", Integer.MAX_VALUE)
+                        .build())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(ResponseSearchObjectWithCert.class)
+                .consumeWith(response -> {
+                    ResponseSearchObjectWithCert result = response.getResponseBody();
+                    assertNotNull(result);
+                    assertNotNull(result.getSearchServiceResult());
+                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
+
+                    // Test each of the result entries
+                    for(SearchObjectResultWithCert searchObjectResult : result.getSearchServiceResult()) {
+                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                        assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
+                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
+
+                        // Now also check the certificates
+                        assertNotNull(searchObjectResult.getCertificates());
+                        assertEquals(1, (searchObjectResult).getCertificates().size());
+
+                        // Try to compare the MIR/MSR certificate responses
+                        final McpCertitifateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
+                        final McpCertitifateDto msrResponse = searchObjectResult.getCertificates().getFirst();
+                        assertEquals(mirResponse.getId(), msrResponse.getId());
+                        assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
+                        assertEquals(mirResponse.getStart(), msrResponse.getStart());
+                        assertEquals(mirResponse.getEnd(), msrResponse.getEnd());
+                        assertEquals(mirResponse.getSerialNumber(), msrResponse.getSerialNumber());
+                        assertEquals(mirResponse.getRevokedAt(), msrResponse.getRevokedAt());
+                        assertEquals(mirResponse.getRevokeReason(), msrResponse.getRevokeReason());
+                        assertEquals(mirResponse.isRevoked(), msrResponse.isRevoked());
+                    }
+                });
+    }
+
 }

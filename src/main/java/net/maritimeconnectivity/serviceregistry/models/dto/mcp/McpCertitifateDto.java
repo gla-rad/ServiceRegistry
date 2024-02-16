@@ -17,8 +17,13 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.mcp;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeDeserializer;
+import org.grad.secom.core.base.DateTimeSerializer;
+
 import java.math.BigInteger;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * The MCP Certificate DTO Class.
@@ -32,11 +37,17 @@ public class McpCertitifateDto {
 
     private BigInteger id;
     private String certificate;
-    private Date start;
-    private Date end;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime start;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime end;
     private String serialNumber;
     private boolean revoked;
-    private Date revokedAt;
+    @JsonSerialize(using = DateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    private LocalDateTime revokedAt;
     private String revokeReason;
 
     /**
@@ -80,7 +91,7 @@ public class McpCertitifateDto {
      *
      * @return the start
      */
-    public Date getStart() {
+    public LocalDateTime getStart() {
         return start;
     }
 
@@ -89,7 +100,7 @@ public class McpCertitifateDto {
      *
      * @param start the start
      */
-    public void setStart(Date start) {
+    public void setStart(LocalDateTime start) {
         this.start = start;
     }
 
@@ -98,7 +109,7 @@ public class McpCertitifateDto {
      *
      * @return the end
      */
-    public Date getEnd() {
+    public LocalDateTime getEnd() {
         return end;
     }
 
@@ -107,7 +118,7 @@ public class McpCertitifateDto {
      *
      * @param end the end
      */
-    public void setEnd(Date end) {
+    public void setEnd(LocalDateTime end) {
         this.end = end;
     }
 
@@ -152,7 +163,7 @@ public class McpCertitifateDto {
      *
      * @return the revoked at
      */
-    public Date getRevokedAt() {
+    public LocalDateTime getRevokedAt() {
         return revokedAt;
     }
 
@@ -161,7 +172,7 @@ public class McpCertitifateDto {
      *
      * @param revokedAt the revoked at
      */
-    public void setRevokedAt(Date revokedAt) {
+    public void setRevokedAt(LocalDateTime revokedAt) {
         this.revokedAt = revokedAt;
     }
 
