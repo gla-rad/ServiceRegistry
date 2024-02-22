@@ -33,7 +33,7 @@ import java.time.LocalDateTime;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class McpCertitifateDto {
+public class McpCertificateDto {
 
     private BigInteger id;
     private String certificate;
