@@ -26,8 +26,7 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
-import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertitifateDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpDeviceDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
@@ -259,7 +258,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
                             .map(McpEntityBase::getCertificates)
                             .orElseGet(Collections::emptyList)
                             .stream()
-                            .filter(not(McpCertitifateDto::isRevoked))
+                            .filter(not(McpCertificateDto::isRevoked))
                             .collect(Collectors.toList()));
                 } catch (FeignException ex) {
                     log.error("Error while retrieving certificate for entity {}: {}",
