@@ -21,7 +21,7 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
-import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertitifateDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.ResponseSearchObjectWithCert;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
@@ -132,14 +132,14 @@ class SecomSearchServiceControllerTest {
             mcpServiceDto.setOidcClientSecret(String.format("secret%d", i));
             mcpServiceDto.setIdOrganization(String.format("urn:mrn:org:service:instance:%d", i));
             // Add a certificate entry
-            McpCertitifateDto mcpCertitifateDto = new McpCertitifateDto();
-            mcpCertitifateDto.setId(BigInteger.valueOf(i));
-            mcpCertitifateDto.setCertificate("certificate");
-            mcpCertitifateDto.setSerialNumber("serialNumber");
-            mcpCertitifateDto.setStart(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-            mcpCertitifateDto.setEnd(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
-            mcpCertitifateDto.setRevoked(false);
-            mcpServiceDto.setCertificates(Collections.singletonList(mcpCertitifateDto));
+            McpCertificateDto mcpCertificateDto = new McpCertificateDto();
+            mcpCertificateDto.setId(BigInteger.valueOf(i));
+            mcpCertificateDto.setCertificate("certificate");
+            mcpCertificateDto.setSerialNumber("serialNumber");
+            mcpCertificateDto.setStart(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+            mcpCertificateDto.setEnd(LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS));
+            mcpCertificateDto.setRevoked(false);
+            mcpServiceDto.setCertificates(Collections.singletonList(mcpCertificateDto));
 
             // Add the MCP service DTO to the respective map
             this.mcpServiceDtos.put(instance.getInstanceId(), mcpServiceDto);
@@ -257,8 +257,8 @@ class SecomSearchServiceControllerTest {
                         assertEquals(1, (searchObjectResult).getCertificates().size());
 
                         // Try to compare the MIR/MSR certificate responses
-                        final McpCertitifateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final McpCertitifateDto msrResponse = searchObjectResult.getCertificates().getFirst();
+                        final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
+                        final McpCertificateDto msrResponse = searchObjectResult.getCertificates().getFirst();
                         assertEquals(mirResponse.getId(), msrResponse.getId());
                         assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
                         assertEquals(mirResponse.getStart(), msrResponse.getStart());
@@ -376,8 +376,8 @@ class SecomSearchServiceControllerTest {
                         assertEquals(1, (searchObjectResult).getCertificates().size());
 
                         // Try to compare the MIR/MSR certificate responses
-                        final McpCertitifateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final McpCertitifateDto msrResponse = searchObjectResult.getCertificates().getFirst();
+                        final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
+                        final McpCertificateDto msrResponse = searchObjectResult.getCertificates().getFirst();
                         assertEquals(mirResponse.getId(), msrResponse.getId());
                         assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
                         assertEquals(mirResponse.getStart(), msrResponse.getStart());

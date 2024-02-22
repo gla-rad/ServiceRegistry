@@ -52,7 +52,7 @@ public abstract class McpEntityBase {
     @JsonSerialize(using = DateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime updatedAt;
-    private List<McpCertitifateDto> certificates;
+    private List<McpCertificateDto> certificates;
 
     /**
      * Instantiates a new Mcp entity dto.
@@ -164,7 +164,7 @@ public abstract class McpEntityBase {
      *
      * @return the certificates
      */
-    public List<McpCertitifateDto> getCertificates() {
+    public List<McpCertificateDto> getCertificates() {
         return certificates;
     }
 
@@ -173,7 +173,7 @@ public abstract class McpEntityBase {
      *
      * @param certificates the certificates
      */
-    public void setCertificates(List<McpCertitifateDto> certificates) {
+    public void setCertificates(List<McpCertificateDto> certificates) {
         this.certificates = certificates;
     }
 
