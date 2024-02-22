@@ -16,7 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.secom;
 
-import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertitifateDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import org.grad.secom.core.models.SearchObjectResult;
 
 import java.util.List;
@@ -34,14 +34,14 @@ import java.util.List;
 public class SearchObjectResultWithCert extends SearchObjectResult {
 
     // Class Variables
-    List<McpCertitifateDto> certificates;
+    List<McpCertificateDto> certificates;
 
     /**
      * Gets certificates.
      *
      * @return the certificates
      */
-    public List<McpCertitifateDto> getCertificates() {
+    public List<McpCertificateDto> getCertificates() {
         return certificates;
     }
 
@@ -50,7 +50,7 @@ public class SearchObjectResultWithCert extends SearchObjectResult {
      *
      * @param certificates the certificates
      */
-    public void setCertificates(List<McpCertitifateDto> certificates) {
+    public void setCertificates(List<McpCertificateDto> certificates) {
         this.certificates = certificates;
     }
 
