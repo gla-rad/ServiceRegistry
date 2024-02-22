@@ -42,6 +42,7 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.firewall.HttpFirewall;
@@ -176,6 +177,8 @@ class SpringSecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http,
                                            ClientRegistrationRepository clientRegistrationRepository,
                                            RestTemplate restTemplate) throws Exception {
+        // Register the CORS preflight filter
+        http.addFilterBefore(new SimpleCorsFilter(), ChannelProcessingFilter.class);
         // Authenticate through configured OpenID Provider
         http.oauth2Login(login -> login
                 .loginPage("/oauth2/authorization/keycloak")
