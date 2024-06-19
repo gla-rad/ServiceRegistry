@@ -23,15 +23,18 @@ on how to download and install PostGIS can he found
 ## Database Configuration
 The service uses hibernate to initialise the database structure. The database
 connection parameters such as the URL and username/password should be provided
-in the *application.yaml* file found in the resources' folder. Here
+in the *bootstrap.yaml* file found in the resources' folder. Here
 is an example:
 
 ```yaml
-spring:
-    datasource:
-        url: 'jdbc:postgresql://localhost:5432/mcp_service_registry'
-        username: sysadmin
-        password: sysadmin
+service:
+    variable:
+        contextPath: ${CONTEXT_PATH:}
+        datasource:
+            database:
+                name: ${DATABASE_NAME:mcp_service_registry}
+                username: ${DATABASE_USERNAME:admin}
+                password: ${DATABASE_PASSWORD:admin}
 ```
 
 To create a local database for development/testing you should install a
