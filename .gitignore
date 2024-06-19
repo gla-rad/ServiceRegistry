@@ -40,3 +40,6 @@ build/
 ### macOS ###
 .DS_Store
 
+### Skip certs ###
+/certs/
+
