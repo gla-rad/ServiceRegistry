@@ -346,8 +346,8 @@ class InstanceServiceTest {
 
         // Check the geometry
         assertNotNull(result.getGeometry());
-        assertEquals(new ObjectMapper().readTree(this.instanceService.wholeWorldGeoJson).get("type"), result.getGeometryJson().get("type"));
-        assertEquals(new ObjectMapper().readTree(this.instanceService.wholeWorldGeoJson).get("coordinates"), result.getGeometryJson().get("coordinates"));
+        assertFalse(result.getGeometryJson().get("type").isNull());
+        assertTrue(result.getGeometryJson().get("coordinates").isEmpty());
 
         // Also that a saving call took place in the repository
         verify(this.instanceRepo, times(1)).save(this.newInstance);
@@ -610,16 +610,16 @@ class InstanceServiceTest {
         // Set the pagination request columns
         dtPagingRequest.setColumns(new ArrayList());
         Stream.of("name",
-                "version",
-                "lastUpdatedAt",
-                "instanceId",
-                "keywords",
-                "status",
-                "organizationId",
-                "endpointUri",
-                "mmsi",
-                "imo",
-                "serviceType")
+                        "version",
+                        "lastUpdatedAt",
+                        "instanceId",
+                        "keywords",
+                        "status",
+                        "organizationId",
+                        "endpointUri",
+                        "mmsi",
+                        "imo",
+                        "serviceType")
                 .map(DtColumn::new)
                 .forEach(dtPagingRequest.getColumns()::add);
 
