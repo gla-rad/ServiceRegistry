@@ -18,7 +18,6 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
@@ -53,6 +52,7 @@ import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
 import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
 import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.util.GeometryCombiner;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
@@ -167,16 +167,6 @@ public class InstanceService {
     };
 
     /**
-     * Definition of the whole world area in GeoJSON.
-     */
-    protected String wholeWorldGeoJson = "{\n" +
-            "  \"type\": \"Polygon\",\n" +
-            "  \"coordinates\": [\n" +
-            "    [[-180, -90], [-180, 90], [180, 90], [180, -90], [-180, -90]]\n" +
-            "  ]\n" +
-            "}";
-
-    /**
      * Allow a common G1128 Utils definitions for the G1128 Instances.
      */
     protected G1128Utils<ServiceInstance> g1128SIUtils = new G1128Utils<>(ServiceInstance.class);
@@ -219,10 +209,10 @@ public class InstanceService {
         // First, validate the object
         this.validateInstanceForSave(instance);
 
-        // Don't accept empty geometry value, set whole earth coverage
+        // Don't accept empty geometry value, set empty geometries
         if (instance.getGeometry() == null) {
-            log.debug("Setting whole-earth coverage");
-            instance.setGeometryJson(new ObjectMapper().readTree(wholeWorldGeoJson));
+            log.debug("Setting empty geometry coverage");
+            instance.setGeometryJson(GeometryJSONConverter.convertFromGeometry(new GeometryFactory().createEmpty(0)));
         }
 
         // Populate the save operation fields if required.
@@ -343,7 +333,7 @@ public class InstanceService {
     public Instance findByDomainIdAndVersion(String domainId, String version) throws DataNotFoundException {
         log.debug("Request to get Instance by domain id {} and version {}", domainId, version);
         return this.instanceRepo.findByDomainIdAndVersionEagerRelationships(domainId, version)
-            .orElseThrow(() -> new DataNotFoundException("No instance found for the provided domain ID and version", null));
+                .orElseThrow(() -> new DataNotFoundException("No instance found for the provided domain ID and version", null));
     }
 
     /**
