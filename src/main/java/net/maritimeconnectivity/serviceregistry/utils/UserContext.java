@@ -26,6 +26,8 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -56,15 +58,29 @@ public class UserContext {
 	 *
 	 * @return the JWT string if it exists
 	 */
-	public  Optional<String> getJwtString() {
+	public Optional<String> getJwtString() {
 		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		return Optional.ofNullable(authentication)
-				.filter(OAuth2AuthenticationToken.class::isInstance)
-				.map(OAuth2AuthenticationToken.class::cast)
-				.map(t -> clientService.loadAuthorizedClient(t.getAuthorizedClientRegistrationId(), t.getName()))
-				.map(OAuth2AuthorizedClient.class::cast)
-				.map(OAuth2AuthorizedClient::getAccessToken)
-				.map(OAuth2AccessToken::getTokenValue);
+
+		// Read the JWT token for different cases
+		final Optional<String> jwtString;
+		if (authentication instanceof OAuth2AuthenticationToken) {
+			jwtString = Optional.of(authentication)
+					.map(OAuth2AuthenticationToken.class::cast)
+					.map(t -> clientService.loadAuthorizedClient(t.getAuthorizedClientRegistrationId(), t.getName()))
+					.map(OAuth2AuthorizedClient.class::cast)
+					.map(OAuth2AuthorizedClient::getAccessToken)
+					.map(OAuth2AccessToken::getTokenValue);
+		} else if (authentication instanceof JwtAuthenticationToken) {
+			jwtString = Optional.of(authentication)
+					.map(JwtAuthenticationToken.class::cast)
+					.map(JwtAuthenticationToken::getToken)
+					.map(Jwt::getTokenValue);
+		} else {
+			jwtString = Optional.empty();
+		}
+
+		// And return what we found
+		return jwtString;
 	}
 
 	/**
@@ -73,15 +89,7 @@ public class UserContext {
 	 * @return the JWT token if it exists
 	 */
 	public Optional<UserToken> getJwtToken() {
-		final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		return Optional.ofNullable(authentication)
-				.filter(OAuth2AuthenticationToken.class::isInstance)
-				.map(OAuth2AuthenticationToken.class::cast)
-				.map(t -> clientService.loadAuthorizedClient(t.getAuthorizedClientRegistrationId(), t.getName()))
-				.map(OAuth2AuthorizedClient.class::cast)
-				.map(OAuth2AuthorizedClient::getAccessToken)
-				.map(OAuth2AccessToken::getTokenValue)
-				.map(this.jwtTokenUtility::getTokenFromString);
+		return this.getJwtString().map(this.jwtTokenUtility::getTokenFromString);
 	}
 
 }
