@@ -173,9 +173,8 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
                 query = this.addToQuery(query, "unlocode", searchFilterObject.getQuery().getUnlocode(), BooleanOperator.AND);
             }
 
-            // Handle the endpoint URI filter
-            if (Objects.nonNull(searchFilterObject.getQuery().getEndpointUri())) {
-
+            // Handle the endpoint URI filter - make sure it's not empty
+            if (Objects.nonNull(searchFilterObject.getQuery().getEndpointUri()) && Strings.isNotBlank(searchFilterObject.getQuery().getEndpointUri().getPath())) {
                 query = this.addToQuery(query, "endpointUri", searchFilterObject.getQuery().getEndpointUri().toString(), BooleanOperator.AND);
             }
 
