@@ -219,13 +219,8 @@
 		<!-- SECOM -->
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-core-jakarta</artifactId>
-			<version>0.0.38</version>
-		</dependency>
-		<dependency>
-			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-springboot3</artifactId>
-			<version>0.0.38</version>
+			<version>0.0.49</version>
 		</dependency>
 
 		<!-- G-1128 Schemas -->
