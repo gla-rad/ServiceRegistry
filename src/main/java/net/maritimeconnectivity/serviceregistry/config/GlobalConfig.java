@@ -20,6 +20,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
+import org.apache.commons.lang3.StringUtils;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.locationtech.jts.geom.Geometry;
@@ -84,6 +85,12 @@ public class GlobalConfig {
         modelMapper.createTypeMap(Instance.class, SearchObjectResultWithCert.class)
                 .implicitMappings()
                 .addMappings(mapper -> {
+                    mapper.using(ctx -> Optional.of(ctx)
+                                    .map(MappingContext::getSource)
+                                    .map(Iterable.class::cast)
+                                    .map(kl -> String.join(",", kl))
+                                    .orElse(null))
+                            .map(Instance::getKeywords, SearchObjectResult::setKeywords);
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .map(Xml.class::cast)
