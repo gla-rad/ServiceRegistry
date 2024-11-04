@@ -270,6 +270,21 @@ generate the OpenAPI specification for the SECOM interfaces which are provided
 by the [SECOMLib](https://github.com/gla-rad/SECOMLib) library and are defined
 using [JAX-RS](https://www.baeldung.com/jax-rs-spec-and-implementations).
 
+## Lucene Indexing
+The Service Registry is using Lucene to index its database entries in the
+background. This was preferred as opposed to Elasticsearch, so that the service
+can be hosted in any kind of platform. The downside however, is that it requires
+a local directory to store its indexes in. In the cases of a major Lucene
+upgrade, the old indexes may become out-of-date and the previous directory will
+need to be manually
+[upgraded](https://lucene.apache.org/core/9_8_0//core/org/apache/lucene/index/IndexUpgrader.html)
+or completely removed (in this case a new set of indexes will be generated, but
+this might take a while).
+
+This behaviour is expected and on any major Lucene upgrade - if the current 
+deployment is using persistent indexes - and it is suggested that the **index
+directory is regenerated**.
+
 ## MIR Integration
 Another important point concerns the MCP MIR integration. This functionality
 is one of the latest features and allows the MSR to include the service instance
