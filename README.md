@@ -317,6 +317,21 @@ successfully retrieve the corresponding certificates, the services registered
 in the MIR and the service instances in the MSR should match, i.e. they should
 have the same organisation and instance ID MRNs.
 
+## OpenAPI Documentation
+
+The API documentation for MSR is provided using **OpenAPI** with a Swagger UI interface. This documentation allows developers to explore, test, and integrate with the API seamlessly.
+
+Swagger UI URL: **%MSR_SERVER_URL%/swagger-ui/index.html**
+
+And here %MSR_SERVER_URL% is an MSR endpoint, e.g., http://localhost:8444 for local dev environment.
+
+For SECOM service search API, you need to type in '/api/secom/openapi.json' in the swagger explore field of the Swagger UI page.
+
+#### **Accessing the API Documentation**
+You can view and interact with the API documentation using the following URL:
+
+👉 [API Documentation URL](https://msr-test.maritimeconnectivity.net/swagger-ui/index.html)
+
 ## Keycloak Policy Enforcer Configuration - Deprecated
 
 Please note that for greater access management granularity, in Springboot 2 the
