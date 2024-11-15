@@ -327,11 +327,6 @@ And here %MSR_SERVER_URL% is an MSR endpoint, e.g., http://localhost:8444 for lo
 
 For SECOM service search API, you need to type in '/api/secom/openapi.json' in the swagger explore field of the Swagger UI page.
 
-#### **Accessing the API Documentation**
-You can view and interact with the API documentation using the following URL:
-
-👉 [API Documentation URL](https://msr-test.maritimeconnectivity.net/swagger-ui/index.html)
-
 ## Keycloak Policy Enforcer Configuration - Deprecated
 
 Please note that for greater access management granularity, in Springboot 2 the
