@@ -71,7 +71,6 @@ import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Service Implementation for managing Instance.
@@ -147,7 +146,7 @@ public class InstanceService {
             "endpointUri",
             "mmsi",
             "imo",
-            "serviceType",
+            "serviceTypes",
             "dataProductType",
             "designId",
             "specificationId"
@@ -158,8 +157,7 @@ public class InstanceService {
             "lastUpdatedAt",
             "comment",
             "instanceId",
-            "keywords",
-            "serviceType"
+            "keywords"
     };
 
     /**
@@ -495,7 +493,7 @@ public class InstanceService {
         instance.setEndpointUri(serviceInstance.getEndpoint());
         instance.setMmsi(serviceInstance.getMMSI());
         instance.setImo(serviceInstance.getIMO());
-        instance.setServiceType(serviceInstance.getServiceTypes());
+        instance.setServiceTypes(serviceInstance.getServiceTypes());
         instance.setUnlocode(Optional.of(serviceInstance)
                 .map(ServiceInstance::getCoversAreas)
                 .map(CoverageInfo::getCoversAreasAndUnLoCodes)

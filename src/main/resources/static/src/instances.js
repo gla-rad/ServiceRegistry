@@ -28,7 +28,7 @@ var columnDefs = [{
     data: "version",
     title: "Version",
 }, {
-    data: "serviceType",
+    data: "serviceTypes",
     title: "Service Type",
 }, {
     data: "dataProductType",
@@ -334,9 +334,17 @@ $(() => {
         }, 50);
     });
 
+    // Also initialise the service type type multi-select
+    $('#serviceTypes').select2({
+        placeholder: "Service Types",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
     // Also initialise the data product type multi-select
     $('#dataProductType').select2({
-        placeholder: "Data Product Type",
+        placeholder: "Data Product Types",
         theme: "bootstrap-5",
         selectionCssClass: 'select2--small',
         dropdownCssClass: 'select2--small'
@@ -723,7 +731,7 @@ function alignInstanceData(rowData, field, value, columnDefs){
         if (field === 'id'){
             rowData[field] = parseInt(value);
         }
-        else if(["keywords", "serviceType", "unlocode"].includes(field)) {
+        else if(["keywords", "serviceTypes", "unlocode"].includes(field)) {
             rowData[field] = value.split(",");
         }
         else if( field === "designs") {

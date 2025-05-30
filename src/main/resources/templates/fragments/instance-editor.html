@@ -102,27 +102,33 @@
                         </div>
                         <div style="clear:both;"></div>
                     </div>
-                    <div style="margin-left: initial;margin-right: initial;"
+                    <div style="margin-left: initial;margin-right: initial; margin-bottom: 2px;"
                          class="form-group row"
-                         id="editor-row-serviceType">
+                         id="editor-row-serviceTypes">
                         <div class="col-sm-3 col-md-3 col-lg-3 text-right"
                              style="padding-top:4px;">
-                            <label for="serviceType" class="col-form-label col-form-label-sm">Service Type:</label>
+                            <label for="serviceTypes" class="col-form-label col-form-label-sm">Service Type:</label>
                         </div>
                         <div class="col-sm-8 col-md-8 col-lg-8">
-                            <input class="form-control form-control-sm"
-                                   type="text" id="serviceType"
-                                   pattern=".*"
-                                   title="Type of service"
-                                   name="Service Type" step=""
-                                   min="" max="" value=""
-                                   placeholder="Type of the service"
-                                   data-special="" data-errormsg=""
-                                   data-uniquemsg=""
-                                   data-unique="false" readonly=""
-                                   data-g1128="true"
-                                   required
-                                   style="overflow:hidden;">
+                            <select id="serviceTypes" class="form-select form-select-sm" multiple>
+                                <option value="MS_1">MS 1 - VTS Information service (INS)</option>
+                                <option value="MS_2">MS 2 - VTS Navigational assistance service (NAS)</option>
+                                <option value="MS_3">MS 3 - Traffic organization service (TOS)</option>
+                                <option value="MS_4">MS 4 - Port support service (PSS)</option>
+                                <option value="MS_5">MS 5 - Maritime safety information (MSI) service</option>
+                                <option value="MS_6">MS 6 - Pilotage service</option>
+                                <option value="MS_7">MS 7 - Tug service</option>
+                                <option value="MS_8">MS 8 - Vessel shore reporting</option>
+                                <option value="MS_9">MS 9 - Telemedical assistance service (TMAS)</option>
+                                <option value="MS_10">MS 10 - Maritime assistance service (MAS)</option>
+                                <option value="MS_11">MS 11 - Nautical chart service</option>
+                                <option value="MS_12">MS 12 - Nautical publications service</option>
+                                <option value="MS_13">MS 13 - Ice navigation service</option>
+                                <option value="MS_14">MS 14 - Meteorological information service</option>
+                                <option value="MS_15">MS 15 - Real-time hydrographic and environmental information services</option>,
+                                <option value="MS_16">MS 16 - Search and rescue (SAR) service</option>
+                                <option value="OTHER">Other</option>
+                            </select>
                         </div>
                         <div style="clear:both;"></div>
                     </div>
@@ -147,8 +153,9 @@
                                 <option value="S126">S-126 Marine Physical Environment</option>
                                 <option value="S127">S-127 Marine Traffic Management</option>
                                 <option value="S128">S-128 Catalogue of Nautical Products</option>
-                                <option value="S129">"-129 Under Keel Clearance Management (UKCM)</option>
+                                <option value="S129">S-129 Under Keel Clearance Management (UKCM)</option>
                                 <option value="S131">S-131 Marine Harbour Infrastructure</option>
+                                <option value="S201">S-201 Aids To Navigation Information</option>,
                                 <option value="S210">S-210 Inter-VTS Exchange Format</option>,
                                 <option value="S211">S-211 Port Call Message Format</option>
                                 <option value="S212">S-212 VTS Digital Information Service</option>
