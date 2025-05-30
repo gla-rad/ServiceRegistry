@@ -17,9 +17,10 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
 import org.apache.commons.io.IOUtils;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageInfo;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.CoverageInfo;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -45,7 +46,7 @@ class G1128UtilsTest {
     @BeforeEach
     void setup() {
         this.serviceInstanceXml = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
-                "<serviceInstance xmlns=\"http://iala-aism.org/g1128/v1.3/ServiceInstanceSchema.xsd\" xmlns:ns2=\"http://iala-aism.org/g1128/v1.3/ServiceSpecificationSchema.xsd\">\n" +
+                "<serviceInstance xmlns=\"http://iala-aism.org/g1128/v1.7/ServiceInstanceSchema.xsd\">\n" +
                 "    <id>org.test.serviceInstance.0.0.1</id>\n" +
                 "    <version>0.0.1TEST</version>\n" +
                 "    <name>Service Instance Name</name>\n" +
@@ -55,7 +56,7 @@ class G1128UtilsTest {
                 "    <endpoint>https://test.org/somoething</endpoint>\n" +
                 "    <MMSI>123456789</MMSI>\n" +
                 "    <IMO>1234567</IMO>\n" +
-                "    <serviceType>other:test</serviceType>\n" +
+                "    <serviceTypes>Other</serviceTypes>\n" +
                 "    <requiresAuthorization>false</requiresAuthorization>\n" +
                 "    <coversAreas>\n" +
                 "        <unLoCode>HWC</unLoCode>\n" +
@@ -74,7 +75,7 @@ class G1128UtilsTest {
         this.serviceInstance.setEndpoint("https://test.org/somoething");
         this.serviceInstance.setMMSI("123456789");
         this.serviceInstance.setIMO("1234567");
-        this.serviceInstance.getServiceType().add("other:test");
+        this.serviceInstance.getServiceTypes().add(ServiceType.OTHER);
 
         /// Also set the UnLoCode for the coverage info
         CoverageInfo coverageInfo = new CoverageInfo();
@@ -122,7 +123,7 @@ class G1128UtilsTest {
         assertEquals(this.serviceInstance.getEndpoint(), serviceInstance.getEndpoint());
         assertEquals(this.serviceInstance.getMMSI(), serviceInstance.getMMSI());
         assertEquals(this.serviceInstance.getIMO(), serviceInstance.getIMO());
-        assertEquals(this.serviceInstance.getServiceType(), serviceInstance.getServiceType());
+        assertEquals(this.serviceInstance.getServiceTypes(), serviceInstance.getServiceTypes());
         assertEquals(this.serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes(), serviceInstance.getCoversAreas().getCoversAreasAndUnLoCodes());
         assertEquals(this.serviceInstance.getProducedBy(), serviceInstance.getProducedBy());
         assertEquals(this.serviceInstance.getProvidedBy(), serviceInstance.getProvidedBy());

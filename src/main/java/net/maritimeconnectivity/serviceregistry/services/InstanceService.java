@@ -46,11 +46,7 @@ import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
 import org.hibernate.search.mapper.orm.session.SearchSession;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageArea;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.CoverageInfo;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceDesignReference;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.util.GeometryCombiner;
@@ -499,7 +495,7 @@ public class InstanceService {
         instance.setEndpointUri(serviceInstance.getEndpoint());
         instance.setMmsi(serviceInstance.getMMSI());
         instance.setImo(serviceInstance.getIMO());
-        instance.setServiceType(serviceInstance.getServiceType());
+        instance.setServiceType(serviceInstance.getServiceTypes());
         instance.setUnlocode(Optional.of(serviceInstance)
                 .map(ServiceInstance::getCoversAreas)
                 .map(CoverageInfo::getCoversAreasAndUnLoCodes)
@@ -509,9 +505,11 @@ public class InstanceService {
                 .map(String.class::cast)
                 .collect(Collectors.toList()));
         instance.setDesigns(Optional.of(serviceInstance)
-                .map(ServiceInstance::getImplementsServiceDesign)
+                .map(ServiceInstance::getImplementsServiceDesigns)
+                .map(ServiceInstance.ImplementsServiceDesigns::getImplementsServiceDesigns)
                 .stream()
-                .collect(Collectors.toMap(ServiceDesignReference::getId, ServiceDesignReference::getVersion)));
+                .flatMap(List::stream)
+                .collect(Collectors.toMap(SpecReference::getId, SpecReference::getVersion)));
     }
 
     /**

@@ -33,7 +33,7 @@ import org.apache.commons.io.IOUtils;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.engine.search.query.SearchResult;
 import org.hibernate.search.engine.search.query.SearchResultTotal;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

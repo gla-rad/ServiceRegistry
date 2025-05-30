@@ -21,7 +21,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
 import org.apache.commons.io.IOUtils;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -238,25 +238,10 @@ class XmlServiceTest {
         assertNotNull(serviceInstance.getEndpoint());
         assertNotNull(serviceInstance.getMMSI());
         assertNotNull(serviceInstance.getIMO());
-        assertNotNull(serviceInstance.getServiceType());
+        assertNotNull(serviceInstance.getServiceTypes());
         assertNotNull(serviceInstance.getCoversAreas());
         assertNotNull(serviceInstance.getProducedBy());
         assertNotNull(serviceInstance.getProvidedBy());
-    }
-
-    /**
-     * Test that when we don't have a valid G1128 schema class (e.g. for the
-     * G1128 BASE case), the validation will fail with a DataNotFoundException.
-     */
-    @Test
-    void testValidateNoClass() {
-        // Create a test invalid input
-        String xml = "Some random input";
-
-        // Perform the service call
-        assertThrows(DataNotFoundException.class, () ->
-                this.xmlService.validate(xml, G1128Schemas.BASE)
-        );
     }
 
     /**

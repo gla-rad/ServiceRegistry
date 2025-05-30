@@ -16,8 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.components;
 
-import net.maritimeconnectivity.serviceregistry.components.StringToServiceStatusConverter;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
