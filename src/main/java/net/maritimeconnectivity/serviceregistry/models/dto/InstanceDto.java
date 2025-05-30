@@ -67,7 +67,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String endpointType;
     private String mmsi;
     private String imo;
-    private List<String> serviceType;
+    private List<String> serviceTypes;
     private List<SECOM_DataProductType> dataProductType;
     private XmlDto instanceAsXml;
     private DocDto instanceAsDoc;
@@ -395,17 +395,17 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public List<String> getServiceType() {
-        return serviceType;
+    public List<String> getServiceTypes() {
+        return serviceTypes;
     }
 
     /**
      * Sets service type.
      *
-     * @param serviceType the service type
+     * @param serviceTypes the service type
      */
-    public void setServiceType(List<String> serviceType) {
-        this.serviceType = serviceType;
+    public void setServiceTypes(List<String> serviceTypes) {
+        this.serviceTypes = serviceTypes;
     }
 
     /**

@@ -150,13 +150,13 @@ public class Instance implements Serializable, JsonSerializable {
     private String imo;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
-    @GenericField(name="serviceType_sort",
-                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
-                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
-                  sortable = Sortable.YES)
+//    @GenericField(name="serviceType_sort",
+//                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
+//                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
+//                  sortable = Sortable.YES)
     @ElementCollection
     @Enumerated(EnumType.STRING)
-    private List<ServiceType> serviceType;
+    private List<ServiceType> serviceTypes;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @ElementCollection
@@ -508,21 +508,21 @@ public class Instance implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets service type.
+     * Gets service types.
      *
-     * @return the service type
+     * @return the service types
      */
-    public List<ServiceType>  getServiceType() {
-        return serviceType;
+    public List<ServiceType> getServiceTypes() {
+        return serviceTypes;
     }
 
     /**
-     * Sets service type.
+     * Sets service types.
      *
-     * @param serviceType the service type
+     * @param serviceTypes the service types
      */
-    public void setServiceType(List<ServiceType>  serviceType) {
-        this.serviceType = serviceType;
+    public void setServiceTypes(List<ServiceType> serviceTypes) {
+        this.serviceTypes = serviceTypes;
     }
 
     /**
@@ -719,7 +719,7 @@ public class Instance implements Serializable, JsonSerializable {
                 ", endpointType='" + endpointType + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
-                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().map(ServiceType::value).collect(Collectors.joining(",")) + '\'' +
+                ", serviceType='" + Optional.ofNullable(serviceTypes).orElse(Collections.emptyList()).stream().map(ServiceType::value).collect(Collectors.joining(",")) + '\'' +
                 '}';
     }
 
