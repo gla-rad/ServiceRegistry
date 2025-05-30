@@ -29,10 +29,7 @@ public class G1128Utils<T> {
 
     // Create a public definition of all the G1128 sources
     public static List<String> SOURCES_LIST = Arrays.asList(new String[]{
-            G1128Schemas.BASE.getPath(),
-            G1128Schemas.DESIGN.getPath(),
-            G1128Schemas.SERVICE.getPath(),
-            G1128Schemas.INSTANCE.getPath(),
+            G1128Schemas.INSTANCE.getPath()
     });
 
     // Class Variables

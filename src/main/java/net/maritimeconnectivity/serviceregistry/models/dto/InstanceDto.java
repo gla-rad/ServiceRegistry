@@ -23,7 +23,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerReques
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
 import jakarta.validation.constraints.NotNull;

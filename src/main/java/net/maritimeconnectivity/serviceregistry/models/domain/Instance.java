@@ -32,7 +32,8 @@ import org.hibernate.search.mapper.pojo.extractor.builtin.BuiltinContainerExtrac
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceType;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.data.annotation.CreatedDate;
@@ -154,7 +155,8 @@ public class Instance implements Serializable, JsonSerializable {
                   extraction = @ContainerExtraction(extract = ContainerExtract.NO),
                   sortable = Sortable.YES)
     @ElementCollection
-    private List<String> serviceType;
+    @Enumerated(EnumType.STRING)
+    private List<ServiceType> serviceType;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @ElementCollection
@@ -510,7 +512,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public List<String>  getServiceType() {
+    public List<ServiceType>  getServiceType() {
         return serviceType;
     }
 
@@ -519,7 +521,7 @@ public class Instance implements Serializable, JsonSerializable {
      *
      * @param serviceType the service type
      */
-    public void setServiceType(List<String>  serviceType) {
+    public void setServiceType(List<ServiceType>  serviceType) {
         this.serviceType = serviceType;
     }
 
@@ -717,7 +719,7 @@ public class Instance implements Serializable, JsonSerializable {
                 ", endpointType='" + endpointType + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
-                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
+                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().map(ServiceType::value).collect(Collectors.joining(",")) + '\'' +
                 '}';
     }
 

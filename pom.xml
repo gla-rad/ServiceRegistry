@@ -227,7 +227,7 @@
 		<dependency>
 			<groupId>net.maritimeconnectivity.eNav</groupId>
 			<artifactId>g1128-schemas</artifactId>
-			<version>0.1.5</version>
+			<version>0.1.7</version>
 			<classifier>jakarta</classifier>
 		</dependency>
 
