@@ -58,6 +58,7 @@ postgres=# \c mcp_service_registry;
 postgres=# CREATE EXTENSION postgis;
 postgres=# CREATE USER sysadmin WITH PASSWORD 'sysadmin';
 postgres=# GRANT ALL PRIVILEGES ON DATABASE mcp_service_registry to sysadmin;
+postgres=# GRANT ALL ON SCHEMA public to admin;
 ```
 
 If you, like me don't remember your PostgreSQL command 
