@@ -17,11 +17,11 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.eNav.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.repos.XmlRepo;
-import net.maritimeconnectivity.serviceregistry.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.utils.XmlUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -33,6 +33,7 @@ import org.xml.sax.SAXException;
 
 import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Optional;
 
 /**
@@ -118,7 +119,7 @@ public class XmlService {
                 .map(G1128Schemas::getSchemaClass)
                 .orElseThrow(() -> new DataNotFoundException("Invalid G1128 schema selection", null));
         // Make sure it's a valid XML
-        XmlUtil.validateXml(content, G1128Utils.SOURCES_LIST);
+        XmlUtil.validateXml(content, Collections.singletonList(G1128Schemas.INSTANCE.getPath()));
         // And parse the G1128 content
         return new G1128Utils<>(schemaClass).unmarshallG1128(content);
     }

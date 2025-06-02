@@ -28,7 +28,7 @@ import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public enum G1128Schemas {
-    INSTANCE("instance", "xsd/ServiceInstanceSchema.xsd", ServiceInstance.class);
+    INSTANCE("instance", "xsd/v1_7/ServiceInstanceSchema.xsd", ServiceInstance.class);
 
     // Enum Variables
     private String name;
