@@ -19,8 +19,10 @@ package net.maritimeconnectivity.serviceregistry.services;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.eNav.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
@@ -398,7 +400,7 @@ public class InstanceService {
         }
 
         try {
-            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), G1128Utils.SOURCES_LIST);
+            XmlUtil.validateXml(instance.getInstanceAsXml().getContent(), Collections.singletonList(G1128Schemas.INSTANCE.getPath()));
         } catch (SAXException e) {
             throw new XMLValidationException("Service Instance XML is not valid.", e);
         } catch (IOException e) {

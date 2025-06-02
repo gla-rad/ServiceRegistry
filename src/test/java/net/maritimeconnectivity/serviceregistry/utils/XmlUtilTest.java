@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
+import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -25,6 +26,7 @@ import org.xml.sax.SAXParseException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -39,7 +41,7 @@ class XmlUtilTest {
     void testValidateXmlTrue() throws IOException, SAXException {
         InputStream in = new ClassPathResource("test-instance.xml").getInputStream();
         String xml = IOUtils.toString(in, StandardCharsets.UTF_8);
-        assertTrue(XmlUtil.validateXml(xml, G1128Utils.SOURCES_LIST));
+        assertTrue(XmlUtil.validateXml(xml, Collections.singletonList(G1128Schemas.INSTANCE.getPath())));
     }
 
     /**
@@ -57,7 +59,7 @@ class XmlUtilTest {
 
         // And  the exception
         assertThrows(SAXParseException.class, () ->
-            XmlUtil.validateXml(wrongXml, G1128Utils.SOURCES_LIST)
+            XmlUtil.validateXml(wrongXml, Collections.singletonList(G1128Schemas.INSTANCE.getPath()))
         );
     }
 
