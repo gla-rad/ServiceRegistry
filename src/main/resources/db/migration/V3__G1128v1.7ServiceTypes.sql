@@ -19,4 +19,4 @@ UPDATE instance_service_types SET service_types = 'MS_13' WHERE service_types = 
 UPDATE instance_service_types SET service_types = 'MS_14' WHERE service_types = 'MeteorologicalInformationService';
 UPDATE instance_service_types SET service_types = 'MS_15' WHERE service_types = 'RealTimeHydrographicAndEnvironmentalInformationServices';
 UPDATE instance_service_types SET service_types = 'MS_16' WHERE service_types = 'SearchAndRescueService';
-UPDATE instance_service_types SET service_types = 'OTHER' WHERE service_type NOT LIKE 'MS%';
+UPDATE instance_service_types SET service_types = 'OTHER' WHERE service_types NOT LIKE 'MS%';
