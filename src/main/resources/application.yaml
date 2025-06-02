@@ -19,7 +19,7 @@ spring:
                             configurer: >-
                                 class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
                     schema_management:
-                        strategy: create-or-update
+                        strategy: create
         generate-ddl: true
         hibernate:
             ddl-auto: update
@@ -29,7 +29,7 @@ spring:
         username: ${service.variable.datasource.database.username}
         password: ${service.variable.datasource.database.password}
     flyway:
-        enabled: false
+        enabled: true
         url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
         schemas: mcp_service_registry
         user: ${service.variable.datasource.database.username}
