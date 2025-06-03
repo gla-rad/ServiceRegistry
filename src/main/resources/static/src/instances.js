@@ -121,19 +121,7 @@ var columnDefs = [{
             `<i class="fa-solid fa-file" style="color:green" onclick="downloadDoc(${'instanceEditPanel'}, ${data})"></i>`:
             `<i class="fa-solid xmark" style="color:red"></i>`);
     },
- }, {
-    data: "implementsServiceDesign",
-    title: "Implements Service Design",
-    type: "hidden",
-    visible: false,
-    searchable: false,
-}, {
-    data: "implementsServiceDesignVersion",
-    title: "Implements Service Design Versin",
-    type: "hidden",
-    visible: false,
-    searchable: false,
-}];
+ }];
 
 /**
  * Standard jQuery initialisation of the page.
@@ -156,7 +144,7 @@ $(() => {
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-md-auto'B><'col-md col-sm-6 pb-1'l><'col-md col-sm-6'f>><'row'<'col-md-12'rt>><'row'<'col'i><'col-md-auto'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -334,10 +322,17 @@ $(() => {
         }, 50);
     });
 
-    // Also initialise the service type type multi-select
+    // Also initialise the service type multi-select
     $('#serviceTypes').select2({
         placeholder: "Service Types",
         theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
+    // Also initialise the status type multi-select
+    $('#status').select2({
+        placeholder: "Status",
         selectionCssClass: 'select2--small',
         dropdownCssClass: 'select2--small'
     });
@@ -385,7 +380,11 @@ function validateXml($modalDiv) {
     api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
         // Update the instance fields
         for (var field in response) {
-            $modalDiv.find("input#"+field).val(response[field]);
+            if($modalDiv.find("input#"+field).length > 0) {
+                $modalDiv.find("input#"+field).val(response[field]);
+            } else if ($("#"+field).length > 0 && ["status","serviceTypes"].includes(field)) {
+                $modalDiv.find("#"+field).val(response[field]).change();
+            }
         }
         // Update the instance coverage area
         if(response["coversAreas"] && response["coversAreas"]["coversAreasAndUnLoCodes"]) {
@@ -731,7 +730,7 @@ function alignInstanceData(rowData, field, value, columnDefs){
         if (field === 'id'){
             rowData[field] = parseInt(value);
         }
-        else if(["keywords", "serviceTypes", "unlocode"].includes(field)) {
+        else if(["keywords", "unlocode"].includes(field)) {
             rowData[field] = value.split(",");
         }
         else if( field === "designs") {

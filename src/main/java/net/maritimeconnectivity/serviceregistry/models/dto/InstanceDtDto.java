@@ -75,8 +75,6 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
-    private String implementsServiceDesign;
-    private String implementsServiceDesignVersion;
 
     /**
      * Instantiates a new Instance dto.
@@ -535,39 +533,4 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
         this.ledgerRequestStatus = ledgerRequestStatus;
     }
 
-    /**
-     * Gets implements service design.
-     *
-     * @return the implements service design
-     */
-    public String getImplementsServiceDesign() {
-        return implementsServiceDesign;
-    }
-
-    /**
-     * Sets implements service design.
-     *
-     * @param implementsServiceDesign the implements service design
-     */
-    public void setImplementsServiceDesign(String implementsServiceDesign) {
-        this.implementsServiceDesign = implementsServiceDesign;
-    }
-
-    /**
-     * Gets implements service design version.
-     *
-     * @return the implements service design version
-     */
-    public String getImplementsServiceDesignVersion() {
-        return implementsServiceDesignVersion;
-    }
-
-    /**
-     * Sets implements service design version.
-     *
-     * @param implementsServiceDesignVersion the implements service design version
-     */
-    public void setImplementsServiceDesignVersion(String implementsServiceDesignVersion) {
-        this.implementsServiceDesignVersion = implementsServiceDesignVersion;
-    }
 }

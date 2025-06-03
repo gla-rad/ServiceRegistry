@@ -18,7 +18,9 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <th:block th:insert="~{fragments/general.html :: headerfiles}"></th:block>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.5/css/dataTables.bootstrap5.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.3.1/css/dataTables.bootstrap5.min.css" integrity="sha384-5hBbs6yhVjtqKk08rsxdk9xO80wJES15HnXHglWBQoj3cus3WT+qDJRpvs5rRP2c" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/3.0.4/css/responsive.bootstrap5.min.css" integrity="sha384-seyUnB//1QOFEqox9uI7YTLBgz9jBwFRqZvsEPFrTw6NAsFEo70nhBWsQfODqiYA" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.datatables.net/select/3.0.1/css/select.bootstrap5.min.css" integrity="sha384-TlxQ7BelG5MWHP/TbW8dDV3/3kwuo6rinsUsoQdbLGPvurwx/DA2Z49RVLIOxVrG" crossorigin="anonymous">
     <link rel="stylesheet" th:href="@{webjars/select2/css/select2.min.css}" />
     <link rel="stylesheet" th:href="@{webjars/select2-bootstrap-5-theme/dist/select2-bootstrap-5-theme.min.css}" />
     <link rel="stylesheet" th:href="@{webjars/leaflet/dist/leaflet.css}" />
@@ -179,10 +181,11 @@
     <script th:src="@{webjars/terraformer/terraformer.min.js}"></script>
     <script th:src="@{webjars/terraformer-wkt-parser/terraformer-wkt-parser.min.js}"></script>
     <script th:src="@{webjars/select2/js/select2.full.min.js}"></script>
-    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.js" ></script>
-    <script src="https://cdn.datatables.net/1.13.5/js/dataTables.bootstrap5.min.js" ></script>
-    <script src="https://cdn.datatables.net/select/1.7.0/js/dataTables.select.js" ></script>
-    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.js" ></script>
+    <script src="https://cdn.datatables.net/2.3.1/js/dataTables.min.js" integrity="sha384-LiV1KhVIIiAY/+IrQtQib29gCaonfR5MgtWzPCTBVtEVJ7uYd0u8jFmf4xka4WVy" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/2.3.1/js/dataTables.bootstrap5.min.js" integrity="sha384-G85lmdZCo2WkHaZ8U1ZceHekzKcg37sFrs4St2+u/r2UtfvSDQmQrkMsEx4Cgv/W" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.4/js/dataTables.responsive.min.js" integrity="sha384-A6In5tKqlvPZKDpH+ei4A3A4TZrEsyvvN2Fe+oCB1IaQfGD5HNqDIxwjztNKSGDd" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/responsive/3.0.4/js/responsive.bootstrap5.js" integrity="sha384-hyp/YDWGBMFqg7pJuS+y+2VWJkwnOyX+oMN9fWcxINo2flqjC/SdNaHj8LIV4zKJ" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/select/3.0.1/js/dataTables.select.min.js" integrity="sha384-rJdomZwznaHW2zmRyvbgDRNVWK3XuD1AVsMUn+IVFBOZTW871NIFjfNinziLytgY" crossorigin="anonymous"></script>
     <script th:src="@{static/src/file-utils.js}"></script>
     <script th:src="@{static/src/map-utils.js}"></script>
     <script th:src="@{static/src/api/instances-api.js}"></script>
