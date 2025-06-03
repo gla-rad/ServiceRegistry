@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry;
 
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
-import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.config.GlobalConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -126,14 +125,6 @@ public class TestingConfiguration {
     @Bean
     public DomainDtoMapper searchObjectResultMapper() {
         return new DomainDtoMapper<Instance, SearchObjectResult>();
-    }
-
-    /**
-     * The Smart Contract Provider Bean.
-     */
-    @Bean
-    public SmartContractProvider smartContractProvider() {
-        return mock(SmartContractProvider.class);
     }
 
 }

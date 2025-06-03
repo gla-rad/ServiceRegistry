@@ -195,15 +195,6 @@ $(() => {
             action: (e, dt, node, config) => {
                 loadInstanceStatus(e, dt, node, config);
             }
-        }, {
-            extend: 'selected', // Bind to Selected row
-            text: '<i class="fa-solid fa-cloud-arrow-up"></i>',
-            titleAttr: 'Instance Global Ledger Status',
-            name: 'instance-ledger-status', // do not change name
-            className: 'instance-ledger-toggle',
-            action: (e, dt, node, config) => {
-                loadInstanceLedgerStatus(e, dt, node, config);
-            }
         }],
         onAddRow: (datatable, rowdata, success, error) => {
             api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
@@ -644,32 +635,6 @@ function onStatusUpdate($modalDiv, id, status) {
         $modalDiv.removeClass('loading');
         showError(getErrorFromHeader(response, "Error while trying to update the instance status!"));
     });
-}
-
-/**
- * This function will load the instance ledger status onto the instance ledger
- * status select input of the DOM. Always read the ledger status value from
- * the server to pick up successes and failures.
- *
- * @param {Event}       event       The event that took place
- * @param {DataTable}   table       The AtoN type table
- * @param {Node}        button      The button node that was pressed
- * @param {any}         config      The table configuration
- */
-function loadInstanceLedgerStatus(event, table, button, config) {
-    // If a row has been selected load the data into the form
-    if(table.row({selected : true})) {
-        var rowdata = table.row({selected : true}).data();
-        id = rowdata["id"];
-        ledgerRequestId = rowdata["ledgerRequestId"];
-        ledgerRequestStatus = rowdata["ledgerRequestStatus"];
-        // First always start with the last known value
-        $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
-        // And then query the server for an update
-        api.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
-            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
-        });
-    }
 }
 
 /**

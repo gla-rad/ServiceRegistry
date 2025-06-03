@@ -12,7 +12,6 @@ $(() => {
     api.instancesApi = new InstancesApi();
     api.xmlsApi = new XmlsApi();
     api.docsApi = new DocsApi();
-    api.ledgerRequestsApi = new LedgerRequestsApi();
     api.search = new SearchApi();
 });
 

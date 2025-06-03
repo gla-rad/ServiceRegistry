@@ -99,13 +99,6 @@ public class InstanceController {
                 map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
             }
         });
-        this.instanceDomainToDtDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDtDto>() {
-            @Override
-            protected void configure() {
-                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
-                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
-            }
-        });
     }
 
     /**
@@ -259,28 +252,6 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .build();
         }
-
-        // Return an OK response
-        return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityStatusUpdateAlert("instance", id.toString()))
-                .build();
-    }
-
-    /**
-     * PUT /api/instances/{id}/ledger-status : Updates the "ID" instance ledger
-     * status.
-     *
-     * @param id the ID of the instance to be updated
-     * @param ledgerRequestStatus the new ledger status value
-     * @return the ResponseEntity with status 200 (OK), or with status 400 (Bad Request) if the instance ledger status couldn't be updated
-     * @throws URISyntaxException if the Location URI syntax is incorrect
-     */
-    @PutMapping(value = "/{id}/ledger-status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerRequestStatus) {
-        log.debug("REST request to update instance {} ledger status : {}", id, ledgerRequestStatus.value());
-
-        // Update the instance's ledger status
-        this.instanceService.updateLedgerStatus(id, ledgerRequestStatus, null);
 
         // Return an OK response
         return ResponseEntity.ok()
