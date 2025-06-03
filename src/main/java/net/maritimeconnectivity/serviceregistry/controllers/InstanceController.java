@@ -99,13 +99,6 @@ public class InstanceController {
                 map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
             }
         });
-        this.instanceDomainToDtDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDtDto>() {
-            @Override
-            protected void configure() {
-                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
-                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
-            }
-        });
     }
 
     /**
