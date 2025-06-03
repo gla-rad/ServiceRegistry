@@ -1,5 +1,6 @@
 package db.migration;
 
+import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128PortingUtils;
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;
@@ -9,6 +10,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 
+@Slf4j
 public class V4__PortG1128Schemas extends BaseJavaMigration {
 
     @Override
@@ -23,12 +25,18 @@ public class V4__PortG1128Schemas extends BaseJavaMigration {
         while (rs.next()) {
             final Long xmlId = rs.getLong("id");
             final String xml_v1_3 = rs.getString("content");
-            final String xml_v1_7 = G1128PortingUtils.portXMLVersion_1_3_to_1_7(xml_v1_3);
 
-            // Now perform the update statement
-            psXML.setString(1, xml_v1_7);
-            psXML.setLong(2, xmlId);
-            psXML.execute();
+            // Try to port the XML version and update the database
+            try {
+                final String xml_v1_7 = G1128PortingUtils.portXMLVersion_1_3_to_1_7(xml_v1_3);
+
+                // Now perform the update statement
+                psXML.setString(1, xml_v1_7);
+                psXML.setLong(2, xmlId);
+                psXML.execute();
+            } catch (Exception ex) {
+                log.error(ex.getMessage());
+            }
         }
         psXML.close();
         rs.close();
