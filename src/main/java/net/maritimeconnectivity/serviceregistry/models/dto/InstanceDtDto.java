@@ -31,6 +31,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,7 +65,7 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String organizationId; // Use the JWT auth token for that
     private List<String> unlocode;
     private String endpointUri;
-    private String endpointType;
+    private String statusEndpointUri;
     private String mmsi;
     private String imo;
     private List<String> serviceTypes;
@@ -75,6 +76,8 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
+    private Map<String, String> implementsServiceDesigns;
+    private Map<String, String> designsServiceSpecifications;
 
     /**
      * Instantiates a new Instance dto.
@@ -336,21 +339,21 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets endpoint type.
+     * Gets status endpoint uri.
      *
-     * @return the endpoint type
+     * @return the status endpoint uri
      */
-    public String getEndpointType() {
-        return endpointType;
+    public String getStatusEndpointUri() {
+        return statusEndpointUri;
     }
 
     /**
-     * Sets endpoint type.
+     * Sets status endpoint uri.
      *
-     * @param endpointType the endpoint type
+     * @param statusEndpointUri the status endpoint uri
      */
-    public void setEndpointType(String endpointType) {
-        this.endpointType = endpointType;
+    public void setStatusEndpointUri(String statusEndpointUri) {
+        this.statusEndpointUri = statusEndpointUri;
     }
 
     /**
@@ -533,4 +536,39 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
         this.ledgerRequestStatus = ledgerRequestStatus;
     }
 
+    /**
+     * Gets implements service designs.
+     *
+     * @return the implements service designs
+     */
+    public Map<String, String> getImplementsServiceDesigns() {
+        return implementsServiceDesigns;
+    }
+
+    /**
+     * Sets implements service designs.
+     *
+     * @param implementsServiceDesigns the implements service designs
+     */
+    public void setImplementsServiceDesigns(Map<String, String> implementsServiceDesigns) {
+        this.implementsServiceDesigns = implementsServiceDesigns;
+    }
+
+    /**
+     * Gets designs service specifications.
+     *
+     * @return the designs service specifications
+     */
+    public Map<String, String> getDesignsServiceSpecifications() {
+        return designsServiceSpecifications;
+    }
+
+    /**
+     * Sets designs service specifications.
+     *
+     * @param designsServiceSpecifications the designs service specifications
+     */
+    public void setDesignsServiceSpecifications(Map<String, String> designsServiceSpecifications) {
+        this.designsServiceSpecifications = designsServiceSpecifications;
+    }
 }

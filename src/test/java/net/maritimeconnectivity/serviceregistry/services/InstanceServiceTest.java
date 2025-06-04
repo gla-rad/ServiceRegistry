@@ -218,7 +218,7 @@ class InstanceServiceTest {
         assertEquals(this.existingInstance.getKeywords(), result.getKeywords());
         assertEquals(this.existingInstance.getComment(), result.getComment());
         assertEquals(this.existingInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.existingInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.existingInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.existingInstance.getMmsi(), result.getMmsi());
         assertEquals(this.existingInstance.getImo(), result.getImo());
         assertEquals(this.existingInstance.getServiceTypes(), result.getServiceTypes());
@@ -298,7 +298,7 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getKeywords(), result.getKeywords());
         assertEquals(this.newInstance.getComment(), result.getComment());
         assertEquals(this.newInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.newInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.newInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.newInstance.getMmsi(), result.getMmsi());
         assertEquals(this.newInstance.getImo(), result.getImo());
         assertEquals(this.newInstance.getServiceTypes(), result.getServiceTypes());
@@ -336,7 +336,7 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getKeywords(), result.getKeywords());
         assertEquals(this.newInstance.getComment(), result.getComment());
         assertEquals(this.newInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.newInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.newInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.newInstance.getMmsi(), result.getMmsi());
         assertEquals(this.newInstance.getImo(), result.getImo());
         assertEquals(this.newInstance.getServiceTypes(), result.getServiceTypes());
@@ -474,7 +474,7 @@ class InstanceServiceTest {
         assertEquals(this.existingInstance.getKeywords(), result.getKeywords());
         assertEquals(this.existingInstance.getComment(), result.getComment());
         assertEquals(this.existingInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.existingInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.existingInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.existingInstance.getMmsi(), result.getMmsi());
         assertEquals(this.existingInstance.getImo(), result.getImo());
         assertEquals(this.existingInstance.getServiceTypes(), result.getServiceTypes());
@@ -502,7 +502,7 @@ class InstanceServiceTest {
         assertEquals(this.instances.get(this.instances.size()-1).getKeywords(), result.getKeywords());
         assertEquals(this.instances.get(this.instances.size()-1).getComment(), result.getComment());
         assertEquals(this.instances.get(this.instances.size()-1).getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.instances.get(this.instances.size()-1).getEndpointType(), result.getEndpointType());
+        assertEquals(this.instances.get(this.instances.size()-1).getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.instances.get(this.instances.size()-1).getMmsi(), result.getMmsi());
         assertEquals(this.instances.get(this.instances.size()-1).getImo(), result.getImo());
         assertEquals(this.instances.get(this.instances.size()-1).getServiceTypes(), result.getServiceTypes());
