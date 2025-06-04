@@ -1,5 +1,8 @@
 package net.maritimeconnectivity.serviceregistry.components;
 
+import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +17,12 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class MmsEdgeRouter {
+
+    @Value("${maritimeconnectivity.mms.router.url")
+    private String routerUrl;
+
+    @Autowired
+    private final KeyStoreUtil keystoreUtil;
 
 
 
