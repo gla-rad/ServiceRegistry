@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+option go_package = "./mmtp";
+
+message ApplicationMessage {
+  ApplicationMessageHeader header = 1;
+  bytes body = 2;
+  bytes signature = 3;
+}
+
+message ApplicationMessageHeader {
+  oneof SubjectOrRecipient {
+    string subject = 1;
+    Recipients recipients = 2;
+  }
+  int64 expires = 3;
+  string sender = 4;
+  optional string qosProfile = 5;
+  uint32 bodySizeNumBytes = 6;
+}
+
+message Recipients {
+  repeated string recipients = 1;
+}
+
+message MmtpMessage {
+  MsgType msgType = 1;
+  string uuid = 2;
+  oneof body {
+    ProtocolMessage protocolMessage = 3;
+    ResponseMessage responseMessage = 4;
+  }
+}
+
+enum MsgType {
+  UNSPECIFIED_MESSAGE = 0;
+  PROTOCOL_MESSAGE = 1;
+  RESPONSE_MESSAGE = 2;
+}
+
+message ProtocolMessage {
+  ProtocolMessageType protocolMsgType = 1;
+  oneof body {
+    Subscribe subscribeMessage = 2;
+    Unsubscribe unsubscribeMessage = 3;
+    Send sendMessage = 4;
+    Receive receiveMessage = 5;
+    Fetch fetchMessage = 6;
+    Disconnect disconnectMessage = 7;
+    Connect connectMessage = 8;
+    Notify notifyMessage = 9;
+  }
+}
+
+message Subscribe {
+  oneof subjectOrDirectMessages {
+    string subject = 1;
+    bool directMessages = 2;
+  }
+}
+
+message Unsubscribe {
+  oneof subjectOrDirectMessages {
+    string subject = 1;
+    bool directMessages = 2;
+  }
+}
+
+message Send {
+  ApplicationMessage applicationMessage = 1;
+}
+
+message Receive {
+  optional Filter filter = 1;
+}
+
+message Filter {
+  repeated string messageUuids = 1;
+}
+
+message Fetch {
+
+}
+
+message Disconnect {
+
+}
+
+message Connect {
+  optional string ownMrn = 1;
+  optional string reconnectToken = 2;
+}
+
+message Notify {
+  repeated MessageMetadata messageMetadata = 1;
+}
+
+enum ProtocolMessageType {
+  UNSPECIFIED = 0;
+  SUBSCRIBE_MESSAGE = 1;
+  UNSUBSCRIBE_MESSAGE = 2;
+  SEND_MESSAGE = 3;
+  RECEIVE_MESSAGE = 4;
+  FETCH_MESSAGE = 5;
+  DISCONNECT_MESSAGE = 6;
+  CONNECT_MESSAGE = 7;
+  NOTIFY_MESSAGE = 8;
+}
+
+message ResponseMessage {
+  string responseToUuid = 1;
+  ResponseEnum response = 2;
+  optional string reasonText = 3;
+  repeated MessageMetadata messageMetadata = 4;
+  repeated MessageContent messageContent = 5;
+  optional string reconnectToken = 6;
+}
+
+enum ResponseEnum {
+  UNSPECIFIED_RESPONSE = 0;
+  GOOD = 1;
+  ERROR = 2;
+}
+
+message MessageMetadata {
+  string uuid = 1;
+  ApplicationMessageHeader header = 2;
+}
+
+message MessageContent {
+  string uuid = 1;
+  ApplicationMessage msg = 2;
+}
