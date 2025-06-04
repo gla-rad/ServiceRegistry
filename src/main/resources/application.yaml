@@ -19,7 +19,7 @@ spring:
                             configurer: >-
                                 class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
                     schema_management:
-                        strategy: create
+                        strategy: validate
         generate-ddl: true
         hibernate:
             ddl-auto: update

@@ -44,10 +44,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -114,6 +111,8 @@ class InstanceControllerTest {
         this.existingInstance.setVersion("1.0.0");
         this.existingInstance.setComment("No comment");
         this.existingInstance.setStatus(ServiceStatus.RELEASED);
+        this.existingInstance.setDesigns(Collections.emptyMap());
+        this.existingInstance.setSpecifications(Collections.emptyMap());
     }
 
     /**

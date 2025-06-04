@@ -29,9 +29,7 @@ import org.locationtech.jts.geom.Geometry;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * The Instance DTO Class.
@@ -64,7 +62,7 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private String organizationId; // Use the JWT auth token for that
     private List<String> unlocode;
     private String endpointUri;
-    private String endpointType;
+    private String statusEndpointUri;
     private String mmsi;
     private String imo;
     private List<String> serviceTypes;
@@ -74,8 +72,8 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private Long ledgerRequestId;
     private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
-    private String implementsServiceDesign;
-    private String implementsServiceDesignVersion;
+    private Map<String, String> implementsServiceDesigns;
+    private Map<String, String> designsServiceSpecifications;
 
     /**
      * Instantiates a new Instance dto.
@@ -341,17 +339,17 @@ public class InstanceDto implements Serializable, JsonSerializable {
      *
      * @return the endpoint type
      */
-    public String getEndpointType() {
-        return endpointType;
+    public String getStatusEndpointUri() {
+        return statusEndpointUri;
     }
 
     /**
      * Sets endpoint type.
      *
-     * @param endpointType the endpoint type
+     * @param statusEndpointUri the endpoint type
      */
-    public void setEndpointType(String endpointType) {
-        this.endpointType = endpointType;
+    public void setStatusEndpointUri(String statusEndpointUri) {
+        this.statusEndpointUri = statusEndpointUri;
     }
 
     /**
@@ -517,38 +515,38 @@ public class InstanceDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets implements service design.
+     * Gets implements service designs.
      *
-     * @return the implements service design
+     * @return the implements service designs
      */
-    public String getImplementsServiceDesign() {
-        return implementsServiceDesign;
+    public Map<String, String> getImplementsServiceDesigns() {
+        return implementsServiceDesigns;
     }
 
     /**
-     * Sets implements service design.
+     * Sets implements service designs.
      *
-     * @param implementsServiceDesign the implements service design
+     * @param implementsServiceDesigns the implements service designs
      */
-    public void setImplementsServiceDesign(String implementsServiceDesign) {
-        this.implementsServiceDesign = implementsServiceDesign;
+    public void setImplementsServiceDesigns(Map<String, String> implementsServiceDesigns) {
+        this.implementsServiceDesigns = implementsServiceDesigns;
     }
 
     /**
-     * Gets implements service design version.
+     * Gets designs service specifications.
      *
-     * @return the implements service design version
+     * @return the designs service specifications
      */
-    public String getImplementsServiceDesignVersion() {
-        return implementsServiceDesignVersion;
+    public Map<String, String> getDesignsServiceSpecifications() {
+        return designsServiceSpecifications;
     }
 
     /**
-     * Sets implements service design version.
+     * Sets designs service specifications.
      *
-     * @param implementsServiceDesignVersion the implements service design version
+     * @param designsServiceSpecifications the designs service specifications
      */
-    public void setImplementsServiceDesignVersion(String implementsServiceDesignVersion) {
-        this.implementsServiceDesignVersion = implementsServiceDesignVersion;
+    public void setDesignsServiceSpecifications(Map<String, String> designsServiceSpecifications) {
+        this.designsServiceSpecifications = designsServiceSpecifications;
     }
 }
