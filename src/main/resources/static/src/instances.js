@@ -565,7 +565,7 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
         if (xmlContent && xmlContent.length>0) {
             rowData["instanceAsXml"]["content"] = xmlContent;
         }
-    } else if(!firstInstanceMapView){
+    } else {
         rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
     }
 
