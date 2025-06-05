@@ -105,24 +105,5 @@ class InstancesApi {
             error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
         });
     }
-
-    /**
-      * API setter function for the instance global ledger status.
-      *
-      * @param  {int} id                The ID of the instance to be updated
-      * @param  {string} status         The global ledger status to update the instance with
-      * @param  {Function} callback     The callback to be used after the AJAX call
-      * @param  {Function} errorCallback The error callback to be used if the AJAX call fails
-      */
-    setLedgerStatus(id, status, callback, errorCallback) {
-        $.ajax({
-            url: `api/instances/${id}/ledger-status?ledgerStatus=${status}`,
-            type: 'PUT',
-            contentType: 'application/json',
-            crossDomain: true,
-            success: callback,
-            error: (response, status, more) => handleAjaxError(response, status, more, errorCallback)
-        });
-    }
 }
 /******************************************************************************/

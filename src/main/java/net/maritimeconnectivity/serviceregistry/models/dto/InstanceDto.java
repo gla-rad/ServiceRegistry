@@ -19,7 +19,6 @@ package net.maritimeconnectivity.serviceregistry.models.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
@@ -69,8 +68,6 @@ public class InstanceDto implements Serializable, JsonSerializable {
     private List<SECOM_DataProductType> dataProductType;
     private XmlDto instanceAsXml;
     private DocDto instanceAsDoc;
-    private Long ledgerRequestId;
-    private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
     private Map<String, String> implementsServiceDesigns;
     private Map<String, String> designsServiceSpecifications;
@@ -461,24 +458,6 @@ public class InstanceDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets ledger request id.
-     *
-     * @return the ledger request id
-     */
-    public Long getLedgerRequestId() {
-        return ledgerRequestId;
-    }
-
-    /**
-     * Sets ledger request id.
-     *
-     * @param ledgerRequestId the ledger request id
-     */
-    public void setLedgerRequestId(Long ledgerRequestId) {
-        this.ledgerRequestId = ledgerRequestId;
-    }
-
-    /**
      * Gets doc ids.
      *
      * @return the doc ids
@@ -494,24 +473,6 @@ public class InstanceDto implements Serializable, JsonSerializable {
      */
     public void setDocIds(Set<Long> docIds) {
         this.docIds = docIds;
-    }
-
-    /**
-     * Gets ledger request status.
-     *
-     * @return the ledger request status
-     */
-    public LedgerRequestStatus getLedgerRequestStatus() {
-        return ledgerRequestStatus;
-    }
-
-    /**
-     * Sets ledger request status.
-     *
-     * @param ledgerRequestStatus the ledger request status
-     */
-    public void setLedgerRequestStatus(LedgerRequestStatus ledgerRequestStatus) {
-        this.ledgerRequestStatus = ledgerRequestStatus;
     }
 
     /**

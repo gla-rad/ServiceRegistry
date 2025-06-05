@@ -23,7 +23,6 @@ import net.maritimeconnectivity.eNav.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
@@ -68,7 +67,6 @@ import org.xml.sax.SAXException;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;

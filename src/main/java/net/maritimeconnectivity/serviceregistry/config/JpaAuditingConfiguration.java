@@ -22,8 +22,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 /**
  * The JPA Auditioning Configuration.
  *
- * This configuration is used to enabled the automatic JPA timestamps on
- * creation or update or certain entries like the ledger requests.
+ * This configuration is used to enable the automatic JPA timestamps on
+ * creation or update or certain entries.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */

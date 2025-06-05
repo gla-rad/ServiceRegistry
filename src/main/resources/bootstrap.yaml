@@ -29,12 +29,6 @@ service:
         mir:
             server:
                 url: ${MCP_MIR_URL:http://localhost:8443/oidc/api}
-        ledger:
-            server:
-                host: ${MCP_LEDGER_HOST:localhost}
-                port: ${MCP_LEDGER_PORT:8546}
-                address: ${MCP_LEDGER_ADDRESS:0x0000000000000000000000000000000000000000}
-                credentials: ${MCP_LEDGER_CREDENTIALS:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890}
         info:
             name: ${SERVICE_INFO_NAME:Test MSR Instance}
             mrn: ${SERVICE_INFO_MRN:urn:mrn:mcp:msr:test:testMSR1}

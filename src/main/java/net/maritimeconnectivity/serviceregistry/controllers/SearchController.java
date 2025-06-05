@@ -74,7 +74,7 @@ public class SearchController {
      * @param queryString   the query string of the instance search
      * @param geometry      the geometry of the instance search
      * @param geometryWKT   the geometry WKT string of the instance search
-     * @param globalSearch  whether the global ledger search facility should be used
+     * @param globalSearch  whether the global search facility should be used
      * @return the result of the search
      */
     @GetMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)

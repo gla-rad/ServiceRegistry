@@ -205,7 +205,7 @@ function geoSearchForInstances() {
  * @param  {string} queryString     The instance query string to be used
  * @param  {string} queryGeoJSON    The instance geometry query GeoJSON string
  * @param  {string} queryWKT        The instance geometry query WKT string
- * @param  {boolean} globalSearch   Whether the global ledger search facility should be user
+ * @param  {boolean} globalSearch   Whether the global search facility should be user
  */
 function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     // Destroy the matrix if it already exists

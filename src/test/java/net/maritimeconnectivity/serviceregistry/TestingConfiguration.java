@@ -104,22 +104,6 @@ public class TestingConfiguration {
     }
 
     /**
-     * Ledger Request Mapper from Domain to DTO.
-     */
-    @Bean
-    public DomainDtoMapper ledgerRequestDomainToDtoMapper() {
-        return new DomainDtoMapper<Instance, InstanceDto>();
-    }
-
-    /**
-     * Ledger Request from DTO to Domain.
-     */
-    @Bean
-    public DomainDtoMapper ledgerRequestDtoToDomainMapper() {
-        return new DomainDtoMapper<InstanceDto, Instance>();
-    }
-
-    /**
      * From Instance to Search Object Result.
      */
     @Bean

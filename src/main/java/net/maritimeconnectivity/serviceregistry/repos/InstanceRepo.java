@@ -37,8 +37,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
      */
     @Query("select distinct instance " +
             "from Instance instance " +
-            "left join fetch instance.docs " +
-            "left join fetch instance.ledgerRequest")
+            "left join fetch instance.docs")
     List<Instance> findAllWithEagerRelationships();
 
     /**
@@ -50,7 +49,6 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
     @Query("select distinct instance " +
             "from Instance instance " +
             "left join fetch instance.docs " +
-            "left join fetch instance.ledgerRequest " +
             "where instance.instanceId = :id ")
     List<Instance> findByDomainIdEagerRelationships(@Param("id") String id);
 
@@ -63,7 +61,6 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
     @Query("select instance " +
             "from Instance instance " +
             "left join fetch instance.docs " +
-            "left join fetch instance.ledgerRequest " +
             "where instance.id =:id")
     Instance findOneWithEagerRelationships(@Param("id") Long id);
 
@@ -101,7 +98,6 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
     @Query("select distinct instance " +
             "from Instance instance " +
             "left join fetch instance.docs " +
-            "left join fetch instance.ledgerRequest " +
             "where instance.instanceId = :id " +
             "and instance.version = :version")
     Optional<Instance> findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
