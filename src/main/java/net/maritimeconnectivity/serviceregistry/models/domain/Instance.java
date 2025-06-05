@@ -138,8 +138,8 @@ public class Instance implements Serializable, JsonSerializable {
     private String endpointUri;
 
     @KeywordField(sortable = Sortable.YES)
-    @Column(name = "endpoint_type")
-    private String endpointType;
+    @Column(name = "status_endpoint_uri")
+    private String statusEndpointUri;
 
     @KeywordField(sortable = Sortable.YES)
     @Column(name = "mmsi")
@@ -454,21 +454,21 @@ public class Instance implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets endpoint type.
+     * Gets status endpoint type.
      *
-     * @return the endpoint type
+     * @return the status endpoint type
      */
-    public String getEndpointType() {
-        return endpointType;
+    public String getStatusEndpointUri() {
+        return statusEndpointUri;
     }
 
     /**
-     * Sets endpoint type.
+     * Sets status endpoint type.
      *
-     * @param endpointType the endpoint type
+     * @param statusEndpointUri the status endpoint type
      */
-    public void setEndpointType(String endpointType) {
-        this.endpointType = endpointType;
+    public void setStatusEndpointUri(String statusEndpointUri) {
+        this.statusEndpointUri = statusEndpointUri;
     }
 
     /**
@@ -716,7 +716,7 @@ public class Instance implements Serializable, JsonSerializable {
                 ", organizationId='" + organizationId + '\'' +
                 ", unlocode='" + Optional.ofNullable(unlocode).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", endpointUri='" + endpointUri + '\'' +
-                ", endpointType='" + endpointType + '\'' +
+                ", statusEndpointUri='" + statusEndpointUri + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
                 ", serviceType='" + Optional.ofNullable(serviceTypes).orElse(Collections.emptyList()).stream().map(ServiceType::value).collect(Collectors.joining(",")) + '\'' +
