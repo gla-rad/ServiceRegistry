@@ -176,12 +176,6 @@ public class Instance implements Serializable, JsonSerializable {
     private Set<Doc> docs = new HashSet<>();
 
     /**
-     * The Ledger Request.
-     */
-    @OneToOne(mappedBy = "serviceInstance", cascade = CascadeType.REMOVE)
-    private LedgerRequest ledgerRequest;
-
-    /**
      * The Designs.
      */
     @ElementCollection
@@ -577,24 +571,6 @@ public class Instance implements Serializable, JsonSerializable {
      */
     public void setInstanceAsDoc(Doc instanceAsDoc) {
         this.instanceAsDoc = instanceAsDoc;
-    }
-
-    /**
-     * Gets ledger request.
-     *
-     * @return the ledger request
-     */
-    public LedgerRequest getLedgerRequest() {
-        return ledgerRequest;
-    }
-
-    /**
-     * Sets ledger request.
-     *
-     * @param ledgerRequest the ledger request
-     */
-    public void setLedgerRequest(LedgerRequest ledgerRequest) {
-        this.ledgerRequest = ledgerRequest;
     }
 
     /**

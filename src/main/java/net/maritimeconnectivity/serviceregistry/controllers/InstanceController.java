@@ -22,11 +22,8 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.LedgerRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
@@ -47,10 +44,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller for managing Instance.
@@ -92,12 +86,7 @@ public class InstanceController {
     @PostConstruct
     void setup() {
         this.instanceDtoToDomainMapper.getModelMapper()
-                .addMappings(new PropertyMap<InstanceDto, Instance>() {
-                    @Override
-                    protected void configure() {
-                        map(source.getLedgerRequestId()).setLedgerRequest(null);
-                    }
-                })
+                .createTypeMap(InstanceDto.class, Instance.class)
                 .addMappings(mapper -> {
                     mapper.using(ctx -> ((InstanceDto)ctx.getSource()).getImplementsServiceDesigns())
                             .map(src -> src, Instance::setDesigns);
