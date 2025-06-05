@@ -340,13 +340,6 @@ $(() => {
         dropdownCssClass: 'select2--small'
     });
 
-    // Also initialise the status type multi-select
-    $('#status').select2({
-        placeholder: "Status",
-        selectionCssClass: 'select2--small',
-        dropdownCssClass: 'select2--small'
-    });
-
     // Also initialise the data product type multi-select
     $('#dataProductType').select2({
         placeholder: "Data Product Types",
@@ -354,6 +347,13 @@ $(() => {
         selectionCssClass: 'select2--small',
         dropdownCssClass: 'select2--small'
     });
+
+    // Also initialise the status type multi-select
+        $('#status').select2({
+            placeholder: "Status",
+            selectionCssClass: 'select2--small',
+            dropdownCssClass: 'select2--small'
+        });
 });
 
 /**
@@ -436,7 +436,12 @@ function clearInstanceEditPanel() {
 
     // Do the form
     $('form[name="instanceEditPanelForm"]').trigger("reset");
+    $("#serviceTypes").select2('val', null);
+    $("#serviceTypes").trigger('change');
     $("#dataProductType").select2('val', null);
+    $("#dataProductType").trigger('change');
+    clearTable("implementsServiceDesigns");
+    clearTable("designsServiceSpecifications");
 
     // And the map
     drawnEditMapItems.clearLayers();
