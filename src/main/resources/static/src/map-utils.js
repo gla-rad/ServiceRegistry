@@ -145,9 +145,17 @@ function getGeometryCollectionFromMap(drawnItems) {
         type: "GeometryCollection",
         geometries: []
     };
+    // Add all the items
     drawnItems.toGeoJSON().features.forEach(feature => {
         geometry.geometries.push(feature.geometry);
     });
+    // For empty geometries push an empty point in there
+    if(geometry.geometries.length ==0) {
+        geometry.geometries.push({
+           "type": "Point",
+           "coordinates": []
+        });
+    }
     // And return
     return geometry;
 }
