@@ -41,6 +41,10 @@ var columnDefs = [{
     data: "endpointUri",
     title: "Endpoint URI",
 }, {
+    data: "statusEndpointUri",
+    title: "Status Endpoint URI",
+    visible: false
+}, {
     data: "organizationId",
     title: "Organization",
 }, {
@@ -92,12 +96,6 @@ var columnDefs = [{
     visible: false,
     searchable: false
 }, {
-    data: "endpointType",
-    title: "Endpoint Type",
-    type: "hidden",
-    visible: false,
-    searchable: false
-}, {
     data: "ledgerRequestId",
     title: "Ledger Request ID",
     type: "hidden",
@@ -106,6 +104,18 @@ var columnDefs = [{
 }, {
     data: "ledgerRequestStatus",
     title: "Ledger Request Status",
+    type: "hidden",
+    visible: false,
+    searchable: false
+ }, {
+    data: "implementsServiceDesigns",
+    title: "Implements Service Designs",
+    type: "hidden",
+    visible: false,
+    searchable: false
+ }, {
+    data: "designsServiceSpecifications",
+    title: "Designs Service Specifications",
     type: "hidden",
     visible: false,
     searchable: false
@@ -373,6 +383,8 @@ function validateXml($modalDiv) {
         for (var field in response) {
             if($modalDiv.find("input#"+field).length > 0) {
                 $modalDiv.find("input#"+field).val(response[field]);
+            } else if($modalDiv.find("table#"+field).length > 0) {
+                updateTable($modalDiv.find("table#"+field).attr("id"), new Map(response[field][field].map(i => [i.id, i.version])));
             } else if ($("#"+field).length > 0 && ["status","serviceTypes"].includes(field)) {
                 $modalDiv.find("#"+field).val(response[field]).change();
             }
@@ -470,6 +482,16 @@ function loadInstanceEditPanel($modalDiv, isNewInstance) {
             $(this).val(rowData[$(this).attr('id')]).trigger('change');
             $(this).filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
         });
+        $('form[name="instanceEditPanelForm"] table').each(function() {
+            // Make sure the select element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
+            if(!rowData[$(this).attr('id')]) {
+                rowData[$(this).attr('id')] = {};
+            }
+            updateTable($(this).attr('id'), new Map(Object.entries(rowData[$(this).attr('id')])));
+        });
 
         // Augmenting xml content on the data
         if(g1128Compliant) {
@@ -518,6 +540,9 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
     // Getting the inputs from the modal
     $('form[name="instanceEditPanelForm"] :input').each(function() {
         rowData = alignInstanceData(rowData, $(this).attr('id'), $(this).val(), columnDefData);
+    });
+    $('form[name="instanceEditPanelForm"] table').each(function() {
+        rowData = alignInstanceData(rowData, $(this).attr('id'), Object.fromEntries($(this).data("entries")), columnDefData);
     });
 
     // For G1128-compliant entries, augmenting xml content on the data
@@ -698,12 +723,9 @@ function alignInstanceData(rowData, field, value, columnDefs){
         else if(["keywords", "unlocode"].includes(field)) {
             rowData[field] = value.split(",");
         }
-        else if( field === "designs") {
-            rowData[field] = value ? { [value.split(",")[0]]: value.split(",")[1] } : null;
-        }
         else if(field.toUpperCase().endsWith("JSON")) {
             rowData[field] = JSON.stringify(value);
-        } else{
+        } else {
             rowData[field] = value;
         }
     }

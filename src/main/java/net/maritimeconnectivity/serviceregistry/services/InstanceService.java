@@ -473,14 +473,20 @@ public class InstanceService {
                 .stream()
                 .flatMap(List::stream)
                 .collect(Collectors.toMap(SpecReference::getId, SpecReference::getVersion)));
+        instance.setSpecifications(Optional.of(serviceInstance)
+                .map(ServiceInstance::getDesignsServiceSpecifications)
+                .map(ServiceInstance.DesignsServiceSpecifications::getDesignsServiceSpecifications)
+                .stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toMap(SpecReference::getId, SpecReference::getVersion)));
     }
 
     /**
      * Parse instance geometry from the xml payload for search/filtering
      *
      * @param instance      the instance to parse
-     * @return an instance with its attributes set
-     * @throws Exception if the XML is invalid or attributes not present
+     * @throws JAXBException if the XML is invalid or attributes not present
+     * @throws ParseException if the XML parsing fails for any reason
      */
     protected void parseInstanceGeometryFromXML(Instance instance) throws JAXBException, ParseException {
         log.debug("Parsing XML: " + instance.getInstanceAsXml().getContent());

@@ -251,3 +251,102 @@ function downloadDoc($modalDiv, docId) {
         showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
     });
 }
+
+/**
+ *
+ */
+function addMapEntry(tableId, key, value, mapEntries) {
+// Use non-empty key values if you have to
+    key = key ? key : "urn:mrn:unknown:"+(mapEntries.size+1);
+
+    // Sanity Check
+    if(!mapEntries) {
+        mapEntries = new Map();
+    }
+    mapEntries.set(key,value);
+    $("#"+tableId).data('entries', mapEntries);
+
+    // Create a new row
+    const $newEntryRow = $("<tr>");
+
+    // Create the key cell
+    const $keyCell = $('<td>');
+    const $keyInput = $("<input>");
+    $keyInput.addClass("form-control form-control-sm").val(key);
+    $keyInput.on('change', () => {
+        var oldKey = $keyInput.data('val');
+        mapEntries.delete(oldKey);
+        mapEntries.set($keyInput.val(), $valueInput.val());
+        $("#"+tableId).data('entries', mapEntries);
+    });
+    $keyCell.append($keyInput);
+    $newEntryRow.append($keyCell);
+
+    // Create the value cell
+    const $valueCell = $('<td>');
+    const $valueInput = $("<input>");
+    $valueInput.addClass("form-control form-control-sm").val(value);
+    $valueInput.on('change', () => {
+        mapEntries.set($keyInput.val(), $valueInput.val());
+        $("#"+tableId).data('entries', mapEntries);
+    });
+    $valueCell.append($valueInput);
+    $newEntryRow.append($valueCell);
+
+    // Create the button cell
+    const $actionsCell = $('<td>');
+    const $removeButton = $("<div>");
+    $removeButton.addClass("btn btn-sm btn-danger");
+    $removeButton.on('click', () => {
+        mapEntries.delete($keyInput.val());
+        $("#"+tableId).data('entries', mapEntries);
+        updateTable(tableId, mapEntries);
+    });
+    $buttonSpan = $("<span>")
+    $buttonSpanI = $("<i>")
+    $buttonSpanI.addClass("fa-solid fa-trash-can");
+    $buttonSpan.append($buttonSpanI);
+    $removeButton.append($buttonSpan);
+    $actionsCell.append($removeButton);
+    $newEntryRow.append($actionsCell);
+
+    // And the row to the table
+    $('#'+tableId+' tbody').append($newEntryRow);
+}
+
+/**
+ *
+ */
+function updateTable(tableId, mapEntries) {
+    // Sanity Checks
+    if(!tableId) {
+        return;
+    }
+    if(!mapEntries) {
+        mapEntries = new Map();
+    }
+
+    // Clear the table buttons and body
+    $('#'+tableId+'AddButtonHeader').html("");
+    $('#'+tableId+' tbody').html("");
+
+    // And add a new button
+    var $button = $('<button type="button" id="'+tableId+'AddEntryButton"/>');
+    $button.addClass("btn btn-sm btn-success");
+    $button.on("click", () => {
+        addMapEntry(tableId, "", "", mapEntries);
+    });
+    $buttonSpan = $("<span>")
+    $buttonSpanI = $("<i>")
+    $buttonSpanI.addClass("fa-solid fa-circle-plus");
+    $buttonSpan.append($buttonSpanI);
+    $button.append($buttonSpan);
+    $button.appendTo($('#'+tableId+'AddButtonHeader'));
+
+    // Now iterate and add all map values
+    var index = 1;
+    for (const [key, value] of mapEntries) {
+        addMapEntry(tableId, key ? key : "urn:mrn:unknown:"+index, value, mapEntries);
+        index++;
+    }
+}
