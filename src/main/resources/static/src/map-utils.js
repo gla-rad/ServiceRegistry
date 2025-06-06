@@ -110,12 +110,17 @@ function loadGeometryOnMap(geometry, map, drawnItems, fitBounds=true) {
     // Recreate the drawn items feature group
     drawnItems.clearLayers();
     if(geometry) {
-        var geomLayer = L.geoJson(geometry);
-        addNonGroupLayers(geomLayer, drawnItems);
-        if(fitBounds) {
-            setTimeout(() => map.fitBounds(geomLayer.getBounds()), 50);
-        } else {
-            map.setView(geomLayer.getBounds().getCenter());
+        // NOTE: Empty geometries do throw errors
+        try {
+            var geomLayer = L.geoJson(geometry);
+            addNonGroupLayers(geomLayer, drawnItems);
+            if(fitBounds) {
+                setTimeout(() => map.fitBounds(geomLayer.getBounds()), 50);
+            } else {
+                map.setView(geomLayer.getBounds().getCenter());
+            }
+        } catch(exception) {
+            console.error(exception);
         }
     }
 }
@@ -145,9 +150,18 @@ function getGeometryCollectionFromMap(drawnItems) {
         type: "GeometryCollection",
         geometries: []
     };
+    // Add all the items
     drawnItems.toGeoJSON().features.forEach(feature => {
         geometry.geometries.push(feature.geometry);
     });
+    // For empty geometries push an empty point in there
+    // Otherwise on save, the database gis extension might complain.
+    if(geometry.geometries.length ==0) {
+        geometry.geometries.push({
+           "type": "Point",
+           "coordinates": []
+        });
+    }
     // And return
     return geometry;
 }
