@@ -349,11 +349,12 @@ $(() => {
     });
 
     // Also initialise the status type multi-select
-        $('#status').select2({
-            placeholder: "Status",
-            selectionCssClass: 'select2--small',
-            dropdownCssClass: 'select2--small'
-        });
+    $('#status').select2({
+        placeholder: "Status",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
 });
 
 /**
@@ -440,6 +441,8 @@ function clearInstanceEditPanel() {
     $("#serviceTypes").trigger('change');
     $("#dataProductType").select2('val', null);
     $("#dataProductType").trigger('change');
+    $("#status").select2('val', null);
+    $("#status").trigger('change');
     clearTable("implementsServiceDesigns");
     clearTable("designsServiceSpecifications");
 
@@ -565,7 +568,9 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
         if (xmlContent && xmlContent.length>0) {
             rowData["instanceAsXml"]["content"] = xmlContent;
         }
-    } else {
+    }
+    // If non-G1128 and the geometry has been plotted, then read it value from the map
+    else if(!firstInstanceMapView) {
         rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
     }
 
