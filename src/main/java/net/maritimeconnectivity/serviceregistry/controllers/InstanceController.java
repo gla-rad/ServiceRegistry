@@ -22,11 +22,8 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.LedgerRequest;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.LedgerRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
@@ -47,10 +44,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * REST controller for managing Instance.
@@ -92,12 +86,7 @@ public class InstanceController {
     @PostConstruct
     void setup() {
         this.instanceDtoToDomainMapper.getModelMapper()
-                .addMappings(new PropertyMap<InstanceDto, Instance>() {
-                    @Override
-                    protected void configure() {
-                        map(source.getLedgerRequestId()).setLedgerRequest(null);
-                    }
-                })
+                .createTypeMap(InstanceDto.class, Instance.class)
                 .addMappings(mapper -> {
                     mapper.using(ctx -> ((InstanceDto)ctx.getSource()).getImplementsServiceDesigns())
                             .map(src -> src, Instance::setDesigns);
@@ -273,28 +262,6 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .build();
         }
-
-        // Return an OK response
-        return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityStatusUpdateAlert("instance", id.toString()))
-                .build();
-    }
-
-    /**
-     * PUT /api/instances/{id}/ledger-status : Updates the "ID" instance ledger
-     * status.
-     *
-     * @param id the ID of the instance to be updated
-     * @param ledgerRequestStatus the new ledger status value
-     * @return the ResponseEntity with status 200 (OK), or with status 400 (Bad Request) if the instance ledger status couldn't be updated
-     * @throws URISyntaxException if the Location URI syntax is incorrect
-     */
-    @PutMapping(value = "/{id}/ledger-status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerRequestStatus) {
-        log.debug("REST request to update instance {} ledger status : {}", id, ledgerRequestStatus.value());
-
-        // Update the instance's ledger status
-        this.instanceService.updateLedgerStatus(id, ledgerRequestStatus, null);
 
         // Return an OK response
         return ResponseEntity.ok()

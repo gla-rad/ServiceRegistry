@@ -96,18 +96,6 @@ var columnDefs = [{
     visible: false,
     searchable: false
 }, {
-    data: "ledgerRequestId",
-    title: "Ledger Request ID",
-    type: "hidden",
-    visible: false,
-    searchable: false
-}, {
-    data: "ledgerRequestStatus",
-    title: "Ledger Request Status",
-    type: "hidden",
-    visible: false,
-    searchable: false
- }, {
     data: "implementsServiceDesigns",
     title: "Implements Service Designs",
     type: "hidden",
@@ -205,15 +193,6 @@ $(() => {
             action: (e, dt, node, config) => {
                 loadInstanceStatus(e, dt, node, config);
             }
-        }, {
-            extend: 'selected', // Bind to Selected row
-            text: '<i class="fa-solid fa-cloud-arrow-up"></i>',
-            titleAttr: 'Instance Global Ledger Status',
-            name: 'instance-ledger-status', // do not change name
-            className: 'instance-ledger-toggle',
-            action: (e, dt, node, config) => {
-                loadInstanceLedgerStatus(e, dt, node, config);
-            }
         }],
         onAddRow: (datatable, rowdata, success, error) => {
             api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
@@ -248,13 +227,6 @@ $(() => {
     instancesTable.buttons('.instance-status-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceStatusPanel" });
-
-    // We also need to link the instance ledger toggle button with the the
-    // modal panel so that by clicking the button the panel pops up. It's easier
-    // done with jQuery.
-    instancesTable.buttons('.instance-ledger-toggle')
-        .nodes()
-        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceLedgerPanel" });
 
     // On confirmation of the instance saving, we need to make an AJAX
     // call back to the service to save the entry.
@@ -295,16 +267,6 @@ $(() => {
         onStatusUpdate($modalDiv,
             instancesTable.row({selected : true}).data()["id"],
             $("#instanceStatusPanel").find("#instanceStatusSelect").val());
-    });
-
-    // On confirmation of the instance saving, we need to make an AJAX
-    // call back to the service to save the entry.
-    $('#instanceLedgerPanel').on('click', '.btn-ok', (e) => {
-        var $modalDiv = $(e.delegateTarget);
-        $modalDiv.addClass('loading');
-        onLedgerRequestUpdate($modalDiv,
-            instancesTable.row({selected : true}).data()["id"],
-            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
     });
 
     // Also initialise the instance map before we need it
@@ -678,51 +640,6 @@ function onStatusUpdate($modalDiv, id, status) {
     }, (response, status, more) => {
         $modalDiv.removeClass('loading');
         showError(getErrorFromHeader(response, "Error while trying to update the instance status!"));
-    });
-}
-
-/**
- * This function will load the instance ledger status onto the instance ledger
- * status select input of the DOM. Always read the ledger status value from
- * the server to pick up successes and failures.
- *
- * @param {Event}       event       The event that took place
- * @param {DataTable}   table       The AtoN type table
- * @param {Node}        button      The button node that was pressed
- * @param {any}         config      The table configuration
- */
-function loadInstanceLedgerStatus(event, table, button, config) {
-    // If a row has been selected load the data into the form
-    if(table.row({selected : true})) {
-        var rowdata = table.row({selected : true}).data();
-        id = rowdata["id"];
-        ledgerRequestId = rowdata["ledgerRequestId"];
-        ledgerRequestStatus = rowdata["ledgerRequestStatus"];
-        // First always start with the last known value
-        $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
-        // And then query the server for an update
-        api.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
-            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
-        });
-    }
-}
-
-/**
- * Using an AJAX call we ask the server to update the instance ledger request
- * status and if proven successful, we can request the instances datatables to
- * reload.
- *
- * @param {Component}   $modalDiv   The modal component performing the update
- * @param {number}      id          The ID of the ledger request to be updated
- * @param {String}      status      The new status value
- */
-function onLedgerRequestUpdate($modalDiv, id, status) {
-    api.instancesApi.setLedgerStatus(id, status, () => {
-        $modalDiv.removeClass('loading');
-        instancesTable.draw('page');
-    }, (response, status, more) => {
-        $modalDiv.removeClass('loading');
-        showError(getErrorFromHeader(response, "Error while trying to update the instance global ledger status!"));
     });
 }
 

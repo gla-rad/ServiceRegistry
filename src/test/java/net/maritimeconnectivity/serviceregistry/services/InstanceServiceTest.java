@@ -95,12 +95,6 @@ class InstanceServiceTest {
     private DocService docService;
 
     /**
-     * The LedgerRequest Service Mock.
-     */
-    @Mock
-    private LedgerRequestService ledgerRequestService;
-
-    /**
      * The User Context.
      */
     @Mock

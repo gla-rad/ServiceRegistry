@@ -237,10 +237,6 @@ net:
                 application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
             mir:
                 server-url: ${service.variable.mir.server.url}
-            ledger:
-                server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
-                credentials: ${service.variable.ledger.server.credentials}
-                contract-address: ${service.variable.ledger.server.address}
 
 # Local Service Configuration
 info:
@@ -438,7 +434,6 @@ operation, a list of all currently used endpoint roles is provided below:
 | post_api_xmls                  | Users are allowed API requests to create new xmls                                |
 | put_api_doc                    | Users are allowed API requests to update an existing doc                         |
 | put_api_instance               | Users are allowed API requests to update an existing instance                    |
-| put_api_instance_ledger_status | Users are allowed API requests to update the ledger status of existing instances |
 | put_api_instance_status        | Users are allowed API requests to update the status of existing instances        |
 | put_api_xml                    | Users are allowed API requests to update an existing xml                         |
 
@@ -447,7 +442,6 @@ operation, a list of all currently used endpoint roles is provided below:
 |---------------|----------------------------------------------------------------------------------|
 | user          | Users are allowed to login and view the local service registry                   |
 | service_admin | Users are allows to create and upload new services and change their local status |
-| ledger_admin  | Users are allowed to control instances and upload them to the global MSR ledger  |
 | admin         | MSR site administrator role                                                      |
 
 ## Contributing

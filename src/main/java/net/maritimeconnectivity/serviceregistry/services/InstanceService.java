@@ -23,7 +23,6 @@ import net.maritimeconnectivity.eNav.utils.G1128Utils;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
@@ -68,7 +67,6 @@ import org.xml.sax.SAXException;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-import jakarta.validation.constraints.NotNull;
 import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.util.*;
@@ -107,13 +105,6 @@ public class InstanceService {
      */
     @Autowired
     DocService docService;
-
-    /**
-     * The LedgerRequest Service.
-     */
-    @Lazy
-    @Autowired(required = false)
-    private LedgerRequestService ledgerRequestService;
 
     /**
      * The UnLoCode Service.
@@ -273,36 +264,6 @@ public class InstanceService {
             log.error("Problem during instance status update.", ex);
             throw ex;
         }
-    }
-
-    /**
-     * Update the ledger status of an instance by ID.
-     *
-     * @param id                    the ID of the entity
-     * @param ledgerRequestStatus   the ledger request status of the entity
-     */
-    @Transactional
-    public LedgerRequest updateLedgerStatus(@NotNull Long id, @NotNull LedgerRequestStatus ledgerRequestStatus, String reason) {
-        return Optional.ofNullable(this.ledgerRequestService)
-                .map(lss -> {
-                    // First make sure the instance is valid
-                    final Instance instance = this.findOne(id);
-
-                    // Get a ledger request and if it does not exist create one
-                    final LedgerRequest request = Optional.of(instance)
-                            .filter(i -> Objects.nonNull(i.getLedgerRequest()))
-                            .map(Instance::getLedgerRequest)
-                            .orElseGet(() ->  {
-                                final LedgerRequest newRequest = new LedgerRequest();
-                                newRequest.setServiceInstance(instance);
-                                newRequest.setStatus(LedgerRequestStatus.CREATED);
-                                return this.ledgerRequestService.save(newRequest);
-                            });
-
-                    // Finally, update the status
-                    return lss.updateStatus(request.getId(), ledgerRequestStatus, reason);
-                })
-                .orElseThrow(() -> new LedgerConnectionException(MsrErrorConstant.LEDGER_NOT_CONNECTED, null));
     }
 
     /**
