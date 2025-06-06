@@ -110,7 +110,12 @@
                             <label for="serviceTypes" class="col-form-label col-form-label-sm">Service Type:</label>
                         </div>
                         <div class="col-sm-8 col-md-8 col-lg-8">
-                            <select id="serviceTypes" class="form-select form-select-sm" multiple>
+                            <select class="form-select form-select-sm"
+                                    name="serviceTypes" id="serviceTypes"
+                                    data-special=""
+                                    data-unique="false"
+                                    data-g1128="true"
+                                    multiple>
                                 <option value="MS_1">MS 1 - VTS Information service (INS)</option>
                                 <option value="MS_2">MS 2 - VTS Navigational assistance service (NAS)</option>
                                 <option value="MS_3">MS 3 - Traffic organization service (TOS)</option>
@@ -140,7 +145,12 @@
                             <label for="dataProductType" class="col-form-label col-form-label-sm">Data Type:</label>
                         </div>
                         <div class="col-sm-8 col-md-8 col-lg-8">
-                            <select id="dataProductType" class="form-select form-select-sm" multiple>
+                            <select class="form-select form-select-sm"
+                                    name="dataProductType" id="dataProductType"
+                                    data-special=""
+                                    data-unique="false"
+                                    data-g1128="true"
+                                    multiple>
                                 <option value="OTHER">Other data types not covered in this table</option>
                                 <option value="S101">S-57 Electronic Navigational Chart (ENC)</option>
                                 <option value="S102">S-101 Electronic Navigational Chart (ENC)</option>
@@ -182,7 +192,6 @@
                         <div class="col-sm-8 col-md-8 col-lg-8">
                             <select class="form-select form-select-sm"
                                     name="status" id="status"
-                                    placeholder="Status"
                                     data-special=""
                                     data-unique="false"
                                     data-g1128="true"
