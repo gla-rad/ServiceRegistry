@@ -150,10 +150,6 @@ public class Instance implements Serializable, JsonSerializable {
     private String imo;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
-//    @GenericField(name="serviceType_sort",
-//                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
-//                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
-//                  sortable = Sortable.YES)
     @ElementCollection
     @Enumerated(EnumType.STRING)
     private List<ServiceType> serviceTypes;
