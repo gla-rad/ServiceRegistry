@@ -292,6 +292,11 @@
 			<version>4.0.13</version>
 		</dependency>
 		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>4.28.2</version>
+		</dependency>
+		<dependency>
 			<groupId>org.webjars.npm</groupId>
 			<artifactId>select2-bootstrap-5-theme</artifactId>
 			<version>1.3.0</version>
@@ -301,6 +306,12 @@
 					<artifactId>bootstrap</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+
+		<!--Websocket -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
 		</dependency>
 
 		<!-- Testing -->

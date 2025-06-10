@@ -119,6 +119,9 @@ info:
         copyright: 'Copyright © 2024 Maritime Connectivity Platform Consortium'
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
         profile: ${spring.profiles.active:test}
+    mms:
+        router:
+            url: wss://eu-router.dmc.international:8080
 
 eureka:
     client:

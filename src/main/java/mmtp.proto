@@ -1,6 +1,7 @@
 syntax = "proto3";
 
-option go_package = "./mmtp";
+option java_package = "net.maritimeconnectivity.mmtp";
+option java_multiple_files = true;
 
 message ApplicationMessage {
   ApplicationMessageHeader header = 1;
