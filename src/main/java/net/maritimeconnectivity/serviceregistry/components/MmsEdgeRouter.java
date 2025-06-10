@@ -3,8 +3,11 @@ package net.maritimeconnectivity.serviceregistry.components;
 import jakarta.annotation.PreDestroy;
 import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
+import org.geolatte.geom.M;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.socket.BinaryMessage;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
@@ -67,6 +70,31 @@ public class MmsEdgeRouter {
 
 
 
+    private class MMSWebsocketHandler extends BinaryWebSocketHandler {
 
+        private final MmsEdgeRouter edgeRouterRef;
+
+         //constreuctor
+        public MMSWebsocketHandler(MmsEdgeRouter er) {
+            this.edgeRouterRef = er;
+
+        }
+
+         @Override
+        public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+
+        }
+
+        @Override
+        protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
+            // Handle incoming binary messages
+        }
+
+        @Override
+        public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+
+        }
+
+    }
 
 }
