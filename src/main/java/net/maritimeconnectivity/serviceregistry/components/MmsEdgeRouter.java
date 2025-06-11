@@ -1,9 +1,11 @@
 package net.maritimeconnectivity.serviceregistry.components;
 
+import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PreDestroy;
 import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
 import org.geolatte.geom.M;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.socket.BinaryMessage;
@@ -54,7 +56,7 @@ public class MmsEdgeRouter {
     }
 
     //Handler triggered when a message is received from the WebSocket
-    public void handleMessage() {
+    public void handleMessage(MmtpMessage msg) {
 
     }
 
@@ -74,7 +76,7 @@ public class MmsEdgeRouter {
 
         private final MmsEdgeRouter edgeRouterRef;
 
-         //constreuctor
+        //constructor
         public MMSWebsocketHandler(MmsEdgeRouter er) {
             this.edgeRouterRef = er;
 
@@ -82,19 +84,28 @@ public class MmsEdgeRouter {
 
          @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
+            log.info("WebSocket connection established with {}", session.getRemoteAddress());
 
+        }
+
+        // Handles an incoming binary message
+        @Override
+        protected void handleBinaryMessage(@NotNull WebSocketSession session, @NotNull BinaryMessage message) {
+            try {
+                MmtpMessage mmtpMsg = MmtpMessage.parseFrom(message.getPayload());
+                this.edgeRouterRef.handleMessage(mmtpMsg);
+
+            } catch (InvalidProtocolBufferException e) {
+                log.error("Protobuf error when de-serializing, {}", e.getMessage());
+            }
         }
 
         @Override
-        protected void handleBinaryMessage(WebSocketSession session, BinaryMessage message) {
-            // Handle incoming binary messages
+        public void afterConnectionClosed(WebSocketSession session, @NotNull CloseStatus status) {
+            log.info("WebSocket connection closed with status: {}", status);
+            log.info("Is session open? {}", session.isOpen());
+            this.edgeRouterRef.webSocketSession = null;
         }
-
-        @Override
-        public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
-
-        }
-
     }
 
 }
