@@ -3,8 +3,9 @@ package net.maritimeconnectivity.serviceregistry.components;
 import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PreDestroy;
 import net.maritimeconnectivity.mmtp.MmtpMessage;
+import net.maritimeconnectivity.mmtp.ResponseEnum;
+import net.maritimeconnectivity.mmtp.ResponseMessage;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
-import org.geolatte.geom.M;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -53,10 +54,36 @@ public class MmsEdgeRouter {
 
     public void sendMessage(MmtpMessage mmtpMessage) {
 
+
     }
 
     //Handler triggered when a message is received from the WebSocket
     public void handleMessage(MmtpMessage msg) {
+        // Case: Incoming global search request
+        if (msg.hasProtocolMessage()) {
+
+            //Extract body
+            byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
+
+            //Pass the body as input to a local search
+            // TODO: Call proper API
+
+
+            // Case: Response from Router when sending global search request to the MMS Network
+        } else if (msg.hasResponseMessage()) {
+            ResponseMessage resp = msg.getResponseMessage();
+            if (resp.getResponse() != ResponseEnum.GOOD) {
+                String respToUuid = resp.getResponseToUuid();
+                String reason = resp.getReasonText();
+                log.error("Error response from MMS Router for UUID {}: Code: {}: {}", respToUuid, resp.getResponse(), reason);
+
+                // TODO: Possible action to re-transmit the message or notify the user
+            } else {
+                log.info("Message {} successfully sent to MMS Router", resp.getResponseToUuid());
+            }
+        }
+
+
 
     }
 
