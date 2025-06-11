@@ -17,13 +17,6 @@ public interface MmtpFactory {
             Duration ttl
     );
 
-    MmtpMessage createSendMessageMrn(
-            List<String> recipients,
-            String sender,
-            String body,
-            Duration ttl
-    );
-
     MmtpMessage createReceiveMessage();
 
     MmtpMessage createDisconnectMessage();
