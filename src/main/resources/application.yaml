@@ -28,6 +28,8 @@ spring:
         url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
         username: ${service.variable.datasource.database.username}
         password: ${service.variable.datasource.database.password}
+    flyway:
+        enabled: true
 
     # Keycloak Configuration
     security:
