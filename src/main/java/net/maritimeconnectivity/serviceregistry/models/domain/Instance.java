@@ -178,7 +178,7 @@ public class Instance implements Serializable, JsonSerializable {
     private LedgerRequest ledgerRequest;
 
     /**
-     * The Designs.
+     * The Designs map between Service Design MRNs and Versions.
      */
     @ElementCollection
     @GenericField(
@@ -188,7 +188,7 @@ public class Instance implements Serializable, JsonSerializable {
     Map<String, String> designs = new HashMap<>();
 
     /**
-     * The Specifications.
+     * The Specifications map between Service Specification MRNs and Versions.
      */
     @ElementCollection
     @GenericField(
