@@ -2,9 +2,7 @@ package net.maritimeconnectivity.serviceregistry.components;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PreDestroy;
-import net.maritimeconnectivity.mmtp.MmtpMessage;
-import net.maritimeconnectivity.mmtp.ResponseEnum;
-import net.maritimeconnectivity.mmtp.ResponseMessage;
+import net.maritimeconnectivity.mmtp.*;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.UUID;
 
 /**
  * The MMs Edge Router Component
@@ -52,20 +51,43 @@ public class MmsEdgeRouter {
         //Handle closing of websocket and mmtp session somewhat gracefully
     }
 
-    public void sendMessage(MmtpMessage mmtpMessage) {
+    public void sendMessage(MmtpMessage mmtpMessage) throws IOException {
 
 
     }
+
+    //Send an mmtp receive to the edgerouter
+    private void receive() {
+        MmtpMessage receiveMessage = MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.RECEIVE_MESSAGE)
+                        .setReceiveMessage(Receive.newBuilder())
+                ).build();
+
+        try {
+            sendMessage(receiveMessage);
+        } catch (IOException e) {
+            log.error("Error sending receive message to MMS Router: {}", e.getMessage());
+        }
+    }
+
 
     //Handler triggered when a message is received from the WebSocket
     public void handleMessage(MmtpMessage msg) {
         // Case: Incoming global search request
         if (msg.hasProtocolMessage()) {
 
+            // Check if it is a Notify, and then Receive Messages
+
             //Extract body
             byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
 
             //Pass the body as input to a local search
+
+            // TODO: Attempt parsding of payload as JSON object according to MSR open API
+
             // TODO: Call proper API
 
 
