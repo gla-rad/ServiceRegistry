@@ -1,4 +1,4 @@
-package net.maritimeconnectivity.serviceregistry.components;
+package net.maritimeconnectivity.serviceregistry.components.mms;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PreDestroy;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
-import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
 import lombok.extern.slf4j.Slf4j;
