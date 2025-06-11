@@ -1,0 +1,28 @@
+package net.maritimeconnectivity.serviceregistry.models.dto.mms;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Getter;
+import lombok.Setter;
+import org.grad.secom.core.models.SearchParameters;
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@Getter
+@Setter
+public class MmsSearchMessageDto {
+
+    @JsonProperty("endpoint")
+    private String endpoint;
+
+    @JsonProperty("consumerMRN")
+    private String consumerMRN;
+
+    @JsonProperty("searchObject")
+    private SearchParameters searchParameters;
+
+    public MmsSearchMessageDto(String endpoint, String consumerMRN, SearchParameters searchParams) {
+        this.endpoint = endpoint;
+        this.consumerMRN = consumerMRN;
+        this.searchParameters = searchParams;
+    }
+}

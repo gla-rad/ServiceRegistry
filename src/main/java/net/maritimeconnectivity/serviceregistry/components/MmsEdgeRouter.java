@@ -52,7 +52,10 @@ public class MmsEdgeRouter {
     }
 
     public void sendMessage(MmtpMessage mmtpMessage) throws IOException {
+        byte[] bytes = mmtpMessage.toByteArray();
+        webSocketSession.sendMessage(new BinaryMessage(bytes));
 
+        // TODO: Possibly keep track of sent messages and UUIDs in order to be able to report a progress to GMSP
 
     }
 
