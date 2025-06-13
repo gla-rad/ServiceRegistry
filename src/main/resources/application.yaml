@@ -122,7 +122,12 @@ info:
     mms:
         router:
             url: wss://eu-router.dmc.international:8080
-
+        ownEdgerouter:
+            keyStore:
+                path:
+                password:
+            rootCA:
+                path:
 eureka:
     client:
         enabled: false
