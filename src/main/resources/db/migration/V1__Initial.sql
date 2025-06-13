@@ -35,7 +35,7 @@ SET default_tablespace = '';
 SET default_table_access_method = heap;
 
 --
--- Name: document; Type: TABLE; Schema: public; Owner: admin
+-- Name: document; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.document (
@@ -48,11 +48,8 @@ CREATE TABLE public.document (
     instance_id bigint
 );
 
-
-ALTER TABLE public.document OWNER TO admin;
-
 --
--- Name: document_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- Name: document_id_seq; Type: SEQUENCE; Schema: public
 --
 
 CREATE SEQUENCE public.document_id_seq
@@ -63,17 +60,15 @@ CREATE SEQUENCE public.document_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.document_id_seq OWNER TO admin;
-
 --
--- Name: document_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Name: document_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 --
 
 ALTER SEQUENCE public.document_id_seq OWNED BY public.document.id;
 
 
 --
--- Name: instance; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance (
@@ -98,10 +93,8 @@ CREATE TABLE public.instance (
 );
 
 
-ALTER TABLE public.instance OWNER TO admin;
-
 --
--- Name: instance_data_product_type; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance_data_product_type; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance_data_product_type (
@@ -110,10 +103,8 @@ CREATE TABLE public.instance_data_product_type (
 );
 
 
-ALTER TABLE public.instance_data_product_type OWNER TO admin;
-
 --
--- Name: instance_designs; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance_designs; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance_designs (
@@ -123,10 +114,8 @@ CREATE TABLE public.instance_designs (
 );
 
 
-ALTER TABLE public.instance_designs OWNER TO admin;
-
 --
--- Name: instance_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- Name: instance_id_seq; Type: SEQUENCE; Schema: public
 --
 
 CREATE SEQUENCE public.instance_id_seq
@@ -137,17 +126,15 @@ CREATE SEQUENCE public.instance_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.instance_id_seq OWNER TO admin;
-
 --
--- Name: instance_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Name: instance_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 --
 
 ALTER SEQUENCE public.instance_id_seq OWNED BY public.instance.id;
 
 
 --
--- Name: instance_keywords; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance_keywords; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance_keywords (
@@ -156,10 +143,8 @@ CREATE TABLE public.instance_keywords (
 );
 
 
-ALTER TABLE public.instance_keywords OWNER TO admin;
-
 --
--- Name: instance_service_type; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance_service_type; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance_service_type (
@@ -168,10 +153,8 @@ CREATE TABLE public.instance_service_type (
 );
 
 
-ALTER TABLE public.instance_service_type OWNER TO admin;
-
 --
--- Name: instance_specifications; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance_specifications; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance_specifications (
@@ -181,10 +164,8 @@ CREATE TABLE public.instance_specifications (
 );
 
 
-ALTER TABLE public.instance_specifications OWNER TO admin;
-
 --
--- Name: instance_unlocode; Type: TABLE; Schema: public; Owner: admin
+-- Name: instance_unlocode; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.instance_unlocode (
@@ -193,10 +174,8 @@ CREATE TABLE public.instance_unlocode (
 );
 
 
-ALTER TABLE public.instance_unlocode OWNER TO admin;
-
 --
--- Name: ledgerrequest; Type: TABLE; Schema: public; Owner: admin
+-- Name: ledgerrequest; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.ledgerrequest (
@@ -209,10 +188,8 @@ CREATE TABLE public.ledgerrequest (
 );
 
 
-ALTER TABLE public.ledgerrequest OWNER TO admin;
-
 --
--- Name: ledgerrequest_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- Name: ledgerrequest_id_seq; Type: SEQUENCE; Schema: public
 --
 
 CREATE SEQUENCE public.ledgerrequest_id_seq
@@ -223,17 +200,15 @@ CREATE SEQUENCE public.ledgerrequest_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.ledgerrequest_id_seq OWNER TO admin;
-
 --
--- Name: ledgerrequest_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Name: ledgerrequest_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 --
 
 ALTER SEQUENCE public.ledgerrequest_id_seq OWNED BY public.ledgerrequest.id;
 
 
 --
--- Name: xml; Type: TABLE; Schema: public; Owner: admin
+-- Name: xml; Type: TABLE; Schema: public
 --
 
 CREATE TABLE public.xml (
@@ -245,10 +220,8 @@ CREATE TABLE public.xml (
 );
 
 
-ALTER TABLE public.xml OWNER TO admin;
-
 --
--- Name: xml_id_seq; Type: SEQUENCE; Schema: public; Owner: admin
+-- Name: xml_id_seq; Type: SEQUENCE; Schema: public
 --
 
 CREATE SEQUENCE public.xml_id_seq
@@ -259,45 +232,43 @@ CREATE SEQUENCE public.xml_id_seq
     CACHE 1;
 
 
-ALTER SEQUENCE public.xml_id_seq OWNER TO admin;
-
 --
--- Name: xml_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: admin
+-- Name: xml_id_seq; Type: SEQUENCE OWNED BY; Schema: public
 --
 
 ALTER SEQUENCE public.xml_id_seq OWNED BY public.xml.id;
 
 
 --
--- Name: document id; Type: DEFAULT; Schema: public; Owner: admin
+-- Name: document id; Type: DEFAULT; Schema: public
 --
 
 ALTER TABLE ONLY public.document ALTER COLUMN id SET DEFAULT nextval('public.document_id_seq'::regclass);
 
 
 --
--- Name: instance id; Type: DEFAULT; Schema: public; Owner: admin
+-- Name: instance id; Type: DEFAULT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance ALTER COLUMN id SET DEFAULT nextval('public.instance_id_seq'::regclass);
 
 
 --
--- Name: ledgerrequest id; Type: DEFAULT; Schema: public; Owner: admin
+-- Name: ledgerrequest id; Type: DEFAULT; Schema: public
 --
 
 ALTER TABLE ONLY public.ledgerrequest ALTER COLUMN id SET DEFAULT nextval('public.ledgerrequest_id_seq'::regclass);
 
 
 --
--- Name: xml id; Type: DEFAULT; Schema: public; Owner: admin
+-- Name: xml id; Type: DEFAULT; Schema: public
 --
 
 ALTER TABLE ONLY public.xml ALTER COLUMN id SET DEFAULT nextval('public.xml_id_seq'::regclass);
 
 
 --
--- Name: document document_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: document document_pkey; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.document
@@ -305,7 +276,7 @@ ALTER TABLE ONLY public.document
 
 
 --
--- Name: instance_designs instance_designs_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_designs instance_designs_pkey; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_designs
@@ -313,7 +284,7 @@ ALTER TABLE ONLY public.instance_designs
 
 
 --
--- Name: instance instance_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance instance_pkey; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance
@@ -321,7 +292,7 @@ ALTER TABLE ONLY public.instance
 
 
 --
--- Name: instance_specifications instance_specifications_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_specifications instance_specifications_pkey; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_specifications
@@ -329,7 +300,7 @@ ALTER TABLE ONLY public.instance_specifications
 
 
 --
--- Name: ledgerrequest ledgerrequest_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: ledgerrequest ledgerrequest_pkey; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.ledgerrequest
@@ -337,7 +308,7 @@ ALTER TABLE ONLY public.ledgerrequest
 
 
 --
--- Name: instance mrn_version_constraint; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance mrn_version_constraint; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance
@@ -345,7 +316,7 @@ ALTER TABLE ONLY public.instance
 
 
 --
--- Name: instance uk_gq32irmf5yu82sx86ih3fgsnt; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance uk_gq32irmf5yu82sx86ih3fgsnt; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance
@@ -353,7 +324,7 @@ ALTER TABLE ONLY public.instance
 
 
 --
--- Name: instance uk_swfuwkflpfywn6qlwxlpe5bkb; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance uk_swfuwkflpfywn6qlwxlpe5bkb; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance
@@ -361,7 +332,7 @@ ALTER TABLE ONLY public.instance
 
 
 --
--- Name: xml xml_pkey; Type: CONSTRAINT; Schema: public; Owner: admin
+-- Name: xml xml_pkey; Type: CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.xml
@@ -369,7 +340,7 @@ ALTER TABLE ONLY public.xml
 
 
 --
--- Name: instance fk28hf3yf6p0k18v1epodb1mqmk; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance fk28hf3yf6p0k18v1epodb1mqmk; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance
@@ -377,7 +348,7 @@ ALTER TABLE ONLY public.instance
 
 
 --
--- Name: instance fk385xaqb9hb5lihe7gqrbh8s1v; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance fk385xaqb9hb5lihe7gqrbh8s1v; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance
@@ -385,7 +356,7 @@ ALTER TABLE ONLY public.instance
 
 
 --
--- Name: instance_designs fk447t5jpf2nvff5wpwjqyll5in; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_designs fk447t5jpf2nvff5wpwjqyll5in; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_designs
@@ -393,7 +364,7 @@ ALTER TABLE ONLY public.instance_designs
 
 
 --
--- Name: document fk7lj6kapjrnq817tu3cqaddb68; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: document fk7lj6kapjrnq817tu3cqaddb68; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.document
@@ -401,7 +372,7 @@ ALTER TABLE ONLY public.document
 
 
 --
--- Name: instance_service_type fk9jt9kmu6hfdpopje2tfru22la; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_service_type fk9jt9kmu6hfdpopje2tfru22la; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_service_type
@@ -409,7 +380,7 @@ ALTER TABLE ONLY public.instance_service_type
 
 
 --
--- Name: instance_specifications fkb1qhu7u3ax3y0u5q1wmluoff5; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_specifications fkb1qhu7u3ax3y0u5q1wmluoff5; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_specifications
@@ -417,7 +388,7 @@ ALTER TABLE ONLY public.instance_specifications
 
 
 --
--- Name: instance_data_product_type fkba03pdlgvr1gfyjdve50tnl70; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_data_product_type fkba03pdlgvr1gfyjdve50tnl70; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_data_product_type
@@ -425,7 +396,7 @@ ALTER TABLE ONLY public.instance_data_product_type
 
 
 --
--- Name: ledgerrequest fkh19ua4lgk2h63jhpyjqxcm6yf; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: ledgerrequest fkh19ua4lgk2h63jhpyjqxcm6yf; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.ledgerrequest
@@ -433,7 +404,7 @@ ALTER TABLE ONLY public.ledgerrequest
 
 
 --
--- Name: instance_keywords fkkg6qrgf97q3xlhwlujwku0n43; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_keywords fkkg6qrgf97q3xlhwlujwku0n43; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_keywords
@@ -441,7 +412,7 @@ ALTER TABLE ONLY public.instance_keywords
 
 
 --
--- Name: instance_unlocode fkrkqiysf8pmo0pmuv505lv8unm; Type: FK CONSTRAINT; Schema: public; Owner: admin
+-- Name: instance_unlocode fkrkqiysf8pmo0pmuv505lv8unm; Type: FK CONSTRAINT; Schema: public
 --
 
 ALTER TABLE ONLY public.instance_unlocode
