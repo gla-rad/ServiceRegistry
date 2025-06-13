@@ -10,13 +10,24 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.BinaryWebSocketHandler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URI;
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 /**
  * The MMs Edge Router Component
@@ -91,11 +102,9 @@ public class MmsEdgeRouter {
 
                 // TODO: Call proper API
 
-
             } else {
                 log.error("Cannot handle message type: {}", type);
             }
-
 
         // Case: Response from Router when sending global search request to the MMS Network
         } else if (msg.hasResponseMessage()) {
@@ -110,14 +119,48 @@ public class MmsEdgeRouter {
                 log.info("Message {} successfully sent to MMS Router", resp.getResponseToUuid());
             }
         }
-
-
-
     }
 
-    private void connectWebSocket () {
-
+    private void connect() {
+         try {
+             connectWebSocket();
+             connectMmtp();
+         } catch (Exception e) {
+             log.error("Error connecting to MMS Router", e);
+         }
     }
+
+
+    private void connectMmtp() throws IOException {
+         mmtpFactory.createConnectMessage();
+         sendMessage(mmtpFactory.createConnectMessage());
+    }
+
+    private void connectWebSocket () throws
+            NoSuchAlgorithmException,
+            URISyntaxException,
+            ExecutionException,
+            InterruptedException,
+            CertificateException,
+            UnrecoverableKeyException,
+            IOException,
+            KeyStoreException,
+            KeyManagementException
+    {
+
+        //Setup ssl context
+        KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+        keyManagerFactory.init(keystoreUtil.getMmsKeystore(), keystoreUtil.getMmsKeystorePassword());
+
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
+
+        StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
+        URI uri = new URI(routerUrl);
+        webSocketSession = webSocketClient.execute(new MMSWebsocketHandler(this), null, uri).get();
+        log.info("Connected to MMS router {}", routerUrl);
+    }
+
 
     private byte[] generateSignature(String subject, long expires, String ownMrn, byte []body) {
         return new byte[0];

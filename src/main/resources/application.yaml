@@ -124,8 +124,8 @@ info:
             url: wss://eu-router.dmc.international:8080
         ownEdgerouter:
             keyStore:
-                path:
-                password:
+                    path:
+                    password:
             rootCA:
                 path:
 eureka:
