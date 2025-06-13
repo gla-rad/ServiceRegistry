@@ -33,6 +33,7 @@ public class MmsEdgeRouter {
     @Value("${info.mms.router.url}")
     private String routerUrl;
     private final KeyStoreUtil keystoreUtil;
+    private final MmtpFactory mmtpFactory;
 
     private WebSocketSession webSocketSession;
 
@@ -41,8 +42,9 @@ public class MmsEdgeRouter {
      *
      * @param keystoreUtil Utility for handling keystore operations.
      */  @Autowired
-    public MmsEdgeRouter(KeyStoreUtil keystoreUtil) {
-        this.keystoreUtil = keystoreUtil;
+    public MmsEdgeRouter(KeyStoreUtil keystoreUtil, MmtpFactory mmtpFactory) {
+         this.keystoreUtil = keystoreUtil;
+         this.mmtpFactory = mmtpFactory;
     }
 
     @PreDestroy
@@ -58,21 +60,15 @@ public class MmsEdgeRouter {
 
     }
 
-    //Send an mmtp receive to the edgerouter
-    private void receive() {
-        MmtpMessage receiveMessage = MmtpMessage.newBuilder()
-                .setMsgType(MsgType.PROTOCOL_MESSAGE)
-                .setUuid(UUID.randomUUID().toString())
-                .setProtocolMessage(ProtocolMessage.newBuilder()
-                        .setProtocolMsgType(ProtocolMessageType.RECEIVE_MESSAGE)
-                        .setReceiveMessage(Receive.newBuilder())
-                ).build();
+    //Send an MMTP receive to the Router
+    private void receive() throws IOException {
+        MmtpMessage receiveMessage = this.mmtpFactory.createReceiveMessage();
+        sendMessage(receiveMessage);
+    }
 
-        try {
-            sendMessage(receiveMessage);
-        } catch (IOException e) {
-            log.error("Error sending receive message to MMS Router: {}", e.getMessage());
-        }
+    // Will send a receive
+    private void handleNotify() throws IOException {
+        this.receive();
     }
 
 
@@ -81,19 +77,27 @@ public class MmsEdgeRouter {
         // Case: Incoming global search request
         if (msg.hasProtocolMessage()) {
 
-            // Check if it is a Notify, and then Receive Messages
+            // Check if it is a Notify,
+            var type = msg.getProtocolMessage().getProtocolMsgType();
+            if (type == ProtocolMessageType.NOTIFY_MESSAGE) {
+                try {
+                    handleNotify();
+                } catch (IOException e) {
+                    log.error("Error pulling messages from router upon receiving a Notify", e);
+                }
+            } else if (type == ProtocolMessageType.SEND_MESSAGE) {
+                byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
+                // TODO: Attempt parsding of payload as JSON object according to MSR open API
 
-            //Extract body
-            byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
-
-            //Pass the body as input to a local search
-
-            // TODO: Attempt parsding of payload as JSON object according to MSR open API
-
-            // TODO: Call proper API
+                // TODO: Call proper API
 
 
-            // Case: Response from Router when sending global search request to the MMS Network
+            } else {
+                log.error("Cannot handle message type: {}", type);
+            }
+
+
+        // Case: Response from Router when sending global search request to the MMS Network
         } else if (msg.hasResponseMessage()) {
             ResponseMessage resp = msg.getResponseMessage();
             if (resp.getResponse() != ResponseEnum.GOOD) {

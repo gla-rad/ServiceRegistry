@@ -1,9 +1,10 @@
 package net.maritimeconnectivity.serviceregistry.components.mms;
 
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.mmtp.MmtpMessage;
+import net.maritimeconnectivity.mmtp.*;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -22,8 +23,13 @@ public class ProtobufMmtpFactory implements MmtpFactory {
 
     @Override
     public MmtpMessage createReceiveMessage() {
-        // Implementation for creating a receive message
-        return null; // Replace with actual implementation
+        return MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.RECEIVE_MESSAGE)
+                        .setReceiveMessage(Receive.newBuilder())
+                ).build();
     }
 
     @Override
