@@ -30,6 +30,7 @@ spring:
         password: ${service.variable.datasource.database.password}
     flyway:
         enabled: true
+        schemas: public
 
     # Keycloak Configuration
     security:
