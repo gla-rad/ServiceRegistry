@@ -11,13 +11,11 @@ import org.grad.secom.core.models.SearchParameters;
 @Setter
 public class MmsSearchMessageDto {
 
-    @JsonProperty("endpoint")
-    private String endpoint;
+    private String endpoint; //Should contain transactionID
 
-    @JsonProperty("consumerMRN")
+    @Getter
     private String consumerMRN;
 
-    @JsonProperty("searchObject")
     private SearchParameters searchParameters;
 
     public MmsSearchMessageDto(String endpoint, String consumerMRN, SearchParameters searchParams) {
@@ -25,4 +23,5 @@ public class MmsSearchMessageDto {
         this.consumerMRN = consumerMRN;
         this.searchParameters = searchParams;
     }
+
 }
