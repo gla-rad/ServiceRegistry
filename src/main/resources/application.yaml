@@ -128,6 +128,9 @@ info:
                     password:
             rootCA:
                 path:
+    gmsp:
+        search:
+            globalSubject: 'urn:mrn:mcp:msr:search:global'
 eureka:
     client:
         enabled: false
