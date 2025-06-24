@@ -1,7 +1,9 @@
 package net.maritimeconnectivity.serviceregistry.components;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
@@ -16,6 +18,11 @@ import java.time.Duration;
 
 @Component
 @Slf4j
+
+/*
+This class implements use case 2 and 3 as defined in IALA Guideline on Maritime Service Registry (MSR) Technical Specification
+
+ */
 public class Gmsp {
 
     @Value("${info.gmsp.search.globalSubject}")
@@ -32,27 +39,29 @@ public class Gmsp {
         this.mmsEdgeRouter = er;
         this.mmtpFactory = mmtpFactory;
 
-        // Create mmtpFactory and register it with the MmsEdgeRouter
-
     }
 
+    /*
+    Assumes local search is conducted elsewhere
+    The DTO passed much contain the endpoint (including transaction ID) to which the response should be sent,
 
+
+   From UC3, step 4: The consumer's MSR propagates the search request (along with the geometry provided description of the route) to the Global MCP Search Platform.
+     */
     public void globalSearch (MmsSearchMessageDto mmsSearchMessageDto) {
         try {
             // Convert MmsSearchMessageDto to JSON string
             String searchMessageJson = writeJsonSearchMessage(mmsSearchMessageDto);
 
-            //Set TTL to 1 h. Note this is a high level java object and not seconds after epoch
-            Duration ttl = Duration.ofHours(1);
-
             //Calculate subject based on whether geometry is present
             // TODO: Implement this, but we need to have postgis calculate the intersections of the geometry
+            // should be named CalculateSubjectFromGeometry
 
             MmtpMessage msg = this.mmtpFactory.createSendMessage(
                     globalSearchSubject,
                     mmsSearchMessageDto.getConsumerMRN(),
                     searchMessageJson,
-                    ttl
+                    Duration.ofHours(1)
             );
 
             mmsEdgeRouter.sendMessage(msg);
@@ -69,10 +78,18 @@ public class Gmsp {
         return objectMapper.writeValueAsString(mmsSearchMessageDto);
     }
 
+    public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) {
+        log.info("Handling global search request from MMS Router for Endpoint/XactID: {}", dto.getEndpoint());
+
+        // TODO: initiate local search or further processing here
+
+        // TODO: Once local search is done, a response must be uploaded to the endpoint specified in the DTO
+    }
 
 
 
-    //Somefunction that can call a callback to client code upon event
-
+    public MmsSearchMessageDto parseSearchDto(String json) throws JsonProcessingException {
+        return objectMapper.readValue(json, MmsSearchMessageDto.class);
+    }
 
 }

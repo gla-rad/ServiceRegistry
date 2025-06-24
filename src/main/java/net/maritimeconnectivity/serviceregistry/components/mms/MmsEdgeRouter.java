@@ -1,8 +1,11 @@
 package net.maritimeconnectivity.serviceregistry.components.mms;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PreDestroy;
 import net.maritimeconnectivity.mmtp.*;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +50,14 @@ public class MmsEdgeRouter {
     private final MmtpFactory mmtpFactory;
 
     private WebSocketSession webSocketSession;
+    private Gmsp gmsp;
+
+    @Autowired //Necessary to avoid circular dependency as the Gmsp has The edgerouter constructor injected
+    public void setGmsp(Gmsp gmsp) {
+        this.gmsp = gmsp;
+    }
+
+
 
     /**
      * Constructor for MmsEdgeRouter.
@@ -98,10 +109,16 @@ public class MmsEdgeRouter {
                 }
             } else if (type == ProtocolMessageType.SEND_MESSAGE) {
                 byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
-                // TODO: Attempt parsding of payload as JSON object according to MSR open API
 
-                // TODO: Call proper API
+                try {
 
+                String json = new String(body);
+                MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
+                gmsp.handleIncomingGlobalSearch(dto);
+
+                } catch (JsonProcessingException e) {
+                    log.error("Error parsing JSON from MMS Router: {}", e.getMessage());
+                }
             } else {
                 log.error("Cannot handle message type: {}", type);
             }
