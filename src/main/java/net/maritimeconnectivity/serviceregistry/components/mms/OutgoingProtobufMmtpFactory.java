@@ -1,5 +1,6 @@
 package net.maritimeconnectivity.serviceregistry.components.mms;
 
+import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.mmtp.*;
 import org.springframework.stereotype.Component;
@@ -18,7 +19,27 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
 
     @Override
     public OutgoingMmtpMessage createSendMessage(String subject, String sender, String body, Duration ttl) {
-        return null;
+        long expires = 0;
+        byte[] payload = body.getBytes();
+
+        return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.SEND_MESSAGE)
+                        .setSendMessage(Send.newBuilder()
+                                .setApplicationMessage(ApplicationMessage.newBuilder()
+                                        .setHeader(ApplicationMessageHeader.newBuilder()
+                                                .setExpires(expires)
+                                                .setBodySizeNumBytes(payload.length)
+                                                .setSubject(subject)
+                                                .setSender(sender)
+                                        )
+                                        .setSignature(null) // TODO Replace with actual signing algorithm
+                                        .setBody(ByteString.copyFrom(payload))
+                                )
+                        )
+                ).build());
     }
 
     @Override
