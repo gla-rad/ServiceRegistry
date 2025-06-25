@@ -3,7 +3,6 @@ import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 
-@Component
 public interface OutgoingMmtpFactory {
 
     OutgoingMmtpMessage createConnectMessage();

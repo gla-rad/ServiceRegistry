@@ -1,18 +1,16 @@
 package net.maritimeconnectivity.serviceregistry.components;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.ObjectCodec;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
-import net.maritimeconnectivity.serviceregistry.components.mms.MmtpFactory;
+import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
+import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -35,9 +33,9 @@ public class Gmsp {
 
     private final MmsEdgeRouter mmsEdgeRouter;
 
-    private final MmtpFactory mmtpFactory;
+    private final OutgoingMmtpFactory mmtpFactory;
 
-    public Gmsp(MmsEdgeRouter er, MmtpFactory mmtpFactory) {
+    public Gmsp(MmsEdgeRouter er, OutgoingMmtpFactory mmtpFactory) {
         this.mmsEdgeRouter = er;
         this.mmtpFactory = mmtpFactory;
 
@@ -59,17 +57,17 @@ public class Gmsp {
             //Calculate subject based on whether geometry is present
             // TODO: Implement this, but we need to have postgis calculate the intersections of the geometry
             // should be named CalculateSubjectFromGeometry
-            List<MmtpMessage> messages = new ArrayList<>();
+            List<OutgoingMmtpMessage> messages = new ArrayList<>();
 
 
             if (!mmsSearchMessageDto.hasGeometry()) {
-                MmtpMessage msg = this.mmtpFactory.createSendMessage(
+                OutgoingMmtpMessage outMsg = this.mmtpFactory.createSendMessage(
                         globalSearchSubject,
                         mmsSearchMessageDto.getConsumerMRN(),
                         searchMessageJson,
                         Duration.ofHours(1)
                 );
-                messages.add(msg);
+                messages.add(outMsg);
             } else {
                 // Infer subjects from geometry
                 // Add subjects
@@ -77,7 +75,7 @@ public class Gmsp {
             }
 
         // Send each message to the MMS Edge Router
-        for (MmtpMessage msg : messages) {
+        for (OutgoingMmtpMessage msg : messages) {
             mmsEdgeRouter.sendMessage(msg);
             log.info("Global search request sent to MMS Router for Endpoint/XactID: {}", mmsSearchMessageDto.getEndpoint());
         }
