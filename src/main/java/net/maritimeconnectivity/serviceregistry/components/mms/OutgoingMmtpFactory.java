@@ -1,23 +1,21 @@
 package net.maritimeconnectivity.serviceregistry.components.mms;
-import net.maritimeconnectivity.mmtp.MmtpMessage;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.List;
 
 @Component
-public interface MmtpFactory {
+public interface OutgoingMmtpFactory {
 
-    MmtpMessage createConnectMessage();
+    OutgoingMmtpMessage createConnectMessage();
 
-    MmtpMessage createSendMessage(
+    OutgoingMmtpMessage createSendMessage(
             String subject,
             String sender,
             String body,
             Duration ttl
     );
 
-    MmtpMessage createReceiveMessage();
+    OutgoingMmtpMessage createReceiveMessage();
 
-    MmtpMessage createDisconnectMessage();
+    OutgoingMmtpMessage createDisconnectMessage();
 }

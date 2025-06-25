@@ -29,7 +29,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -57,8 +56,6 @@ public class MmsEdgeRouter {
         this.gmsp = gmsp;
     }
 
-
-
     /**
      * Constructor for MmsEdgeRouter.
      *
@@ -74,8 +71,10 @@ public class MmsEdgeRouter {
         //Handle closing of websocket and mmtp session somewhat gracefully
     }
 
-    public void sendMessage(MmtpMessage mmtpMessage) throws IOException {
-        byte[] bytes = mmtpMessage.toByteArray();
+    public void sendMessage(OutgoingMmtpMessage msg) throws IOException {
+
+
+        byte[] bytes = msg.getMessage().toByteArray();
         webSocketSession.sendMessage(new BinaryMessage(bytes));
 
         // TODO: Possibly keep track of sent messages and UUIDs in order to be able to report a progress to GMSP
