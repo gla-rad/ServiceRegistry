@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
+import org.bouncycastle.pqc.jcajce.provider.Falcon;
 import org.grad.secom.core.models.SearchParameters;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -22,6 +23,11 @@ public class MmsSearchMessageDto {
         this.endpoint = endpoint;
         this.consumerMRN = consumerMRN;
         this.searchParameters = searchParams;
+    }
+
+    public boolean hasGeometry() {
+        // TODO Implement this method to check if the searchParameters contain a geometry
+        return false;
     }
 
 }

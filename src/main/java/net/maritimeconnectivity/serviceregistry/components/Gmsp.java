@@ -15,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -53,18 +55,32 @@ public class Gmsp {
             // Convert MmsSearchMessageDto to JSON string
             String searchMessageJson = writeJsonSearchMessage(mmsSearchMessageDto);
 
+
             //Calculate subject based on whether geometry is present
             // TODO: Implement this, but we need to have postgis calculate the intersections of the geometry
             // should be named CalculateSubjectFromGeometry
+            List<MmtpMessage> messages = new ArrayList<>();
 
-            MmtpMessage msg = this.mmtpFactory.createSendMessage(
-                    globalSearchSubject,
-                    mmsSearchMessageDto.getConsumerMRN(),
-                    searchMessageJson,
-                    Duration.ofHours(1)
-            );
 
+            if (!mmsSearchMessageDto.hasGeometry()) {
+                MmtpMessage msg = this.mmtpFactory.createSendMessage(
+                        globalSearchSubject,
+                        mmsSearchMessageDto.getConsumerMRN(),
+                        searchMessageJson,
+                        Duration.ofHours(1)
+                );
+                messages.add(msg);
+            } else {
+                // Infer subjects from geometry
+                // Add subjects
+                messages.add(null);
+            }
+
+        // Send each message to the MMS Edge Router
+        for (MmtpMessage msg : messages) {
             mmsEdgeRouter.sendMessage(msg);
+            log.info("Global search request sent to MMS Router for Endpoint/XactID: {}", mmsSearchMessageDto.getEndpoint());
+        }
 
 
         } catch (JsonProcessingException e) {
