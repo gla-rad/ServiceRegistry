@@ -10,6 +10,7 @@ import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -46,12 +47,13 @@ public class MmsEdgeRouter {
     @Value("${info.mms.router.url}")
     private String routerUrl;
     private final KeyStoreUtil keystoreUtil;
-    private final MmtpFactory mmtpFactory;
+    private final OutgoingMmtpFactory mmtpFactory;
 
     private WebSocketSession webSocketSession;
     private Gmsp gmsp;
 
     @Autowired //Necessary to avoid circular dependency as the Gmsp has The edgerouter constructor injected
+    @Lazy
     public void setGmsp(Gmsp gmsp) {
         this.gmsp = gmsp;
     }
@@ -61,9 +63,10 @@ public class MmsEdgeRouter {
      *
      * @param keystoreUtil Utility for handling keystore operations.
      */  @Autowired
-    public MmsEdgeRouter(KeyStoreUtil keystoreUtil, MmtpFactory mmtpFactory) {
-         this.keystoreUtil = keystoreUtil;
-         this.mmtpFactory = mmtpFactory;
+    public MmsEdgeRouter(KeyStoreUtil keystoreUtil, OutgoingMmtpFactory mmtpFactory) {
+        this.keystoreUtil = keystoreUtil;
+        this.mmtpFactory = mmtpFactory;
+
     }
 
     @PreDestroy
@@ -83,7 +86,7 @@ public class MmsEdgeRouter {
 
     //Send an MMTP receive to the Router
     private void receive() throws IOException {
-        MmtpMessage receiveMessage = this.mmtpFactory.createReceiveMessage();
+        OutgoingMmtpMessage receiveMessage = this.mmtpFactory.createReceiveMessage();
         sendMessage(receiveMessage);
     }
 
