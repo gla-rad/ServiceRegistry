@@ -73,6 +73,12 @@ public class MmsEdgeRouter {
 
     @PreDestroy
     public void preDestroy() throws IOException, InterruptedException {
+         //Make sure we are disconnected
+        if (webSocketSession.isOpen()) {
+            OutgoingMmtpMessage disconnectMessage = mmtpFactory.createDisconnectMessage();
+            sendMessage(disconnectMessage);
+        }
+
         //Handle closing of websocket and mmtp session somewhat gracefully
     }
 
