@@ -25,9 +25,4 @@ public class MmsSearchMessageDto {
         this.searchParameters = searchParams;
     }
 
-    public boolean hasGeometry() {
-        // TODO Implement this method to check if the searchParameters contain a geometry
-        return false;
-    }
-
 }
