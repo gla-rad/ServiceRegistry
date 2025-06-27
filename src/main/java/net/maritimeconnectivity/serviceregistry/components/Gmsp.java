@@ -45,14 +45,6 @@ public class Gmsp {
 
     }
 
-    /*
-    Assumes local search is conducted elsewhere
-    The DTO passed much contain the endpoint (including transaction ID) to which the response should be sent,
-
-
-   From UC3, step 4: The consumer's MSR propagates the search request (along with the geometry provided description of the route) to the Global MCP Search Platform.
-     */
-
     /**
      * Global Search using MMS.
      * @param searchFilterObj The object representing the SECOM searchService call
