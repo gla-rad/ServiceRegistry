@@ -13,8 +13,13 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
 
     @Override
     public OutgoingMmtpMessage createConnectMessage() {
-        // Implementation for creating a connect message
-        return null; // Replace with actual implementation
+        return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.CONNECT_MESSAGE)
+                        .setConnectMessage(Connect.newBuilder())
+                ).build());
     }
 
     @Override
@@ -55,8 +60,13 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
 
     @Override
     public OutgoingMmtpMessage createDisconnectMessage() {
-        // Implementation for creating a disconnect message
-        return null; // Replace with actual implementation
+        return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.DISCONNECT_MESSAGE)
+                        .setDisconnectMessage(Disconnect.newBuilder())
+                ).build());
     }
 
 
