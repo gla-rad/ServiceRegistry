@@ -52,6 +52,8 @@ public class MmsEdgeRouter {
     private WebSocketSession webSocketSession;
     private Gmsp gmsp;
 
+
+
     @Autowired //Necessary to avoid circular dependency as the Gmsp has The edgerouter constructor injected
     @Lazy
     public void setGmsp(Gmsp gmsp) {
@@ -148,7 +150,6 @@ public class MmsEdgeRouter {
              log.error("Error connecting to MMS Router", e);
          }
     }
-
 
     private void connectMmtp() throws IOException {
          mmtpFactory.createConnectMessage();

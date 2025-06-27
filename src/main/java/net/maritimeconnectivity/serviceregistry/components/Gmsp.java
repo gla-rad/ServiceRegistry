@@ -3,7 +3,6 @@ package net.maritimeconnectivity.serviceregistry.components;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
@@ -21,8 +20,7 @@ import java.util.List;
 @Slf4j
 
 /*
-This class implements use case 2 and 3 as defined in IALA Guideline on Maritime Service Registry (MSR) Technical Specification
-
+Implements the GMSP (Global Maritime Search Platform) functionality for the Service Registry.
  */
 public class Gmsp {
 
@@ -127,6 +125,11 @@ public class Gmsp {
         return objectMapper.writeValueAsString(mmsSearchMessageDto);
     }
 
+    /**
+     * Callback function to handle incoming global search requests from the MMS Router.
+     *
+     * @param dto The DTO containing the search request details.
+     */
     public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) {
         log.info("Handling global search request from MMS Router for Endpoint/XactID: {}", dto.getEndpoint());
 
