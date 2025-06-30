@@ -115,6 +115,25 @@ spring:
                     issuer-uri: 'http://localhost:8090/auth/realms/realm'
 ```
 
+## Global Maritime Search Platform (GMSP) Configuration
+To facilitate global search the MSR needs to configure the edgerouter it uses to properly propagate the 
+search request over the Maritime Messaging Service (MMS). Using the mms section of the *application.yaml* configuration file, the user shall set the following values before using global search.
+
+```yaml
+    mms:
+        mmtp:
+            duration:
+                minutes: 60 # Indicates the TTL of a MMS message
+        router:
+            url: wss://someUrl:somePort # Router in dedicated MMS network, to which the MSR's built in edgerouter can forward search requests
+        ownEdgerouter:
+            keyStore:
+                    path: # Path to a keystore (.p12) file containing the edgerouter's certificate and private key
+                    password: # Password for the keystore
+            rootCA:
+                path: # Path to a root CA certificate used for validating client requests
+```
+
 ## Docker Container
 A version of the MCP Service Registry is also available via
 [DockerHub](https://hub.docker.com/repository/docker/glarad/mc-service-registry/general).
