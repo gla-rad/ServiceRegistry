@@ -46,6 +46,7 @@ import java.util.concurrent.ExecutionException;
 public class MmsEdgeRouter {
 
     private volatile  boolean connected = false;
+    private volatile boolean initialized = false;
 
     @Value("${info.mms.router.url}")
     private String routerUrl;
@@ -72,15 +73,37 @@ public class MmsEdgeRouter {
     public MmsEdgeRouter(KeyStoreUtil keystoreUtil, OutgoingMmtpFactory mmtpFactory) {
         this.keystoreUtil = keystoreUtil;
         this.mmtpFactory = mmtpFactory;
-        this.ownMrn = keystoreUtil.getOwnMrn();
 
+        try {
+            this.ownMrn = keystoreUtil.getOwnMrn();
+        } catch (Exception e) {
+            log.error("Error retrieving own MRN from keystore: {}", e.getMessage());
+        }
+        initialized = true;
     }
 
     @PostConstruct
     public void init() {
+        try {
+            this.ownMrn = keystoreUtil.getOwnMrn();
+            log.info("Successfully retrieved own MRN: {}", ownMrn);
+        } catch (Exception e) {
+            log.error("Error retrieving own MRN from keystore", e);
+        }
+
         log.info("Initializing MmsEdgeRouter with router URL: {}", routerUrl);
-        connect();
+        this.initialized = true;
+
+        try {
+            connect();
+            this.connected = true;
+            log.info("Successfully connected to MMS Router");
+        } catch (Exception e) {
+            log.error("Error connecting to MMS Router", e);
+            this.connected = false; //
+        }
     }
+
 
     @PreDestroy
     public void preDestroy() throws IOException, InterruptedException {
@@ -159,18 +182,14 @@ public class MmsEdgeRouter {
         }
     }
 
-    private void connect() {
-         try {
-             connectWebSocket();
-             connectMmtp();
-             this.connected = true;
-         } catch (Exception e) {
-             log.error("Error connecting to MMS Router", e);
-         }
+    private void connect() throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, URISyntaxException, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
+         connectWebSocket();
+         connectMmtp();
+         this.connected = true;
     }
 
     private void connectMmtp() throws IOException {
-         OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage(keystoreUtil.getOwnMrn());
+         OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage(ownMrn);
 
          log.info("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
 
@@ -208,7 +227,7 @@ public class MmsEdgeRouter {
 
 
 
-    private class MMSWebsocketHandler extends BinaryWebSocketHandler {
+    private static class MMSWebsocketHandler extends BinaryWebSocketHandler {
 
         private final MmsEdgeRouter edgeRouterRef;
 
