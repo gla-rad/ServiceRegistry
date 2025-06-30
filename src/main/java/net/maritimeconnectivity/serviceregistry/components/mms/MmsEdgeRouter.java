@@ -192,10 +192,12 @@ public class MmsEdgeRouter {
         sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 
         StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
+        webSocketClient.setSslContext(sslContext);
         URI uri = new URI(routerUrl);
         webSocketSession = webSocketClient.execute(new MMSWebsocketHandler(this), null, uri).get();
         log.info("WS Connected to MMS router {}", routerUrl);
     }
+
 
 
 
