@@ -45,6 +45,8 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class MmsEdgeRouter {
 
+    private volatile  boolean connected = false;
+
     @Value("${info.mms.router.url}")
     private String routerUrl;
     private final KeyStoreUtil keystoreUtil;
@@ -159,6 +161,7 @@ public class MmsEdgeRouter {
          try {
              connectWebSocket();
              connectMmtp();
+             this.connected = true;
          } catch (Exception e) {
              log.error("Error connecting to MMS Router", e);
          }
