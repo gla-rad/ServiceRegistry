@@ -155,10 +155,9 @@ public class MmsEdgeRouter {
                 byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
 
                 try {
-
-                String json = new String(body);
-                MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
-                gmsp.handleIncomingGlobalSearch(dto);
+                    String json = new String(body);
+                    MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
+                    gmsp.handleIncomingGlobalSearch(dto);
 
                 } catch (JsonProcessingException e) {
                     log.error("Error parsing JSON from MMS Router: {}", e.getMessage());
@@ -221,9 +220,6 @@ public class MmsEdgeRouter {
         webSocketSession = webSocketClient.execute(new MMSWebsocketHandler(this), null, uri).get();
         log.info("WS Connected to MMS router {}", routerUrl);
     }
-
-
-
 
 
 
