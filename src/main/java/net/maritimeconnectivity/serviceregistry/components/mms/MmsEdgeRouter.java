@@ -49,6 +49,7 @@ public class MmsEdgeRouter {
 
     @Value("${info.mms.router.url}")
     private String routerUrl;
+    private String ownMrn;
     private final KeyStoreUtil keystoreUtil;
     private final OutgoingMmtpFactory mmtpFactory;
 
@@ -71,6 +72,7 @@ public class MmsEdgeRouter {
     public MmsEdgeRouter(KeyStoreUtil keystoreUtil, OutgoingMmtpFactory mmtpFactory) {
         this.keystoreUtil = keystoreUtil;
         this.mmtpFactory = mmtpFactory;
+        this.ownMrn = keystoreUtil.getOwnMrn();
 
     }
 
@@ -168,7 +170,7 @@ public class MmsEdgeRouter {
     }
 
     private void connectMmtp() throws IOException {
-         OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage();
+         OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage(keystoreUtil.getOwnMrn());
 
          log.info("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
 

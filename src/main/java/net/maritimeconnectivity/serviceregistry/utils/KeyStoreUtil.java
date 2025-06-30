@@ -11,6 +11,12 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.security.cert.Certificate;
+import java.util.List;
+import java.util.Set;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 
 @Slf4j
 @Component
@@ -29,4 +35,26 @@ public class KeyStoreUtil {
         return mmsKeystorePassword.toCharArray();
     }
 
+    public String getOwnMrn() {
+        try {
+            KeyStore keystore = getMmsKeystore();
+            String alias = keystore.aliases().nextElement(); // assumes only 1 cert
+            Certificate cert = keystore.getCertificate(alias);
+
+            if (cert instanceof X509Certificate) {
+                X509Certificate x509 = (X509Certificate) cert;
+
+                // Parse subject DN
+                LdapName ldapDN = new LdapName(x509.getSubjectX500Principal().getName());
+                for (Rdn rdn : ldapDN.getRdns()) {
+                    if (rdn.getType().equalsIgnoreCase("UID")) {
+                        return rdn.getValue().toString();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to extract MRN from keystore certificate", e);
+        }
+        return null;
+    }
 }
