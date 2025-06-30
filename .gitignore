@@ -43,3 +43,7 @@ build/
 ### Skip certs ###
 /certs/
 
+### Skip Local env configs ###
+.env
+
+
