@@ -46,3 +46,31 @@ net:
     maritimeconnectivity:
         serviceregistry:
             allowedContentTypes: application/pdf
+
+info:
+    msr:
+        name: ${service.variable.info.name}
+        mrn: ${service.variable.info.mrn}'
+        url: ${service.variable.info.url}
+        operatorName: ${service.variable.info.operator.name}
+        operatorMrn: ${service.variable.info.operator.mrn}
+        operatorContact: ${service.variable.info.operator.contact}
+        operatorUrl: ${service.variable.info.operator.url}
+        copyright: 'Copyright © 2025 Maritime Connectivity Platform Consortium'
+        projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
+        profile: ${spring.profiles.active:test}
+    mms:
+        mmtp:
+            duration:
+                minutes: 60
+        router:
+            url: wss://eu-router.dmc.international:8080
+        ownEdgerouter:
+            keyStore:
+                path: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
+                password: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
+            rootCA:
+                path:
+    gmsp:
+        search:
+            globalSubject: 'urn:mrn:mcp:msr:search:global'
