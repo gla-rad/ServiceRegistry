@@ -12,13 +12,14 @@ import java.util.UUID;
 public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
 
     @Override
-    public OutgoingMmtpMessage createConnectMessage() {
+    public OutgoingMmtpMessage createConnectMessage(String ownMrn) {
         return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
                 .setMsgType(MsgType.PROTOCOL_MESSAGE)
                 .setUuid(UUID.randomUUID().toString())
                 .setProtocolMessage(ProtocolMessage.newBuilder()
                         .setProtocolMsgType(ProtocolMessageType.CONNECT_MESSAGE)
-                        .setConnectMessage(Connect.newBuilder())
+                        .setConnectMessage(Connect.newBuilder()
+                                .setOwnMrn(ownMrn))
                 ).build());
     }
 

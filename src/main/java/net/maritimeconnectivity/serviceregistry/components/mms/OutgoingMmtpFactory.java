@@ -5,7 +5,7 @@ import java.time.Duration;
 
 public interface OutgoingMmtpFactory {
 
-    OutgoingMmtpMessage createConnectMessage();
+    OutgoingMmtpMessage createConnectMessage(String ownMrn);
 
     OutgoingMmtpMessage createSendMessage(
             String subject,

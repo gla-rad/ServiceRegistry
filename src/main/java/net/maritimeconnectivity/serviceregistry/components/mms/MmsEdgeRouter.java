@@ -168,8 +168,11 @@ public class MmsEdgeRouter {
     }
 
     private void connectMmtp() throws IOException {
-         mmtpFactory.createConnectMessage();
-         sendMessage(mmtpFactory.createConnectMessage());
+         OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage();
+
+         log.info("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
+
+         sendMessage(msg);
     }
 
     private void connectWebSocket () throws
