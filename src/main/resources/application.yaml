@@ -127,8 +127,8 @@ info:
             url: wss://eu-router.dmc.international:8080
         ownEdgerouter:
             keyStore:
-                    path:
-                    password:
+                    path: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
+                    password: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
             rootCA:
                 path:
     gmsp:

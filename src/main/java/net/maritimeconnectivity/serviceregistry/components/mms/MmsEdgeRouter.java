@@ -2,6 +2,7 @@ package net.maritimeconnectivity.serviceregistry.components.mms;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.InvalidProtocolBufferException;
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import net.maritimeconnectivity.mmtp.*;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
@@ -69,6 +70,12 @@ public class MmsEdgeRouter {
         this.keystoreUtil = keystoreUtil;
         this.mmtpFactory = mmtpFactory;
 
+    }
+
+    @PostConstruct
+    public void init() {
+        log.info("Initializing MmsEdgeRouter with router URL: {}", routerUrl);
+        connect();
     }
 
     @PreDestroy
@@ -184,12 +191,7 @@ public class MmsEdgeRouter {
         StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
         URI uri = new URI(routerUrl);
         webSocketSession = webSocketClient.execute(new MMSWebsocketHandler(this), null, uri).get();
-        log.info("Connected to MMS router {}", routerUrl);
-    }
-
-
-    private byte[] generateSignature(String subject, long expires, String ownMrn, byte []body) {
-        return new byte[0];
+        log.info("WS Connected to MMS router {}", routerUrl);
     }
 
 
