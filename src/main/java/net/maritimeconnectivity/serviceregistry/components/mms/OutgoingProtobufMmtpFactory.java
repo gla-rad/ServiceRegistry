@@ -41,7 +41,6 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
                                                 .setSubject(subject)
                                                 .setSender(sender)
                                         )
-                                        .setSignature(null) // TODO Replace with actual signing algorithm
                                         .setBody(ByteString.copyFrom(payload))
                                 )
                         )
