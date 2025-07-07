@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
+import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +15,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Slf4j
@@ -37,7 +40,10 @@ public class Gmsp {
 
     private final OutgoingMmtpFactory mmtpFactory;
 
+    private HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
+
     public Gmsp(MmsEdgeRouter er, OutgoingMmtpFactory mmtpFactory) {
+        this.globalSearchRequests = new HashMap<>();
         this.mmsEdgeRouter = er;
         this.mmtpFactory = mmtpFactory;
 
@@ -47,9 +53,10 @@ public class Gmsp {
      * Global Search using MMS.
      * @param searchFilterObj The object representing the SECOM searchService call
      * @param endpoint The endpoint to which the response should be sent. The transactionID is part of the URL.
+     * @return uuid to uniquely identify the global search request
      * TODO: Consider where the check of certificate validity should be done.
      */
-    public void globalSearch (String endpoint, String consumerMrn, SearchFilterObject searchFilterObj) {
+    public String globalSearch (String endpoint, String consumerMrn, SearchFilterObject searchFilterObj) {
         try {
             MmsSearchMessageDto searchMessageDto = new MmsSearchMessageDto(
                     endpoint, // This should contain the transaction ID
@@ -85,17 +92,27 @@ public class Gmsp {
                 messages.add(msg);
             }
 
-        // Send each message to the MMS Edge Router
-        for (OutgoingMmtpMessage msg : messages) {
-            mmsEdgeRouter.sendMessage(msg);
-            log.info("Global search request sent to MMS Router for Endpoint/XactID: {}", endpoint);
-        }
+            //Create GlobalSearchRequest Oject
+            GlobalSearchRequestDto gsr = new GlobalSearchRequestDto(messages.size());
+            String gsrUuid = UUID.randomUUID().toString();
 
+            // Send each message to the MMS Edge Router
+            for (OutgoingMmtpMessage msg : messages) {
+
+                msg.setGsrUuid(gsrUuid); // Set the UUID for tracking
+                mmsEdgeRouter.sendMessage(msg);
+                log.info("Global search request sent to MMS Router for Endpoint/XactID: {}", endpoint);
+            }
+            this.globalSearchRequests.put(gsrUuid, gsr);
+
+            return gsrUuid;
         } catch (JsonProcessingException e) {
             log.error("Error writing JSON for MmsSearchMessageDto", e);
         } catch (IOException e) {
             log.error("Error sending message via MmsEdgeRouter", e);
         }
+
+        return null;
     }
 
 
@@ -118,6 +135,10 @@ public class Gmsp {
     private ArrayList<String> calculateSubjectsFromGeometry(String geometry) {
         // This method should calculate the subjects based on the geometry provided.
         // For now, it returns an empty list as a placeholder.
+
+
+        //Give me all areas where the WKT geometry intersects with the areas of interest.
+
         return new ArrayList<>();
     }
 
@@ -140,9 +161,22 @@ public class Gmsp {
 
 
 
-
     public MmsSearchMessageDto parseSearchDto(String json) throws JsonProcessingException {
         return objectMapper.readValue(json, MmsSearchMessageDto.class);
     }
 
+
+    public void globalSearchRequestCallback(String uuid) {
+        GlobalSearchRequestDto gsr = this.globalSearchRequests.get(uuid);
+        if (gsr != null) {
+            gsr.decrementCount();
+        }
+    }
+
+    public boolean isSent(String gsrUuid) {
+        if  (this.globalSearchRequests.containsKey(gsrUuid)) {
+            return this.globalSearchRequests.get(gsrUuid).isSent();
+        }
+        return false;
+    }
 }

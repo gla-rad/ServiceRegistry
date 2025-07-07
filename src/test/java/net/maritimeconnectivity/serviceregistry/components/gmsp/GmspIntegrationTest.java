@@ -8,6 +8,7 @@ import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingProtobufM
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchParameters;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -36,11 +39,18 @@ class GmspIntegrationTest {
         String testEndpoint = "http://example.com/test/endpoint";
         String testMrn = "urn:mrn:mcp:example:test:client";
 
-        // Act & Assert
         assertDoesNotThrow(() -> {
-            gmsp.globalSearch(testEndpoint, testMrn, sfo);
-        });
-    }
+            String gmspRequestUuid = gmsp.globalSearch(testEndpoint, testMrn, sfo);
 
+            //Sleep for 4 seconds
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            Assertions.assertTrue(gmsp.isSent(gmspRequestUuid));
+        });
+
+    }
 
 }

@@ -31,6 +31,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -45,6 +46,8 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 public class MmsEdgeRouter {
 
+    public static final int RETRANSMISSION_NUM = 5;
+
     private volatile  boolean connected = false;
     private volatile boolean initialized = false;
 
@@ -56,7 +59,7 @@ public class MmsEdgeRouter {
 
     private WebSocketSession webSocketSession;
     private Gmsp gmsp;
-
+    private HashMap<String, OutgoingMmtpMessage> msgBuffer = new HashMap<>();
 
 
     @Autowired //Necessary to avoid circular dependency as the Gmsp has The edgerouter constructor injected
@@ -118,12 +121,19 @@ public class MmsEdgeRouter {
 
     public void sendMessage(OutgoingMmtpMessage msg) throws IOException {
 
+        String uuid = msg.getMessage().getUuid();
 
         byte[] bytes = msg.getMessage().toByteArray();
+
+        //Only add on first attempt to send
+        if (!this.msgBuffer.containsKey(uuid)) {
+            this.msgBuffer.put(uuid, msg);
+        }
         webSocketSession.sendMessage(new BinaryMessage(bytes));
 
-        // TODO: Possibly keep track of sent messages and UUIDs in order to be able to report a progress to GMSP
-
+        log.info("Sent message with UUID: {} to MMS Router", uuid);
+        msg.incrementSendAttempts();
+        msg.updateTimestamp();
     }
 
     //Send an MMTP receive to the Router
@@ -168,17 +178,38 @@ public class MmsEdgeRouter {
 
         // Case: Response from Router when sending global search request to the MMS Network
         } else if (msg.hasResponseMessage()) {
-            ResponseMessage resp = msg.getResponseMessage();
-            if (resp.getResponse() != ResponseEnum.GOOD) {
-                String respToUuid = resp.getResponseToUuid();
-                String reason = resp.getReasonText();
-                log.error("Error response from MMS Router for UUID {}: Code: {}: {}", respToUuid, resp.getResponse(), reason);
+            String responseToUuid = msg.getResponseMessage().getResponseToUuid();
+            OutgoingMmtpMessage bufferedMsg = this.msgBuffer.get(responseToUuid);
 
-                // TODO: Possible action to re-transmit the message or notify the user
+            ResponseMessage resp = msg.getResponseMessage();
+            log.info("New response to UUID {}: Code: {}, Reason: {}", responseToUuid, resp.getResponse(), resp.getReasonText());
+            if (resp.getResponse() != ResponseEnum.GOOD) {
+                String reason = resp.getReasonText();
+
+                if (bufferedMsg.getSendAttempts() < RETRANSMISSION_NUM) {
+                    log.error("Error response from MMS Router for UUID {}: Code: {}: {}, Attempting Retransmit...", responseToUuid, resp.getResponse(), reason);
+                    try {
+                        this.sendMessage(bufferedMsg);
+                    } catch (Exception e) {
+                        log.error("Error sending retransmit.", e);
+                    }
+                } else {
+                    log.error("Error response from MMS Router for UUID {}: Code {}: {}, Cannot re-transmit, Discarding", responseToUuid, resp.getResponse(), reason);
+                }
             } else {
-                log.info("Message {} successfully sent to MMS Router", resp.getResponseToUuid());
+                if (this.msgBuffer.containsKey(responseToUuid)) {
+                    log.info("ACK: Message {} successfully sent to MMS Router", resp.getResponseToUuid());
+                    gmsp.globalSearchRequestCallback(bufferedMsg.getGsrUuid());
+                    this.msgBuffer.remove(responseToUuid);
+                } else {
+                    log.error("Received response to unknown message: {}", resp.getResponseToUuid());
+                }
             }
         }
+    }
+
+    public boolean isBuffered(String uuid) {
+         return this.msgBuffer.containsKey(uuid);
     }
 
     private void connect() throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, URISyntaxException, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
