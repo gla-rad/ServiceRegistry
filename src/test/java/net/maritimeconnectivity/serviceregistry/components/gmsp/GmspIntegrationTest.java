@@ -41,8 +41,9 @@ class GmspIntegrationTest {
 
         assertDoesNotThrow(() -> {
             String gmspRequestUuid = gmsp.globalSearch(testEndpoint, testMrn, sfo);
+            Assertions.assertFalse(gmsp.isSent(gmspRequestUuid));
 
-            //Sleep for 4 seconds
+            //Sleep for 1 second
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

@@ -8,7 +8,11 @@ import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFacto
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
+import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.grad.secom.core.models.SearchFilterObject;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
+import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -70,17 +74,22 @@ public class Gmsp {
 
             // Calculate subjects from geometry if it exists
             if (this.containsGeometry(searchFilterObj)) {
-                ArrayList<String> subjects = calculateSubjectsFromGeometry(searchFilterObj.getGeometry());
+                try {
 
-                // Create mms msg for each subject
-                for (String subject : subjects) {
-                    OutgoingMmtpMessage msg = mmtpFactory.createSendMessage(
-                            subject,
-                            consumerMrn,
-                            searchMessageJson,
-                            Duration.ofMinutes(messageDurationMinutes) // Set a timeout for the message
-                    );
-                    messages.add(msg);
+                    ArrayList<String> subjects = calculateSubjectsFromGeometry(searchFilterObj.getGeometry());
+
+                    // Create mms msg for each subject
+                    for (String subject : subjects) {
+                        OutgoingMmtpMessage msg = mmtpFactory.createSendMessage(
+                                subject,
+                                consumerMrn,
+                                searchMessageJson,
+                                Duration.ofMinutes(messageDurationMinutes) // Set a timeout for the message
+                        );
+                        messages.add(msg);
+                    }
+                } catch (Exception e) {
+                    log.error("Error calculating subjects from geometry: ", e);
                 }
             } else {
                 OutgoingMmtpMessage msg = mmtpFactory.createSendMessage(
@@ -132,7 +141,18 @@ public class Gmsp {
         return "";
     }
 
-    private ArrayList<String> calculateSubjectsFromGeometry(String geometry) {
+    private ArrayList<String> calculateSubjectsFromGeometry(String geometryAsWKT) throws ParseException {
+        //Parse WKT to Geometry
+        Geometry geometry = WKTUtil.convertWKTtoGeometry(geometryAsWKT);
+
+        //Create Luscene query
+
+        //Run the query - should find intersections in order to return areas of interest (only the areas!)
+
+        //Return list of area MRNs for which we need to propagate the request over MMS.
+
+
+
         // This method should calculate the subjects based on the geometry provided.
         // For now, it returns an empty list as a placeholder.
 
