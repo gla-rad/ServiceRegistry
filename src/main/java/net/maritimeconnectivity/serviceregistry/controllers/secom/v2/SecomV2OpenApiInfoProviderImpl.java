@@ -1,42 +1,29 @@
-/*
- * Copyright (c) 2025 Maritime Connectivity Platform Consortium
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *        http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
-package net.maritimeconnectivity.serviceregistry.config;
-
+import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import org.springframework.beans.factory.annotation.Qualifier;
+import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.servers.Server;
+import org.grad.secomv2.springboot3.openapi.SecomV2OpenApiInfoProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
+import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
- * The SpringFoxConfig Class.
- * <p>
- * This configuration controls the swagger behaviour.
+ * The SECOM OpenApi Provider Implementation
+ * <p/>
+ * Provides the definition of the service OpenAPI documentation so that it can
+ * be used for the description of the SECOM V2 interfaces.
  *
- * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ * @author - Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Configuration
-public class SpringDocConfig {
+@Component
+public class SecomV2OpenApiInfoProviderImpl implements SecomV2OpenApiInfoProvider {
 
     @Value("${swagger.title:Maritime Connectivity Platform Service Registry API}" )
     private String swaggerTitle;
@@ -75,16 +62,18 @@ public class SpringDocConfig {
     List<String> serverUrls;
 
     /**
-     * API docket.
+     * Returns the OpenAPI documentation details.
      *
-     * @return the API docket
+     * @return The OpenAPI documentation details
      */
-    @Bean
-    @Qualifier("openApi")
-    @Primary
-    public OpenAPI openApi() {
-        return new OpenAPI()
-                .info(this.apiInfo());
+    @Override
+    public OpenAPI getOpenApiInfo() {
+        return new OpenAPI().schema("secom-v1", new Schema<>().$schema("openapi.json"))
+                .info(this.apiInfo())
+                .servers(serverUrls.stream().map(url -> new Server().url(url)).toList())
+                .externalDocs(new ExternalDocumentation()
+                        .description("SpringShop Wiki Documentation")
+                        .url("https://springshop.wiki.github.org/docs"));
     }
 
     /**
