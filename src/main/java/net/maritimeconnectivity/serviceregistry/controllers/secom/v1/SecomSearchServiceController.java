@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.controllers.secom;
+package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,7 +29,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOpera
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
@@ -126,7 +126,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         // Now build the query if we have to
         if(isFreeText) {
             query = searchFilterObject.getFreetext();
-        } else {
+        } else if(Objects.nonNull(searchFilterObject.getQuery())) {
             // Handle the name filter
             if (Strings.isNotBlank(searchFilterObject.getQuery().getName())) {
                 query = this.addToQuery(query, "name", searchFilterObject.getQuery().getName(), BooleanOperator.AND);

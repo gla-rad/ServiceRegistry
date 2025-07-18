@@ -30,7 +30,6 @@ import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
-import org.modelmapper.PropertyMap;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

@@ -75,8 +75,17 @@ springdoc:
     swagger-ui:
         path: /swagger-ui.html
         display-query-params: true
-        url: /v3/api-docs
-    packagesToScan: net.maritimeconnectivity.serviceregistry.controllers
+        urls:
+            - name: mcp-service-registry
+              url: /v3/api-docs
+            - name: secom-v1-api
+              url: /api/secom/v1/openapi.json
+            - name: secom-v2-api
+              url: /api/secom/v2/openapi.json
+    packagesToScan: >-
+        net.maritimeconnectivity.serviceregistry.controllers,
+        net.maritimeconnectivity.serviceregistry.controllers.secom.v1,
+        net.maritimeconnectivity.serviceregistry.controllers.secom.v2,
 
 # Springdoc Swagger Configuration
 swagger:
@@ -89,13 +98,16 @@ swagger:
     contactEmail: Nikolaos.Vastardis@gla-rad.org
     license: Apache-2.0
     licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
+    serverUrls: /,/api/secom
 
 # MCP Service Registry Configuration
 net:
     maritimeconnectivity:
         serviceregistry:
             allowedContentTypes: >-
-                application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
+                application/pdf,
+                application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                application/vnd.oasis.opendocument.text
             mir:
                 server-url: ${service.variable.mir.server.url}
 

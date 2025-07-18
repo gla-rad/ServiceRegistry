@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.dto.secom;
+package net.maritimeconnectivity.serviceregistry.models.dto.secom.v1;
 
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import org.grad.secom.core.models.SearchObjectResult;
