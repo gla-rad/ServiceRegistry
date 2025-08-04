@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,8 @@ import org.hibernate.search.mapper.pojo.extractor.builtin.BuiltinContainerExtrac
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtract;
 import org.hibernate.search.mapper.pojo.extractor.mapping.annotation.ContainerExtraction;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceType;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.data.annotation.CreatedDate;
@@ -137,8 +138,8 @@ public class Instance implements Serializable, JsonSerializable {
     private String endpointUri;
 
     @KeywordField(sortable = Sortable.YES)
-    @Column(name = "endpoint_type")
-    private String endpointType;
+    @Column(name = "status_endpoint_uri")
+    private String statusEndpointUri;
 
     @KeywordField(sortable = Sortable.YES)
     @Column(name = "mmsi")
@@ -149,12 +150,9 @@ public class Instance implements Serializable, JsonSerializable {
     private String imo;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
-    @GenericField(name="serviceType_sort",
-                  valueBridge = @ValueBridgeRef(type = StringListBridge.class),
-                  extraction = @ContainerExtraction(extract = ContainerExtract.NO),
-                  sortable = Sortable.YES)
     @ElementCollection
-    private List<String> serviceType;
+    @Enumerated(EnumType.STRING)
+    private List<ServiceType> serviceTypes;
 
     @KeywordField(normalizer = "lowercase", sortable = Sortable.YES)
     @ElementCollection
@@ -174,13 +172,7 @@ public class Instance implements Serializable, JsonSerializable {
     private Set<Doc> docs = new HashSet<>();
 
     /**
-     * The Ledger Request.
-     */
-    @OneToOne(mappedBy = "serviceInstance", cascade = CascadeType.REMOVE)
-    private LedgerRequest ledgerRequest;
-
-    /**
-     * The Designs.
+     * The Designs map between Service Design MRNs and Versions.
      */
     @ElementCollection
     @GenericField(
@@ -190,7 +182,7 @@ public class Instance implements Serializable, JsonSerializable {
     Map<String, String> designs = new HashMap<>();
 
     /**
-     * The Specifications.
+     * The Specifications map between Service Specification MRNs and Versions.
      */
     @ElementCollection
     @GenericField(
@@ -452,21 +444,21 @@ public class Instance implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets endpoint type.
+     * Gets status endpoint type.
      *
-     * @return the endpoint type
+     * @return the status endpoint type
      */
-    public String getEndpointType() {
-        return endpointType;
+    public String getStatusEndpointUri() {
+        return statusEndpointUri;
     }
 
     /**
-     * Sets endpoint type.
+     * Sets status endpoint type.
      *
-     * @param endpointType the endpoint type
+     * @param statusEndpointUri the status endpoint type
      */
-    public void setEndpointType(String endpointType) {
-        this.endpointType = endpointType;
+    public void setStatusEndpointUri(String statusEndpointUri) {
+        this.statusEndpointUri = statusEndpointUri;
     }
 
     /**
@@ -506,21 +498,21 @@ public class Instance implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets service type.
+     * Gets service types.
      *
-     * @return the service type
+     * @return the service types
      */
-    public List<String>  getServiceType() {
-        return serviceType;
+    public List<ServiceType> getServiceTypes() {
+        return serviceTypes;
     }
 
     /**
-     * Sets service type.
+     * Sets service types.
      *
-     * @param serviceType the service type
+     * @param serviceTypes the service types
      */
-    public void setServiceType(List<String>  serviceType) {
-        this.serviceType = serviceType;
+    public void setServiceTypes(List<ServiceType> serviceTypes) {
+        this.serviceTypes = serviceTypes;
     }
 
     /**
@@ -575,24 +567,6 @@ public class Instance implements Serializable, JsonSerializable {
      */
     public void setInstanceAsDoc(Doc instanceAsDoc) {
         this.instanceAsDoc = instanceAsDoc;
-    }
-
-    /**
-     * Gets ledger request.
-     *
-     * @return the ledger request
-     */
-    public LedgerRequest getLedgerRequest() {
-        return ledgerRequest;
-    }
-
-    /**
-     * Sets ledger request.
-     *
-     * @param ledgerRequest the ledger request
-     */
-    public void setLedgerRequest(LedgerRequest ledgerRequest) {
-        this.ledgerRequest = ledgerRequest;
     }
 
     /**
@@ -714,10 +688,10 @@ public class Instance implements Serializable, JsonSerializable {
                 ", organizationId='" + organizationId + '\'' +
                 ", unlocode='" + Optional.ofNullable(unlocode).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
                 ", endpointUri='" + endpointUri + '\'' +
-                ", endpointType='" + endpointType + '\'' +
+                ", statusEndpointUri='" + statusEndpointUri + '\'' +
                 ", mmsi='" + mmsi + '\'' +
                 ", imo='" + imo + '\'' +
-                ", serviceType='" + Optional.ofNullable(serviceType).orElse(Collections.emptyList()).stream().collect(Collectors.joining(",")) + '\'' +
+                ", serviceType='" + Optional.ofNullable(serviceTypes).orElse(Collections.emptyList()).stream().map(ServiceType::value).collect(Collectors.joining(",")) + '\'' +
                 '}';
     }
 

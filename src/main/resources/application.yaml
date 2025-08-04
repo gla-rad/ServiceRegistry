@@ -19,7 +19,7 @@ spring:
                             configurer: >-
                                 class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
                     schema_management:
-                        strategy: create-or-update
+                        strategy: validate
         generate-ddl: true
         hibernate:
             ddl-auto: update
@@ -29,11 +29,8 @@ spring:
         username: ${service.variable.datasource.database.username}
         password: ${service.variable.datasource.database.password}
     flyway:
-        enabled: false
-        url: jdbc:${service.variable.datasource.server.type}://${service.variable.datasource.server.host}:${service.variable.datasource.server.port}/${service.variable.datasource.database.name}
-        schemas: mcp_service_registry
-        user: ${service.variable.datasource.database.username}
-        password: ${service.variable.datasource.database.password}
+        enabled: true
+        schemas: public
 
     # Keycloak Configuration
     security:
@@ -78,8 +75,17 @@ springdoc:
     swagger-ui:
         path: /swagger-ui.html
         display-query-params: true
-        url: /v3/api-docs
-    packagesToScan: net.maritimeconnectivity.serviceregistry.controllers
+        urls:
+            - name: mcp-service-registry
+              url: /v3/api-docs
+            - name: secom-v1-api
+              url: /api/secom/v1/openapi.json
+            - name: secom-v2-api
+              url: /api/secom/v2/openapi.json
+    packagesToScan: >-
+        net.maritimeconnectivity.serviceregistry.controllers,
+        net.maritimeconnectivity.serviceregistry.controllers.secom.v1,
+        net.maritimeconnectivity.serviceregistry.controllers.secom.v2,
 
 # Springdoc Swagger Configuration
 swagger:
@@ -92,19 +98,18 @@ swagger:
     contactEmail: Nikolaos.Vastardis@gla-rad.org
     license: Apache-2.0
     licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
+    serverUrls: /,/api/secom
 
 # MCP Service Registry Configuration
 net:
     maritimeconnectivity:
         serviceregistry:
             allowedContentTypes: >-
-                application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.oasis.opendocument.text
+                application/pdf,
+                application/vnd.openxmlformats-officedocument.wordprocessingml.document,
+                application/vnd.oasis.opendocument.text
             mir:
                 server-url: ${service.variable.mir.server.url}
-            ledger:
-                server-url: ws://${service.variable.ledger.server.host}:${service.variable.ledger.server.port}
-                credentials: ${service.variable.ledger.server.credentials}
-                contract-address: ${service.variable.ledger.server.address}
 
 # Local Service Configuration
 info:

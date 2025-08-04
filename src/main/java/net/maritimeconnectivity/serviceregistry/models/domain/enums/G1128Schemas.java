@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.models.domain.enums;
 
-import org.iala_aism.g1128.v1_3.servicedesignschema.ServiceDesign;
-import org.iala_aism.g1128.v1_3.serviceinstanceschema.ServiceInstance;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceSpecification;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
 
 /**
  * The G1128 Schemas Enumeration.
@@ -30,10 +28,7 @@ import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceSpecification;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 public enum G1128Schemas {
-    BASE("base", "xsd/ServiceBaseTypesSchema.xsd", null),
-    DESIGN("design", "xsd/ServiceDesignSchema.xsd", ServiceDesign.class),
-    SERVICE("service", "xsd/ServiceSpecificationSchema.xsd", ServiceSpecification.class),
-    INSTANCE("instance", "xsd/ServiceInstanceSchema.xsd", ServiceInstance.class);
+    INSTANCE("instance", "xsd/v1_7/ServiceInstanceSchema.xsd", ServiceInstance.class);
 
     // Enum Variables
     private String name;

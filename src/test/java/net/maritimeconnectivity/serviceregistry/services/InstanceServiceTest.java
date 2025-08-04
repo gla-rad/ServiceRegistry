@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
@@ -33,7 +32,7 @@ import org.apache.commons.io.IOUtils;
 import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.engine.search.query.SearchResult;
 import org.hibernate.search.engine.search.query.SearchResultTotal;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,12 +93,6 @@ class InstanceServiceTest {
      */
     @Mock
     private DocService docService;
-
-    /**
-     * The LedgerRequest Service Mock.
-     */
-    @Mock
-    private LedgerRequestService ledgerRequestService;
 
     /**
      * The User Context.
@@ -219,10 +212,10 @@ class InstanceServiceTest {
         assertEquals(this.existingInstance.getKeywords(), result.getKeywords());
         assertEquals(this.existingInstance.getComment(), result.getComment());
         assertEquals(this.existingInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.existingInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.existingInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.existingInstance.getMmsi(), result.getMmsi());
         assertEquals(this.existingInstance.getImo(), result.getImo());
-        assertEquals(this.existingInstance.getServiceType(), result.getServiceType());
+        assertEquals(this.existingInstance.getServiceTypes(), result.getServiceTypes());
         assertEquals(this.existingInstance.getUnlocode(), result.getUnlocode());
         assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
@@ -299,10 +292,10 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getKeywords(), result.getKeywords());
         assertEquals(this.newInstance.getComment(), result.getComment());
         assertEquals(this.newInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.newInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.newInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.newInstance.getMmsi(), result.getMmsi());
         assertEquals(this.newInstance.getImo(), result.getImo());
-        assertEquals(this.newInstance.getServiceType(), result.getServiceType());
+        assertEquals(this.newInstance.getServiceTypes(), result.getServiceTypes());
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals(this.newInstance.getGeometry(), result.getGeometry());
         assertEquals("org", this.newInstance.getOrganizationId());
@@ -337,10 +330,10 @@ class InstanceServiceTest {
         assertEquals(this.newInstance.getKeywords(), result.getKeywords());
         assertEquals(this.newInstance.getComment(), result.getComment());
         assertEquals(this.newInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.newInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.newInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.newInstance.getMmsi(), result.getMmsi());
         assertEquals(this.newInstance.getImo(), result.getImo());
-        assertEquals(this.newInstance.getServiceType(), result.getServiceType());
+        assertEquals(this.newInstance.getServiceTypes(), result.getServiceTypes());
         assertEquals(this.newInstance.getUnlocode(), result.getUnlocode());
         assertEquals("org", this.newInstance.getOrganizationId());
 
@@ -475,10 +468,10 @@ class InstanceServiceTest {
         assertEquals(this.existingInstance.getKeywords(), result.getKeywords());
         assertEquals(this.existingInstance.getComment(), result.getComment());
         assertEquals(this.existingInstance.getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.existingInstance.getEndpointType(), result.getEndpointType());
+        assertEquals(this.existingInstance.getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.existingInstance.getMmsi(), result.getMmsi());
         assertEquals(this.existingInstance.getImo(), result.getImo());
-        assertEquals(this.existingInstance.getServiceType(), result.getServiceType());
+        assertEquals(this.existingInstance.getServiceTypes(), result.getServiceTypes());
         assertEquals(this.existingInstance.getUnlocode(), result.getUnlocode());
         assertEquals(this.existingInstance.getGeometry(), result.getGeometry());
     }
@@ -503,10 +496,10 @@ class InstanceServiceTest {
         assertEquals(this.instances.get(this.instances.size()-1).getKeywords(), result.getKeywords());
         assertEquals(this.instances.get(this.instances.size()-1).getComment(), result.getComment());
         assertEquals(this.instances.get(this.instances.size()-1).getEndpointUri(), result.getEndpointUri());
-        assertEquals(this.instances.get(this.instances.size()-1).getEndpointType(), result.getEndpointType());
+        assertEquals(this.instances.get(this.instances.size()-1).getStatusEndpointUri(), result.getStatusEndpointUri());
         assertEquals(this.instances.get(this.instances.size()-1).getMmsi(), result.getMmsi());
         assertEquals(this.instances.get(this.instances.size()-1).getImo(), result.getImo());
-        assertEquals(this.instances.get(this.instances.size()-1).getServiceType(), result.getServiceType());
+        assertEquals(this.instances.get(this.instances.size()-1).getServiceTypes(), result.getServiceTypes());
         assertEquals(this.instances.get(this.instances.size()-1).getUnlocode(), result.getUnlocode());
         assertEquals(this.instances.get(this.instances.size()-1).getGeometry(), result.getGeometry());
     }

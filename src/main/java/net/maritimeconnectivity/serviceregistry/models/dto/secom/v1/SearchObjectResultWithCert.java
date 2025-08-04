@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.dto.secom;
+package net.maritimeconnectivity.serviceregistry.models.dto.secom.v1;
 
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import org.grad.secom.core.models.SearchObjectResult;

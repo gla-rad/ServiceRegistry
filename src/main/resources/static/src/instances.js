@@ -28,7 +28,7 @@ var columnDefs = [{
     data: "version",
     title: "Version",
 }, {
-    data: "serviceType",
+    data: "serviceTypes",
     title: "Service Type",
 }, {
     data: "dataProductType",
@@ -40,6 +40,10 @@ var columnDefs = [{
 }, {
     data: "endpointUri",
     title: "Endpoint URI",
+}, {
+    data: "statusEndpointUri",
+    title: "Status Endpoint URI",
+    visible: false
 }, {
     data: "organizationId",
     title: "Organization",
@@ -92,20 +96,14 @@ var columnDefs = [{
     visible: false,
     searchable: false
 }, {
-    data: "endpointType",
-    title: "Endpoint Type",
+    data: "implementsServiceDesigns",
+    title: "Implements Service Designs",
     type: "hidden",
     visible: false,
     searchable: false
-}, {
-    data: "ledgerRequestId",
-    title: "Ledger Request ID",
-    type: "hidden",
-    visible: false,
-    searchable: false
-}, {
-    data: "ledgerRequestStatus",
-    title: "Ledger Request Status",
+ }, {
+    data: "designsServiceSpecifications",
+    title: "Designs Service Specifications",
     type: "hidden",
     visible: false,
     searchable: false
@@ -121,19 +119,7 @@ var columnDefs = [{
             `<i class="fa-solid fa-file" style="color:green" onclick="downloadDoc(${'instanceEditPanel'}, ${data})"></i>`:
             `<i class="fa-solid xmark" style="color:red"></i>`);
     },
- }, {
-    data: "implementsServiceDesign",
-    title: "Implements Service Design",
-    type: "hidden",
-    visible: false,
-    searchable: false,
-}, {
-    data: "implementsServiceDesignVersion",
-    title: "Implements Service Design Versin",
-    type: "hidden",
-    visible: false,
-    searchable: false,
-}];
+ }];
 
 /**
  * Standard jQuery initialisation of the page.
@@ -156,7 +142,7 @@ $(() => {
             }
         },
         columns: columnDefs,
-        dom: "<'row'<'col-md-auto'B><'col-sm-4 pb-1'l><'col-md col-sm-4'f>><'row'<'col-md-12'rt>><'row'<'col-md-6'i><'col-md-6'p>>",
+        dom: "<'row'<'col-md-auto'B><'col-md col-sm-6 pb-1'l><'col-md col-sm-6'f>><'row'<'col-md-12'rt>><'row'<'col'i><'col-md-auto'p>>",
         select: 'single',
         lengthMenu: [10, 25, 50, 75, 100],
         responsive: true,
@@ -207,15 +193,6 @@ $(() => {
             action: (e, dt, node, config) => {
                 loadInstanceStatus(e, dt, node, config);
             }
-        }, {
-            extend: 'selected', // Bind to Selected row
-            text: '<i class="fa-solid fa-cloud-arrow-up"></i>',
-            titleAttr: 'Instance Global Ledger Status',
-            name: 'instance-ledger-status', // do not change name
-            className: 'instance-ledger-toggle',
-            action: (e, dt, node, config) => {
-                loadInstanceLedgerStatus(e, dt, node, config);
-            }
         }],
         onAddRow: (datatable, rowdata, success, error) => {
             api.instancesApi.createInstance(JSON.stringify(rowdata), success, error);
@@ -250,13 +227,6 @@ $(() => {
     instancesTable.buttons('.instance-status-toggle')
         .nodes()
         .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceStatusPanel" });
-
-    // We also need to link the instance ledger toggle button with the the
-    // modal panel so that by clicking the button the panel pops up. It's easier
-    // done with jQuery.
-    instancesTable.buttons('.instance-ledger-toggle')
-        .nodes()
-        .attr({ "data-bs-toggle": "modal", "data-bs-target": "#instanceLedgerPanel" });
 
     // On confirmation of the instance saving, we need to make an AJAX
     // call back to the service to save the entry.
@@ -299,16 +269,6 @@ $(() => {
             $("#instanceStatusPanel").find("#instanceStatusSelect").val());
     });
 
-    // On confirmation of the instance saving, we need to make an AJAX
-    // call back to the service to save the entry.
-    $('#instanceLedgerPanel').on('click', '.btn-ok', (e) => {
-        var $modalDiv = $(e.delegateTarget);
-        $modalDiv.addClass('loading');
-        onLedgerRequestUpdate($modalDiv,
-            instancesTable.row({selected : true}).data()["id"],
-            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val());
-    });
-
     // Also initialise the instance map before we need it
     drawnEditMapItems = new L.FeatureGroup();
     instanceEditCoverageMap = initMapWithDrawnItems('instanceEditCoverageMap', drawnEditMapItems, true);
@@ -334,9 +294,25 @@ $(() => {
         }, 50);
     });
 
+    // Also initialise the service type multi-select
+    $('#serviceTypes').select2({
+        placeholder: "Service Types",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
     // Also initialise the data product type multi-select
     $('#dataProductType').select2({
-        placeholder: "Data Product Type",
+        placeholder: "Data Product Types",
+        theme: "bootstrap-5",
+        selectionCssClass: 'select2--small',
+        dropdownCssClass: 'select2--small'
+    });
+
+    // Also initialise the status type multi-select
+    $('#status').select2({
+        placeholder: "Status",
         theme: "bootstrap-5",
         selectionCssClass: 'select2--small',
         dropdownCssClass: 'select2--small'
@@ -377,7 +353,13 @@ function validateXml($modalDiv) {
     api.xmlsApi.validateInstanceXml($modalDiv.find("#xml-input").val(), (response, status, more) => {
         // Update the instance fields
         for (var field in response) {
-            $modalDiv.find("input#"+field).val(response[field]);
+            if($modalDiv.find("input#"+field).length > 0) {
+                $modalDiv.find("input#"+field).val(response[field]);
+            } else if($modalDiv.find("table#"+field).length > 0) {
+                updateTable($modalDiv.find("table#"+field).attr("id"), new Map(response[field][field].map(i => [i.id, i.version])));
+            } else if ($("#"+field).length > 0 && ["status","serviceTypes"].includes(field)) {
+                $modalDiv.find("#"+field).val(response[field]).change();
+            }
         }
         // Update the instance coverage area
         if(response["coversAreas"] && response["coversAreas"]["coversAreasAndUnLoCodes"]) {
@@ -417,7 +399,14 @@ function clearInstanceEditPanel() {
 
     // Do the form
     $('form[name="instanceEditPanelForm"]').trigger("reset");
+    $("#serviceTypes").select2('val', null);
+    $("#serviceTypes").trigger('change');
     $("#dataProductType").select2('val', null);
+    $("#dataProductType").trigger('change');
+    $("#status").select2('val', null);
+    $("#status").trigger('change');
+    clearTable("implementsServiceDesigns");
+    clearTable("designsServiceSpecifications");
 
     // And the map
     drawnEditMapItems.clearLayers();
@@ -472,6 +461,16 @@ function loadInstanceEditPanel($modalDiv, isNewInstance) {
             $(this).val(rowData[$(this).attr('id')]).trigger('change');
             $(this).filter('[data-g1128="true"]').attr('disabled', g1128Compliant);
         });
+        $('form[name="instanceEditPanelForm"] table').each(function() {
+            // Make sure the select element has an ID
+            if(!$(this).attr('id')) {
+                return;
+            }
+            if(!rowData[$(this).attr('id')]) {
+                rowData[$(this).attr('id')] = {};
+            }
+            updateTable($(this).attr('id'), new Map(Object.entries(rowData[$(this).attr('id')])));
+        });
 
         // Augmenting xml content on the data
         if(g1128Compliant) {
@@ -521,6 +520,9 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
     $('form[name="instanceEditPanelForm"] :input').each(function() {
         rowData = alignInstanceData(rowData, $(this).attr('id'), $(this).val(), columnDefData);
     });
+    $('form[name="instanceEditPanelForm"] table').each(function() {
+        rowData = alignInstanceData(rowData, $(this).attr('id'), Object.fromEntries($(this).data("entries")), columnDefData);
+    });
 
     // For G1128-compliant entries, augmenting xml content on the data
     if(g1128Compliant) {
@@ -528,7 +530,9 @@ function saveInstanceEditPanel($modalDiv, isNewInstance) {
         if (xmlContent && xmlContent.length>0) {
             rowData["instanceAsXml"]["content"] = xmlContent;
         }
-    } else if(!firstInstanceMapView){
+    }
+    // If non-G1128 and the geometry has been plotted, then read it value from the map
+    else if(!firstInstanceMapView) {
         rowData["geometry"] = getGeometryCollectionFromMap(drawnEditMapItems);
     }
 
@@ -640,51 +644,6 @@ function onStatusUpdate($modalDiv, id, status) {
 }
 
 /**
- * This function will load the instance ledger status onto the instance ledger
- * status select input of the DOM. Always read the ledger status value from
- * the server to pick up successes and failures.
- *
- * @param {Event}       event       The event that took place
- * @param {DataTable}   table       The AtoN type table
- * @param {Node}        button      The button node that was pressed
- * @param {any}         config      The table configuration
- */
-function loadInstanceLedgerStatus(event, table, button, config) {
-    // If a row has been selected load the data into the form
-    if(table.row({selected : true})) {
-        var rowdata = table.row({selected : true}).data();
-        id = rowdata["id"];
-        ledgerRequestId = rowdata["ledgerRequestId"];
-        ledgerRequestStatus = rowdata["ledgerRequestStatus"];
-        // First always start with the last known value
-        $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(ledgerRequestStatus);
-        // And then query the server for an update
-        api.ledgerRequestsApi.getLedgerRequest(ledgerRequestId, (response) => {
-            $("#instanceLedgerPanel").find("#instanceLedgerStatusSelect").val(response["status"]);
-        });
-    }
-}
-
-/**
- * Using an AJAX call we ask the server to update the instance ledger request
- * status and if proven successful, we can request the instances datatables to
- * reload.
- *
- * @param {Component}   $modalDiv   The modal component performing the update
- * @param {number}      id          The ID of the ledger request to be updated
- * @param {String}      status      The new status value
- */
-function onLedgerRequestUpdate($modalDiv, id, status) {
-    api.instancesApi.setLedgerStatus(id, status, () => {
-        $modalDiv.removeClass('loading');
-        instancesTable.draw('page');
-    }, (response, status, more) => {
-        $modalDiv.removeClass('loading');
-        showError(getErrorFromHeader(response, "Error while trying to update the instance global ledger status!"));
-    });
-}
-
-/**
  * This helper function returns a band new blank instance object to be used
  * for generating new entries.
  */
@@ -723,15 +682,12 @@ function alignInstanceData(rowData, field, value, columnDefs){
         if (field === 'id'){
             rowData[field] = parseInt(value);
         }
-        else if(["keywords", "serviceType", "unlocode"].includes(field)) {
+        else if(["keywords", "unlocode"].includes(field)) {
             rowData[field] = value.split(",");
-        }
-        else if( field === "designs") {
-            rowData[field] = value ? { [value.split(",")[0]]: value.split(",")[1] } : null;
         }
         else if(field.toUpperCase().endsWith("JSON")) {
             rowData[field] = JSON.stringify(value);
-        } else{
+        } else {
             rowData[field] = value;
         }
     }

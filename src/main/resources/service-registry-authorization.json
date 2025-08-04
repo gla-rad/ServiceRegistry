@@ -130,22 +130,6 @@
       ]
     },
     {
-      "name": "api_instance_ledger_status",
-      "type": "urn:mcp-service-registry:resources:instance:id:ledger-status",
-      "ownerManagedAccess": false,
-      "displayName": "API Instance Ledger Status Endpoint",
-      "attributes": {},
-      "_id": "73cc1adf-501b-4e58-a083-3a83ecd0e2e1",
-      "uris": [
-        "/api/instances/{id}/ledger-status"
-      ],
-      "scopes": [
-        {
-          "name": "PUT"
-        }
-      ]
-    },
-    {
       "name": "api_docs_dt",
       "type": "urn:mcp-service-registry:resources:docs:dt",
       "ownerManagedAccess": false,
@@ -495,17 +479,6 @@
       }
     },
     {
-      "id": "9d4f3a57-88ad-4efc-b43f-a130091d0c27",
-      "name": "put_api_instance_ledger_status",
-      "description": "Whether the user has the put_api_instance_ledger_status role",
-      "type": "role",
-      "logic": "POSITIVE",
-      "decisionStrategy": "UNANIMOUS",
-      "config": {
-        "roles": "[{\"id\":\"mcp-service-registry/put_api_instance_ledger_status\",\"required\":true}]"
-      }
-    },
-    {
       "id": "9f57abf9-0b07-42ad-9f33-82317f77c3ed",
       "name": "delete_api_xml",
       "description": "Whether the user has the delete_api_xml role",
@@ -774,19 +747,6 @@
         "resources": "[\"api_instances_dt\"]",
         "scopes": "[\"POST\"]",
         "applyPolicies": "[\"post_api_instances_dt\"]"
-      }
-    },
-    {
-      "id": "6bd87787-03de-4d68-9c96-d1a9eec9af73",
-      "name": "Allow Put Instance Ledger Status",
-      "description": "Allows users to update the ledger status of an existing instance",
-      "type": "scope",
-      "logic": "POSITIVE",
-      "decisionStrategy": "UNANIMOUS",
-      "config": {
-        "resources": "[\"api_instance_ledger_status\"]",
-        "scopes": "[\"PUT\"]",
-        "applyPolicies": "[\"put_api_instance_ledger_status\"]"
       }
     },
     {

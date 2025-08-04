@@ -37,10 +37,6 @@ shown in the following table:
 | KEYCLOAK_CLIENT_ID     | The OIDC client ID to be used for authentication       | mcp-service-registry           |
 | KEYCLOAK_CLIENT_SECRET | The OIDC client secret to be used for authentication   | N/A                            |
 | MCP_MIR_URL            | The URL of the MCP MIR API to retrieve certificates    | http://localhost:8443/oidc/api |
-| MCP_LEDGER_HOST        | The name of the database to connect to                 | localhost                      |
-| MCP_LEDGER_PORT        | The username for the database connection               | 8546                           |
-| MCP_LEDGER_ADDRESS     | The password for the database connection               | N/A                            |
-| MCP_LEDGER_CREDENTIALS | The server hostname of the eureka server               | N/A                            |
 
 The parameters will be picked up and used to populate the default
 **bootstrap.yaml** of the service that look as follows:
@@ -75,16 +71,10 @@ The parameters will be picked up and used to populate the default
             mir:
                 server:
                     url: ${MCP_MIR_URL:http://localhost:8443/oidc/api}
-            ledger:
-                server:
-                    host: ${MCP_LEDGER_HOST:localhost}
-                    port: ${MCP_LEDGER_PORT:8546}
-                    address: ${MCP_LEDGER_ADDRESS:0x0000000000000000000000000000000000000000}
-                    credentials: ${MCP_LEDGER_CREDENTIALS:abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890}
-                info:
-                    name: ${SERVICE_INFO_NAME:Test MSR Instance}
-                    mrn: ${SERVICE_INFO_MRN:urn:mrn:mcp:msr:test:testMSR1}
-                    url: ${SERVICE_INFO_URL:http://localhost:8444}
+            info:
+                name: ${SERVICE_INFO_NAME:Test MSR Instance}
+                mrn: ${SERVICE_INFO_MRN:urn:mrn:mcp:msr:test:testMSR1}
+                url: ${SERVICE_INFO_URL:http://localhost:8444}
                 operator:
                     name: ${SERVICE_INFO_OPERATOR:Maritime Connectivity Platform}
                     contact: ${SERVICE_INFO_OPERATOR_CONTACT:secretariat@maritimeconnectivity.net}
@@ -110,10 +100,6 @@ with the correct values for your setup.
         -e KEYCLOAK_CLIENT_ID='mcp-service-registry' \
         -e KEYCLOAK_CLIENT_SECRET='secret' \
         -e MCP_MIR_URL='http://localhost:8443/oidc/api' \
-        -e MCP_LEDGER_HOST='localhost' \
-        -e MCP_LEDGER_PORT='8546' \
-        -e MCP_LEDGER_ADDRESS='0x0000000000000000000000000000000000000000' \
-        -e MCP_LEDGER_CREDENTIALS='abcdef1234567890abcdef1234567890abcdef123567890abcdef1234567890' \
         <image-id>
 
 ## Operation

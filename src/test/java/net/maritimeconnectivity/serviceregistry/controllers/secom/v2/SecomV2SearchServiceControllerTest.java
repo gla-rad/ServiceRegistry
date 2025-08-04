@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.controllers.secom;
+package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
@@ -23,15 +23,15 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.ResponseSearchObjectWithCert;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.ResponseSearchObjectWithCert;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import org.grad.secom.core.models.ResponseSearchObject;
-import org.grad.secom.core.models.SearchFilterObject;
-import org.grad.secom.core.models.SearchObjectResult;
-import org.grad.secom.core.models.SearchParameters;
-import org.grad.secom.core.models.enums.SECOM_DataProductType;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.grad.secomv2.core.models.ResponseSearchObject;
+import org.grad.secomv2.core.models.SearchFilterObject;
+import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.SearchParameters;
+import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
@@ -41,13 +41,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
@@ -57,9 +57,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_SERVICE_INTERFACE_PATH;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -67,7 +66,7 @@ import static org.mockito.Mockito.doReturn;
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
-class SecomSearchServiceControllerTest {
+class SecomV2SearchServiceControllerTest {
 
     /**
      * The Reactive Web Test Client.
@@ -81,10 +80,10 @@ class SecomSearchServiceControllerTest {
     @Autowired
     public DomainDtoMapper<?,?> searchObjectResultMapper;
 
-    @MockBean
+    @MockitoBean
     private InstanceService instanceService;
 
-    @MockBean
+    @MockitoBean
     private MirClient mirClient;
 
     // Test Variables
@@ -111,6 +110,7 @@ class SecomSearchServiceControllerTest {
             instance.setStatus(ServiceStatus.RELEASED);
             instance.setVersion("0.0.1");
             instance.setGeometry(factory.createPoint(new Coordinate(i, i)));
+            instance.setDataProductType(Collections.singletonList(org.grad.secom.core.models.enums.SECOM_DataProductType.OTHER));
 
             Xml xml = new Xml();
             xml.setId(i);
@@ -162,6 +162,8 @@ class SecomSearchServiceControllerTest {
         searchParameters.setName("Test");
         searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+        searchFilterObject.setPage(0);
+        searchFilterObject.setPageSize(Integer.MAX_VALUE);
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
@@ -195,7 +197,7 @@ class SecomSearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
-                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
+                        assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
     }
@@ -215,6 +217,8 @@ class SecomSearchServiceControllerTest {
         searchParameters.setName("Test");
         searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+        searchFilterObject.setPage(0);
+        searchFilterObject.setPageSize(Integer.MAX_VALUE);
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
@@ -250,7 +254,7 @@ class SecomSearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
-                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
+                        assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
                         assertNotNull((searchObjectResult).getCertificates());
@@ -284,6 +288,9 @@ class SecomSearchServiceControllerTest {
         searchParameters.setName("Test");
         searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+        searchFilterObject.setPage(0);
+        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
@@ -294,8 +301,6 @@ class SecomSearchServiceControllerTest {
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
-                        .queryParam("page", 0)
-                        .queryParam("pageSize", Integer.MAX_VALUE)
                         .build())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
@@ -316,7 +321,7 @@ class SecomSearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
-                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
+                        assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
     }
@@ -336,6 +341,9 @@ class SecomSearchServiceControllerTest {
         searchParameters.setName("Test");
         searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+        searchFilterObject.setPage(0);
+        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
@@ -347,8 +355,6 @@ class SecomSearchServiceControllerTest {
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
-                        .queryParam("page", 0)
-                        .queryParam("pageSize", Integer.MAX_VALUE)
                         .build())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
@@ -369,7 +375,7 @@ class SecomSearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
-                        assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
+                        assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
                         assertNotNull(searchObjectResult.getCertificates());

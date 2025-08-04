@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,10 @@ package net.maritimeconnectivity.serviceregistry.models.dto;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import net.maritimeconnectivity.serviceregistry.models.JsonSerializable;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONDeserializer;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONSerializer;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 
 import jakarta.validation.constraints.NotNull;
@@ -31,6 +30,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -64,19 +64,17 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     private String organizationId; // Use the JWT auth token for that
     private List<String> unlocode;
     private String endpointUri;
-    private String endpointType;
+    private String statusEndpointUri;
     private String mmsi;
     private String imo;
-    private List<String> serviceType;
+    private List<String> serviceTypes;
     private List<SECOM_DataProductType> dataProductType;
     private XmlDto instanceAsXml;
     private Long instanceAsDocId;
     private String instanceAsDocName;
-    private Long ledgerRequestId;
-    private LedgerRequestStatus ledgerRequestStatus;
     private Set<Long> docIds = new HashSet<>();
-    private String implementsServiceDesign;
-    private String implementsServiceDesignVersion;
+    private Map<String, String> implementsServiceDesigns;
+    private Map<String, String> designsServiceSpecifications;
 
     /**
      * Instantiates a new Instance dto.
@@ -338,21 +336,21 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets endpoint type.
+     * Gets status endpoint uri.
      *
-     * @return the endpoint type
+     * @return the status endpoint uri
      */
-    public String getEndpointType() {
-        return endpointType;
+    public String getStatusEndpointUri() {
+        return statusEndpointUri;
     }
 
     /**
-     * Sets endpoint type.
+     * Sets status endpoint uri.
      *
-     * @param endpointType the endpoint type
+     * @param statusEndpointUri the status endpoint uri
      */
-    public void setEndpointType(String endpointType) {
-        this.endpointType = endpointType;
+    public void setStatusEndpointUri(String statusEndpointUri) {
+        this.statusEndpointUri = statusEndpointUri;
     }
 
     /**
@@ -396,17 +394,17 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
      *
      * @return the service type
      */
-    public List<String> getServiceType() {
-        return serviceType;
+    public List<String> getServiceTypes() {
+        return serviceTypes;
     }
 
     /**
      * Sets service type.
      *
-     * @param serviceType the service type
+     * @param serviceTypes the service type
      */
-    public void setServiceType(List<String> serviceType) {
-        this.serviceType = serviceType;
+    public void setServiceTypes(List<String> serviceTypes) {
+        this.serviceTypes = serviceTypes;
     }
 
     /**
@@ -482,24 +480,6 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets ledger request id.
-     *
-     * @return the ledger request id
-     */
-    public Long getLedgerRequestId() {
-        return ledgerRequestId;
-    }
-
-    /**
-     * Sets ledger request id.
-     *
-     * @param ledgerRequestId the ledger request id
-     */
-    public void setLedgerRequestId(Long ledgerRequestId) {
-        this.ledgerRequestId = ledgerRequestId;
-    }
-
-    /**
      * Gets doc ids.
      *
      * @return the doc ids
@@ -518,56 +498,38 @@ public class InstanceDtDto implements Serializable, JsonSerializable {
     }
 
     /**
-     * Gets ledger request status.
+     * Gets implements service designs.
      *
-     * @return the ledger request status
+     * @return the implements service designs
      */
-    public LedgerRequestStatus getLedgerRequestStatus() {
-        return ledgerRequestStatus;
+    public Map<String, String> getImplementsServiceDesigns() {
+        return implementsServiceDesigns;
     }
 
     /**
-     * Sets ledger request status.
+     * Sets implements service designs.
      *
-     * @param ledgerRequestStatus the ledger request status
+     * @param implementsServiceDesigns the implements service designs
      */
-    public void setLedgerRequestStatus(LedgerRequestStatus ledgerRequestStatus) {
-        this.ledgerRequestStatus = ledgerRequestStatus;
+    public void setImplementsServiceDesigns(Map<String, String> implementsServiceDesigns) {
+        this.implementsServiceDesigns = implementsServiceDesigns;
     }
 
     /**
-     * Gets implements service design.
+     * Gets designs service specifications.
      *
-     * @return the implements service design
+     * @return the designs service specifications
      */
-    public String getImplementsServiceDesign() {
-        return implementsServiceDesign;
+    public Map<String, String> getDesignsServiceSpecifications() {
+        return designsServiceSpecifications;
     }
 
     /**
-     * Sets implements service design.
+     * Sets designs service specifications.
      *
-     * @param implementsServiceDesign the implements service design
+     * @param designsServiceSpecifications the designs service specifications
      */
-    public void setImplementsServiceDesign(String implementsServiceDesign) {
-        this.implementsServiceDesign = implementsServiceDesign;
-    }
-
-    /**
-     * Gets implements service design version.
-     *
-     * @return the implements service design version
-     */
-    public String getImplementsServiceDesignVersion() {
-        return implementsServiceDesignVersion;
-    }
-
-    /**
-     * Sets implements service design version.
-     *
-     * @param implementsServiceDesignVersion the implements service design version
-     */
-    public void setImplementsServiceDesignVersion(String implementsServiceDesignVersion) {
-        this.implementsServiceDesignVersion = implementsServiceDesignVersion;
+    public void setDesignsServiceSpecifications(Map<String, String> designsServiceSpecifications) {
+        this.designsServiceSpecifications = designsServiceSpecifications;
     }
 }

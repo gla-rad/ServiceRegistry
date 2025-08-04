@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.LedgerRequestStatus;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
@@ -30,8 +29,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRe
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
 import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
-import org.iala_aism.g1128.v1_3.servicespecificationschema.ServiceStatus;
-import org.modelmapper.PropertyMap;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -86,26 +84,30 @@ public class InstanceController {
      */
     @PostConstruct
     void setup() {
-        this.instanceDtoToDomainMapper.getModelMapper().addMappings(new PropertyMap<InstanceDto, Instance>() {
-            @Override
-            protected void configure() {
-                map(source.getLedgerRequestId()).setLedgerRequest(null);
-            }
-        });
-        this.instanceDomainToDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDto>() {
-            @Override
-            protected void configure() {
-                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
-                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
-            }
-        });
-        this.instanceDomainToDtDtoMapper.getModelMapper().addMappings(new PropertyMap<Instance, InstanceDtDto>() {
-            @Override
-            protected void configure() {
-                map(source.getImplementsDesign()).setImplementsServiceDesign(null);
-                map(source.getImplementsDesignVersion()).setImplementsServiceDesignVersion(null);
-            }
-        });
+        this.instanceDtoToDomainMapper.getModelMapper()
+                .createTypeMap(InstanceDto.class, Instance.class)
+                .addMappings(mapper -> {
+                    mapper.using(ctx -> ((InstanceDto)ctx.getSource()).getImplementsServiceDesigns())
+                            .map(src -> src, Instance::setDesigns);
+                    mapper.using(ctx -> ((InstanceDto)ctx.getSource()).getDesignsServiceSpecifications())
+                            .map(src -> src, Instance::setSpecifications);
+                });
+        this.instanceDomainToDtoMapper.getModelMapper()
+                .createTypeMap(Instance.class, InstanceDto.class)
+                .addMappings(mapper -> {
+                    mapper.using(ctx -> ((Instance)ctx.getSource()).getDesigns())
+                            .map(src -> src, InstanceDto::setImplementsServiceDesigns);
+                    mapper.using(ctx -> ((Instance)ctx.getSource()).getSpecifications())
+                            .map(src -> src, InstanceDto::setDesignsServiceSpecifications);
+                });
+        this.instanceDomainToDtDtoMapper.getModelMapper()
+                .createTypeMap(Instance.class, InstanceDtDto.class)
+                .addMappings(mapper -> {
+                    mapper.using(ctx -> ((Instance)ctx.getSource()).getDesigns())
+                            .map(src -> src, InstanceDtDto::setImplementsServiceDesigns);
+                    mapper.using(ctx -> ((Instance)ctx.getSource()).getSpecifications())
+                            .map(src -> src, InstanceDtDto::setDesignsServiceSpecifications);
+                });
     }
 
     /**
@@ -259,28 +261,6 @@ public class InstanceController {
             return ResponseEntity.badRequest()
                     .build();
         }
-
-        // Return an OK response
-        return ResponseEntity.ok()
-                .headers(HeaderUtil.createEntityStatusUpdateAlert("instance", id.toString()))
-                .build();
-    }
-
-    /**
-     * PUT /api/instances/{id}/ledger-status : Updates the "ID" instance ledger
-     * status.
-     *
-     * @param id the ID of the instance to be updated
-     * @param ledgerRequestStatus the new ledger status value
-     * @return the ResponseEntity with status 200 (OK), or with status 400 (Bad Request) if the instance ledger status couldn't be updated
-     * @throws URISyntaxException if the Location URI syntax is incorrect
-     */
-    @PutMapping(value = "/{id}/ledger-status", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> updateInstanceLedgerStatus(@PathVariable Long id, @NotNull @RequestParam(name="ledgerStatus") LedgerRequestStatus ledgerRequestStatus) {
-        log.debug("REST request to update instance {} ledger status : {}", id, ledgerRequestStatus.value());
-
-        // Update the instance's ledger status
-        this.instanceService.updateLedgerStatus(id, ledgerRequestStatus, null);
 
         // Return an OK response
         return ResponseEntity.ok()

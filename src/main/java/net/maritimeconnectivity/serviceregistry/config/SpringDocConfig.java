@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,17 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
-import io.swagger.v3.jaxrs2.integration.JaxrsOpenApiContextBuilder;
-import io.swagger.v3.oas.integration.OpenApiConfigurationException;
-import io.swagger.v3.oas.integration.SwaggerConfiguration;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
-import org.grad.secom.springboot3.config.JaxrsApplication;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.List;
 
 /**
  * The SpringFoxConfig Class.
@@ -75,10 +69,10 @@ public class SpringDocConfig {
     private String secomOpenApiConfig;
 
     /**
-     * The JAX-RS SECOM Application.
+     * Definition of the server URLS to access the API.
      */
-    @Autowired
-    JaxrsApplication jaxrsApplication;
+    @Value("${swagger.serverUrls:}")
+    List<String> serverUrls;
 
     /**
      * API docket.
@@ -91,31 +85,6 @@ public class SpringDocConfig {
     public OpenAPI openApi() {
         return new OpenAPI()
                 .info(this.apiInfo());
-    }
-
-    /**
-     * SECOM API docket.
-     *
-     * @return the SECOM API docket
-     */
-    @Bean
-    @Qualifier("secomOpenApi")
-    public OpenAPI secomOpenAPI() throws OpenApiConfigurationException {
-        // Use the defined OpenAPI configuration as default
-        OpenAPI oas = new OpenAPI()
-                .info(this.apiInfo());
-        SwaggerConfiguration oasConfig = new SwaggerConfiguration()
-                .openAPI(oas)
-                .prettyPrint(true)
-                .resourcePackages(Stream.of("net.maritimeconnectivity.serviceregistry.controllers.secom").collect(Collectors.toSet()));
-
-        // Build the docker for the JAX-RS application
-        return new JaxrsOpenApiContextBuilder()
-                .application(this.jaxrsApplication)
-                .openApiConfiguration(this.secomOpenApiConfig == null ? oasConfig : null)
-                .configLocation(this.secomOpenApiConfig)
-                .buildContext(true)
-                .read();
     }
 
     /**

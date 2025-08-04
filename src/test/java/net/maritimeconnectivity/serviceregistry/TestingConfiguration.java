@@ -17,7 +17,6 @@
 package net.maritimeconnectivity.serviceregistry;
 
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
-import net.maritimeconnectivity.serviceregistry.components.SmartContractProvider;
 import net.maritimeconnectivity.serviceregistry.config.GlobalConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -105,35 +104,11 @@ public class TestingConfiguration {
     }
 
     /**
-     * Ledger Request Mapper from Domain to DTO.
-     */
-    @Bean
-    public DomainDtoMapper ledgerRequestDomainToDtoMapper() {
-        return new DomainDtoMapper<Instance, InstanceDto>();
-    }
-
-    /**
-     * Ledger Request from DTO to Domain.
-     */
-    @Bean
-    public DomainDtoMapper ledgerRequestDtoToDomainMapper() {
-        return new DomainDtoMapper<InstanceDto, Instance>();
-    }
-
-    /**
      * From Instance to Search Object Result.
      */
     @Bean
     public DomainDtoMapper searchObjectResultMapper() {
         return new DomainDtoMapper<Instance, SearchObjectResult>();
-    }
-
-    /**
-     * The Smart Contract Provider Bean.
-     */
-    @Bean
-    public SmartContractProvider smartContractProvider() {
-        return mock(SmartContractProvider.class);
     }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ class SpringSecurityConfig {
     }
 
     /**
-     * Forwarded header filter filter registration bean.
+     * Forwarded header filter registration bean.
      * <p>
      * This corrects the urls produced by the microservice when accessed from a proxy server.
      * E.g. Api gateway:

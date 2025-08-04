@@ -32,15 +32,6 @@ class StringToG1128SchemaConverterTest {
     @Test
     void testConvert() {
         StringToG1128SchemaConverter converter = new StringToG1128SchemaConverter();
-        assertEquals(G1128Schemas.BASE, converter.convert("base"));
-        assertEquals(G1128Schemas.BASE, converter.convert("Base"));
-        assertEquals(G1128Schemas.BASE, converter.convert("BASE"));
-        assertEquals(G1128Schemas.DESIGN, converter.convert("design"));
-        assertEquals(G1128Schemas.DESIGN, converter.convert("Design"));
-        assertEquals(G1128Schemas.DESIGN, converter.convert("DESIGN"));
-        assertEquals(G1128Schemas.SERVICE, converter.convert("service"));
-        assertEquals(G1128Schemas.SERVICE, converter.convert("Service"));
-        assertEquals(G1128Schemas.SERVICE, converter.convert("SERVICE"));
         assertEquals(G1128Schemas.INSTANCE, converter.convert("instance"));
         assertEquals(G1128Schemas.INSTANCE, converter.convert("Instance"));
         assertEquals(G1128Schemas.INSTANCE, converter.convert("INSTANCE"));

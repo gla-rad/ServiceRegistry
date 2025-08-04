@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ public class SearchController {
      * @param queryString   the query string of the instance search
      * @param geometry      the geometry of the instance search
      * @param geometryWKT   the geometry WKT string of the instance search
-     * @param globalSearch  whether the global ledger search facility should be used
+     * @param globalSearch  whether the global search facility should be used
      * @return the result of the search
      */
     @GetMapping(value = "/instances", produces = MediaType.APPLICATION_JSON_VALUE)

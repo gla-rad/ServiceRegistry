@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,16 @@ package net.maritimeconnectivity.serviceregistry.utils;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
-import org.grad.secom.core.base.DateTimeDeSerializer;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
+
+import static java.util.function.Predicate.not;
+import static org.grad.secomv2.core.base.SecomConstants.SECOM_DATE_TIME_FORMATTER;
 
 /**
  * The LocalDateDeserializer Class.
@@ -38,16 +42,36 @@ import java.time.ZoneId;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 
-public class LocalDateTimeDeserializer extends DateTimeDeSerializer {
+public class LocalDateTimeDeserializer extends StdDeserializer<LocalDateTime> {
+
+    /**
+     * Instantiates a new Byte array de serializer.
+     */
+    protected LocalDateTimeDeserializer() {
+        this(null);
+    }
+
+    /**
+     * Instantiates a new Byte array de serializer.
+     *
+     * @param t the byte array class
+     */
+    protected LocalDateTimeDeserializer(Class<LocalDateTime> t) {
+        super(t);
+    }
 
     @Override
     public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         try {
-            long timestamp = jsonParser.getLongValue();
+            long timestamp = jsonParser.getValueAsLong();
             return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime();
         } catch (IOException ex) {
             // In case of errors, try the standard SECOM approach
-            return super.deserialize(jsonParser, deserializationContext);
+            final String value = jsonParser.getCodec().readValue(jsonParser, String.class);
+            return Optional.ofNullable(value)
+                    .filter(not(String::isBlank))
+                    .map(v -> LocalDateTime.parse(v, SECOM_DATE_TIME_FORMATTER))
+                    .orElse(null);
         }
     }
 

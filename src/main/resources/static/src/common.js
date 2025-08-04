@@ -12,7 +12,6 @@ $(() => {
     api.instancesApi = new InstancesApi();
     api.xmlsApi = new XmlsApi();
     api.docsApi = new DocsApi();
-    api.ledgerRequestsApi = new LedgerRequestsApi();
     api.search = new SearchApi();
 });
 
@@ -251,4 +250,159 @@ function downloadDoc($modalDiv, docId) {
         $modalDiv.removeClass('loading');
         showError(getErrorFromHeader(response, "Error while trying to retrieve the instance doc!"));
     });
+}
+
+/**
+ * Add a new key-value pair to the table and adds it to its map entries
+ * as well.
+ *
+ * @param tableId {string}  The ID of the table to be updated
+ * @param key {string}      The key of the key-value pair to be added
+ * @param tableId {value}   The value of the key-value pair to be added
+ */
+function addMapEntry(tableId, key, value) {
+    // Get the table map entries
+    const mapEntries = $("#"+tableId).data("entries");
+
+    // Sanity Check
+    if(!mapEntries) {
+        mapEntries = new Map();
+    }
+
+    // Use non-empty key values if you have to
+    key = key ? key : calculateKey(mapEntries);
+
+    // Update the map entries
+    mapEntries.set(key,value);
+    $("#"+tableId).data('entries', mapEntries);
+
+    // Create a new row
+    const $newEntryRow = $("<tr>");
+
+    // Create the key cell
+    const $keyCell = $('<td>');
+    const $keyInput = $("<input>");
+    $keyInput.addClass("form-control form-control-sm").val(key).data('val', key);
+    $keyInput.on('change', () => {
+        var newKey = $keyInput.val();
+        var oldKey = $keyInput.data('val');
+        if(mapEntries.has(newKey)) {
+            showError("The selected key value already exists, please choose a different one.")
+            $keyInput.val(oldKey);
+            return;
+        }
+        mapEntries.delete(oldKey);
+        mapEntries.set(newKey, $valueInput.val());
+        $keyInput.data('val', newKey);
+        $("#"+tableId).data('entries', mapEntries);
+    });
+    $keyCell.append($keyInput);
+    $newEntryRow.append($keyCell);
+
+    // Create the value cell
+    const $valueCell = $('<td>');
+    const $valueInput = $("<input>");
+    $valueInput.addClass("form-control form-control-sm").val(value);
+    $valueInput.on('change', () => {
+        mapEntries.set($keyInput.val(), $valueInput.val());
+        $("#"+tableId).data('entries', mapEntries);
+    });
+    $valueCell.append($valueInput);
+    $newEntryRow.append($valueCell);
+
+    // Create the button cell
+    const $actionsCell = $('<td>');
+    const $removeButton = $("<div>");
+    $removeButton.addClass("btn btn-sm btn-danger");
+    $removeButton.on('click', () => {
+        mapEntries.delete($keyInput.val());
+        $("#"+tableId).data('entries', mapEntries);
+        updateTable(tableId, mapEntries);
+    });
+    $buttonSpan = $("<span>")
+    $buttonSpanI = $("<i>")
+    $buttonSpanI.addClass("fa-solid fa-trash-can");
+    $buttonSpan.append($buttonSpanI);
+    $removeButton.append($buttonSpan);
+    $actionsCell.append($removeButton);
+    $newEntryRow.append($actionsCell);
+
+    // And the row to the table
+    $('#'+tableId+' tbody').append($newEntryRow);
+}
+
+/**
+ * Updates the table specified by the provided ID and sets the given entries
+ * as the values.
+ *
+ * @param tableId {string}  The ID of the table to be updated
+ * @param mapEntries {Map}  The map entries to be added to the table
+ */
+function updateTable(tableId, mapEntries) {
+    // Sanity Checks
+    if(!tableId) {
+        return;
+    }
+    if(!mapEntries) {
+        mapEntries = new Map();
+    }
+
+    // Clear out the table
+    clearTable(tableId);
+
+    // Now iterate and add all map values
+    for (const [key, value] of mapEntries) {
+        addMapEntry(tableId, key, value);
+    }
+}
+
+/**
+ * Clears out the table specified by the tableID provided. It also initialises
+ * it with the appropriate controls and buttons.
+ *
+ * @param tableId {string}  The ID of the table to be cleared
+ */
+function clearTable(tableId) {
+    // Clear the table buttons and body
+    $('#'+tableId+'AddButtonHeader').html("");
+    $('#'+tableId+' tbody').html("");
+
+    // Create a new set of map entries
+    $("#"+tableId).data('entries', new Map());
+
+    // And add a new button
+    var $button = $('<button type="button" id="'+tableId+'AddEntryButton"/>');
+    $button.addClass("btn btn-sm btn-success");
+    $button.on("click", () => {
+        addMapEntry(tableId, "", "");
+    });
+    $buttonSpan = $("<span>")
+    $buttonSpanI = $("<i>")
+    $buttonSpanI.addClass("fa-solid fa-circle-plus");
+    $buttonSpan.append($buttonSpanI);
+    $button.append($buttonSpan);
+    $button.appendTo($('#'+tableId+'AddButtonHeader'));
+}
+
+/**
+ * Calculate a valid key for the provided map entries. If in the first try
+ * the calculated key already exists, try again until successful.
+ *
+ * @param mapEntries {Map}  The map to calculate the new key for
+ */
+function calculateKey(mapEntries) {
+    //Sanity Check
+    if(!mapEntries) {
+        return undefined;
+    }
+    // Otherwise start with a standard while
+    var index = mapEntries.size+1;
+    var key = "urn:mrn:unknown:"+index;
+    // And work up all the way
+    while(mapEntries.has(key)) {
+        index++;
+        key =  "urn:mrn:unknown:"+index;
+    }
+    //Finally return
+    return key;
 }

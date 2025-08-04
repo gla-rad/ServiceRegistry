@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Maritime Connectivity Platform Consortium
+ * Copyright (c) 2025 Maritime Connectivity Platform Consortium
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,8 +22,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 /**
  * The JPA Auditioning Configuration.
  *
- * This configuration is used to enabled the automatic JPA timestamps on
- * creation or update or certain entries like the ledger requests.
+ * This configuration is used to enable the automatic JPA timestamps on
+ * creation or update or certain entries.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
