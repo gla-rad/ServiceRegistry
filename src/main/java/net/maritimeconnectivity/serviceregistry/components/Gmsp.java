@@ -76,7 +76,7 @@ public class Gmsp {
             if (searchGeometry != null) {
                 try {
 
-                    ArrayList<String> subjects = calculateSubjectsFromGeometry(searchGeometry));
+                    ArrayList<String> subjects = calculateSubjectsFromGeometry(searchGeometry);
 
                     // Create mms msg for each subject
                     for (String subject : subjects) {
