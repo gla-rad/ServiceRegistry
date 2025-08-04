@@ -36,6 +36,7 @@ public class SearchArea implements Serializable {
     @NotNull
     @Column(name = "geometry", columnDefinition = "geometry")
     private Geometry geometry;
+    private Integer externalId;
 
     // ------------------------
     // Getters and Setters
