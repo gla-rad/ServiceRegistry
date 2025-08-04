@@ -47,16 +47,14 @@ import org.grad.secomv2.core.models.SearchObjectResult;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
@@ -71,6 +69,12 @@ import static java.util.function.Predicate.not;
 @Validated
 @Slf4j
 public class SecomV2SearchServiceController implements SearchServiceServiceInterface {
+
+    @Value("${info.msr.url}")
+    private String msrBaseUrl;
+
+    @Value("${info.msr.localSearchOnly}")
+    private boolean localSearchOnly;
 
     /**
      * The Object Mapper.
@@ -214,12 +218,25 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
 
-        // Perform the search
+        // Perform the search locally
         final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
                 query,
                 searchGeometry,
                 PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE))
         );
+
+        String transactionId = UUID.randomUUID().toString();
+
+        //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
+        String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
+
+        //Propagate the search to the GMSP if available
+        String gmspRequestUuid = null;
+        if (!localSearchOnly) {
+            String gmspUuid = searchFilterObject.getCallbackEndpoint();
+
+            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "", searchFilterObject);
+        }
 
         // Get the search object results and if possible also update the
         // certificates through the MIR.
