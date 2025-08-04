@@ -26,6 +26,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
@@ -86,6 +87,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @Autowired(required = false)
     MirClient mirClient;
 
+    @Autowired
+    Gmsp gmspClient;
     /**
      * Object Mapper from Domain to DTO.
      */
