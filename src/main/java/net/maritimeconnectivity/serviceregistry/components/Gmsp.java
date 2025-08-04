@@ -9,7 +9,7 @@ import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessa
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import org.grad.secom.core.models.SearchFilterObject;
+import org.grad.secomv2.core.models.SearchFilterObject;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -60,11 +60,11 @@ public class Gmsp {
      * @return uuid to uniquely identify the global search request
      * TODO: Consider where the check of certificate validity should be done.
      */
-    public String globalSearch (String endpoint, String consumerMrn, SearchFilterObject searchFilterObj) {
+    public String globalSearch (String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
         try {
             MmsSearchMessageDto searchMessageDto = new MmsSearchMessageDto(
                     endpoint, // This should contain the transaction ID
-                    null,
+                    consumerMrn,
                     searchFilterObj.getQuery() //Extract the searchParam object
             );
             String searchMessageJson = writeJsonSearchMessage(searchMessageDto);
@@ -72,11 +72,11 @@ public class Gmsp {
 
             List<OutgoingMmtpMessage> messages = new ArrayList<>();
 
-            // Calculate subjects from geometry if it exists
-            if (this.containsGeometry(searchFilterObj)) {
+            // Calculate subjects if Gemometry param is not null
+            if (searchGeometry != null) {
                 try {
 
-                    ArrayList<String> subjects = calculateSubjectsFromGeometry(searchFilterObj.getGeometry());
+                    ArrayList<String> subjects = calculateSubjectsFromGeometry(searchGeometry));
 
                     // Create mms msg for each subject
                     for (String subject : subjects) {
@@ -141,11 +141,9 @@ public class Gmsp {
         return "";
     }
 
-    private ArrayList<String> calculateSubjectsFromGeometry(String geometryAsWKT) throws ParseException {
-        //Parse WKT to Geometry
-        Geometry geometry = WKTUtil.convertWKTtoGeometry(geometryAsWKT);
+    private ArrayList<String> calculateSubjectsFromGeometry(Geometry searchGeometry) {
 
-        //Create Luscene query
+        //Create Luscene query d
 
         //Run the query - should find intersections in order to return areas of interest (only the areas!)
 

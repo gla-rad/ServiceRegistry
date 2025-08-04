@@ -6,8 +6,8 @@ import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingProtobufMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
-import org.grad.secom.core.models.SearchFilterObject;
-import org.grad.secom.core.models.SearchParameters;
+import org.grad.secomv2.core.models.SearchFilterObject;
+import org.grad.secomv2.core.models.SearchParameters;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +32,7 @@ class GmspIntegrationTest {
         // Arrange
         SearchFilterObject sfo = new SearchFilterObject();
         SearchParameters params = new SearchParameters();
-        params.setKeywords("test");
+        params.setKeywords(new String[] { "test" }); // Valid keywords
         sfo.setQuery(params);  // Valid query
         sfo.setGeometry(null); // No geometry (this is what we're testing)
 
@@ -49,7 +49,7 @@ class GmspIntegrationTest {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
-            Assertions.assertTrue(gmsp.isSent(gmspRequestUuid));
+            Assertions.assertTrue(gmsp.isSent(gmspRequestUuid)); //Assert is sent
         });
 
     }

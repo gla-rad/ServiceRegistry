@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.bouncycastle.pqc.jcajce.provider.Falcon;
-import org.grad.secom.core.models.SearchParameters;
+import org.grad.secomv2.core.models.SearchParameters;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Getter

@@ -117,6 +117,7 @@ info:
         name: ${service.variable.info.name}
         mrn: ${service.variable.info.mrn}'
         url: ${service.variable.info.url}
+        localSearchOnly: false
         operatorName: ${service.variable.info.operator.name}
         operatorMrn: ${service.variable.info.operator.mrn}
         operatorContact: ${service.variable.info.operator.contact}
