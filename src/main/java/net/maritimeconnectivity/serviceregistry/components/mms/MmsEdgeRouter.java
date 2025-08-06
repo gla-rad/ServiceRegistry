@@ -126,7 +126,7 @@ public class MmsEdgeRouter {
         byte[] bytes = msg.getMessage().toByteArray();
 
         //Only add on first attempt to send
-        if (!this.msgBuffer.containsKey(uuid)) {
+        if (!this.msgBuffer.containsKey(uuid) && msg.getMessage().getProtocolMessage().hasSendMessage())  {
             this.msgBuffer.put(uuid, msg);
         }
         webSocketSession.sendMessage(new BinaryMessage(bytes));
@@ -176,7 +176,8 @@ public class MmsEdgeRouter {
                 log.error("Cannot handle message type: {}", type);
             }
 
-        // Case: Response from Router when sending global search request to the MMS Network
+        // Case: Response from Router when sending global search request to the MMS Network or
+        // response to a receive message
         } else if (msg.hasResponseMessage()) {
             String responseToUuid = msg.getResponseMessage().getResponseToUuid();
             OutgoingMmtpMessage bufferedMsg = this.msgBuffer.get(responseToUuid);
@@ -198,7 +199,7 @@ public class MmsEdgeRouter {
                 }
             } else {
                 if (this.msgBuffer.containsKey(responseToUuid)) {
-                    log.info("ACK: Message {} successfully sent to MMS Router", resp.getResponseToUuid());
+                    log.info("ACK received from router: Message {} was successfully sent to the MMS Router", resp.getResponseToUuid());
                     gmsp.globalSearchRequestCallback(bufferedMsg.getGsrUuid());
                     this.msgBuffer.remove(responseToUuid);
                 } else {
