@@ -207,25 +207,28 @@ public class MmsEdgeRouter {
                     this.msgBuffer.remove(responseToUuid);
 
                     // Possibly incoming GMSP search requests
-                    log.warn("Contents of length {} received from MMS Router", msg.getResponseMessage().getMessageContentList().size());
                     List<MessageContent> content = msg.getResponseMessage().getMessageContentList();
                     for (MessageContent c : content) {
                         ApplicationMessage appMsg = c.getMsg();
                         if (appMsg.hasHeader()) {
                             String subject = appMsg.getHeader().getSubject();
-                            log.info("Received message with subject: {}", subject);
-                            //Print bytes of the string vs the globalsubject
-                            log.info("Received message with subject bytes: {} vs {}", subject.getBytes(), gmsp.getGlobalSearchSubject().getBytes());
-
                             if (subject.equals(gmsp.getGlobalSearchSubject())) {
                                 log.warn("\n\nGlobal Search Subject received from MMS Router: {}", subject);
 
-                                //Attempt parse the content to a MmsSearchMessageDto
-                                //gmsp.handleIncomingGlobalSearch(msg);
-                                return; // Exit after handling the GMSP search request
+                                // Parse the content to a MmsSearchMessageDto
+                                var rawContent = appMsg.getBody().toByteArray();
+
+                                // Attempt to parse the content to a MmsSearchMessageDto
+                                MmsSearchMessageDto msgDto = null;
+                                try {
+                                    msgDto = gmsp.parseSearchDto(new String(rawContent));
+                                    gmsp.handleIncomingGlobalSearch(msgDto);
+                                } catch (JsonProcessingException e) {
+                                    log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
+                                }
+                                return;
                             }
                         }
-
                     }
                     log.error("Received response to unknown message: {}", resp.getResponseToUuid());
                 }

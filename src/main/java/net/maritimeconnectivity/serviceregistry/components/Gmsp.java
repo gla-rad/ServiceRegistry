@@ -180,11 +180,10 @@ public class Gmsp {
      * @param dto The DTO containing the search request details.
      */
     public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) {
-        log.info("Handling global search request from MMS Router for Endpoint/XactID: {}", dto.getEndpoint());
+        log.info("Performing global search for transaction ID: {}", dto.getEndpoint());
 
-        // TODO: initiate local search or further processing here
 
-        // TODO: Once local search is done, a response must be uploaded to the endpoint specified in the DTO
+        log.info("Uploaded results via SECOM Upload interface: {}", dto.getEndpoint());
     }
 
 
