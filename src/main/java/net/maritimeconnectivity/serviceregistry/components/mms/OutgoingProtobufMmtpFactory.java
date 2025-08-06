@@ -69,6 +69,19 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
                 ).build());
     }
 
+    @Override
+    public OutgoingMmtpMessage createSubscribeMessage(String subject) {
+        return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.SUBSCRIBE_MESSAGE)
+                        .setSubscribeMessage(Subscribe.newBuilder()
+                                .setSubject(subject)
+                        )
+                ).build());
+    }
+
 
 
 

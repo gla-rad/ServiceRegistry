@@ -3,6 +3,7 @@ package net.maritimeconnectivity.serviceregistry.components;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
@@ -49,6 +50,7 @@ public class Gmsp {
         this.globalSearchRequests = new HashMap<>();
         this.mmsEdgeRouter = er;
         this.mmtpFactory = mmtpFactory;
+        this.subscribe(globalSearchSubject);
 
     }
 
@@ -195,5 +197,15 @@ public class Gmsp {
             return this.globalSearchRequests.get(gsrUuid).isSent();
         }
         return false;
+    }
+
+    private void subscribe(String subject) {
+        // Subscribe to the subject for incoming messages
+        OutgoingMmtpMessage subscriptionMessage = mmtpFactory.createSubscribeMessage(subject);
+        try {
+            mmsEdgeRouter.sendMessage(subscriptionMessage);
+        } catch (Exception e) {
+            log.error("Error subscribing to subject {}: {}", subject, e.getMessage());
+        }
     }
 }

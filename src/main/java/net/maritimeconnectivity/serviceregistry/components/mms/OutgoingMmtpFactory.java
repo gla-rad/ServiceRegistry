@@ -17,4 +17,6 @@ public interface OutgoingMmtpFactory {
     OutgoingMmtpMessage createReceiveMessage();
 
     OutgoingMmtpMessage createDisconnectMessage();
+
+    OutgoingMmtpMessage createSubscribeMessage(String subject);
 }
