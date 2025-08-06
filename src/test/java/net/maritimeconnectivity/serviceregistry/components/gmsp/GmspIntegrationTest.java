@@ -40,7 +40,7 @@ class GmspIntegrationTest {
         String testMrn = "urn:mrn:mcp:example:test:client";
 
         assertDoesNotThrow(() -> {
-            String gmspRequestUuid = gmsp.globalSearch(testEndpoint, testMrn, sfo);
+            String gmspRequestUuid = gmsp.globalSearch(testEndpoint, testMrn, sfo, null);
             Assertions.assertFalse(gmsp.isSent(gmspRequestUuid));
 
             //Sleep for 1 second
