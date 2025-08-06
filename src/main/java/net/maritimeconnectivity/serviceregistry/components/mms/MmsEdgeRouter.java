@@ -32,6 +32,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -50,6 +51,7 @@ public class MmsEdgeRouter {
 
     private volatile  boolean connected = false;
     private volatile boolean initialized = false;
+
 
     @Value("${info.mms.router.url}")
     private String routerUrl;
@@ -126,7 +128,7 @@ public class MmsEdgeRouter {
         byte[] bytes = msg.getMessage().toByteArray();
 
         //Only add on first attempt to send
-        if (!this.msgBuffer.containsKey(uuid) && msg.getMessage().getProtocolMessage().hasSendMessage())  {
+        if (!this.msgBuffer.containsKey(uuid))  {
             this.msgBuffer.put(uuid, msg);
         }
         webSocketSession.sendMessage(new BinaryMessage(bytes));
@@ -157,6 +159,7 @@ public class MmsEdgeRouter {
             var type = msg.getProtocolMessage().getProtocolMsgType();
             if (type == ProtocolMessageType.NOTIFY_MESSAGE) {
                 try {
+                    log.info("Received NOTIFY message from MMS Router: {} You have {} new messages", msg.getUuid(), msg.getProtocolMessage().getNotifyMessage().getMessageMetadataCount());
                     handleNotify();
                 } catch (IOException e) {
                     log.error("Error pulling messages from router upon receiving a Notify", e);
@@ -202,7 +205,28 @@ public class MmsEdgeRouter {
                     log.info("ACK received from router: Message {} was successfully sent to the MMS Router", resp.getResponseToUuid());
                     gmsp.globalSearchRequestCallback(bufferedMsg.getGsrUuid());
                     this.msgBuffer.remove(responseToUuid);
-                } else {
+
+                    // Possibly incoming GMSP search requests
+                    log.warn("Contents of length {} received from MMS Router", msg.getResponseMessage().getMessageContentList().size());
+                    List<MessageContent> content = msg.getResponseMessage().getMessageContentList();
+                    for (MessageContent c : content) {
+                        ApplicationMessage appMsg = c.getMsg();
+                        if (appMsg.hasHeader()) {
+                            String subject = appMsg.getHeader().getSubject();
+                            log.info("Received message with subject: {}", subject);
+                            //Print bytes of the string vs the globalsubject
+                            log.info("Received message with subject bytes: {} vs {}", subject.getBytes(), gmsp.getGlobalSearchSubject().getBytes());
+
+                            if (subject.equals(gmsp.getGlobalSearchSubject())) {
+                                log.warn("\n\nGlobal Search Subject received from MMS Router: {}", subject);
+
+                                //Attempt parse the content to a MmsSearchMessageDto
+                                //gmsp.handleIncomingGlobalSearch(msg);
+                                return; // Exit after handling the GMSP search request
+                            }
+                        }
+
+                    }
                     log.error("Received response to unknown message: {}", resp.getResponseToUuid());
                 }
             }

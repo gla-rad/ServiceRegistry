@@ -3,6 +3,7 @@ package net.maritimeconnectivity.serviceregistry.components;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
@@ -36,6 +37,7 @@ public class Gmsp {
     private long messageDurationMinutes;
 
     @Value("${info.gmsp.search.globalSubject}")
+    @Getter
     private String globalSearchSubject;
 
     @Autowired
@@ -99,6 +101,7 @@ public class Gmsp {
                     log.error("Error calculating subjects from geometry: ", e);
                 }
             } else {
+                log.warn("NO GEOMETRY PROVIDED, USING GLOBAL SEARCH SUBJECT: {}", globalSearchSubject);
                 OutgoingMmtpMessage msg = mmtpFactory.createSendMessage(
                         globalSearchSubject, // Use the global search subject
                         consumerMrn,

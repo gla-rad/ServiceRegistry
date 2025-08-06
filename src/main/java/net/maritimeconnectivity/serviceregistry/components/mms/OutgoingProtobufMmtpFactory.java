@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.mmtp.*;
 import org.springframework.stereotype.Component;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 @Component
@@ -25,7 +26,7 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
 
     @Override
     public OutgoingMmtpMessage createSendMessage(String subject, String sender, String body, Duration ttl) {
-        long expires = 0;
+        long expires = Instant.now().getEpochSecond() + ttl.getSeconds();
         byte[] payload = body.getBytes();
 
         return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
