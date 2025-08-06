@@ -23,12 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
-@Component
-@Slf4j
-
 /*
 Implements the GMSP (Global Maritime Search Platform) functionality for the Service Registry.
  */
+@Component
+@Slf4j
 public class Gmsp {
 
     @Value("${info.mms.mmtp.duration.minutes}")
