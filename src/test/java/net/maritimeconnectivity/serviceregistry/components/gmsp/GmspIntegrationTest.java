@@ -66,7 +66,7 @@ import static org.mockito.Mockito.doReturn;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-class SecomV2SearchServiceControllerTest {
+class GmspIntegrationTest {
 
     /**
      * The Reactive Web Test Client.
