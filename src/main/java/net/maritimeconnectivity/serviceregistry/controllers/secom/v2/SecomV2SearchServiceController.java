@@ -231,7 +231,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
 
         //Propagate the search to the GMSP if available
-        String gmspRequestUuid = null;
+        String
+                gmspRequestUuid = null;
         if (!localSearchOnly) {
             String gmspUuid = searchFilterObject.getCallbackEndpoint();
 
