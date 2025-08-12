@@ -143,3 +143,9 @@ info:
 eureka:
     client:
         enabled: false
+
+secom:
+    security:
+        ssl:
+            keystore: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
+            keystorePassword: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}

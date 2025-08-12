@@ -13,6 +13,8 @@ import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequ
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.grad.secomv2.core.models.SearchFilterObject;
+import org.grad.secomv2.springboot3.components.SecomConfigProperties;
+import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
@@ -20,6 +22,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,6 +40,9 @@ Implements the GMSP (Global Maritime Search Platform) functionality for the Serv
 @Component
 @Slf4j
 public class Gmsp {
+
+    @Autowired
+    SecomConfigProperties secomConfigProperties;
 
     @Value("${info.mms.mmtp.duration.minutes}")
     private long messageDurationMinutes;
@@ -179,11 +190,22 @@ public class Gmsp {
      *
      * @param dto The DTO containing the search request details.
      */
-    public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) {
+    public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
         log.info("Performing global search for transaction ID: {}", dto.getEndpoint());
 
 
         log.info("Uploaded results via SECOM Upload interface: {}", dto.getEndpoint());
+        UploadResultsClient secomClient = new UploadResultsClient(
+                URI.create(dto.getEndpoint()).toURL(),
+                secomConfigProperties
+        );
+
+
+        //Perform local search, which gives a list of SearchObjectResult objects
+
+        secomClient.uploadResults(null);
+
+
     }
 
 

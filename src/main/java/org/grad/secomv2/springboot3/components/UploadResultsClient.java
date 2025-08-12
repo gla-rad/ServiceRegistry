@@ -4,6 +4,7 @@ import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import java.io.IOException;
@@ -21,11 +22,11 @@ public class UploadResultsClient extends SecomClient {
     }
 
 
-    public HttpStatusCode uploadResults(String endpoint, List<SearchObjectResult> searchResults) {
+    public HttpStatusCode uploadResults(List<SearchObjectResult> searchResults) {
         try {
             ResponseEntity<Void> entity = this.secomClient
                     .post()
-                    .uri(endpoint)
+                    .uri("")
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(searchResults))
                     .retrieve()
