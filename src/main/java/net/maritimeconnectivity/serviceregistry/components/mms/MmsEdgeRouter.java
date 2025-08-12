@@ -170,7 +170,12 @@ public class MmsEdgeRouter {
                 try {
                     String json = new String(body);
                     MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
-                    gmsp.handleIncomingGlobalSearch(dto);
+                    try {
+                        gmsp.handleIncomingGlobalSearch(dto);
+                    } catch (UnrecoverableKeyException | CertificateException | IOException |
+                             KeyStoreException | NoSuchAlgorithmException e) {
+                        log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
+                    }
 
                 } catch (JsonProcessingException e) {
                     log.error("Error parsing JSON from MMS Router: {}", e.getMessage());
@@ -223,7 +228,8 @@ public class MmsEdgeRouter {
                                 try {
                                     msgDto = gmsp.parseSearchDto(new String(rawContent));
                                     gmsp.handleIncomingGlobalSearch(msgDto);
-                                } catch (JsonProcessingException e) {
+                                } catch (UnrecoverableKeyException | CertificateException | IOException |
+                                         KeyStoreException | NoSuchAlgorithmException e) {
                                     log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
                                 }
                                 return;
