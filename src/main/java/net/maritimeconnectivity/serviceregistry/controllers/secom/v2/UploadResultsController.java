@@ -17,7 +17,8 @@ import java.util.List;
  * </p>
  * This interface definition can be used by the SECOM-compliant MSRs participating in GMSP
  * to upload result of a SECOM searchService request.
- * Interface placed outside SECOM libary as it is not part of the SECOM standard.
+ * Interface placed outside SECOM libary as it is not part of the SECOM standard, but unoficially an addition to SECOM
+ * used by the MSR.
  * @author Jakob Svenningsen (email: jakob@dmc.international)
  */
 
