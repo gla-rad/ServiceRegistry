@@ -7,8 +7,6 @@ import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import java.io.IOException;
 import java.net.URL;
@@ -28,8 +26,7 @@ public class UploadResultsClient extends SecomClient {
     }
 
     //
-    public HttpStatusCode uploadResults(List<SearchObjectResult> searchResults) {
-        try {
+    public HttpStatusCode uploadResults(List<SearchObjectResult> searchResults) throws WebClientResponseException {
             ResponseEntity<Void> entity = this.secomClient
                     .post()
                     .uri("") //Leave empty as the client is initialized with the absolute path
@@ -40,9 +37,7 @@ public class UploadResultsClient extends SecomClient {
                     .toBodilessEntity()
                     .block(); //Waits for response
 
-            return entity.getStatusCode();
-        } catch (WebClientResponseException e) {
-            return e.getStatusCode();
-        }
+        assert entity != null;
+        return entity.getStatusCode();
     }
 }
