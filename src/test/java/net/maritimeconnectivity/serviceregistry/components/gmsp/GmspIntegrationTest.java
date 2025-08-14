@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry.components.gmsp;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.controllers.secom.v2.UploadResultsController;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
@@ -49,9 +50,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
+import static org.awaitility.Awaitility.await;
+import java.util.concurrent.TimeUnit;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -63,9 +67,18 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.timeout;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
+
 
 @ActiveProfiles("test")
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+        webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT,
+        properties = { "server.port=8444" }
+)
+
 class GmspIntegrationTest {
 
     /**
@@ -79,6 +92,9 @@ class GmspIntegrationTest {
 
     @Autowired
     private Gmsp gmsp;
+
+    @MockitoSpyBean
+    private UploadResultsController uploadResultsController;
 
     @MockitoBean
     private InstanceService instanceService;
@@ -199,6 +215,12 @@ class GmspIntegrationTest {
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
+
+        //Wait 5 seconds to check if results were uploaded to the msr
+        // Wait (up to 5s) for the upload callback to hit the controller
+        //Print port that the upload results controller is listening on
+        verify(uploadResultsController, timeout(10000))
+                .searchService(anyString(), anyList());
     }
 
     }
