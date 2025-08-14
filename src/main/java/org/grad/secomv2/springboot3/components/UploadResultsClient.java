@@ -32,7 +32,7 @@ public class UploadResultsClient extends SecomClient {
         try {
             ResponseEntity<Void> entity = this.secomClient
                     .post()
-                    .uri("")
+                    .uri("") //Leave empty as the client is initialized with the absolute path
                     .contentType(MediaType.APPLICATION_JSON)
                     //Mock empty body
                     .bodyValue(Collections.emptyList())
