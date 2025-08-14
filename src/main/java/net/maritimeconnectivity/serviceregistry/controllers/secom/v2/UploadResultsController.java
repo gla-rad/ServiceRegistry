@@ -9,6 +9,8 @@ import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.util.List;
 
@@ -23,6 +25,7 @@ import java.util.List;
  */
 
 @Component
+@Path("/")
 @Slf4j
 @Validated
 public class UploadResultsController implements GenericSecomInterface {
@@ -31,6 +34,8 @@ public class UploadResultsController implements GenericSecomInterface {
      * The Interface Endpoint Path.
      */
     static final String UPLOAD_RESULTS_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/uploadResults";
+
+
 
     /**
      * POST /v2/uploadResults : The purpose of this interface is to upload results to a global searhService
@@ -45,14 +50,12 @@ public class UploadResultsController implements GenericSecomInterface {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public void searchService(
-            @PathParam("transactionId") String transactionId,
-            @Valid List<SearchObjectResult> searchResults) {
+    public void searchService(@PathParam("transactionId") String transactionId,
+                              @Valid List<SearchObjectResult> searchResults) {
 
-            log.info("Received {} search results for transactionId: {}", searchResults.size(), transactionId);
+        log.info("Received {} search results for transactionId: {}", searchResults.size(), transactionId);
 
-            // Consolidate results based on transactionId
-
+        // Consolidate results based on transactionId
     }
 
 }
