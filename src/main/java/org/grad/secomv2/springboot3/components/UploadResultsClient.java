@@ -1,3 +1,5 @@
+
+//This is just a nasty namespace hack to access the WebClient secomClient in the derived class
 package org.grad.secomv2.springboot3.components;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +27,7 @@ public class UploadResultsClient extends SecomClient {
         log.info("Initializing UploadResultsClient with URL: {}", url);
     }
 
-
+    //
     public HttpStatusCode uploadResults(List<SearchObjectResult> searchResults) {
         try {
             ResponseEntity<Void> entity = this.secomClient
