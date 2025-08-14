@@ -81,6 +81,9 @@ public class Gmsp {
      * TODO: Consider where the check of certificate validity should be done.
      */
     public String globalSearch (String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
+        log.info("Conduct global search for Endpoint: {}", endpoint);
+
+
         try {
             MmsSearchMessageDto searchMessageDto = new MmsSearchMessageDto(
                     endpoint, // This should contain the transaction ID
@@ -193,17 +196,24 @@ public class Gmsp {
     public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
         log.info("Performing global search for transaction ID: {}", dto.getEndpoint());
 
+        log.info("Keystore PW : {}", secomConfigProperties.getKeystorePassword());
 
-        log.info("Uploaded results via SECOM Upload interface: {}", dto.getEndpoint());
-        UploadResultsClient secomClient = new UploadResultsClient(
+
+        log.info("Uploaded results via SECOM Upload interface XXY: {}", dto.getEndpoint());
+        UploadResultsClient uploadSecomClient = new UploadResultsClient(
                 URI.create(dto.getEndpoint()).toURL(),
                 secomConfigProperties
         );
+        if (secomConfigProperties == null) {
+            log.error("SecomConfigProperties is null, cannot initialize UploadResultsClient");
+            return;
+        }
+        log.info("Initialization suceesful for UploadResultsClient with URL: {}", dto.getEndpoint());
 
 
         //Perform local search, which gives a list of SearchObjectResult objects
 
-        secomClient.uploadResults(null);
+        uploadSecomClient.uploadResults(null);
 
 
     }
