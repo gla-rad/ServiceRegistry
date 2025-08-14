@@ -149,3 +149,4 @@ secom:
         ssl:
             keystore: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
             keystorePassword: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
+            insecureSslPolicy: true
