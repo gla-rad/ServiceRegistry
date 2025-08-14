@@ -21,6 +21,8 @@ import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
@@ -213,9 +215,11 @@ public class Gmsp {
 
         //Perform local search, which gives a list of SearchObjectResult objects
 
-        uploadSecomClient.uploadResults(null);
-
-
+        try {
+            uploadSecomClient.uploadResults(null);
+        } catch (WebClientResponseException e){
+            log.error("Error uploading results via SECOM Upload interface, CODE:", e);
+        }
     }
 
 
