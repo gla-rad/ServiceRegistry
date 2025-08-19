@@ -229,8 +229,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         //Propagate the search to the GMSP if available
         String gmspRequestUuid = null;
         if (!localSearchOnly) {
-            String gmspUuid = searchFilterObject.getCallbackEndpoint();
-
             gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "", searchFilterObject, searchGeometry);
         }
 

@@ -12,9 +12,11 @@ import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessa
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.grad.secomv2.core.models.SearchFilterObject;
+import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
 import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.locationtech.jts.geom.Geometry;
@@ -64,6 +66,9 @@ public class Gmsp {
     private final OutgoingMmtpFactory mmtpFactory;
 
     private HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
+
+    @Autowired
+    DomainDtoMapper<Instance, SearchObjectResult> searchObjectResultMapper;
 
     @Autowired
     InstanceService instanceService;
@@ -201,12 +206,14 @@ public class Gmsp {
      * @param dto The DTO containing the search request details.
      */
     public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
-        log.info("Performing global search for transaction ID: {}", dto.getEndpoint());
+        log.info("Handling GMSP requests transaction ID: {}", dto.getEndpoint());
 
-        log.info("Keystore PW : {}", secomConfigProperties.getKeystorePassword());
+        //Print details of the search requets searchFilterObject
+        var q = dto.getSearchFilterObject().getQuery();
+
+        log.info("Search Filter Object Keywords: {}, Name : {}", q.getKeywords(), q.getName());
 
 
-        log.info("Uploaded results via SECOM Upload interface XXY: {}", dto.getEndpoint());
         UploadResultsClient uploadSecomClient = new UploadResultsClient(
                 URI.create(dto.getEndpoint()).toURL(),
                 secomConfigProperties
@@ -215,17 +222,20 @@ public class Gmsp {
             log.error("SecomConfigProperties is null, cannot initialize UploadResultsClient");
             return;
         }
-        log.info("Initialization suceesful for UploadResultsClient with URL: {}", dto.getEndpoint());
 
-
+        log.info("Searching local database");
         //Perform local search, which gives a list of SearchObjectResult objects
         final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject());
+        List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
+        log.info("Found {} search results for local database", searchObjectResults.size());
 
         try {
-            uploadSecomClient.uploadResults(null);
+            uploadSecomClient.uploadResults(searchObjectResults);
         } catch (WebClientResponseException e){
             log.error("Error uploading results via SECOM Upload interface, CODE:", e);
+            return;
         }
+        log.info("Uploaded {} results via SECOM Upload interface {}", searchObjectResults.size(), dto.getEndpoint());
     }
 
 
