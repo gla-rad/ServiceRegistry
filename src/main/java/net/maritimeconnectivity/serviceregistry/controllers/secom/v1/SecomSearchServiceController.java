@@ -222,7 +222,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         }
 
         // Perform the search
-        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
+        final Page<Instance> instancesPage = this.instanceService.handle(
                 query,
                 searchGeometry,
                 PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))

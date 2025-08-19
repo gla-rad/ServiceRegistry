@@ -18,8 +18,10 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128Utils;
+import net.maritimeconnectivity.serviceregistry.components.InstanceSearchQueryBuilder;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
@@ -40,6 +42,7 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.grad.secomv2.core.models.SearchFilterObject;
 import org.hibernate.search.backend.lucene.LuceneBackend;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
@@ -59,6 +62,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -126,6 +130,9 @@ public class InstanceService {
      */
     @Autowired
     EntityManagerFactory entityManagerFactory;
+
+    @Autowired
+    private InstanceSearchQueryBuilder queryBuilder;
 
     // Service Variables
     private final String[] searchFields = new String[] {
@@ -419,7 +426,7 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
+    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
@@ -665,6 +672,15 @@ public class InstanceService {
                 .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false , true)))
                 .map(strategy::makeQuery)
                 .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Instance> search(@Valid SearchFilterObject searchFilterObject) {
+        InstanceSearchQueryBuilder.QueryParams lusceneParams = queryBuilder.build(searchFilterObject);
+        return handle(
+                lusceneParams.queryString(),
+                lusceneParams.geometry(),
+                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)));
     }
 
 }

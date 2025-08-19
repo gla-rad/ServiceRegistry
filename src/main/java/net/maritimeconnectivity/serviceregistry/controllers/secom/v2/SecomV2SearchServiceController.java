@@ -115,115 +115,111 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
-        // If at maximum only one geometry is provided, retrieve it
+//        // If at maximum only one geometry is provided, retrieve it
         final Geometry searchGeometry =  Optional.ofNullable(searchFilterObject)
                 .map(SearchFilterObject::getGeometry)
                 .map(this::parseGeometry)
                 .orElse(null);
 
-        // Check if free text
-        String query = new String();
-
-        // Now build the query if we have to
-        if(Objects.nonNull(searchFilterObject) && Objects.nonNull(searchFilterObject.getQuery())) {
-            // Handle the name filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getName())) {
-                query = this.addToQuery(query, "name", searchFilterObject.getQuery().getName(), BooleanOperator.AND);
-            }
-
-            // Handle the status filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getStatus())) {
-                query = this.addToQuery(query, "status", searchFilterObject.getQuery().getStatus(), BooleanOperator.AND);
-            }
-
-            // Handle the version filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getVersion())) {
-                query = this.addToQuery(query, "version", searchFilterObject.getQuery().getVersion(), BooleanOperator.AND);
-            }
-
-            // Handle the description filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getDescription())) {
-                query = this.addToQuery(query, "description", searchFilterObject.getQuery().getDescription(), BooleanOperator.AND);
-            }
-
-            // Handle the specification filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getSpecificationId())) {
-                query = this.addToQuery(query, "specificationId", searchFilterObject.getQuery().getSpecificationId(), BooleanOperator.AND);
-            }
-
-            // Handle the design ID filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getDesignId())) {
-                query = this.addToQuery(query, "designId", searchFilterObject.getQuery().getDesignId(), BooleanOperator.AND);
-            }
-
-            // Handle the instance ID filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getInstanceId())) {
-                query = this.addToQuery(query, "instanceId", searchFilterObject.getQuery().getInstanceId(), BooleanOperator.AND);
-            }
-
-            // Handle the service Type filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getServiceType())) {
-                query = this.addToQuery(query, "serviceType", searchFilterObject.getQuery().getServiceType(), BooleanOperator.AND);
-            }
-
-            // Handle the UN/LOCODE filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getUnlocode())) {
-                query = this.addToQuery(query, "unlocode", searchFilterObject.getQuery().getUnlocode(), BooleanOperator.AND);
-            }
-
-            // Handle the endpoint URI filter - make sure it's not empty
-            if (Objects.nonNull(searchFilterObject.getQuery().getEndpointUri()) && Strings.isNotBlank(searchFilterObject.getQuery().getEndpointUri().getPath())) {
-                query = this.addToQuery(query, "endpointUri", searchFilterObject.getQuery().getEndpointUri().toString(), BooleanOperator.AND);
-            }
-
-            // Handle the data product type filter
-            if (Objects.nonNull(searchFilterObject.getQuery().getDataProductType())) {
-                query = this.addToQuery(query, "dataProductType", searchFilterObject.getQuery().getDataProductType().name(), BooleanOperator.AND);
-            }
-
-            // Handle the combination of MMSI and IMO filters
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getMmsi()) && Strings.isNotBlank(searchFilterObject.getQuery().getImo())) {
-                // Open the sub-query for an OR statement
-                query += Strings.isBlank(query) ? "(" : " AND (";
-
-                // Add the sub-query statement
-                query = this.addToQuery(query, "mmsi", searchFilterObject.getQuery().getMmsi(), BooleanOperator.OR);
-                query = this.addToQuery(query, "imo", searchFilterObject.getQuery().getImo(), BooleanOperator.OR);
-
-                // Close the sub-query statement
-                query += ")";
-            }
-            // Otherwise, handle the the MMSI and IMO filters separately
-            else {
-                if (Strings.isNotBlank(searchFilterObject.getQuery().getMmsi())) {
-                    query = this.addToQuery(query, "mmsi", searchFilterObject.getQuery().getMmsi(), BooleanOperator.AND);
-                }
-
-                if (Strings.isNotBlank(searchFilterObject.getQuery().getImo())) {
-                    query = this.addToQuery(query, "imo", searchFilterObject.getQuery().getImo(), BooleanOperator.AND);
-                }
-            }
-
-            // Handle the keywords filter
-            if (!Arrays.isNullOrEmpty(searchFilterObject.getQuery().getKeywords())) {
-                // Open the sub-query for an OR statement
-                query += Strings.isBlank(query) ? "(" : " AND (";
-
-                for (String keyword : searchFilterObject.getQuery().getKeywords()) {
-                    query = this.addToQuery(query, "keywords", keyword, BooleanOperator.AND);
-                }
-
-                // Close the sub-query statement
-                query += ")";
-            }
-        }
+//        // Check if free text
+//        String query = new String();
+//
+//        // Now build the query if we have to
+//        if(Objects.nonNull(searchFilterObject) && Objects.nonNull(searchFilterObject.getQuery())) {
+//            // Handle the name filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getName())) {
+//                query = this.addToQuery(query, "name", searchFilterObject.getQuery().getName(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the status filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getStatus())) {
+//                query = this.addToQuery(query, "status", searchFilterObject.getQuery().getStatus(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the version filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getVersion())) {
+//                query = this.addToQuery(query, "version", searchFilterObject.getQuery().getVersion(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the description filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getDescription())) {
+//                query = this.addToQuery(query, "description", searchFilterObject.getQuery().getDescription(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the specification filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getSpecificationId())) {
+//                query = this.addToQuery(query, "specificationId", searchFilterObject.getQuery().getSpecificationId(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the design ID filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getDesignId())) {
+//                query = this.addToQuery(query, "designId", searchFilterObject.getQuery().getDesignId(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the instance ID filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getInstanceId())) {
+//                query = this.addToQuery(query, "instanceId", searchFilterObject.getQuery().getInstanceId(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the service Type filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getServiceType())) {
+//                query = this.addToQuery(query, "serviceType", searchFilterObject.getQuery().getServiceType(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the UN/LOCODE filter
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getUnlocode())) {
+//                query = this.addToQuery(query, "unlocode", searchFilterObject.getQuery().getUnlocode(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the endpoint URI filter - make sure it's not empty
+//            if (Objects.nonNull(searchFilterObject.getQuery().getEndpointUri()) && Strings.isNotBlank(searchFilterObject.getQuery().getEndpointUri().getPath())) {
+//                query = this.addToQuery(query, "endpointUri", searchFilterObject.getQuery().getEndpointUri().toString(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the data product type filter
+//            if (Objects.nonNull(searchFilterObject.getQuery().getDataProductType())) {
+//                query = this.addToQuery(query, "dataProductType", searchFilterObject.getQuery().getDataProductType().name(), BooleanOperator.AND);
+//            }
+//
+//            // Handle the combination of MMSI and IMO filters
+//            if (Strings.isNotBlank(searchFilterObject.getQuery().getMmsi()) && Strings.isNotBlank(searchFilterObject.getQuery().getImo())) {
+//                // Open the sub-query for an OR statement
+//                query += Strings.isBlank(query) ? "(" : " AND (";
+//
+//                // Add the sub-query statement
+//                query = this.addToQuery(query, "mmsi", searchFilterObject.getQuery().getMmsi(), BooleanOperator.OR);
+//                query = this.addToQuery(query, "imo", searchFilterObject.getQuery().getImo(), BooleanOperator.OR);
+//
+//                // Close the sub-query statement
+//                query += ")";
+//            }
+//            // Otherwise, handle the the MMSI and IMO filters separately
+//            else {
+//                if (Strings.isNotBlank(searchFilterObject.getQuery().getMmsi())) {
+//                    query = this.addToQuery(query, "mmsi", searchFilterObject.getQuery().getMmsi(), BooleanOperator.AND);
+//                }
+//
+//                if (Strings.isNotBlank(searchFilterObject.getQuery().getImo())) {
+//                    query = this.addToQuery(query, "imo", searchFilterObject.getQuery().getImo(), BooleanOperator.AND);
+//                }
+//            }
+//
+//            // Handle the keywords filter
+//            if (!Arrays.isNullOrEmpty(searchFilterObject.getQuery().getKeywords())) {
+//                // Open the sub-query for an OR statement
+//                query += Strings.isBlank(query) ? "(" : " AND (";
+//
+//                for (String keyword : searchFilterObject.getQuery().getKeywords()) {
+//                    query = this.addToQuery(query, "keywords", keyword, BooleanOperator.AND);
+//                }
+//
+//                // Close the sub-query statement
+//                query += ")";
+//            }
+//        }
 
         // Perform the search locally
-        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
-                query,
-                searchGeometry,
-                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE))
-        );
+        final Page<Instance> instancesPage = this.instanceService.search(searchFilterObject);
 
         String transactionId = UUID.randomUUID().toString();
 
@@ -231,8 +227,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
 
         //Propagate the search to the GMSP if available
-        String
-                gmspRequestUuid = null;
+        String gmspRequestUuid = null;
         if (!localSearchOnly) {
             String gmspUuid = searchFilterObject.getCallbackEndpoint();
 
@@ -318,27 +313,27 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
     }
-
-    /**
-     * A helper function to construct the SECOM discovery search search query.
-     * This is composed of various search filters alongside their valued,
-     * connected through boolean operators, e.g. AND/OR.
-     *
-     * @param query         The query constructed so far
-     * @param filterName    The new filter name to be added
-     * @param filterValue   The new filter value to be added
-     * @param operator      The boolean operator to be used
-     * @return the constructed search query
-     */
-    protected String addToQuery(String query, String filterName, String filterValue, BooleanOperator operator) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(query);
-        if (stringBuilder.isEmpty() || query.endsWith("(")) {
-            stringBuilder.append(String.format("%s:%s", filterName, filterValue.replaceAll(":","\\\\:")));
-        } else {
-            stringBuilder.append(String.format(" %s %s:%s", operator.name(), filterName, filterValue.replaceAll(":","\\\\:")));
-        }
-        return stringBuilder.toString();
-    }
+//
+//    /**
+//     * A helper function to construct the SECOM discovery search search query.
+//     * This is composed of various search filters alongside their valued,
+//     * connected through boolean operators, e.g. AND/OR.
+//     *
+//     * @param query         The query constructed so far
+//     * @param filterName    The new filter name to be added
+//     * @param filterValue   The new filter value to be added
+//     * @param operator      The boolean operator to be used
+//     * @return the constructed search query
+//     */
+//    protected String addToQuery(String query, String filterName, String filterValue, BooleanOperator operator) {
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder.append(query);
+//        if (stringBuilder.isEmpty() || query.endsWith("(")) {
+//            stringBuilder.append(String.format("%s:%s", filterName, filterValue.replaceAll(":","\\\\:")));
+//        } else {
+//            stringBuilder.append(String.format(" %s %s:%s", operator.name(), filterName, filterValue.replaceAll(":","\\\\:")));
+//        }
+//        return stringBuilder.toString();
+//    }
 
 }

@@ -17,7 +17,6 @@ package net.maritimeconnectivity.serviceregistry.components.gmsp;
  * limitations under the License.
  */
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.controllers.secom.v2.UploadResultsController;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
@@ -25,8 +24,6 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.ResponseSearchObjectWithCert;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import org.grad.secomv2.core.models.ResponseSearchObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
@@ -40,8 +37,6 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -55,7 +50,6 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 import static org.awaitility.Awaitility.await;
-import java.util.concurrent.TimeUnit;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -65,7 +59,6 @@ import java.util.*;
 import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.timeout;
@@ -186,7 +179,7 @@ class GmspIntegrationTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handleSearchQueryRequest(any(), any(), any());
+        doReturn(page).when(this.instanceService).search(any());
 
         // Perform the web request
         webTestClient.post()
