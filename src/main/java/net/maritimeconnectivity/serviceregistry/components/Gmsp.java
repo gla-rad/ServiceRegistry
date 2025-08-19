@@ -9,8 +9,10 @@ import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
+import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
+import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
@@ -20,6 +22,7 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -62,6 +65,9 @@ public class Gmsp {
 
     private HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
 
+    @Autowired
+    InstanceService instanceService;
+
     public Gmsp(MmsEdgeRouter er, OutgoingMmtpFactory mmtpFactory) {
         this.globalSearchRequests = new HashMap<>();
         this.mmsEdgeRouter = er;
@@ -90,7 +96,7 @@ public class Gmsp {
             MmsSearchMessageDto searchMessageDto = new MmsSearchMessageDto(
                     endpoint, // This should contain the transaction ID
                     consumerMrn,
-                    searchFilterObj.getQuery() //Extract the searchParam object
+                    searchFilterObj
             );
             String searchMessageJson = writeJsonSearchMessage(searchMessageDto);
 
@@ -192,7 +198,6 @@ public class Gmsp {
 
     /**
      * Callback function to handle incoming global search requests from the MMS Router.
-     *
      * @param dto The DTO containing the search request details.
      */
     public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
@@ -214,6 +219,7 @@ public class Gmsp {
 
 
         //Perform local search, which gives a list of SearchObjectResult objects
+        final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject());
 
         try {
             uploadSecomClient.uploadResults(null);

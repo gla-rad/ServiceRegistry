@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 import org.bouncycastle.pqc.jcajce.provider.Falcon;
+import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchParameters;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -17,12 +18,12 @@ public class MmsSearchMessageDto {
     @Getter
     private String consumerMRN;
 
-    private SearchParameters searchParameters;
+    private SearchFilterObject searchFilterObject;
 
-    public MmsSearchMessageDto(String endpoint, String consumerMRN, SearchParameters searchParams) {
+    public MmsSearchMessageDto(String endpoint, String consumerMRN, SearchFilterObject searchFilterObject) {
         this.endpoint = endpoint;
         this.consumerMRN = consumerMRN;
-        this.searchParameters = searchParams;
+        this.searchFilterObject = searchFilterObject;
     }
 
 }
