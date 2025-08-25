@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.mmtp.MmtpMessage;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
@@ -14,24 +13,19 @@ import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequ
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
 import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.WKTReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -78,8 +72,6 @@ public class Gmsp {
         this.globalSearchRequests = new HashMap<>();
         this.mmsEdgeRouter = er;
         this.mmtpFactory = mmtpFactory;
-
-
     }
 
     @PostConstruct
