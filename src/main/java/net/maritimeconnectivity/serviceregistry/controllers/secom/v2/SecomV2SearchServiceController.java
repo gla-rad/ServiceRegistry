@@ -127,9 +127,13 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
         String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
 
+
+        //Aggreagator
+
         //Propagate the search to the GMSP if available
         String gmspRequestUuid = null;
         if (!localSearchOnly) {
+
             gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "", searchFilterObject, searchGeometry);
         }
 

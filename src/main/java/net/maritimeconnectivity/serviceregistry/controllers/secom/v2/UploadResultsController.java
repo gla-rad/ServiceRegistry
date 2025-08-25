@@ -37,7 +37,6 @@ public class UploadResultsController implements GenericSecomInterface {
     static final String UPLOAD_RESULTS_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/uploadResults";
 
 
-
     /**
      * POST /v2/uploadResults : The purpose of this interface is to upload results to a global searhService
      * request that has been propagated to the MSR over the GMSP.
