@@ -170,7 +170,7 @@ class GmspIntegrationTest {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
-        searchParameters.setName("XML");
+        searchParameters.setName("s-124");
         searchFilterObject.setQuery(searchParameters);
         searchFilterObject.setPage(0);
         searchFilterObject.setPageSize(Integer.MAX_VALUE);
