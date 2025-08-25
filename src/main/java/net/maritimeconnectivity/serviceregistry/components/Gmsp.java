@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.io.IOException;
@@ -205,6 +206,7 @@ public class Gmsp {
      * Callback function to handle incoming global search requests from the MMS Router.
      * @param dto The DTO containing the search request details.
      */
+    @Transactional(readOnly = true)
     public void handleIncomingGlobalSearch(MmsSearchMessageDto dto) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
         log.info("Handling GMSP requests transaction ID: {}", dto.getEndpoint());
 
@@ -226,6 +228,8 @@ public class Gmsp {
         log.info("Searching local database");
         //Perform local search, which gives a list of SearchObjectResult objects
         final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject());
+
+        log.info("Extract filter object");
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
         log.info("Found {} search results for local database", searchObjectResults.size());
 
