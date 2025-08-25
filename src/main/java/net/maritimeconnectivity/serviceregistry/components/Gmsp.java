@@ -233,6 +233,8 @@ public class Gmsp {
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
         log.info("Found {} search results for local database", searchObjectResults.size());
 
+
+
         try {
             uploadSecomClient.uploadResults(searchObjectResults);
         } catch (WebClientResponseException e){

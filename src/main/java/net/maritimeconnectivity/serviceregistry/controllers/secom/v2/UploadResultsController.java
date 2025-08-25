@@ -4,7 +4,8 @@ import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import org.grad.secom.core.interfaces.GenericSecomInterface;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
+import org.grad.secomv2.core.interfaces.GenericSecomInterface;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.stereotype.Component;
@@ -51,10 +52,12 @@ public class UploadResultsController implements GenericSecomInterface {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public void searchService(@PathParam("transactionId") String transactionId,
-                              @Valid List<SearchObjectResult> searchResults) {
+                              List<SearchObjectResultWithCert> searchResults) {
 
         log.info("Received {} search results for transactionId: {}", searchResults.size(), transactionId);
-
+        for (SearchObjectResultWithCert result : searchResults) {
+            log.info("Service name: {}", result.getName());
+        }
         // Consolidate results based on transactionId
     }
 
