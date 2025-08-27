@@ -39,9 +39,9 @@ import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
-import org.grad.secomv2.core.models.ResponseSearchObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.SearchResult;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -109,7 +109,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject)  {
+    public SearchResult searchService(@Valid SearchFilterObject searchFilterObject)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
@@ -177,9 +177,11 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         }
 
         // Finally build the response
-        ResponseSearchObject responseSearchObject = new ResponseSearchObject();
-        responseSearchObject.setSearchServiceResult(searchObjectResults);
-        return responseSearchObject;
+        SearchResult searchResult = new SearchResult();
+        searchResult.setTransactionId(transactionId);
+
+        searchResult.setServices(searchObjectResults);
+        return searchResult;
     }
 
     /**
