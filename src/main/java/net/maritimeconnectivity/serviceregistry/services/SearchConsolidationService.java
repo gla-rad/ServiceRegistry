@@ -2,6 +2,7 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.config.CacheConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.cache.Cache;
@@ -19,15 +20,13 @@ import java.util.List;
 @Slf4j
 public class SearchConsolidationService {
 
-    private static final String CACHE_NAME = "search-results-by-transactionId";
-
     private final Cache sessions;
 
     // cm injected by Spring as it is defined as a Bean in CacheConfig
     public SearchConsolidationService(CacheManager cm) {
-        this.sessions = cm.getCache(CACHE_NAME);
+        this.sessions = cm.getCache(CacheConfig.CACHE_NAME);
         if (this.sessions == null) {
-            throw new IllegalStateException("Cache '" + CACHE_NAME + "' not found. Check CacheConfig.");
+            throw new IllegalStateException("Cache '" + CacheConfig.CACHE_NAME + "' not found. Check CacheConfig.");
         }
 
     }
