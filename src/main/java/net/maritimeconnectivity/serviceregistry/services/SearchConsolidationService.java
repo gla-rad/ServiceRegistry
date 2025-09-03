@@ -2,7 +2,13 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
+import org.grad.secomv2.core.models.SearchObjectResult;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * Service implementation for consolidating search results obtained from local and global search
@@ -13,7 +19,53 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class SearchConsolidationService {
 
+    private static final String CACHE_NAME = "search-results-by-transactionId";
 
+    private final Cache sessions;
 
+    // cm injected by Spring as it is defined as a Bean in CacheConfig
+    public SearchConsolidationService(CacheManager cm) {
+        this.sessions = cm.getCache(CACHE_NAME);
+        if (this.sessions == null) {
+            throw new IllegalStateException("Cache '" + CACHE_NAME + "' not found. Check CacheConfig.");
+        }
+
+    }
+
+    public void addResults(String transactionId, List<SearchObjectResult> results) {
+        for (SearchObjectResult r : results) {
+            addResult(transactionId, r);
+        }
+    }
+
+    /** Add a single result to the transaction’s consolidated set (creates the entry if absent). */
+    public void addResult(String transactionId, SearchObjectResult result) {
+        ConsolidatedSearchResult agg = getOrCreate(transactionId);
+        String key = getKey(result);            // choose your canonical key; instanceId for now
+        if (key != null && !key.isBlank()) {
+            agg.addIfNew(key, result);            // dedup happens inside the aggregator
+        }
+    }
+
+    /** Read all results currently stored for the transaction (immutable snapshot). */
+    public List<SearchObjectResult> getResults(String transactionId) {
+        ConsolidatedSearchResult agg = sessions.get(transactionId, ConsolidatedSearchResult.class);
+        return (agg == null) ? List.of() : List.copyOf(agg.snapshot());
+    }
+
+    private ConsolidatedSearchResult getOrCreate(String transactionId) {
+        ConsolidatedSearchResult existing = sessions.get(transactionId, ConsolidatedSearchResult.class);
+        if (existing != null) return existing;
+
+        ConsolidatedSearchResult fresh = ConsolidatedSearchResult.create(transactionId);
+        sessions.put(transactionId, fresh);
+        return fresh;
+    }
+
+    /** For now: instanceId as the dedup key; adjust if you adopt a different canonical key later. */
+    private String getKey(SearchObjectResult r) {
+        String id = r.getInstanceId();
+        return (id == null) ? null : id.trim().toLowerCase();
+    }
 
 }
