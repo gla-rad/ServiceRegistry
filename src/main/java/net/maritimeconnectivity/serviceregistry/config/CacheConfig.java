@@ -14,16 +14,17 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @EnableCaching
 public class CacheConfig {
+    public static final String CACHE_NAME = "search-results-by-transactionId";
 
     @Bean Caffeine<Object, Object> caffeine() {
         return Caffeine.newBuilder()
-                .expireAfterWrite(60, TimeUnit.SECONDS)
+                .expireAfterWrite(30, TimeUnit.SECONDS)
                 .maximumSize(10000);
     }
 
     @Bean
     CacheManager cacheManager(Caffeine<Object, Object> caffeine) {
-        CaffeineCacheManager mgr = new CaffeineCacheManager("search-results-by-transaction");
+        CaffeineCacheManager mgr = new CaffeineCacheManager(CACHE_NAME);
         mgr.setCaffeine(caffeine);
         return mgr;
     }
