@@ -67,11 +67,11 @@ import static java.util.function.Predicate.not;
 @Slf4j
 public class SecomV2SearchServiceController implements SearchServiceServiceInterface {
 
+    @Value("${info.msr.forceCertificateCheck}")
+    private boolean forceCertificateCheck;
+
     @Value("${info.msr.url}")
     private String msrBaseUrl;
-
-    @Value("${info.msr.localSearchOnly}")
-    private boolean localSearchOnly;
 
     /**
      * The Object Mapper.
@@ -112,8 +112,11 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     public SearchResult searchService(@Valid SearchFilterObject searchFilterObject)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
+        // Get from searchfilterobject default to false if null
+        boolean localSearchOnly = Optional.ofNullable(searchFilterObject.getLocalOnly()).orElse(false);
+
         // If at maximum only one geometry is provided, retrieve it
-        final Geometry searchGeometry =  Optional.ofNullable(searchFilterObject)
+        final Geometry searchGeometry =  Optional.of(searchFilterObject)
                 .map(SearchFilterObject::getGeometry)
                 .map(this::parseGeometry)
                 .orElse(null);
@@ -121,6 +124,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         // Perform the search locally
         final Page<Instance> instancesPage = this.instanceService.search(searchFilterObject);
+
+        log.info("Found {} instances for search filter object", instancesPage.getTotalElements());
 
         String transactionId = UUID.randomUUID().toString();
 
@@ -143,7 +148,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         // Careful cause depending on the configuration an MIR client might not
         // be available. In those case the mirClient will be null.
-        if(this.mirClient != null) {
+        if(this.mirClient != null && this.forceCertificateCheck) {
             for (SearchObjectResult searchObject : searchObjectResults) {
                 try {
                     // Retrieve the certificates from the MIR
@@ -181,6 +186,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         searchResult.setTransactionId(transactionId);
 
         searchResult.setServices(searchObjectResults);
+
         return searchResult;
     }
 
