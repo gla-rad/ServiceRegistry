@@ -5,9 +5,11 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
+import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.interfaces.GenericSecomInterface;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.SearchObjectResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import jakarta.ws.rs.core.Context;
@@ -36,6 +38,8 @@ public class UploadResultsController implements GenericSecomInterface {
      */
     static final String UPLOAD_RESULTS_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/uploadResults";
 
+    @Autowired
+    SearchConsolidationService searchConsolidationService;
 
     /**
      * POST /v2/uploadResults : The purpose of this interface is to upload results to a global searhService
@@ -57,7 +61,10 @@ public class UploadResultsController implements GenericSecomInterface {
         for (SearchObjectResultWithCert result : searchResults) {
             log.info("Service name: {}", result.getName());
         }
-        // Consolidate results based on transactionId
+        // Consolidate results based on transactionId cast to searchObjectResult
+        List<SearchObjectResult> results = searchResults.stream().map(r -> (SearchObjectResult) r).toList();
+        searchConsolidationService.addResults(transactionId, results);
+
     }
 
 }
