@@ -1,14 +1,16 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.ws.rs.GET;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
-import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.base.SecomConstants;
+import org.grad.secomv2.core.exceptions.SecomNotAuthorisedException;
+import org.grad.secomv2.core.exceptions.SecomNotFoundException;
+import org.grad.secomv2.core.exceptions.SecomNotImplementedException;
+import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.GenericSecomInterface;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.core.models.SearchResult;
@@ -41,9 +43,15 @@ public class RetrieveResultsController implements GenericSecomInterface {
 
         //If empty, return 404
         if (services.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+            log.error("No results found for transactionId {}", transactionId);
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            try {
+                response.flushBuffer();
+                return null;
+            } catch(Exception e){}
         }
+
+
 
         //Wrap in SearchResult
         SearchResult searchResult = new SearchResult();
@@ -51,6 +59,4 @@ public class RetrieveResultsController implements GenericSecomInterface {
         searchResult.setServices(services);
         return searchResult;
     }
-
-
 }
