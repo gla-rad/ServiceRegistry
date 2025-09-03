@@ -44,7 +44,7 @@ public class RetrieveResultsController implements GenericSecomInterface {
         //If empty, return 404
         if (services.isEmpty()) {
             log.error("No results found for transactionId {}", transactionId);
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+
             try {
                 response.flushBuffer();
                 return null;
@@ -60,3 +60,6 @@ public class RetrieveResultsController implements GenericSecomInterface {
         return searchResult;
     }
 }
+
+
+
