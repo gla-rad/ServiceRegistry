@@ -125,6 +125,7 @@ info:
         copyright: 'Copyright © 2025 Maritime Connectivity Platform Consortium'
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
         profile: ${spring.profiles.active:test}
+        forceCertificateCheck: false
     mms:
         mmtp:
             duration:

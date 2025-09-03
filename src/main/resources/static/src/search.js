@@ -55,7 +55,17 @@ var columnDefs = [{
     type: "hidden",
     visible: false,
     searchable: false
-}];
+}, {
+    data: "localResult",
+    title: "Local Result",
+    readonly: true,
+    hoverMsg: "Whether the result was found locally",
+    placeholder: "Whether the result was found locally",
+}
+
+
+
+];
 
 /**
  * Standard jQuery initialisation of the page.
@@ -243,8 +253,23 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
                 return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
-                return  (json != undefined && json.hasOwnProperty('searchServiceResult'))? json.searchServiceResult : [];
+                if (!json) return [];
+
+                // Ensure services is an array
+                if (Array.isArray(json.services)) {
+                    // Add `localResult: true` to each row
+                    return json.services.map(service => {
+                        return {
+                            ...service,        // spread the existing backend fields
+                            localResult: true  // add our custom field
+                        };
+                    });
+                }
+
+                return [];
             },
+
+
             error: function (jqXHR, ajaxOptions, thrownError) {
                 showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));
                 destroyInstancesTable();
