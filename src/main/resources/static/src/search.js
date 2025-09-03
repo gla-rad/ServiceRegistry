@@ -1,6 +1,3 @@
-/**
- * Global variables
- */
 var searchMap = undefined;
 var instancesTable = undefined;
 var drawControl = undefined;
@@ -8,6 +5,9 @@ var drawControlFull = undefined;
 var drawControlEditOnly = undefined;
 var instanceItems = undefined;
 var geoSpatialSearchMode = "geoJson";
+var currentTransactionId = null;
+var retrieveTimers = [];
+
 
 /**
  * The Instances Search Table Column Definitions
@@ -61,11 +61,7 @@ var columnDefs = [{
     readonly: true,
     hoverMsg: "Whether the result was found locally",
     placeholder: "Whether the result was found locally",
-}
-
-
-
-];
+}];
 
 /**
  * Standard jQuery initialisation of the page.
@@ -248,28 +244,22 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
             contentType: 'application/json; charset=utf-8',
             crossDomain: true,
 
-
-            data: function (d) {
+            data: function () {
                 return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
                 if (!json) return [];
 
-                // Ensure services is an array
+                // Ensure services is an array and tag local results
                 if (Array.isArray(json.services)) {
-                    // Add `localResult: true` to each row
-                    return json.services.map(service => {
-                        return {
-                            ...service,        // spread the existing backend fields
-                            localResult: true  // add our custom field
-                        };
-                    });
+                    return json.services.map(service => ({
+                        ...service,
+                        localResult: true
+                    }));
                 }
 
                 return [];
             },
-
-
             error: function (jqXHR, ajaxOptions, thrownError) {
                 showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));
                 destroyInstancesTable();
@@ -282,10 +272,20 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         responsive: true
     });
 
+    // When the initial searchService Ajax finishes, capture transactionId and schedule follow-ups if global search
+    if (globalSearch) {
+        instancesTable.on('xhr.dt', function (e, settings, json) {
+            if (json && json.transactionId) {
+                currentTransactionId = json.transactionId;
+                scheduleRetrieveResults(currentTransactionId);
+            }
+        });
+    }
+
     // On an instance selection, draw the area on the map
-    instancesTable.on( 'select', function ( e, dt, type, indexes ) {
-        if ( type === 'row' ) {
-            loadGeometryOnMap(dt.row({selected : true}).data().geometry, searchMap, instanceItems, false);
+    instancesTable.on('select', function (e, dt, type, indexes) {
+        if (type === 'row') {
+            loadGeometryOnMap(dt.row({ selected: true }).data().geometry, searchMap, instanceItems, false);
         }
     });
 
@@ -299,6 +299,53 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         var $modalDiv = $('#instanceViewPanel');
         loadInstanceEditPanel($modalDiv);
         $modalDiv.modal("toggle");
+    });
+}
+
+/**
+ * Schedule retrieveResults calls at +3s, +6s, +10s for the given transaction ID.
+ */
+function scheduleRetrieveResults(txId) {
+    clearRetrieveTimers();
+    [3000, 6000, 10000].forEach(ms => {
+        const t = setTimeout(() => fetchAndMergeResults(txId), ms);
+        retrieveTimers.push(t);
+    });
+}
+
+/**
+ * Clear any pending retrieve timers.
+ */
+function clearRetrieveTimers() {
+    retrieveTimers.forEach(clearTimeout);
+    retrieveTimers = [];
+}
+
+/**
+ * Fetch additional results for a transaction and append them to the table.
+ * Server handles duplicate suppression.
+ */
+function fetchAndMergeResults(txId) {
+    if (!txId) return;
+
+    $.ajax({
+        // Using the path form you requested:
+        url: `api/secom/v2/retrieveResults/${encodeURIComponent(txId)}`,
+        // If your server expects a query param instead, switch to:
+        // url: `api/secom/v2/retrieveResults?transactionId=${encodeURIComponent(txId)}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            const services = (data && Array.isArray(data.services)) ? data.services : [];
+            if (!services.length || !instancesTable) return;
+
+            // Mark these as non-local (optional; change to true if you want)
+            const rows = services.map(s => ({ ...s, localResult: false }));
+            instancesTable.rows.add(rows).draw(false);
+        },
+        error: function (jqXHR) {
+            console.warn('retrieveResults failed', jqXHR && jqXHR.status, jqXHR && jqXHR.responseText);
+        }
     });
 }
 
@@ -468,4 +515,3 @@ function clearInstanceEditPanel($modalDiv) {
     // Don't forget the XML content
     $modalDiv.find('#xml-input').val(null);
 }
-
