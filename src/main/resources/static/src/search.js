@@ -212,21 +212,33 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instanceItems.clearLayers();
     destroyInstancesTable();
 
+    // List of keywords
+    let keywords = [];
+    if (queryString && queryString.trim() !== "") {
+        keywords.push(queryString.trim());
+    }
+
     // Construct the SECOM search filter object
+    let searchParameters = {
+        'keywords': keywords,
+    }
+
     let searchFilterObject = {
-        'query': null,
+        'query': searchParameters,
         'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
-        'freetext': queryString
+        localOnly: !globalSearch,
     }
 
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         processing: true,
         ajax: {
-            url: `api/secom/v1/searchService`,
+            url: `api/secom/v2/searchService`,
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             crossDomain: true,
+
+
             data: function (d) {
                 return JSON.stringify(searchFilterObject);
             },
