@@ -3,24 +3,41 @@ package net.maritimeconnectivity.serviceregistry.components;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
+import jakarta.validation.Valid;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpMessage;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
+import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
+import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
+import org.apache.lucene.spatial.query.SpatialArgs;
+import org.apache.lucene.spatial.query.SpatialOperation;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
 import org.grad.secomv2.springboot3.components.UploadResultsClient;
+import org.hibernate.search.backend.lucene.LuceneExtension;
+import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
+import org.hibernate.search.engine.search.query.SearchQuery;
+import org.hibernate.search.mapper.orm.Search;
+import org.hibernate.search.mapper.orm.scope.SearchScope;
+import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
+import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -31,10 +48,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 /*
 Implements the GMSP (Global Maritime Search Platform) functionality for the Service Registry.
@@ -42,6 +56,8 @@ Implements the GMSP (Global Maritime Search Platform) functionality for the Serv
 @Component
 @Slf4j
 public class Gmsp {
+
+    private final String G1191_SEARCHAREA_PREFIX = "urn:mrn:mcp:msr:search:searcharea:";
 
     @Autowired
     SecomConfigProperties secomConfigProperties;
@@ -55,6 +71,13 @@ public class Gmsp {
 
     @Autowired
     ObjectMapper objectMapper;
+
+    @Autowired
+    EntityManager entityManager;
+
+
+    @Autowired
+    private InstanceSearchQueryBuilder queryBuilder;
 
     private final MmsEdgeRouter mmsEdgeRouter;
 
@@ -84,12 +107,13 @@ public class Gmsp {
 
     /**
      * Global Search using MMS.
+     *
      * @param searchFilterObj The object representing the SECOM searchService call
-     * @param endpoint The endpoint to which the response should be sent. The transactionID is part of the URL.
+     * @param endpoint        The endpoint to which the response should be sent. The transactionID is part of the URL.
      * @return uuid to uniquely identify the global search request
      * TODO: Consider where the check of certificate validity should be done.
      */
-    public String globalSearch (String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
+    public String globalSearch(String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
         log.info("Conduct global search for Endpoint: {}", endpoint);
 
 
@@ -104,11 +128,12 @@ public class Gmsp {
 
             List<OutgoingMmtpMessage> messages = new ArrayList<>();
 
-            // Calculate subjects if Gemometry param is not null
+            // Calculate subjects if Geometry param is not null
             if (searchGeometry != null) {
                 try {
 
-                    ArrayList<String> subjects = calculateSubjectsFromGeometry(searchGeometry);
+                    ArrayList<String> subjects = getSearchAreaSubject(searchGeometry);
+                    log.info("Found {} subjects for provided geometry", subjects.size());
 
                     // Create mms msg for each subject
                     for (String subject : subjects) {
@@ -118,6 +143,7 @@ public class Gmsp {
                                 searchMessageJson,
                                 Duration.ofMinutes(messageDurationMinutes) // Set a timeout for the message
                         );
+                        log.info("added message with subject {}", subject);
                         messages.add(msg);
                     }
                 } catch (Exception e) {
@@ -158,25 +184,65 @@ public class Gmsp {
     }
 
 
-    private boolean containsGeometry(SearchFilterObject searchFilterObject) {
-        // Check if the searchFilterObject contains a geometry
-        return searchFilterObject.getQuery() != null && searchFilterObject.getGeometry() != null;
+    private ArrayList<String> getSearchAreaSubject(Geometry searchGeometry) {
+        ArrayList<String> subjects = new ArrayList<>();
+
+        List<SearchArea> results = this.findIntersectingSearchAreas(searchGeometry);
+
+        //Map results to subjects
+        results.forEach(searchArea -> {
+            String subject = G1191_SEARCHAREA_PREFIX + searchArea.getName().toLowerCase();
+            subjects.add(subject);
+        });
+
+        return subjects;
+
     }
+
 
     /**
      * This method calculates the subject based on the geometry provided in the search parameters.
      *
      * @param geometry The geometry string in WKT format from which to calculate the subject.
-     * example = "POLYGON ((0.65 51.42, 0.65 52.26, 2.68 52.26, 2.68 51.42, 0.65 51.42))")
+     *                 example = "POLYGON ((0.65 51.42, 0.65 52.26, 2.68 52.26, 2.68 51.42, 0.65 51.42))")
      * @return A string representing the subject derived from the geometry.
      */
-    private String calculateSubjectFromGeometry(String geometry) {
-        return "";
-    }
+    private List<SearchArea> findIntersectingSearchAreas(Geometry geometry) {
 
-    private ArrayList<String> calculateSubjectsFromGeometry(Geometry searchGeometry) {
+        //Create Luscene query
+        JtsSpatialContext ctx = JtsSpatialContext.GEO;
+        int maxLevels = 12; //results in sub-meter precision for geohash
+        SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
+        RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid, "geometry");
 
-        //Create Luscene query d
+        // Create the Lucene GeoSpatial Query
+        var geoQuery = Optional.ofNullable(geometry)
+                .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false, true)))
+                .map(strategy::makeQuery)
+                .orElse(null);
+
+
+        log.info("Found intersecting search areas: {}", geoQuery);
+
+        //Run the query - should find intersections in order to return areas of interest (only the areas!)
+        SearchSession searchSession = Search.session( entityManager );
+        SearchScope<SearchArea> scope = searchSession.scope( SearchArea.class );
+
+        var lazyResults = searchSession.search( scope )
+                .where(f -> f.bool()
+                        .must(q2 -> Optional.ofNullable(geoQuery)
+                                .map(q2.extension(LuceneExtension.get())::fromLuceneQuery)
+                                .orElseGet(q2::matchAll)
+                        )
+                )
+                .toQuery();
+
+        List<SearchArea> hits = lazyResults.fetchHits(100); // Limit to 100 results for safety
+        log.info("Found {} areas of interest intersecting provided geometry", hits.size());
+        return hits;
+
+
+
 
         //Run the query - should find intersections in order to return areas of interest (only the areas!)
 
@@ -190,7 +256,6 @@ public class Gmsp {
 
         //Give me all areas where the WKT geometry intersects with the areas of interest.
 
-        return new ArrayList<>();
     }
 
     private String writeJsonSearchMessage(MmsSearchMessageDto mmsSearchMessageDto) throws JsonProcessingException {
