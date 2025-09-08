@@ -3,9 +3,11 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import net.maritimeconnectivity.serviceregistry.utils.GeometryBinder;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.search.mapper.pojo.bridge.mapping.annotation.ValueBinderRef;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -14,6 +16,7 @@ import java.io.Serializable;
 
 @Entity
 @Table(name = "search_area")
+@Indexed
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 public class SearchArea implements Serializable {
@@ -25,18 +28,13 @@ public class SearchArea implements Serializable {
     private Long id;
 
     @NotNull
-    @Column(name = "object_id", unique = true)
-    private Integer objectId;
-
-
-    @NotNull
     @Column(name = "name")
     private String name;
 
     @NotNull
+    @NonStandardField(valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     @Column(name = "geometry", columnDefinition = "geometry")
     private Geometry geometry;
-    private Integer externalId;
 
     // ------------------------
     // Getters and Setters
@@ -48,22 +46,6 @@ public class SearchArea implements Serializable {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Integer getObjectId() {
-        return objectId;
-    }
-
-    public void setObjectId(Integer objectId) {
-        this.objectId = objectId;
-    }
-
-    public Integer getExternalId() {
-        return externalId;
-    }
-
-    public void setExternalId(Integer externalId) {
-        this.externalId = externalId;
     }
 
     public String getName() {
