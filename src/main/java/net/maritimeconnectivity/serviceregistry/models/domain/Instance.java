@@ -659,12 +659,28 @@ public class Instance implements Serializable, JsonSerializable {
         this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
     }
 
+    public Set<SearchArea> getSearchAreas() {
+        return searchAreas;
+    }
+
+    private void addSearchArea(SearchArea area) {
+        if (area != null) { this.searchAreas.add(area); }
+    }
+
+    public void addSearchAreas(Collection<SearchArea> areas) {
+        if (areas == null) return;
+        for (SearchArea a : areas) addSearchArea(a);
+    }
+
     /**
      * Overrides the equality operator of the class.
      *
      * @param o the object to check the equality
      * @return whether the two objects are equal
      */
+
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

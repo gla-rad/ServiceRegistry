@@ -16,20 +16,27 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers;
 
+import com.fasterxml.jackson.core.JacksonException;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
-import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import net.maritimeconnectivity.serviceregistry.utils.*;
+import org.grad.secomv2.core.exceptions.SecomValidationException;
+import org.grad.secomv2.core.models.SearchFilterObject;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.io.ParseException;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -43,7 +50,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * REST controller for managing Instance.
@@ -61,6 +71,8 @@ public class InstanceController {
     @Autowired
     InstanceService instanceService;
 
+    @Autowired
+    Gmsp gmsp;
     /**
      * Object Mapper from Domain to DTO.
      */
@@ -78,6 +90,9 @@ public class InstanceController {
      */
     @Autowired
     DomainDtoMapper<Instance, InstanceDtDto> instanceDomainToDtDtoMapper;
+
+    @Autowired
+    SearchAreaCalculator searchAreaCalculator;
 
     /**
      * Setup up addition model mapper configurations.
@@ -200,7 +215,27 @@ public class InstanceController {
                     .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new instance cannot already have an ID"))
                     .build();
         }
-        return this.saveInstance(this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class), true);
+
+
+        //This is a little hack which we should probably put in a service at a later point, but it will optimize
+        // later queries a lot, such that we avoid re-calculating all indexes
+        Instance newInstance = this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class);
+
+        // Get geometry if exists in DTO
+        if (instanceDto.getGeometry() != null) {
+            log.warn("---CALCULATING AREAS----");
+            List<SearchArea> areas = searchAreaCalculator.findIntersectingSearchAreas(instanceDto.getGeometry());
+            log.warn("AREA CALC DONE");
+
+
+            for (SearchArea area : areas) {
+                log.info("ADDING AREA WITH GEOMETRY {}", area.getGeometry());
+                newInstance.addSearchAreas(areas);}
+
+        }
+
+        this.updateSubscriptions(newInstance);
+        return this.saveInstance(newInstance, true);
     }
 
     /**
@@ -304,6 +339,17 @@ public class InstanceController {
                 ResponseEntity.ok()
                         .headers(HeaderUtil.createEntityUpdateAlert("instance", instance.getId().toString()))
                         .body(this.instanceDomainToDtoMapper.convertTo(instance, InstanceDto.class));
+    }
+
+    /** Update geo-based subscriptions with the GMSP such that this instance is always subscribed to all subject areas
+     * for which it contains services
+     */
+    public void updateSubscriptions(Instance newInstance) {
+        ArrayList<String> subjects = gmsp.getSearchAreaSubject(newInstance.getGeometry());
+        for (String subject : subjects) {
+            gmsp.subscribe(subject);
+            log.info("Subscribed to subject '{}'", subject);
+        }
     }
 
 }

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128Utils;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.components.InstanceSearchQueryBuilder;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
@@ -682,5 +683,11 @@ public class InstanceService {
                 lusceneParams.geometry(),
                 PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)));
     }
+
+
+
+
+
+
 
 }

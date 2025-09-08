@@ -59,6 +59,7 @@ public class MmsEdgeRouter {
     private final KeyStoreUtil keystoreUtil;
     private final OutgoingMmtpFactory mmtpFactory;
 
+
     private WebSocketSession webSocketSession;
     private Gmsp gmsp;
     private HashMap<String, OutgoingMmtpMessage> msgBuffer = new HashMap<>();

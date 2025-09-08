@@ -184,7 +184,7 @@ public class Gmsp {
     }
 
 
-    private ArrayList<String> getSearchAreaSubject(Geometry searchGeometry) {
+    public ArrayList<String> getSearchAreaSubject(Geometry searchGeometry) {
         ArrayList<String> subjects = new ArrayList<>();
 
         List<SearchArea> results = this.findIntersectingSearchAreas(searchGeometry);
@@ -326,7 +326,7 @@ public class Gmsp {
         return false;
     }
 
-    private void subscribe(String subject) {
+    public void subscribe(String subject) {
         // Subscribe to the subject for incoming messages
         OutgoingMmtpMessage subscriptionMessage = mmtpFactory.createSubscribeMessage(subject);
         try {
