@@ -28,7 +28,7 @@ public class ConsolidatedSearchResult {
         return new ConsolidatedSearchResult(transactionId);
     }
 
-    /**Dont do thjousan
+    /**
      * Add a result if not already present (deduplication).
      *
      * @param key a stable deduplication key (TBD but for now use instanceId)
