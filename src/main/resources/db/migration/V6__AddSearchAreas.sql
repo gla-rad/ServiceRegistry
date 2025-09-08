@@ -8,6 +8,18 @@ CREATE TABLE IF NOT EXISTS search_area (
                                            geometry GEOMETRY(MULTIPOLYGON, 4326)
 );
 
+CREATE TABLE instance_search_area (
+                                      instance_id     BIGINT NOT NULL,
+                                      search_area_id  BIGINT NOT NULL,
+    -- prevent duplicates
+                                      PRIMARY KEY (instance_id, search_area_id),
+
+                                      CONSTRAINT fk_isa_instance
+                                          FOREIGN KEY (instance_id) REFERENCES public.instance(id) ON DELETE CASCADE,
+                                      CONSTRAINT fk_isa_search_area
+                                          FOREIGN KEY (search_area_id) REFERENCES search_area(id) ON DELETE CASCADE
+);
+
 -- I
 INSERT INTO search_area (name, geometry)
 VALUES (
@@ -287,3 +299,4 @@ VALUES (
                    4326
            )
        );
+

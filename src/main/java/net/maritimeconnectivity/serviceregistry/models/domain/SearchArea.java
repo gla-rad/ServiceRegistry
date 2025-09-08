@@ -13,6 +13,8 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 
 import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "search_area")
@@ -35,6 +37,10 @@ public class SearchArea implements Serializable {
     @NonStandardField(valueBinder = @ValueBinderRef(type = GeometryBinder.class))
     @Column(name = "geometry", columnDefinition = "geometry")
     private Geometry geometry;
+
+    @ManyToMany(mappedBy = "searchAreas")
+    private Set<Instance> instances = new HashSet<>();
+
 
     // ------------------------
     // Getters and Setters
@@ -76,4 +82,6 @@ public class SearchArea implements Serializable {
     public void setGeometryJson(JsonNode geometry) throws ParseException {
         this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
     }
+
+
 }
