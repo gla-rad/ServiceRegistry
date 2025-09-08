@@ -3,8 +3,7 @@ package net.maritimeconnectivity.serviceregistry.models.domain;
 import lombok.Getter;
 import org.grad.secomv2.core.models.SearchObjectResult;
 
-import java.util.Collection;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -19,9 +18,12 @@ public class ConsolidatedSearchResult {
     private final String transactionId;
     private final Map<String, SearchObjectResult> results;
 
+    private final Set<String> polled;
+
     private ConsolidatedSearchResult(String transactionId) {
         this.transactionId = transactionId;
         this.results = new ConcurrentHashMap<>();
+        this.polled = ConcurrentHashMap.newKeySet(); //Thread safe set
     }
 
     public static ConsolidatedSearchResult create(String transactionId) {
@@ -48,9 +50,20 @@ public class ConsolidatedSearchResult {
     /**
      * @return a read-only snapshot of all consolidated results.
      * Avoids concurrent modification issues, as more results may be added by GMSP
+     * Will only return results that have not been polled before!
      */
     public Collection<SearchObjectResult> snapshot() {
-        return java.util.List.copyOf(results.values());
+        List<SearchObjectResult> out = new ArrayList<>();
+
+        //We want both key and val., so iterate the entry set
+        for (Map.Entry<String, SearchObjectResult> e : results.entrySet()) {
+            String key = e.getKey();
+            if (polled.add(key)) { //Adds key only if not already present and returns true
+                out.add(e.getValue());
+            }
+        }
+
+        return java.util.List.copyOf(out);
     }
 
 }
