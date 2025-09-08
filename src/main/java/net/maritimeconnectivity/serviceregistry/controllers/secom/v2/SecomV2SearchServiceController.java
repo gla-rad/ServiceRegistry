@@ -73,6 +73,9 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @Value("${info.msr.url}")
     private String msrBaseUrl;
 
+    @Value("${info.msr.mrn}")
+    private String ownMrn;
+
     /**
      * The Object Mapper.
      */
@@ -145,6 +148,9 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         // Get the search object results and if possible also update the
         // certificates through the MIR.
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
+
+        // Foreach SearchObjectResult set the sourceMSR
+        searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
 
         // Careful cause depending on the configuration an MIR client might not
         // be available. In those case the mirClient will be null.

@@ -61,7 +61,17 @@ var columnDefs = [{
     readonly: true,
     hoverMsg: "Whether the result was found locally",
     placeholder: "Whether the result was found locally",
-}];
+}, {
+    data: "sourceMSR",
+    title: "Source MSR",
+    readonly: true,
+    hoverMsg: "The MRN of the source MSR",
+    placeholder: "The MRN of the source MSR"
+}
+
+
+
+];
 
 /**
  * Standard jQuery initialisation of the page.

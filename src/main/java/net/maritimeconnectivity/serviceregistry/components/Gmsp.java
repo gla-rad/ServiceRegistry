@@ -62,6 +62,9 @@ public class Gmsp {
 
     private HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
 
+    @Value("${info.msr.mrn}")
+    private String ownMrn;
+
     @Autowired
     DomainDtoMapper<Instance, SearchObjectResult> searchObjectResultMapper;
 
@@ -223,6 +226,7 @@ public class Gmsp {
 
         log.info("Extract filter object");
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
+        searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
         log.info("Found {} search results for local database", searchObjectResults.size());
 
 
