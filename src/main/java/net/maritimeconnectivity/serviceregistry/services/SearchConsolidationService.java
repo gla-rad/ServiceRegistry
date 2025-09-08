@@ -54,12 +54,7 @@ public class SearchConsolidationService {
     }
 
     private ConsolidatedSearchResult getOrCreate(String transactionId) {
-        ConsolidatedSearchResult existing = sessions.get(transactionId, ConsolidatedSearchResult.class);
-        if (existing != null) return existing;
-
-        ConsolidatedSearchResult fresh = ConsolidatedSearchResult.create(transactionId);
-        sessions.put(transactionId, fresh);
-        return fresh;
+        return sessions.get(transactionId, () -> ConsolidatedSearchResult.create(transactionId));
     }
 
     /** For now: instanceId as the dedup key; adjust if you adopt a different canonical key later. */
