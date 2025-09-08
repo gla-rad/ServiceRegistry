@@ -115,7 +115,7 @@ net:
 info:
     msr:
         name: ${service.variable.info.name}
-        mrn: ${service.variable.info.mrn}'
+        mrn: ${service.variable.info.mrn}
         url: ${service.variable.info.url}
         localSearchOnly: false
         operatorName: ${service.variable.info.operator.name}
