@@ -28,7 +28,7 @@ public class ConsolidatedSearchResult {
         return new ConsolidatedSearchResult(transactionId);
     }
 
-    /**
+    /**Dont do thjousan
      * Add a result if not already present (deduplication).
      *
      * @param key a stable deduplication key (TBD but for now use instanceId)
@@ -36,8 +36,14 @@ public class ConsolidatedSearchResult {
      * @return true if the result was added, false if it was a duplicate
      */
     public boolean addIfNew(String key, SearchObjectResult result) {
-        return results.putIfAbsent(key, result) == null;
+        if (key == null || key.isBlank()) {
+            return false; // skip invalid or empty keys
+        }
+        // Normalize key to avoid duplicates with different casing/whitespace
+        String normalizedKey = key.trim().toLowerCase();
+        return results.putIfAbsent(normalizedKey, result) == null;
     }
+
 
     /**
      * @return a read-only snapshot of all consolidated results.

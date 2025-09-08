@@ -37,7 +37,8 @@ public class SearchConsolidationService {
         }
     }
 
-    /** Add a single result to the transaction’s consolidated set (creates the entry if absent). */
+    /** Add a single result to the transaction’s consolidated set (creates the entry if absent).
+     * Do not add duplicate results*/
     public void addResult(String transactionId, SearchObjectResult result) {
         ConsolidatedSearchResult agg = getOrCreate(transactionId);
         String key = getKey(result);            // choose your canonical key; instanceId for now
@@ -66,5 +67,6 @@ public class SearchConsolidationService {
         String id = r.getInstanceId();
         return (id == null) ? null : id.trim().toLowerCase();
     }
+
 
 }
