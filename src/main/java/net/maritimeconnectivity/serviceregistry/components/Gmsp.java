@@ -26,8 +26,6 @@ import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
 import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.hibernate.search.backend.lucene.LuceneExtension;
-import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
-import org.hibernate.search.engine.search.query.SearchQuery;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
 import org.hibernate.search.mapper.orm.session.SearchSession;
@@ -37,7 +35,6 @@ import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -66,7 +63,6 @@ public class Gmsp {
     private long messageDurationMinutes;
 
     @Value("${info.gmsp.search.globalSubject}")
-    @Getter
     private String globalSearchSubject;
 
     @Autowired
@@ -83,7 +79,7 @@ public class Gmsp {
 
     private final OutgoingMmtpFactory mmtpFactory;
 
-    private HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
+    private final HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
 
     @Value("${info.msr.mrn}")
     private String ownMrn;
@@ -115,7 +111,6 @@ public class Gmsp {
      */
     public String globalSearch(String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
         log.info("Conduct global search for Endpoint: {}", endpoint);
-
 
         try {
             MmsSearchMessageDto searchMessageDto = new MmsSearchMessageDto(
@@ -241,21 +236,6 @@ public class Gmsp {
         log.info("Found {} areas of interest intersecting provided geometry", hits.size());
         return hits;
 
-
-
-
-        //Run the query - should find intersections in order to return areas of interest (only the areas!)
-
-        //Return list of area MRNs for which we need to propagate the request over MMS.
-
-
-
-        // This method should calculate the subjects based on the geometry provided.
-        // For now, it returns an empty list as a placeholder.
-
-
-        //Give me all areas where the WKT geometry intersects with the areas of interest.
-
     }
 
     private String writeJsonSearchMessage(MmsSearchMessageDto mmsSearchMessageDto) throws JsonProcessingException {
@@ -273,7 +253,7 @@ public class Gmsp {
         //Print details of the search requets searchFilterObject
         var q = dto.getSearchFilterObject().getQuery();
 
-        log.info("Search Filter Object Keywords: {}, Name : {}", q.getKeywords(), q.getName());
+        log.debug("Search Filter Object Keywords: {}, Name : {}", q.getKeywords(), q.getName());
 
 
         UploadResultsClient uploadSecomClient = new UploadResultsClient(
@@ -285,16 +265,14 @@ public class Gmsp {
             return;
         }
 
-        log.info("Searching local database");
+        log.debug("Searching local database");
         //Perform local search, which gives a list of SearchObjectResult objects
         final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject());
 
         log.info("Extract filter object");
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
         searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
-        log.info("Found {} search results for local database", searchObjectResults.size());
-
-
+        log.debug("Found {} search results for local database", searchObjectResults.size());
 
         try {
             uploadSecomClient.uploadResults(searchObjectResults);
@@ -302,9 +280,8 @@ public class Gmsp {
             log.error("Error uploading results via SECOM Upload interface, CODE:", e);
             return;
         }
-        log.info("Uploaded {} results via SECOM Upload interface {}", searchObjectResults.size(), dto.getEndpoint());
+        log.debug("Uploaded {} results via SECOM Upload interface {}", searchObjectResults.size(), dto.getEndpoint());
     }
-
 
 
     public MmsSearchMessageDto parseSearchDto(String json) throws JsonProcessingException {
@@ -331,7 +308,7 @@ public class Gmsp {
         OutgoingMmtpMessage subscriptionMessage = mmtpFactory.createSubscribeMessage(subject);
         try {
             mmsEdgeRouter.subscribe(subscriptionMessage);
-            log.info("Subscribed to subject: {}", subject);
+            log.debug("Subscribed to subject: {}", subject);
         } catch (Exception e) {
             log.error("Error subscribing to subject {}: {}", subject, e.getMessage());
         }
