@@ -258,6 +258,7 @@ public class MmsEdgeRouter {
                             }
                         }
                     }
+                } else {
                     log.error("Received response to unknown message: {}", resp.getResponseToUuid());
                 }
             }
