@@ -33,6 +33,7 @@ public class SearchConsolidationService {
 
     public void addResults(String transactionId, List<SearchObjectResult> results) {
         for (SearchObjectResult r : results) {
+            log.debug("Added result {}", r.getName());
             addResult(transactionId, r);
         }
     }
@@ -49,9 +50,25 @@ public class SearchConsolidationService {
 
     /** Read all results currently stored for the transaction (immutable snapshot). */
     public List<SearchObjectResult> getResults(String transactionId) {
-        ConsolidatedSearchResult agg = sessions.get(transactionId, ConsolidatedSearchResult.class);
-        return (agg == null) ? List.of() : List.copyOf(agg.snapshot());
+        var agg = sessions.get(transactionId, ConsolidatedSearchResult.class);
+        if (agg == null) {
+            log.debug("No results found for transactionId {}", transactionId);
+            return List.of();
+        }
+
+        // Capture a stable snapshot exactly once
+        List<SearchObjectResult> snapshot = List.copyOf(agg.snapshot()); // defensive copy
+
+        // Log using the same snapshot
+        for (SearchObjectResult r : snapshot) {
+            log.debug("Retrieved result {}", r.getName());
+        }
+
+        log.debug("--NOW RETURNING {} RESULTS--", snapshot.size());
+        return snapshot;
     }
+
+
 
     private ConsolidatedSearchResult getOrCreate(String transactionId) {
         return sessions.get(transactionId, () -> ConsolidatedSearchResult.create(transactionId));
