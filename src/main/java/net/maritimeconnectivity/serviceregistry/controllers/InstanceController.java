@@ -338,7 +338,7 @@ public class InstanceController {
      * for which it contains services
      */
     public void updateSubscriptions(Instance newInstance) {
-        ArrayList<String> subjects = gmsp.getSearchAreaSubject(newInstance.getGeometry());
+        ArrayList<String> subjects = searchAreaCalculator.getSearchAreaSubject(newInstance.getGeometry());
         for (String subject : subjects) {
             gmsp.subscribe(subject);
         }
