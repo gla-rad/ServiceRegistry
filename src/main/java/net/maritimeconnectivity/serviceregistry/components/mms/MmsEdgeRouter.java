@@ -105,13 +105,13 @@ public class MmsEdgeRouter {
             log.error("Error retrieving own MRN from keystore", e);
         }
 
-        log.info("Initializing MmsEdgeRouter with router URL: {}", routerUrl);
+        log.debug("Initializing MmsEdgeRouter with router URL: {}", routerUrl);
         this.initialized = true;
 
         try {
             connect();
             this.connected = true;
-            log.debug("Successfully connected to MMS Router");
+            log.debug("MMS Edgerouter sucessfully setup and connected to router");
         } catch (Exception e) {
             log.error("Error connecting to MMS Router", e);
             this.connected = false; //
@@ -305,7 +305,7 @@ public class MmsEdgeRouter {
         webSocketClient.setSslContext(sslContext);
         URI uri = new URI(routerUrl);
         webSocketSession = webSocketClient.execute(new MMSWebsocketHandler(this), null, uri).get();
-        log.info("WS Connected to MMS router {}", routerUrl);
+        log.debug("WS Connected to MMS router {}", routerUrl);
     }
 
 
@@ -322,7 +322,7 @@ public class MmsEdgeRouter {
 
          @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-            log.info("WebSocket connection established with {}", session.getRemoteAddress());
+            log.debug("WebSocket connection established with {}", session.getRemoteAddress());
 
         }
 
@@ -340,8 +340,7 @@ public class MmsEdgeRouter {
 
         @Override
         public void afterConnectionClosed(WebSocketSession session, @NotNull CloseStatus status) {
-            log.info("WebSocket connection closed with status: {}", status);
-            log.info("Is session open? {}", session.isOpen());
+            log.debug("WebSocket connection closed with status: {}", status);
             this.edgeRouterRef.webSocketSession = null;
         }
     }
