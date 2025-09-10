@@ -14,6 +14,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequ
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.apache.lucene.spatial.prefix.RecursivePrefixTreeStrategy;
 import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
@@ -67,7 +68,7 @@ public class Gmsp {
     ObjectMapper objectMapper;
 
     @Autowired
-    EntityManager entityManager;
+    SearchAreaCalculator searchAreaCalculator;
 
 
     @Autowired
@@ -118,15 +119,14 @@ public class Gmsp {
             );
             String searchMessageJson = writeJsonSearchMessage(searchMessageDto);
 
-
             List<OutgoingMmtpMessage> messages = new ArrayList<>();
 
             // Calculate subjects if Geometry param is not null
             if (searchGeometry != null) {
                 try {
 
-                    ArrayList<String> subjects = getSearchAreaSubject(searchGeometry);
-                    log.info("Found {} subjects for provided geometry", subjects.size());
+                    ArrayList<String> subjects = searchAreaCalculator.getSearchAreaSubject(searchGeometry);
+                    log.debug("Found {} subjects for provided geometry", subjects.size());
 
                     // Create mms msg for each subject
                     for (String subject : subjects) {
@@ -136,14 +136,14 @@ public class Gmsp {
                                 searchMessageJson,
                                 Duration.ofMinutes(messageDurationMinutes) // Set a timeout for the message
                         );
-                        log.info("added message with subject {}", subject);
+                        log.debug("added message with subject {}", subject);
                         messages.add(msg);
                     }
                 } catch (Exception e) {
                     log.error("Error calculating subjects from geometry: ", e);
                 }
             } else {
-                log.warn("NO GEOMETRY PROVIDED, USING GLOBAL SEARCH SUBJECT: {}", globalSearchSubject);
+                log.debug("NO GEOMETRY PROVIDED, USING GLOBAL SEARCH SUBJECT: {}", globalSearchSubject);
                 OutgoingMmtpMessage msg = mmtpFactory.createSendMessage(
                         globalSearchSubject, // Use the global search subject
                         consumerMrn,
@@ -174,66 +174,6 @@ public class Gmsp {
         }
 
         return null;
-    }
-
-
-    public ArrayList<String> getSearchAreaSubject(Geometry searchGeometry) {
-        ArrayList<String> subjects = new ArrayList<>();
-
-        List<SearchArea> results = this.findIntersectingSearchAreas(searchGeometry);
-
-        //Map results to subjects
-        results.forEach(searchArea -> {
-            String subject = G1191_SEARCHAREA_PREFIX + searchArea.getName().toLowerCase();
-            subjects.add(subject);
-        });
-
-        return subjects;
-
-    }
-
-
-    /**
-     * This method calculates the subject based on the geometry provided in the search parameters.
-     *
-     * @param geometry The geometry string in WKT format from which to calculate the subject.
-     *                 example = "POLYGON ((0.65 51.42, 0.65 52.26, 2.68 52.26, 2.68 51.42, 0.65 51.42))")
-     * @return A string representing the subject derived from the geometry.
-     */
-    private List<SearchArea> findIntersectingSearchAreas(Geometry geometry) {
-
-        //Create Luscene query
-        JtsSpatialContext ctx = JtsSpatialContext.GEO;
-        int maxLevels = 12; //results in sub-meter precision for geohash
-        SpatialPrefixTree grid = new GeohashPrefixTree(ctx, maxLevels);
-        RecursivePrefixTreeStrategy strategy = new RecursivePrefixTreeStrategy(grid, "geometry");
-
-        // Create the Lucene GeoSpatial Query
-        var geoQuery = Optional.ofNullable(geometry)
-                .map(g -> new SpatialArgs(SpatialOperation.Intersects, new JtsGeometry(g, ctx, false, true)))
-                .map(strategy::makeQuery)
-                .orElse(null);
-
-
-        log.info("Found intersecting search areas: {}", geoQuery);
-
-        //Run the query - should find intersections in order to return areas of interest (only the areas!)
-        SearchSession searchSession = Search.session( entityManager );
-        SearchScope<SearchArea> scope = searchSession.scope( SearchArea.class );
-
-        var lazyResults = searchSession.search( scope )
-                .where(f -> f.bool()
-                        .must(q2 -> Optional.ofNullable(geoQuery)
-                                .map(q2.extension(LuceneExtension.get())::fromLuceneQuery)
-                                .orElseGet(q2::matchAll)
-                        )
-                )
-                .toQuery();
-
-        List<SearchArea> hits = lazyResults.fetchHits(100); // Limit to 100 results for safety
-        log.info("Found {} areas of interest intersecting provided geometry", hits.size());
-        return hits;
-
     }
 
     private String writeJsonSearchMessage(MmsSearchMessageDto mmsSearchMessageDto) throws JsonProcessingException {
@@ -267,7 +207,6 @@ public class Gmsp {
         //Perform local search, which gives a list of SearchObjectResult objects
         final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject());
 
-        log.info("Extract filter object");
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
         searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
         log.debug("Found {} search results for local database", searchObjectResults.size());

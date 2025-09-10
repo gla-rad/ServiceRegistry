@@ -52,6 +52,7 @@ public class SearchAreaCalculator {
     }
 
 
+
     /**
      * This method calculates the subject based on the geometry provided in the search parameters.
      *
@@ -60,7 +61,7 @@ public class SearchAreaCalculator {
      * @return A string representing the subject derived from the geometry.
      */
     public List<SearchArea> findIntersectingSearchAreas(Geometry geometry) {
-        log.info("--Calculator searching for intersecting search areas for provided geometry");
+        log.debug("--Calculator searching for intersecting search areas for provided geometry");
 
         //Create Luscene query
         JtsSpatialContext ctx = JtsSpatialContext.GEO;
@@ -74,8 +75,6 @@ public class SearchAreaCalculator {
                 .map(strategy::makeQuery)
                 .orElse(null);
 
-
-        log.info("Calculator Found intersecting search areas: {}", geoQuery);
 
         //Run the query - should find intersections in order to return areas of interest (only the areas!)
         SearchSession searchSession = Search.session( entityManager );
@@ -91,7 +90,6 @@ public class SearchAreaCalculator {
                 .toQuery();
 
         List<SearchArea> hits = lazyResults.fetchHits(100); // Limit to 100 results for safety
-        log.info("Found {} areas of interest intersecting provided geometry", hits.size());
         return hits;
 
     }

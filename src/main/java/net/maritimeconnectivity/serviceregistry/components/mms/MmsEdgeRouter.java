@@ -239,7 +239,6 @@ public class MmsEdgeRouter {
                                     log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
                                 }
                                 return;
-                                // Subject is contained in the list of active subscriptions
                             }
                         }
                     }
