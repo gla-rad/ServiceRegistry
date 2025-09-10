@@ -7,6 +7,10 @@ var instanceItems = undefined;
 var geoSpatialSearchMode = "geoJson";
 var currentTransactionId = null;
 var retrieveTimers = [];
+var countdownIntervalId = null;
+var countdownRemainingMs = 0;
+const GLOBAL_COUNTDOWN_TOTAL_MS = 10000;
+
 
 
 /**
@@ -184,9 +188,14 @@ function searchForInstances() {
     if((!queryString || queryString.trim() === "") && (!queryGeometry)) {
         showError("Please provide a valid query to proceed with the search...");
         destroyInstancesTable();
+        hideGlobalSearchLoading()
         return;
     }
-
+    if (globalSearch) {
+        showGlobalSearchLoading()
+    } else {
+        hideGlobalSearchLoading()
+    }
     // Perform the api search
     loadInstancesTable(queryString, JSON.stringify(queryGeometry), $("#geometryWKT").val(), globalSearch);
 }
@@ -317,11 +326,14 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
  */
 function scheduleRetrieveResults(txId) {
     clearRetrieveTimers();
+
     [3000, 6000, 10000].forEach(ms => {
-        const t = setTimeout(() => fetchAndMergeResults(txId), ms);
+        const isLast = (ms === 10000);
+        const t = setTimeout(() => fetchAndMergeResults(txId, isLast), ms);
         retrieveTimers.push(t);
     });
 }
+
 
 /**
  * Clear any pending retrieve timers.
@@ -335,29 +347,28 @@ function clearRetrieveTimers() {
  * Fetch additional results for a transaction and append them to the table.
  * Server handles duplicate suppression.
  */
-function fetchAndMergeResults(txId) {
-    if (!txId) return;
+function fetchAndMergeResults(txId, isLast) {
+
 
     $.ajax({
-        // Using the path form you requested:
         url: `api/secom/v2/retrieveResults/${encodeURIComponent(txId)}`,
-        // If your server expects a query param instead, switch to:
-        // url: `api/secom/v2/retrieveResults?transactionId=${encodeURIComponent(txId)}`,
         type: 'GET',
         dataType: 'json',
         success: function (data) {
             const services = (data && Array.isArray(data.services)) ? data.services : [];
-            if (!services.length || !instancesTable) return;
-
-            // Mark these as non-local (optional; change to true if you want)
-            const rows = services.map(s => ({ ...s, localResult: false }));
-            instancesTable.rows.add(rows).draw(false);
+            if (services.length && instancesTable) {
+                const rows = services.map(s => ({ ...s, localResult: false }));
+                instancesTable.rows.add(rows).draw(false);
+            }
+            if (isLast) markGlobalSearchComplete();
         },
-        error: function (jqXHR) {
-            console.warn('retrieveResults failed', jqXHR && jqXHR.status, jqXHR && jqXHR.responseText);
+        error: function () {
+            // Even on error, we consider the last cycle “complete”.
+            if (isLast) markGlobalSearchComplete();
         }
     });
 }
+
 
 /**
  * Destroys the instance results table so that it get removed from the DOM and
@@ -524,4 +535,51 @@ function clearInstanceEditPanel($modalDiv) {
 
     // Don't forget the XML content
     $modalDiv.find('#xml-input').val(null);
+}
+
+function startGlobalSearchCountdown() {
+    stopGlobalSearchCountdown();
+    countdownRemainingMs = GLOBAL_COUNTDOWN_TOTAL_MS;
+    updateGlobalSearchCountdownLabel();
+    countdownIntervalId = setInterval(() => {
+        countdownRemainingMs = Math.max(0, countdownRemainingMs - 1000);
+        updateGlobalSearchCountdownLabel();
+        if (countdownRemainingMs === 0) {
+            stopGlobalSearchCountdown();
+        }
+    }, 1000);
+}
+
+function stopGlobalSearchCountdown() {
+    if (countdownIntervalId) {
+        clearInterval(countdownIntervalId);
+        countdownIntervalId = null;
+    }
+}
+
+function updateGlobalSearchCountdownLabel() {
+    const secs = (countdownRemainingMs / 1000).toFixed(0);
+    $("#globalSearchCountdown").text(`(${secs}s)`);
+}
+
+function markGlobalSearchComplete() {
+    stopGlobalSearchCountdown();
+    $("#globalSearchText").text("Global search complete");
+    $("#globalSearchCountdown").text(""); // clear countdown
+    $("#globalSearchSpinner").hide();
+}
+
+
+function showGlobalSearchLoading() {
+    $("#globalSearchText").text("Fetching global search…");
+    $("#globalSearchCountdown").text("(10)");
+    $("#globalSearchSpinner").show();           // <- make spinner visible
+    $("#globalSearchStatus").removeClass("d-none");
+    startGlobalSearchCountdown();
+}
+
+
+function hideGlobalSearchLoading() {
+    stopGlobalSearchCountdown();
+    $("#globalSearchStatus").addClass("d-none");
 }
