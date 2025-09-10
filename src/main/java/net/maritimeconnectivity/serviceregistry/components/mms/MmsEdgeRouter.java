@@ -132,6 +132,9 @@ public class MmsEdgeRouter {
     }
 
     public void sendMessage(OutgoingMmtpMessage msg) throws IOException {
+        if (!this.webSocketSession.isOpen()) {
+            throw new IOException("Web socket is closed");
+        }
 
         String uuid = msg.getMessage().getUuid();
 
