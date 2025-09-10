@@ -185,22 +185,7 @@ public class MmsEdgeRouter {
                 } catch (IOException e) {
                     log.error("Error pulling messages from router upon receiving a Notify", e);
                 }
-            } else if (type == ProtocolMessageType.SEND_MESSAGE) {
-                log.error("Received unknown SEND message from MMS Router, sender MRN: {}", msg.getProtocolMessage().getSendMessage().getApplicationMessage().getHeader().getSender());
-//                byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
-//                try {
-//                    String json = new String(body);
-//                    MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
-//                    try {
-//                        gmsp.handleIncomingGlobalSearch(dto);
-//                    } catch (UnrecoverableKeyException | CertificateException | IOException |
-//                             KeyStoreException | NoSuchAlgorithmException e) {
-//                        log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
-//                    }
-//
-//                } catch (JsonProcessingException e) {
-//                    log.error("Error parsing JSON from MMS Router: {}", e.getMessage());
-//                }
+
             } else {
                 log.error("Cannot handle message type: {}", type);
             }
