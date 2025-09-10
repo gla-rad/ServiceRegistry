@@ -1,7 +1,5 @@
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.persistence.EntityManager;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
@@ -10,13 +8,11 @@ import org.apache.lucene.spatial.prefix.tree.GeohashPrefixTree;
 import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
-import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.mapper.orm.Search;
 import org.hibernate.search.mapper.orm.scope.SearchScope;
 import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.io.ParseException;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +46,6 @@ public class SearchAreaCalculator {
         return subjects;
 
     }
-
 
 
     /**
