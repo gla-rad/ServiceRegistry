@@ -330,7 +330,7 @@ public class Gmsp {
         // Subscribe to the subject for incoming messages
         OutgoingMmtpMessage subscriptionMessage = mmtpFactory.createSubscribeMessage(subject);
         try {
-            mmsEdgeRouter.sendMessage(subscriptionMessage);
+            mmsEdgeRouter.subscribe(subscriptionMessage);
             log.info("Subscribed to subject: {}", subject);
         } catch (Exception e) {
             log.error("Error subscribing to subject {}: {}", subject, e.getMessage());

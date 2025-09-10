@@ -32,7 +32,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -62,6 +65,9 @@ public class MmsEdgeRouter {
 
     private WebSocketSession webSocketSession;
     private Gmsp gmsp;
+
+    // Use newKeySet from concurrentHashmap for thread safety
+    private Set<String> subscriptions;
     private HashMap<String, OutgoingMmtpMessage> msgBuffer = new HashMap<>();
 
 
@@ -79,6 +85,7 @@ public class MmsEdgeRouter {
     public MmsEdgeRouter(KeyStoreUtil keystoreUtil, OutgoingMmtpFactory mmtpFactory) {
         this.keystoreUtil = keystoreUtil;
         this.mmtpFactory = mmtpFactory;
+        this.subscriptions = ConcurrentHashMap.newKeySet();
 
         try {
             this.ownMrn = keystoreUtil.getOwnMrn();
@@ -137,6 +144,18 @@ public class MmsEdgeRouter {
         log.info("Sent message with UUID: {} to MMS Router", uuid);
         msg.incrementSendAttempts();
         msg.updateTimestamp();
+    }
+
+
+    public void subscribe(OutgoingMmtpMessage msg) throws IOException {
+        String subject = msg.getMessage().getProtocolMessage().getSubscribeMessage().getSubject();
+        if (!this.subscriptions.contains(subject)) {
+            this.subscriptions.add(subject);
+            this.sendMessage(msg);
+        } else {
+            log.warn("Already subscribed to subject: {}, not sending duplicate subscribe message", subject);
+        }
+
     }
 
     //Send an MMTP receive to the Router
@@ -214,12 +233,19 @@ public class MmsEdgeRouter {
 
                     // Possibly incoming GMSP search requests
                     List<MessageContent> content = msg.getResponseMessage().getMessageContentList();
+                    log.info("Traverse content of response message, count: {}", content.size());
                     for (MessageContent c : content) {
                         ApplicationMessage appMsg = c.getMsg();
                         if (appMsg.hasHeader()) {
                             String subject = appMsg.getHeader().getSubject();
-                            if (subject.equals(gmsp.getGlobalSearchSubject())) {
-                                log.warn("\n\nGlobal Search Subject received from MMS Router: {}", subject);
+                            log.info("Subejct is: {}", subject);
+                            log.info("list of subects");
+                            for (String s : this.subscriptions) {
+                                log.info("ALREADY Subscribed to: {}", s);
+                            }
+
+                            if (this.subscriptions.contains(subject)) {
+                                log.warn("Subject received: {}", subject);
 
                                 // Parse the content to a MmsSearchMessageDto
                                 var rawContent = appMsg.getBody().toByteArray();
@@ -234,6 +260,7 @@ public class MmsEdgeRouter {
                                     log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
                                 }
                                 return;
+                                // Subject is contained in the list of active subscriptions
                             }
                         }
                     }
