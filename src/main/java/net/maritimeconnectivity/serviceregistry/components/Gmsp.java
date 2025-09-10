@@ -4,8 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
-import jakarta.validation.Valid;
-import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
