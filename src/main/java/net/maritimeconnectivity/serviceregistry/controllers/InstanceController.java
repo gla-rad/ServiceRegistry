@@ -209,13 +209,12 @@ public class InstanceController {
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InstanceDto> createInstance(@Valid @RequestBody InstanceDto instanceDto) throws URISyntaxException {
-        log.debug("REST request to save Instance : {}", instanceDto);
+        log.debug("Incoming REST request to save Instance : {}", instanceDto);
         if (instanceDto.getId() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new instance cannot already have an ID"))
                     .build();
         }
-
 
         //This is a little hack which we should probably put in a service at a later point, but it will optimize
         // later queries a lot, such that we avoid re-calculating all indexes
@@ -223,18 +222,12 @@ public class InstanceController {
 
         // Get geometry if exists in DTO
         if (instanceDto.getGeometry() != null) {
-            log.warn("---CALCULATING AREAS----");
             List<SearchArea> areas = searchAreaCalculator.findIntersectingSearchAreas(instanceDto.getGeometry());
-            log.warn("AREA CALC DONE");
+            log.debug("Calculated search areas for instance {} : areas {}", instanceDto.getName(), areas.size());
+            newInstance.addSearchAreas(areas);}
 
 
-            for (SearchArea area : areas) {
-                log.info("ADDING AREA WITH GEOMETRY {}", area.getGeometry());
-                newInstance.addSearchAreas(areas);}
-
-        }
-
-        this.updateSubscriptions(newInstance);
+        this.updateSubscriptions(newInstance); // Todo Delegate this to a subscriptionservice at some point
         return this.saveInstance(newInstance, true);
     }
 
@@ -348,7 +341,6 @@ public class InstanceController {
         ArrayList<String> subjects = gmsp.getSearchAreaSubject(newInstance.getGeometry());
         for (String subject : subjects) {
             gmsp.subscribe(subject);
-            log.info("Subscribed to subject '{}'", subject);
         }
     }
 
