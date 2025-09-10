@@ -3,6 +3,12 @@ server:
     servlet:
         context-path: ${service.variable.contextPath}
 
+logging:
+    level:
+        root: INFO
+        net.maritimeconnectivity.serviceregistry: DEBUG
+
+
 # Springboot Configuration
 spring:
     application:
