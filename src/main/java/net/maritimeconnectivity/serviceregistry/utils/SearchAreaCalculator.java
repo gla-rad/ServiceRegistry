@@ -17,7 +17,6 @@ import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,7 +24,6 @@ import java.util.Optional;
 @Component
 @Slf4j
 public class SearchAreaCalculator {
-
 
     @Autowired
     EntityManager entityManager;
@@ -46,7 +44,6 @@ public class SearchAreaCalculator {
         return subjects;
 
     }
-
 
     /**
      * This method calculates the subject based on the geometry provided in the search parameters.
@@ -88,6 +85,4 @@ public class SearchAreaCalculator {
         return hits;
 
     }
-
-
 }
