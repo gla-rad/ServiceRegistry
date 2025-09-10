@@ -67,11 +67,13 @@ public class MmsEdgeRouter {
     private Gmsp gmsp;
 
     // Use newKeySet from concurrentHashmap for thread safety
-    private Set<String> subscriptions;
-    private HashMap<String, OutgoingMmtpMessage> msgBuffer = new HashMap<>();
+    private final Set<String> subscriptions;
+    private final HashMap<String, OutgoingMmtpMessage> msgBuffer = new HashMap<>();
 
 
-    @Autowired //Necessary to avoid circular dependency as the Gmsp has The edgerouter constructor injected
+    @Autowired
+    //Necessary to avoid circular dependency as the Gmsp has the edgerouter constructor injected
+    //This is needed in order for the gmsp callbacks to work
     @Lazy
     public void setGmsp(Gmsp gmsp) {
         this.gmsp = gmsp;
@@ -99,7 +101,6 @@ public class MmsEdgeRouter {
     public void init() {
         try {
             this.ownMrn = keystoreUtil.getOwnMrn();
-            log.info("Successfully retrieved own MRN: {}", ownMrn);
         } catch (Exception e) {
             log.error("Error retrieving own MRN from keystore", e);
         }
@@ -110,7 +111,7 @@ public class MmsEdgeRouter {
         try {
             connect();
             this.connected = true;
-            log.info("Successfully connected to MMS Router");
+            log.debug("Successfully connected to MMS Router");
         } catch (Exception e) {
             log.error("Error connecting to MMS Router", e);
             this.connected = false; //
@@ -127,6 +128,7 @@ public class MmsEdgeRouter {
         }
 
         //Handle closing of websocket and mmtp session somewhat gracefully
+        // TODO: Implement a more robust shutdown procedure if needed
     }
 
     public void sendMessage(OutgoingMmtpMessage msg) throws IOException {
@@ -141,7 +143,7 @@ public class MmsEdgeRouter {
         }
         webSocketSession.sendMessage(new BinaryMessage(bytes));
 
-        log.info("Sent message with UUID: {} to MMS Router", uuid);
+        log.debug("Sent message with UUID: {} to MMS Router", uuid);
         msg.incrementSendAttempts();
         msg.updateTimestamp();
     }
@@ -153,7 +155,7 @@ public class MmsEdgeRouter {
             this.subscriptions.add(subject);
             this.sendMessage(msg);
         } else {
-            log.warn("Already subscribed to subject: {}, not sending duplicate subscribe message", subject);
+            log.warn("Already subscribed to subject: {}", subject);
         }
 
     }
@@ -169,7 +171,6 @@ public class MmsEdgeRouter {
         this.receive();
     }
 
-
     //Handler triggered when a message is received from the WebSocket
     public void handleMessage(MmtpMessage msg) {
         // Case: Incoming global search request
@@ -179,27 +180,27 @@ public class MmsEdgeRouter {
             var type = msg.getProtocolMessage().getProtocolMsgType();
             if (type == ProtocolMessageType.NOTIFY_MESSAGE) {
                 try {
-                    log.info("Received NOTIFY message from MMS Router: {} You have {} new messages", msg.getUuid(), msg.getProtocolMessage().getNotifyMessage().getMessageMetadataCount());
+                    log.debug("Received NOTIFY message from MMS Router: {} You have {} new messages", msg.getUuid(), msg.getProtocolMessage().getNotifyMessage().getMessageMetadataCount());
                     handleNotify();
                 } catch (IOException e) {
                     log.error("Error pulling messages from router upon receiving a Notify", e);
                 }
             } else if (type == ProtocolMessageType.SEND_MESSAGE) {
-                byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
-
-                try {
-                    String json = new String(body);
-                    MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
-                    try {
-                        gmsp.handleIncomingGlobalSearch(dto);
-                    } catch (UnrecoverableKeyException | CertificateException | IOException |
-                             KeyStoreException | NoSuchAlgorithmException e) {
-                        log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
-                    }
-
-                } catch (JsonProcessingException e) {
-                    log.error("Error parsing JSON from MMS Router: {}", e.getMessage());
-                }
+                log.error("Received unknown SEND message from MMS Router, sender MRN: {}", msg.getProtocolMessage().getSendMessage().getApplicationMessage().getHeader().getSender());
+//                byte[] body = msg.getProtocolMessage().getSendMessage().getApplicationMessage().getBody().toByteArray();
+//                try {
+//                    String json = new String(body);
+//                    MmsSearchMessageDto dto = gmsp.parseSearchDto(json);
+//                    try {
+//                        gmsp.handleIncomingGlobalSearch(dto);
+//                    } catch (UnrecoverableKeyException | CertificateException | IOException |
+//                             KeyStoreException | NoSuchAlgorithmException e) {
+//                        log.error("Error parsing MmsSearchMessageDto from content: {}", e.getMessage());
+//                    }
+//
+//                } catch (JsonProcessingException e) {
+//                    log.error("Error parsing JSON from MMS Router: {}", e.getMessage());
+//                }
             } else {
                 log.error("Cannot handle message type: {}", type);
             }
@@ -211,7 +212,7 @@ public class MmsEdgeRouter {
             OutgoingMmtpMessage bufferedMsg = this.msgBuffer.get(responseToUuid);
 
             ResponseMessage resp = msg.getResponseMessage();
-            log.info("New response to UUID {}: Code: {}, Reason: {}", responseToUuid, resp.getResponse(), resp.getReasonText());
+            log.debug("Response message to UUID {}: Code: {}, Reason: {}", responseToUuid, resp.getResponse(), resp.getReasonText());
             if (resp.getResponse() != ResponseEnum.GOOD) {
                 String reason = resp.getReasonText();
 
@@ -227,26 +228,19 @@ public class MmsEdgeRouter {
                 }
             } else {
                 if (this.msgBuffer.containsKey(responseToUuid)) {
-                    log.info("ACK received from router: Message {} was successfully sent to the MMS Router", resp.getResponseToUuid());
+                    log.debug("Response was expected for uuid {}", resp.getResponseToUuid());
                     gmsp.globalSearchRequestCallback(bufferedMsg.getGsrUuid());
                     this.msgBuffer.remove(responseToUuid);
 
                     // Possibly incoming GMSP search requests
                     List<MessageContent> content = msg.getResponseMessage().getMessageContentList();
-                    log.info("Traverse content of response message, count: {}", content.size());
                     for (MessageContent c : content) {
                         ApplicationMessage appMsg = c.getMsg();
                         if (appMsg.hasHeader()) {
                             String subject = appMsg.getHeader().getSubject();
-                            log.info("Subejct is: {}", subject);
-                            log.info("list of subects");
-                            for (String s : this.subscriptions) {
-                                log.info("ALREADY Subscribed to: {}", s);
-                            }
+                            log.debug("Message with subject: {}", subject);
 
                             if (this.subscriptions.contains(subject)) {
-                                log.warn("Subject received: {}", subject);
-
                                 // Parse the content to a MmsSearchMessageDto
                                 var rawContent = appMsg.getBody().toByteArray();
 
