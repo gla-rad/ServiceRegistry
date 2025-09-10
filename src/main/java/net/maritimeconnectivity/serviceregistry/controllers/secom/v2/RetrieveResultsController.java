@@ -35,6 +35,7 @@ public class RetrieveResultsController implements GenericSecomInterface {
     public SearchResult retrieveResults(@PathParam("transactionId") String transactionId, @Context final HttpServletResponse response) {
 
         List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
+        log.debug("Size of services list: {}", services.size());
 
         //If empty, return 404
         if (services.isEmpty()) {
@@ -44,6 +45,8 @@ public class RetrieveResultsController implements GenericSecomInterface {
                 response.flushBuffer();
                 return null;
             } catch(Exception e){}
+        } else {
+            log.debug("Found {} results for transactionId {}", services.size(), transactionId);
         }
 
 
