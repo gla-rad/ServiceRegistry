@@ -111,7 +111,7 @@ public class MmsEdgeRouter {
         try {
             connect();
             this.connected = true;
-            log.debug("MMS Edgerouter sucessfully setup and connected to router");
+            log.info("MMS Edgerouter sucessfully setup");
         } catch (Exception e) {
             log.error("Error connecting to MMS Router", e);
             this.connected = false; //
@@ -277,7 +277,7 @@ public class MmsEdgeRouter {
     private void connectMmtp() throws IOException {
          OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage(ownMrn);
 
-         log.info("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
+         log.debug("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
 
          sendMessage(msg);
     }
