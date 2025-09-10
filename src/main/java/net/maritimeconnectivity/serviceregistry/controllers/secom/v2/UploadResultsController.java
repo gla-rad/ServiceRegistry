@@ -1,6 +1,5 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
-import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
@@ -12,9 +11,6 @@ import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import jakarta.ws.rs.core.Context;
-import jakarta.ws.rs.core.UriInfo;
-
 import java.util.List;
 
 /**
