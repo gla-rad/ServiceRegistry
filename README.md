@@ -20,7 +20,49 @@ required a PostgreSQL database with a PostGIS extension. More information
 on how to download and install PostGIS can he found 
 [here](https://postgis.net/documentation/getting_started/).
 
+# Configuration for testing purposes
+## Database
+For testing purposes, the use of a Postgis docker container is recommended. Simply install docker and run
+```
+docker run --platform linux/amd64 --rm -p 5433:5432 -e POSTGRES_PASSWORD=test -e POSTGRES_USER=test -e POSTGRES_DB=test postgis/postgis
+```
+where the `p` parameter and environmental variable values may be changed as desired. 
+
+## General configurations
+The `application.yaml` file found in the resources' folder contains the
+general configurations of the project. The file refers to a number of environmental variables, which should be set at run time rather than
+directly in the file. This is to avoid storing sensitive information. The following command contains the minimum required environmental variables to run the service for testing purposes. 
+```
+export DATABASE_NAME=test \                     
+DATABASE_PASSWORD=test \
+DATABASE_USERNAME=test \
+KEYCLOAK_CLIENT_ID=service-registry \
+KEYCLOAK_CLIENT_REALM=MCP \
+KEYCLOAK_CLIENT_SECRET=<insert-secret> \
+KEYCLOAK_SERVER_URL=<insert-keycloak-serverurl> \
+MCP_MIR_UR=<insert-mir-api>> \
+OWN_EDGE_ROUTER_KEYSTORE_PASSWORD=<insert-password-to-p12> \
+OWN_EDGE_ROUTER_KEYSTORE_PATH=<insert-path-to-p12> \
+DATABASE_SERVER_PORT=<db-port-same-as-in-docker-container> \
+SERVICE_INFO_MRN="<some-test-mrn>"
+```
+
+## Compiling and running
+The project uses Maven as a build tool. To compile the project simply run
+```mvn clean install -DskipTests``` from the root of the project. This will
+create a jar file in the *target* folder. To run the service simply use the
+following command:
+``` 
+java -jar mcp-serviceregistry-core-<version>.jar  --server.port=8444
+```
+A frontend web interface will be provided on `localhost:8444` (or whatever port
+you set) and the API documentation will be available on
+`localhost:8444/swagger-ui/index.html`
+
+
+# Configuration for operational use
 ## Database Configuration
+
 The service uses hibernate to initialise the database structure. The database
 connection parameters such as the URL and username/password should be provided
 in the *bootstrap.yaml* file found in the resources' folder. Here
