@@ -126,7 +126,8 @@ public class Gmsp {
             if (searchGeometry != null) {
                 try {
 
-                    ArrayList<String> subjects = searchAreaCalculator.getSearchAreaSubject(searchGeometry);
+                    List<SearchArea> intersectingAreas = searchAreaCalculator.findIntersectingSearchAreas(searchGeometry);
+                    ArrayList<String> subjects = searchAreaCalculator.areaToSubjectMapper(intersectingAreas);
                     log.debug("Found {} subjects for provided geometry", subjects.size());
 
                     // Create mms msg for each subject

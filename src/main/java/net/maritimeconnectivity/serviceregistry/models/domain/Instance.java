@@ -672,6 +672,14 @@ public class Instance implements Serializable, JsonSerializable {
         for (SearchArea a : areas) addSearchArea(a);
     }
 
+    // Add or remove search areas to match the provided list
+    public void updateSearchAreas(List<SearchArea> searchAreas) {
+        // Remove any areas that are not in the new list
+        this.searchAreas.removeIf(area -> !searchAreas.contains(area));
+        // Add any new areas that are not already present
+        this.searchAreas.addAll(searchAreas);
+    }
+
     /**
      * Overrides the equality operator of the class.
      *

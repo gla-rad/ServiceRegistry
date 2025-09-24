@@ -30,13 +30,11 @@ public class SearchAreaCalculator {
 
     private final String G1191_SEARCHAREA_PREFIX = "urn:mrn:mcp:msr:search:searcharea:";
 
-    public ArrayList<String> getSearchAreaSubject(Geometry searchGeometry) {
+    public ArrayList<String> areaToSubjectMapper(List<SearchArea> areas) {
         ArrayList<String> subjects = new ArrayList<>();
 
-        List<SearchArea> results = this.findIntersectingSearchAreas(searchGeometry);
-
         //Map results to subjects
-        results.forEach(searchArea -> {
+        areas.forEach(searchArea -> {
             String subject = G1191_SEARCHAREA_PREFIX + searchArea.getName().toLowerCase();
             subjects.add(subject);
         });

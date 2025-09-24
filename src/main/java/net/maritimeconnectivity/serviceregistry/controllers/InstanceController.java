@@ -218,7 +218,8 @@ public class InstanceController {
         if (instanceDto.getGeometry() != null) {
             List<SearchArea> areas = searchAreaCalculator.findIntersectingSearchAreas(instanceDto.getGeometry());
             log.debug("Calculated search areas for instance {} : areas {}", instanceDto.getName(), areas.size());
-            newInstance.addSearchAreas(areas);}
+            newInstance.addSearchAreas(areas);
+        }
 
         ResponseEntity<InstanceDto> resp = this.saveInstance(newInstance, true);
         if (resp.getStatusCode().is2xxSuccessful()) {
@@ -242,6 +243,13 @@ public class InstanceController {
         log.debug("REST request to update Instance : {}", instanceDto);
         instanceDto.setId(id);
         Instance instance = this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class);
+
+        // Get geometry if exists in DTO
+        if (instanceDto.getGeometry() != null) {
+            List<SearchArea> areas = searchAreaCalculator.findIntersectingSearchAreas(instanceDto.getGeometry());
+            log.debug("Calculated search areas for instance {} : areas {}", instanceDto.getName(), areas.size());
+            instance.updateSearchAreas(areas);
+        }
 
         ResponseEntity<InstanceDto> response = this.saveInstance(instance, true);
         if (response.getStatusCode().is2xxSuccessful()) {

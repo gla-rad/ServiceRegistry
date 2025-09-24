@@ -3,10 +3,12 @@ package net.maritimeconnectivity.serviceregistry.services;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -35,7 +37,11 @@ public class SubscriptionService {
      * for which it contains services
      */
     public void addSubscription(Instance newInstance) {
-        ArrayList<String> subjects = this.sac.getSearchAreaSubject(newInstance.getGeometry());
+
+        // Get search areas for the instance
+        List<SearchArea> searchAreas = newInstance.getSearchAreas().stream().toList();
+
+        ArrayList<String> subjects = this.sac.areaToSubjectMapper(searchAreas);
 
         Set<String> existingSubscriptions = gmsp.getSubscriptions();
 
