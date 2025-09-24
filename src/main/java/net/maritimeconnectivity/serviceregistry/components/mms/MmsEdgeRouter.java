@@ -163,6 +163,22 @@ public class MmsEdgeRouter {
 
     }
 
+    public void unsubscribe(OutgoingMmtpMessage msg) throws IOException {
+        String subject = msg.getMessage().getProtocolMessage().getUnsubscribeMessage().getSubject();
+        if (this.subscriptions.contains(subject)) {
+            this.subscriptions.remove(subject);
+            this.sendMessage(msg);
+        } else {
+            log.warn("Not subscribed to subject: {}", subject);
+        }
+    }
+
+    // Returns a copy of the current subscriptions
+    public  Set<String> getSubscriptions() {
+        return new HashSet<>(this.subscriptions);
+    }
+
+
     //Send an MMTP receive to the Router
     private void receive() throws IOException {
         OutgoingMmtpMessage receiveMessage = this.mmtpFactory.createReceiveMessage();

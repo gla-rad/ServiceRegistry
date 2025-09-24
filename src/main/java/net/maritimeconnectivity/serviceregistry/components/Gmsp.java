@@ -98,6 +98,7 @@ public class Gmsp {
     @PostConstruct
     public void init() {
         this.subscribe(globalSearchSubject);
+
     }
 
     /**
@@ -249,5 +250,20 @@ public class Gmsp {
         } catch (Exception e) {
             log.error("Error subscribing to subject {}: {}", subject, e.getMessage());
         }
+    }
+
+    public void unsubscribe(String subject) {
+        // Unsubscribe from the subject for incoming messages
+        OutgoingMmtpMessage unsubscriptionMessage = mmtpFactory.createUnsubscribeMessage(subject);
+        try {
+            mmsEdgeRouter.unsubscribe(unsubscriptionMessage);
+            log.debug("Unsubscribed from subject: {}", subject);
+        } catch (Exception e) {
+            log.error("Error unsubscribing from subject {}: {}", subject, e.getMessage());
+        }
+    }
+
+    public Set<String> getSubscriptions() {
+        return mmsEdgeRouter.getSubscriptions();
     }
 }

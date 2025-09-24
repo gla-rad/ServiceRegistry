@@ -29,6 +29,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SubscriptionService;
 import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.springdoc.core.annotations.ParameterObject;
@@ -84,6 +85,9 @@ public class InstanceController {
 
     @Autowired
     SearchAreaCalculator searchAreaCalculator;
+
+    @Autowired
+    SubscriptionService subscriptionService;
 
     /**
      * Setup up addition model mapper configurations.
@@ -217,9 +221,13 @@ public class InstanceController {
             log.debug("Calculated search areas for instance {} : areas {}", instanceDto.getName(), areas.size());
             newInstance.addSearchAreas(areas);}
 
+        ResponseEntity<InstanceDto> resp = this.saveInstance(newInstance, true);
+        if (resp.getStatusCode().is2xxSuccessful()) {
+            subscriptionService.updateSubscriptions(newInstance);
+        }
+        return resp;
 
-        this.updateSubscriptions(newInstance); // Todo Delegate this to a subscriptionservice at some point
-        return this.saveInstance(newInstance, true);
+
     }
 
     /**
@@ -325,14 +333,6 @@ public class InstanceController {
                         .body(this.instanceDomainToDtoMapper.convertTo(instance, InstanceDto.class));
     }
 
-    /** Update geo-based subscriptions with the GMSP such that this instance is always subscribed to all subject areas
-     * for which it contains services
-     */
-    public void updateSubscriptions(Instance newInstance) {
-        ArrayList<String> subjects = searchAreaCalculator.getSearchAreaSubject(newInstance.getGeometry());
-        for (String subject : subjects) {
-            gmsp.subscribe(subject);
-        }
-    }
+
 
 }
