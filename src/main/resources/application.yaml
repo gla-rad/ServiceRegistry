@@ -137,7 +137,7 @@ info:
             duration:
                 minutes: 60
         router:
-            url: wss://eu-router.dmc.international:8080
+            url: wss://eu-router.dmc.international:1544
         ownEdgerouter:
             keyStore:
                     path: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}

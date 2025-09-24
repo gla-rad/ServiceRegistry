@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
+import java.io.IOException;
 import java.util.List;
 
 @Component
@@ -32,11 +33,13 @@ public class RetrieveResultsController implements GenericSecomInterface {
     @Path(RETREIVE_RESULTS_INTERFACE_PATH + "/{transactionId}")
     @GET
     @Produces("application/json")
-    public SearchResult retrieveResults(@PathParam("transactionId") String transactionId, @Context final HttpServletResponse response) {
+    public SearchResult retrieveResults(@PathParam("transactionId") String transactionId, @Context final HttpServletResponse response) throws IOException {
 
         if (!searchConsolidationService.isRunning()) {
             log.debug("GMSP is not running. Refuses to process retreiveresults request");
-            throw new WebApplicationException("GMSP is not running. Cannot process request", 503);
+            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+            response.flushBuffer();
+            return null;
         }
 
         List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
