@@ -317,6 +317,14 @@ public class MmsEdgeRouter {
         sslContext.init(keyManagerFactory.getKeyManagers(), null, null);
 
         StandardWebSocketClient webSocketClient = new StandardWebSocketClient();
+
+        //Check we have loaded cert
+        if (keystoreUtil.getMmsKeystore().size() == 0) {
+            log.warn("No certificates found in the MMS keystore. Check your configuration.");
+        } else {
+            log.debug("Loaded {} certificates from the MMS keystore", keystoreUtil.getMmsKeystore().size());
+        }
+
         webSocketClient.setSslContext(sslContext);
         URI uri = new URI(routerUrl);
         webSocketSession = webSocketClient.execute(new MMSWebsocketHandler(this), null, uri).get();
