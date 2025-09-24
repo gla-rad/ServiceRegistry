@@ -3,6 +3,7 @@ package net.maritimeconnectivity.serviceregistry.components;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.components.mms.OutgoingMmtpFactory;
@@ -68,6 +69,9 @@ public class Gmsp {
     @Autowired
     private InstanceSearchQueryBuilder queryBuilder;
 
+    @Getter
+    private boolean running = false;
+
     private final MmsEdgeRouter mmsEdgeRouter;
 
     private final OutgoingMmtpFactory mmtpFactory;
@@ -91,11 +95,13 @@ public class Gmsp {
 
     @PostConstruct
     public void init() {
-        this.subscribe(globalSearchSubject);
+        if (this.mmsEdgeRouter.isConnected()) {
+            this.subscribe(globalSearchSubject);
 
-        //Sub to all areas in DB
-        this.initializeSubscriptionsFromDb();
-
+            //Sub to all areas in DB
+            this.initializeSubscriptionsFromDb();
+            this.running = true;
+        }
     }
 
     /**
@@ -107,6 +113,10 @@ public class Gmsp {
      * TODO: Consider where the check of certificate validity should be done.
      */
     public String globalSearch(String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
+        if (!this.running) {
+            return null;
+        }
+
         log.info("Conduct global search for Endpoint: {}", endpoint);
 
         try {

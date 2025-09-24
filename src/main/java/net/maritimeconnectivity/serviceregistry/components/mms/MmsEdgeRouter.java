@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import lombok.Getter;
 import net.maritimeconnectivity.mmtp.*;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
@@ -52,6 +53,7 @@ public class MmsEdgeRouter {
 
     public static final int RETRANSMISSION_NUM = 5;
 
+    @Getter
     private volatile  boolean connected = false;
     private volatile boolean initialized = false;
 

@@ -1,10 +1,14 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 
+import ch.qos.logback.core.net.server.Client;
+import ch.qos.logback.core.net.server.ConcurrentServerRunner;
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.config.CacheConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
 import org.grad.secomv2.core.models.SearchObjectResult;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
@@ -21,6 +25,13 @@ import java.util.List;
 public class SearchConsolidationService {
 
     private final Cache sessions;
+
+    @Autowired
+    private Gmsp gmsp;
+
+    public boolean isRunning() {
+        return gmsp.isRunning();
+    }
 
     // cm injected by Spring as it is defined as a Bean in CacheConfig
     public SearchConsolidationService(CacheManager cm) {
