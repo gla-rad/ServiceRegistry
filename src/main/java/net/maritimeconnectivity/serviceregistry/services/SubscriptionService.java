@@ -51,6 +51,7 @@ public class SubscriptionService {
         }
     }
 
+
     public void updateSubscriptions(Instance newInstance) {
         // Get search areas for the instance
         List<SearchArea> searchAreas = newInstance.getSearchAreas().stream().toList();

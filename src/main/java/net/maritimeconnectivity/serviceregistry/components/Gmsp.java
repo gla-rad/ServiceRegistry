@@ -12,6 +12,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
+import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.grad.secomv2.core.models.SearchFilterObject;
@@ -58,6 +59,13 @@ public class Gmsp {
     @Autowired
     SearchAreaCalculator searchAreaCalculator;
 
+    @Autowired
+    InstanceRepo instanceRepo;
+
+    @Autowired
+    SearchAreaCalculator sac;
+
+
 
     @Autowired
     private InstanceSearchQueryBuilder queryBuilder;
@@ -87,6 +95,16 @@ public class Gmsp {
     public void init() {
         this.subscribe(globalSearchSubject);
 
+        //Sub to all areas in DB
+        List<SearchArea> allAreasInDb = instanceRepo.findAllInstanceSearchAreasUsed();
+        ArrayList<String> allSubjectsInDb = this.sac.areaToSubjectMapper(allAreasInDb);
+        //Get existing subscriptions
+        Set<String> existingSubscriptions = this.getSubscriptions();
+        for (String subject : allSubjectsInDb) {
+            if(!existingSubscriptions.contains(subject)) {
+                this.subscribe(subject);
+            }
+        }
     }
 
     /**
