@@ -44,7 +44,6 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -223,7 +222,7 @@ public class InstanceController {
 
         ResponseEntity<InstanceDto> resp = this.saveInstance(newInstance, true);
         if (resp.getStatusCode().is2xxSuccessful()) {
-            subscriptionService.updateSubscriptions(newInstance);
+            subscriptionService.addSubscription(newInstance);
         }
         return resp;
 
@@ -242,7 +241,12 @@ public class InstanceController {
     public ResponseEntity<InstanceDto> updateInstance(@PathVariable Long id, @Valid @RequestBody InstanceDto instanceDto) throws URISyntaxException {
         log.debug("REST request to update Instance : {}", instanceDto);
         instanceDto.setId(id);
-        ResponseEntity<InstanceDto> response = saveInstance(this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class), false);
+        Instance instance = this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class);
+
+        ResponseEntity<InstanceDto> response = this.saveInstance(instance, true);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            subscriptionService.addSubscription(instance);
+        }
         return response;
     }
 
@@ -255,6 +259,7 @@ public class InstanceController {
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteInstance(@PathVariable Long id) {
         log.debug("REST request to delete Instance : {}", id);
+
         this.instanceService.delete(id);
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString()))

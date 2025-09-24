@@ -2,13 +2,11 @@ package net.maritimeconnectivity.serviceregistry.services;
 
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
-import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -36,7 +34,7 @@ public class SubscriptionService {
      * Update geo-based subscriptions with the GMSP such that this instance is always subscribed to all subject areas
      * for which it contains services
      */
-    public void updateSubscriptions(Instance newInstance) {
+    public void addSubscription(Instance newInstance) {
         ArrayList<String> subjects = this.sac.getSearchAreaSubject(newInstance.getGeometry());
 
         Set<String> existingSubscriptions = gmsp.getSubscriptions();
@@ -49,6 +47,10 @@ public class SubscriptionService {
                 log.debug("SubscriptionService : Subscription already exists for subject {}", subject);
             }
         }
+    }
+
+    public void removeSubscription(Instance instance) {
+        // TODO
     }
 
 
