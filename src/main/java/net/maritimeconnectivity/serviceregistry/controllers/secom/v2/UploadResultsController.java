@@ -53,7 +53,7 @@ public class UploadResultsController implements GenericSecomInterface {
     public void searchService(@PathParam("transactionId") String transactionId,
                               List<SearchObjectResultWithCert> searchResults) {
 
-        log.debug("Received {} search results for transactionId: {}", searchResults.size(), transactionId);
+        log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
         for (SearchObjectResultWithCert result : searchResults) {
             log.debug("Service name: {}", result.getName());
         }

@@ -6,10 +6,12 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -21,6 +23,9 @@ import java.util.Set;
 @Service
 @Slf4j
 public class SubscriptionService {
+
+    @Value("${info.gmsp.search.globalSubject}")
+    private String globalSearchSubject;
 
     private final Gmsp gmsp;
 
@@ -44,7 +49,7 @@ public class SubscriptionService {
         List<SearchArea> allAreasInDb = instanceRepo.findAllInstanceSearchAreasUsed();
         ArrayList<String> allSubjectsInDb = this.sac.areaToSubjectMapper(allAreasInDb);
         for (String existingSub : existingSubscriptions) {
-            if (!allSubjectsInDb.contains(existingSub)) {
+            if (!allSubjectsInDb.contains(existingSub) && !Objects.equals(existingSub, globalSearchSubject)) {
                 log.debug("SubscriptionService : Removing subscription for subject {} as no instances in the DB require it", existingSub);
                 gmsp.unsubscribe(existingSub);
             }

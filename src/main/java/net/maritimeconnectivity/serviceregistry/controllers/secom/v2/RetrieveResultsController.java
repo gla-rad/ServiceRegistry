@@ -35,12 +35,12 @@ public class RetrieveResultsController implements GenericSecomInterface {
     @Produces("application/json")
     public SearchResult retrieveResults(@PathParam("transactionId") String transactionId, @Context final HttpServletResponse response) throws IOException {
 
-        if (!searchConsolidationService.isRunning()) {
-            log.debug("GMSP is not running. Refuses to process retreiveresults request");
-            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            response.flushBuffer();
-            return null;
-        }
+//        if (!searchConsolidationService.isRunning()) {
+//            log.debug("GMSP is not running. Refuses to process retreiveresults request");
+//            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+//            response.flushBuffer();
+//            return null;
+//        }
 
         List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
         log.debug("Size of services list: {}", services.size());
