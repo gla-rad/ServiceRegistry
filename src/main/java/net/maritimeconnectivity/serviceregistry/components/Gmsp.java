@@ -65,8 +65,6 @@ public class Gmsp {
     @Autowired
     SearchAreaCalculator sac;
 
-
-
     @Autowired
     private InstanceSearchQueryBuilder queryBuilder;
 
@@ -96,15 +94,8 @@ public class Gmsp {
         this.subscribe(globalSearchSubject);
 
         //Sub to all areas in DB
-        List<SearchArea> allAreasInDb = instanceRepo.findAllInstanceSearchAreasUsed();
-        ArrayList<String> allSubjectsInDb = this.sac.areaToSubjectMapper(allAreasInDb);
-        //Get existing subscriptions
-        Set<String> existingSubscriptions = this.getSubscriptions();
-        for (String subject : allSubjectsInDb) {
-            if(!existingSubscriptions.contains(subject)) {
-                this.subscribe(subject);
-            }
-        }
+        this.initializeSubscriptionsFromDb();
+
     }
 
     /**
@@ -272,5 +263,17 @@ public class Gmsp {
 
     public Set<String> getSubscriptions() {
         return mmsEdgeRouter.getSubscriptions();
+    }
+
+    private void initializeSubscriptionsFromDb() {
+        List<SearchArea> allAreasInDb = instanceRepo.findAllInstanceSearchAreasUsed();
+        ArrayList<String> allSubjectsInDb = this.sac.areaToSubjectMapper(allAreasInDb);
+        //Get existing subscriptions
+        Set<String> existingSubscriptions = this.getSubscriptions();
+        for (String subject : allSubjectsInDb) {
+            if(!existingSubscriptions.contains(subject)) {
+                this.subscribe(subject);
+            }
+        }
     }
 }

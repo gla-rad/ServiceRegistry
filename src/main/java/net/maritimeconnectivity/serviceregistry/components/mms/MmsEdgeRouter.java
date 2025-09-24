@@ -55,6 +55,8 @@ public class MmsEdgeRouter {
     private volatile  boolean connected = false;
     private volatile boolean initialized = false;
 
+    private String reconnectToken = null;
+
 
     @Value("${info.mms.router.url}")
     private String routerUrl;
@@ -261,6 +263,13 @@ public class MmsEdgeRouter {
                             }
                         }
                     }
+                    String rcToken = msg.getResponseMessage().getReconnectToken();
+                    if (!rcToken.isBlank()) {
+                        this.reconnectToken = rcToken;
+                        log.debug("Received reconnect token: {}", rcToken);
+                    }
+
+
                 } else {
                     log.error("Received response to unknown message: {}", resp.getResponseToUuid());
                 }
