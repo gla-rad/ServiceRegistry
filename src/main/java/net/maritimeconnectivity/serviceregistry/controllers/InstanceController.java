@@ -223,7 +223,7 @@ public class InstanceController {
 
         ResponseEntity<InstanceDto> resp = this.saveInstance(newInstance, true);
         if (resp.getStatusCode().is2xxSuccessful()) {
-            subscriptionService.addSubscription(newInstance);
+            subscriptionService.updateSubscriptions(newInstance);
         }
         return resp;
 
@@ -253,7 +253,7 @@ public class InstanceController {
 
         ResponseEntity<InstanceDto> response = this.saveInstance(instance, true);
         if (response.getStatusCode().is2xxSuccessful()) {
-            subscriptionService.addSubscription(instance);
+            subscriptionService.updateSubscriptions(instance);
         }
         return response;
     }
@@ -269,6 +269,8 @@ public class InstanceController {
         log.debug("REST request to delete Instance : {}", id);
 
         this.instanceService.delete(id);
+        subscriptionService.removeSubscriptions();
+
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString()))
                 .build();
