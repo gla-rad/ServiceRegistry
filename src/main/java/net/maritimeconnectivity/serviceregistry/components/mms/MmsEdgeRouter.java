@@ -404,7 +404,15 @@ public class MmsEdgeRouter {
             log.debug("WebSocket connection closed with status: {}", status);
             this.edgeRouterRef.webSocketSession = null;
             this.edgeRouterRef.connected = false;
-            this.edgeRouterRef.startReconnectLoop();
+
+
+            if (status.getCode() != CloseStatus.NORMAL.getCode()) {
+                log.warn("WebSocket connection closed unexpectedly. Starting reconnect loop");
+                this.edgeRouterRef.startReconnectLoop();
+            } else  {
+                log.debug("WebSocket connection closed standard code 1000 code {}", status.getCode());
+            }
+
         }
     }
 
