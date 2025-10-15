@@ -13,6 +13,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -32,12 +34,14 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledFuture;
 
 /**
  * The MMs Edge Router Component
@@ -50,6 +54,10 @@ import java.util.concurrent.ExecutionException;
 @Component
 @Slf4j
 public class MmsEdgeRouter {
+
+    private final TaskScheduler scheduler;
+    private final Object reconnectLock = new Object();
+    private volatile ScheduledFuture<?> reconnectTask;
 
     public static final int RETRANSMISSION_NUM = 5;
 
@@ -88,7 +96,8 @@ public class MmsEdgeRouter {
      *
      * @param keystoreUtil Utility for handling keystore operations.
      */  @Autowired
-    public MmsEdgeRouter(KeyStoreUtil keystoreUtil, OutgoingMmtpFactory mmtpFactory) {
+    public MmsEdgeRouter(TaskScheduler taskScheduler, KeyStoreUtil keystoreUtil, OutgoingMmtpFactory mmtpFactory) {
+        this.scheduler = taskScheduler;
         this.keystoreUtil = keystoreUtil;
         this.mmtpFactory = mmtpFactory;
         this.subscriptions = ConcurrentHashMap.newKeySet();
@@ -119,24 +128,34 @@ public class MmsEdgeRouter {
         } catch (Exception e) {
             log.error("Error connecting to MMS Router", e);
             this.connected = false; //
+            this.startReconnectLoop();
         }
     }
 
 
     @PreDestroy
-    public void preDestroy() throws IOException, InterruptedException {
-         //Make sure we are disconnected
-        if (webSocketSession.isOpen()) {
-            OutgoingMmtpMessage disconnectMessage = mmtpFactory.createDisconnectMessage();
-            sendMessage(disconnectMessage);
-        }
+    public void preDestroy() {
+        try {
+            ScheduledFuture<?> toCancel;
+            synchronized (reconnectLock) {
+                toCancel = reconnectTask;
+                reconnectTask = null;
+            }
+            if (toCancel != null) toCancel.cancel(false);
 
-        //Handle closing of websocket and mmtp session somewhat gracefully
-        // TODO: Implement a more robust shutdown procedure if needed
+            if (webSocketSession != null && webSocketSession.isOpen()) {
+                OutgoingMmtpMessage disconnectMessage = mmtpFactory.createDisconnectMessage();
+                sendMessage(disconnectMessage);
+                webSocketSession.close();
+            }
+        } catch (Exception e) {
+            log.error("Error during shutdown: {}", e.getMessage(), e);
+        }
     }
 
+
     public void sendMessage(OutgoingMmtpMessage msg) throws IOException {
-        if (!this.webSocketSession.isOpen()) {
+        if (webSocketSession == null || !this.webSocketSession.isOpen()) {
             throw new IOException("Web socket is closed");
         }
 
@@ -279,10 +298,6 @@ public class MmsEdgeRouter {
         }
     }
 
-    public boolean isBuffered(String uuid) {
-         return this.msgBuffer.containsKey(uuid);
-    }
-
     private void connect() throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, URISyntaxException, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
          connectWebSocket();
          connectMmtp();
@@ -295,6 +310,29 @@ public class MmsEdgeRouter {
          log.debug("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
 
          sendMessage(msg);
+    }
+
+    private void startReconnectLoop() {
+        synchronized (reconnectLock) {
+            if (reconnectTask != null && !reconnectTask.isCancelled()) return;
+            reconnectTask = scheduler.scheduleAtFixedRate(() -> {
+                if (connected) return;
+                try {
+                    connect();
+                    log.info("Reconnected to MMS Router.");
+                    ScheduledFuture<?> toCancel;
+                    synchronized (reconnectLock) {
+                        toCancel = reconnectTask;
+                        reconnectTask = null;
+                    }
+                    if (toCancel != null) toCancel.cancel(false);
+                } catch (Exception e) {
+                    log.debug("Reconnect failed: {}", e.getMessage());
+                }
+            }, Duration.ofSeconds(5));
+        }
+
+
     }
 
     private void connectWebSocket () throws
@@ -365,6 +403,7 @@ public class MmsEdgeRouter {
         public void afterConnectionClosed(WebSocketSession session, @NotNull CloseStatus status) {
             log.debug("WebSocket connection closed with status: {}", status);
             this.edgeRouterRef.webSocketSession = null;
+            this.edgeRouterRef.startReconnectLoop();
         }
     }
 
