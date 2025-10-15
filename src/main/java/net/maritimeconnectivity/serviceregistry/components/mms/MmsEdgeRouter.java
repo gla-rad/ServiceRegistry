@@ -329,7 +329,7 @@ public class MmsEdgeRouter {
                 } catch (Exception e) {
                     log.debug("Reconnect failed: {}", e.getMessage());
                 }
-            }, Duration.ofSeconds(5));
+            }, Duration.ofSeconds(10));
         }
 
 
@@ -403,6 +403,7 @@ public class MmsEdgeRouter {
         public void afterConnectionClosed(WebSocketSession session, @NotNull CloseStatus status) {
             log.debug("WebSocket connection closed with status: {}", status);
             this.edgeRouterRef.webSocketSession = null;
+            this.edgeRouterRef.connected = false;
             this.edgeRouterRef.startReconnectLoop();
         }
     }
