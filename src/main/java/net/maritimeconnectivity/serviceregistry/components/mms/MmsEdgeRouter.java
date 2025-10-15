@@ -72,7 +72,7 @@ public class MmsEdgeRouter {
 
     // Use newKeySet from concurrentHashmap for thread safety
     private final Set<String> subscriptions;
-    private final HashMap<String, OutgoingMmtpMessage> msgBuffer = new HashMap<>();
+    private final ConcurrentHashMap<String, OutgoingMmtpMessage> msgBuffer = new ConcurrentHashMap<>();
 
 
     @Autowired
