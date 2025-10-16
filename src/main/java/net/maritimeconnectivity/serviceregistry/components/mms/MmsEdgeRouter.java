@@ -9,6 +9,7 @@ import net.maritimeconnectivity.mmtp.*;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
 import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
+import net.maritimeconnectivity.serviceregistry.utils.ReconnectTokenUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -65,14 +66,13 @@ public class MmsEdgeRouter {
     private volatile  boolean connected = false;
     private volatile boolean initialized = false;
 
-    private String reconnectToken = null;
-
-
     @Value("${info.mms.router.url}")
     private String routerUrl;
     private String ownMrn;
     private final KeyStoreUtil keystoreUtil;
     private final OutgoingMmtpFactory mmtpFactory;
+
+    private String awaitConnectResponseToUuid;
 
 
     private WebSocketSession webSocketSession;
@@ -123,7 +123,6 @@ public class MmsEdgeRouter {
 
         try {
             connect();
-            this.connected = true;
             log.info("MMS Edgerouter sucessfully setup");
         } catch (Exception e) {
             log.error("Error connecting to MMS Router", e);
@@ -243,7 +242,7 @@ public class MmsEdgeRouter {
             if (resp.getResponse() != ResponseEnum.GOOD) {
                 String reason = resp.getReasonText();
 
-                if (bufferedMsg.getSendAttempts() < RETRANSMISSION_NUM) {
+                if (bufferedMsg.getSendAttempts() < RETRANSMISSION_NUM && bufferedMsg.getMessage().getProtocolMessage().hasSendMessage()) {
                     log.error("Error response from MMS Router for UUID {}: Code: {}: {}, Attempting Retransmit...", responseToUuid, resp.getResponse(), reason);
                     try {
                         this.sendMessage(bufferedMsg);
@@ -254,6 +253,14 @@ public class MmsEdgeRouter {
                     log.error("Error response from MMS Router for UUID {}: Code {}: {}, Cannot re-transmit, Discarding", responseToUuid, resp.getResponse(), reason);
                 }
             } else {
+                if (responseToUuid.equals(awaitConnectResponseToUuid)) {
+                    log.info("Sucessfully Connected to MMS Router at {}", routerUrl);
+                    synchronized (reconnectLock) {
+                        this.connected = true;
+                        reconnectLock.notifyAll();
+                    }
+                }
+
                 if (this.msgBuffer.containsKey(responseToUuid)) {
                     log.debug("Response was expected for uuid {}", resp.getResponseToUuid());
                     gmsp.globalSearchRequestCallback(bufferedMsg.getGsrUuid());
@@ -286,8 +293,12 @@ public class MmsEdgeRouter {
                     }
                     String rcToken = msg.getResponseMessage().getReconnectToken();
                     if (!rcToken.isBlank()) {
-                        this.reconnectToken = rcToken;
-                        log.debug("Received reconnect token: {}", rcToken);
+                        log.debug("Received reconnect token and writing to disk: {}", rcToken);
+                        try {
+                            ReconnectTokenUtil.writeRcToken(rcToken);
+                        } catch (IOException e) {
+                            log.error("Error writing reconnect token to disk: {}", e.getMessage());
+                        }
                     }
 
 
@@ -301,30 +312,52 @@ public class MmsEdgeRouter {
     private void connect() throws UnrecoverableKeyException, CertificateException, NoSuchAlgorithmException, URISyntaxException, IOException, KeyStoreException, ExecutionException, InterruptedException, KeyManagementException {
          connectWebSocket();
          connectMmtp();
-         this.connected = true;
     }
 
     private void connectMmtp() throws IOException {
-         OutgoingMmtpMessage msg =  mmtpFactory.createConnectMessage(ownMrn);
+         OutgoingMmtpMessage msg = mmtpFactory.createConnectMessage(this.ownMrn);
+         // Load rcToken if a such has been stored
+//        try {
+//            String rcToken = ReconnectTokenUtil.readRcToken();
+//
+//            msg = mmtpFactory.createConnectMessage(this.ownMrn, rcToken);
+//            log.debug("Connect to mmtp using token: {}", msg.getMessage().getProtocolMessage().getConnectMessage().getReconnectToken());
+//
+//        } catch (IOException e) {
+//            log.debug("No reconnect token available");
+//        }
 
-         log.debug("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
+        log.debug("Own mrn in connect msg is : {}", msg.getMessage().getProtocolMessage().getConnectMessage().getOwnMrn());
+        awaitConnectResponseToUuid = msg.getMessage().getUuid();
 
-         sendMessage(msg);
+        sendMessage(msg);
     }
 
     private void startReconnectLoop() {
         synchronized (reconnectLock) {
             if (reconnectTask != null && !reconnectTask.isCancelled()) return;
-            reconnectTask = scheduler.scheduleAtFixedRate(() -> {
+            reconnectTask = scheduler.scheduleWithFixedDelay(() -> {
                 if (connected) return;
                 try {
                     connect();
-                    log.info("Reconnected to MMS Router.");
+
+                    // When connected becomes true
+
+                    synchronized (reconnectLock) {
+                        while (!connected) {
+                            reconnectLock.wait(5000); // wake on notify or every 5s to re-check
+                        }
+                    }
+
+                    log.debug("Initialize subs again", routerUrl);
+                    this.gmsp.initializeSubscriptionsFromDb();
+
                     ScheduledFuture<?> toCancel;
                     synchronized (reconnectLock) {
                         toCancel = reconnectTask;
                         reconnectTask = null;
                     }
+                    log.info("Sucessfully restored state with the to MMS Router.");
                     if (toCancel != null) toCancel.cancel(false);
                 } catch (Exception e) {
                     log.debug("Reconnect failed: {}", e.getMessage());
@@ -404,7 +437,7 @@ public class MmsEdgeRouter {
             log.debug("WebSocket connection closed with status: {}", status);
             this.edgeRouterRef.webSocketSession = null;
             this.edgeRouterRef.connected = false;
-
+            edgeRouterRef.subscriptions.clear();
 
             if (status.getCode() != CloseStatus.NORMAL.getCode()) {
                 log.warn("WebSocket connection closed unexpectedly. Starting reconnect loop");

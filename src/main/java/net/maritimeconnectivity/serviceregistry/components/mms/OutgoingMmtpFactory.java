@@ -7,6 +7,8 @@ public interface OutgoingMmtpFactory {
 
     OutgoingMmtpMessage createConnectMessage(String ownMrn);
 
+    OutgoingMmtpMessage createConnectMessage(String ownMrn, String reconnectToken);
+
     OutgoingMmtpMessage createSendMessage(
             String subject,
             String sender,

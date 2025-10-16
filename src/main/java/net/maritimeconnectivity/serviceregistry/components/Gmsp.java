@@ -275,7 +275,7 @@ public class Gmsp {
         return mmsEdgeRouter.getSubscriptions();
     }
 
-    private void initializeSubscriptionsFromDb() {
+    public void initializeSubscriptionsFromDb() {
         List<SearchArea> allAreasInDb = instanceRepo.findAllInstanceSearchAreasUsed();
         ArrayList<String> allSubjectsInDb = this.sac.areaToSubjectMapper(allAreasInDb);
         //Get existing subscriptions

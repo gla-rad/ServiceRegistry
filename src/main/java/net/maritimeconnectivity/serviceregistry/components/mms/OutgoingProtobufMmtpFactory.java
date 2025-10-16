@@ -24,6 +24,19 @@ public class OutgoingProtobufMmtpFactory implements OutgoingMmtpFactory {
                 ).build());
     }
 
+    public OutgoingMmtpMessage createConnectMessage(String ownMrn, String reconnectToken) {
+        return new OutgoingMmtpMessage(MmtpMessage.newBuilder()
+                .setMsgType(MsgType.PROTOCOL_MESSAGE)
+                .setUuid(UUID.randomUUID().toString())
+                .setProtocolMessage(ProtocolMessage.newBuilder()
+                        .setProtocolMsgType(ProtocolMessageType.CONNECT_MESSAGE)
+                        .setConnectMessage(Connect.newBuilder()
+                                .setOwnMrn(ownMrn)
+                                .setReconnectToken(reconnectToken)
+                        )
+                ).build());
+    }
+
     @Override
     public OutgoingMmtpMessage createSendMessage(String subject, String sender, String body, Duration ttl) {
         long expires = Instant.now().getEpochSecond() + ttl.getSeconds();
