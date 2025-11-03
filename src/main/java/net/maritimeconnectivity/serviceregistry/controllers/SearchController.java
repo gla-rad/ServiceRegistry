@@ -106,8 +106,10 @@ public class SearchController {
                 .map(Geometry::toText)
                 .orElseGet(() -> geometryWKT.orElse("None "));
         log.debug("REST request to search for a page of Instances for query {} and geometry {}", queryString, searchGeometryString);
+
+        boolean includeAsXml = true; //Default when using instance controller
         // Perform the search
-        final Page<Instance> page = instanceService.handle(queryString, searchGeometry, pageable);
+        final Page<Instance> page = instanceService.handle(queryString, searchGeometry, pageable, includeAsXml);
         // And build the response
         return ResponseEntity.ok()
                 .headers(PaginationUtil.generatePaginationHttpHeaders(page, "/api/_search/instances"))

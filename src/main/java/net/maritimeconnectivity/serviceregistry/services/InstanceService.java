@@ -427,13 +427,21 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable) {
+    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable, boolean includeXml) {
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
-                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .map(searchResult -> {
+                    List<Instance> hits = searchResult.hits();
+
+                    if (!includeXml) {
+                        hits.forEach(instance -> instance.setInstanceAsXml(null));
+                    }
+
+                    return new PageImpl<>(hits, pageable, searchResult.total().hitCount());
+                })
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
@@ -677,11 +685,15 @@ public class InstanceService {
 
     @Transactional(readOnly = true)
     public Page<Instance> search(@Valid SearchFilterObject searchFilterObject) {
+
+        boolean includeXml = Optional.ofNullable(searchFilterObject.getIncludeXml()).orElse(false);
+
         InstanceSearchQueryBuilder.QueryParams lusceneParams = queryBuilder.build(searchFilterObject);
         return handle(
                 lusceneParams.queryString(),
                 lusceneParams.geometry(),
-                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)));
+                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)),
+                includeXml);
     }
 
 
