@@ -116,7 +116,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // Get from searchfilterobject default to false if null
-        boolean localSearchOnly = Optional.ofNullable(searchFilterObject.getLocalOnly()).orElse(true);
+        boolean localSearchOnly = Optional.of(searchFilterObject.getQuery().getLocalOnly()).orElse(true);
 
         // If at maximum only one geometry is provided, retrieve it
         final Geometry searchGeometry =  Optional.of(searchFilterObject)
