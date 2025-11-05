@@ -416,7 +416,8 @@ public class MmsEdgeRouter {
 
          @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-            log.debug("WebSocket connection established with {}", session.getRemoteAddress());
+            session.setTextMessageSizeLimit(100 * 1024 * 1024); // 100 MiB
+            log.debug("WebSocket connection established with {}, buffer {}", session.getRemoteAddress(), session.getTextMessageSizeLimit());
 
         }
 
