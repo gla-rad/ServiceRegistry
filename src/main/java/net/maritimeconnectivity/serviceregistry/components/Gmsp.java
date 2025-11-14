@@ -15,6 +15,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageD
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchObjectResult;
@@ -86,6 +87,9 @@ public class Gmsp {
 
     @Autowired
     InstanceService instanceService;
+
+    @Autowired
+    private SearchConsolidationService searchConsolidationService;
 
     public Gmsp(MmsEdgeRouter er, OutgoingMmtpFactory mmtpFactory) {
         this.globalSearchRequests = new HashMap<>();
@@ -165,6 +169,12 @@ public class Gmsp {
             //Create GlobalSearchRequest Oject
             GlobalSearchRequestDto gsr = new GlobalSearchRequestDto(messages.size());
             String gsrUuid = UUID.randomUUID().toString();
+
+            //Get uuid part of endpoint
+            String uuid = endpoint.substring(endpoint.lastIndexOf('/') + 1);
+
+            //Create consolidated result entry
+            this.searchConsolidationService.createConsolidationEntry(uuid);
 
             // Send each message to the MMS Edge Router
             for (OutgoingMmtpMessage msg : messages) {

@@ -33,39 +33,27 @@ public class RetrieveResultsController implements GenericSecomInterface {
     @Path(RETREIVE_RESULTS_INTERFACE_PATH + "/{transactionId}")
     @GET
     @Produces("application/json")
-    public SearchResult retrieveResults(@PathParam("transactionId") String transactionId, @Context final HttpServletResponse response) throws IOException {
-
-//        if (!searchConsolidationService.isRunning()) {
-//            log.debug("GMSP is not running. Refuses to process retreiveresults request");
-//            response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-//            response.flushBuffer();
-//            return null;
-//        }
+    public SearchResult retrieveResults(@PathParam("transactionId") String transactionId) {
 
         List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
-        log.debug("Size of services list: {}", services.size());
 
-        //If empty, return 404
-        if (services.isEmpty()) {
-            log.error("No results found for transactionId {}", transactionId);
-
-            try {
-                response.flushBuffer();
-                return null;
-            } catch(Exception e){}
-        } else {
-            log.debug("Found {} results for transactionId {}", services.size(), transactionId);
+        // null => 404
+        if (services == null) {
+            log.debug("User tried to retrieve results for unknown transaction {}", transactionId);
+            throw new NotFoundException("Transaction not found: " + transactionId);
         }
 
+        // empty or non-empty 200 OK
+        log.debug("Found {} results for transactionId {}", services.size(), transactionId);
 
-
-        //Wrap in SearchResult
         SearchResult searchResult = new SearchResult();
         searchResult.setTransactionId(transactionId);
         searchResult.setServices(services);
+
         return searchResult;
     }
 }
+
 
 
 

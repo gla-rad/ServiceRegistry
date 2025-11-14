@@ -26,13 +26,6 @@ public class SearchConsolidationService {
 
     private final Cache sessions;
 
-    @Autowired
-    private Gmsp gmsp;
-
-    public boolean isRunning() {
-        return gmsp.isRunning();
-    }
-
     // cm injected by Spring as it is defined as a Bean in CacheConfig
     public SearchConsolidationService(CacheManager cm) {
         this.sessions = cm.getCache(CacheConfig.CACHE_NAME);
@@ -47,6 +40,11 @@ public class SearchConsolidationService {
             log.debug("Added result {}", r.getName());
             addResult(transactionId, r);
         }
+    }
+
+    public void createConsolidationEntry(String transactionId) {
+        ConsolidatedSearchResult agg = getOrCreate(transactionId);
+        log.debug("Created consolidation entry for transactionId {}", transactionId);
     }
 
     /** Add a single result to the transaction’s consolidated set (creates the entry if absent).
@@ -64,7 +62,7 @@ public class SearchConsolidationService {
         var agg = sessions.get(transactionId, ConsolidatedSearchResult.class);
         if (agg == null) {
             log.debug("No results found for transactionId {}", transactionId);
-            return List.of();
+            return null;
         }
 
         // Capture a stable snapshot exactly once
