@@ -3,6 +3,7 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.base.SecomConstants;
@@ -33,25 +34,28 @@ public class RetrieveResultsController implements GenericSecomInterface {
     @Path(RETREIVE_RESULTS_INTERFACE_PATH + "/{transactionId}")
     @GET
     @Produces("application/json")
-    public SearchResult retrieveResults(@PathParam("transactionId") String transactionId) {
+    public Response retrieveResults(@PathParam("transactionId") String transactionId) {
 
         List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
 
-        // null => 404
         if (services == null) {
             log.debug("User tried to retrieve results for unknown transaction {}", transactionId);
-            throw new NotFoundException("Transaction not found: " + transactionId);
+
+            // Build 404 directly avoiding exception mapping as this is not necessary here
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity("Transaction not found: " + transactionId) // or some error DTO
+                    .build();
         }
 
-        // empty or non-empty 200 OK
         log.debug("Found {} results for transactionId {}", services.size(), transactionId);
 
         SearchResult searchResult = new SearchResult();
         searchResult.setTransactionId(transactionId);
-        searchResult.setServices(services);
+        searchResult.setServices(services); //may be empty, ensures user does not get 404 immediately
 
-        return searchResult;
+        return Response.ok(searchResult).build();
     }
+
 }
 
 
