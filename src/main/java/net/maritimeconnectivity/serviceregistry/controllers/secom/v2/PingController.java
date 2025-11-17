@@ -27,7 +27,7 @@ public class PingController implements GenericSecomInterface {
     // Simple ping to return OK when the MSR is running
     @Path(PING_CONTROLLER_PATH)
     @GET
-    @Produces("application/json")
+    @Produces("*/*")
     public Response ping() {
         return Response.ok().build();
     }
