@@ -175,6 +175,7 @@ public class Gmsp {
 
             //Create consolidated result entry
             this.searchConsolidationService.createConsolidationEntry(uuid);
+            log.debug("Create consolidated entry for transaction ID: {}", uuid);
 
             // Send each message to the MMS Edge Router
             for (OutgoingMmtpMessage msg : messages) {
