@@ -26,6 +26,7 @@ import net.maritimeconnectivity.serviceregistry.components.InstanceSearchQueryBu
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
+import net.maritimeconnectivity.serviceregistry.models.dto.UpdateServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
@@ -220,6 +221,31 @@ public class InstanceService {
 
         // The save and return
         return this.instanceRepo.save(instance);
+    }
+
+    @Transactional
+    public Instance updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+        log.debug("Request to update Instance from DTO: {}", updateServiceDto);
+
+        // First, retrieve the existing instance
+        final Instance instance  = this.findOne(id);
+
+        if (!Objects.equals(updateServiceDto.getVersion(), instance.getVersion())) {
+            instance.setVersion(updateServiceDto.getVersion());
+        }
+
+        if (!Objects.equals(updateServiceDto.getEndpointUri(), instance.getEndpointUri())) {
+            instance.setEndpointUri(updateServiceDto.getEndpointUri());
+        }
+
+        if (!Objects.equals(updateServiceDto.getStatusEndpoint(), instance.getStatusEndpointUri())) {
+            instance.setStatusEndpointUri(updateServiceDto.getStatusEndpoint());
+        }
+
+        // TODO - Find a solution for API DOC and ceritficates
+
+        // Save the updated instance
+        return this.save(instance);
     }
 
     /**
@@ -695,6 +721,8 @@ public class InstanceService {
                 PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)),
                 includeXml);
     }
+
+
 
 
 

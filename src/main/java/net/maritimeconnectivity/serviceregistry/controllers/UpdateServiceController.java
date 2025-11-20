@@ -5,7 +5,9 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.dto.UpdateServiceDto;
+import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import org.grad.secomv2.core.base.SecomConstants;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -16,6 +18,9 @@ import org.springframework.validation.annotation.Validated;
 public class UpdateServiceController {
 
     static final String UPDATE_SERVICE_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/updateService";
+
+    @Autowired
+    InstanceService instanceService;
 
     /**
      * PUT /v2/updateService : The purpose of this interface is to allow the client to make simple updates
@@ -34,13 +39,20 @@ public class UpdateServiceController {
     ) {
         log.debug("Received update for instanceId={} with body={}", instanceId, updateRequest);
 
-        //Get current instance
+        Long id = null;
+        try {
+            id = Long.parseLong(instanceId);
+        } catch (NumberFormatException e) {
+            log.error("Invalid ID: {}", instanceId);
+            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid instance ID format").build();
+        }
 
-        //Take copy of that
-
-        //Alter the necessary fields
-
-        //Save
+        try {
+            instanceService.updateInstanceFromDto(id, updateRequest);
+        } catch (Exception e) {
+            log.error("Error while updating instance with id={}", instanceId, e);
+            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error updating instance").build();
+        }
 
 
 
