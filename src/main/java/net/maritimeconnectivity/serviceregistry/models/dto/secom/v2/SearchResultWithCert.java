@@ -16,39 +16,60 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.secom.v2;
 
+import jakarta.validation.constraints.NotNull;
+import org.grad.secomv2.core.models.SearchObjectResult;
+
 import java.util.List;
 
 /**
- * The ResponseSearchObjectWithCert Class.
+ * The SearchResultWithCert Class.
  * <p/>
- * This class mirrors the standard SECOM ResponseSearchObject object but
+ * This class mirrors the standard SECOM SearchResul object but
  * actually uses the internal SearchObjectResultWithCert objects into
  * the search service results list. This is not actually required in the
  * application runtime, but it's useful for the tests.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class ResponseSearchObjectWithCert {
+public class SearchResultWithCert {
 
     // Class Variables
-    List<SearchObjectResultWithCert> searchServiceResult;
+    private @NotNull String transactionId;
+    private List<SearchObjectResultWithCert> services;
 
     /**
-     * Gets search service result.
+     * Gets transaction id.
      *
-     * @return the search service result
+     * @return the transaction id
      */
-    public List<SearchObjectResultWithCert> getSearchServiceResult() {
-        return searchServiceResult;
+    public String getTransactionId() {
+        return transactionId;
     }
 
     /**
-     * Sets search service result.
+     * Sets transaction id.
      *
-     * @param searchServiceResult the search service result
+     * @param transactionId the transaction id
      */
-    public void setSearchServiceResult(List<SearchObjectResultWithCert> searchServiceResult) {
-        this.searchServiceResult = searchServiceResult;
+    public void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
     }
 
+    /**
+     * Gets services.
+     *
+     * @return the services
+     */
+    public List<SearchObjectResultWithCert> getServices() {
+        return services;
+    }
+
+    /**
+     * Sets services.
+     *
+     * @param services the services
+     */
+    public void setServices(List<SearchObjectResultWithCert> services) {
+        this.services = services;
+    }
 }

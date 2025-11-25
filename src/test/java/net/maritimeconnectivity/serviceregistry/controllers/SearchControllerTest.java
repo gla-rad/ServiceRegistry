@@ -43,6 +43,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doReturn;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -97,7 +98,7 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
@@ -124,7 +125,7 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
 
         // Perform the MVC request
         MvcResult mvcResult = this.mockMvc.perform(get("/api/_search/instances")
@@ -151,7 +152,7 @@ class SearchControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
 
         // Perform the MVC request
         this.mockMvc.perform(get("/api/_search/instances")

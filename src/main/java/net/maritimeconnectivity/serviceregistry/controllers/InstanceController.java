@@ -19,7 +19,6 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
-import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -62,8 +61,6 @@ public class InstanceController {
     @Autowired
     InstanceService instanceService;
 
-    @Autowired
-    Gmsp gmsp;
     /**
      * Object Mapper from Domain to DTO.
      */

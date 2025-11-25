@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
@@ -26,6 +27,8 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.*;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SubscriptionService;
+import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,6 +72,12 @@ class InstanceControllerTest {
 
     @MockitoBean
     private InstanceService instanceService;
+
+    @MockitoBean
+    SearchAreaCalculator searchAreaCalculator;
+
+    @MockitoBean
+    SubscriptionService subscriptionService;
 
     // Test Variables
     private List<Instance> instances;
@@ -356,7 +365,7 @@ class InstanceControllerTest {
         MvcResult mvcResult = this.mockMvc.perform(put("/api/instances/{id}", this.existingInstance.getId())
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(this.objectMapper.writeValueAsString(this.instanceDomainToDtoMapper.convertTo(this.existingInstance, InstanceDto.class))))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
 

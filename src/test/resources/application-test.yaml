@@ -50,7 +50,7 @@ net:
 info:
     msr:
         name: ${service.variable.info.name}
-        mrn: ${service.variable.info.mrn}'
+        mrn: ${service.variable.info.mrn}
         url: ${service.variable.info.url}
         operatorName: ${service.variable.info.operator.name}
         operatorMrn: ${service.variable.info.operator.mrn}
@@ -59,6 +59,7 @@ info:
         copyright: 'Copyright © 2025 Maritime Connectivity Platform Consortium'
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
         profile: ${spring.profiles.active:test}
+        forceCertificateCheck: true
     mms:
         mmtp:
             duration:
