@@ -246,7 +246,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         // By default try to use the specified lucene indexing terms
         if(queryString.includes(":")){
             // Now add all terms specified - if possible
-            queryString.split().forEach(term => {
+            queryString.split(" ").forEach(term => {
                 if(term.includes(":")) {
                     termQuery = term.split(":");
                     searchParameters[termQuery[0]]=termQuery[1]
