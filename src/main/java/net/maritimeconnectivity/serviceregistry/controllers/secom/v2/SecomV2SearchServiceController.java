@@ -121,7 +121,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         boolean localSearchOnly = Optional.of(searchFilterObject.getQuery().getLocalOnly()).orElse(true);
 
-        log.info("Local seaech only set to: {}", localSearchOnly);
+        log.info("Local search only set to: {}", localSearchOnly);
 
         // If at maximum only one geometry is provided, retrieve it
         final Geometry searchGeometry =  Optional.of(searchFilterObject)
