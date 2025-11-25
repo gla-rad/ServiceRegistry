@@ -26,9 +26,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
@@ -37,25 +37,21 @@ import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
-import org.assertj.core.util.Arrays;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
-import org.grad.secomv2.core.models.ResponseSearchObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.SearchResult;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
@@ -70,6 +66,15 @@ import static java.util.function.Predicate.not;
 @Validated
 @Slf4j
 public class SecomV2SearchServiceController implements SearchServiceServiceInterface {
+
+    @Value("${info.msr.forceCertificateCheck}")
+    private boolean forceCertificateCheck;
+
+    @Value("${info.msr.url}")
+    private String msrBaseUrl;
+
+    @Value("${info.msr.mrn}")
+    private String ownMrn;
 
     /**
      * The Object Mapper.
@@ -86,6 +91,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @Autowired(required = false)
     MirClient mirClient;
 
+    @Autowired
+    Gmsp gmspClient;
     /**
      * Object Mapper from Domain to DTO.
      */
@@ -105,126 +112,54 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject)  {
+    public SearchResult searchService(@Valid SearchFilterObject searchFilterObject)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
+        // Get from searchfilterobject default to false if null
+
+        log.info("Search filter object value {}", searchFilterObject.getQuery().getLocalOnly());
+
+        boolean localSearchOnly = Optional.of(searchFilterObject.getQuery().getLocalOnly()).orElse(true);
+
+        log.info("Local seaech only set to: {}", localSearchOnly);
+
         // If at maximum only one geometry is provided, retrieve it
-        final Geometry searchGeometry =  Optional.ofNullable(searchFilterObject)
+        final Geometry searchGeometry =  Optional.of(searchFilterObject)
                 .map(SearchFilterObject::getGeometry)
                 .map(this::parseGeometry)
                 .orElse(null);
 
-        // Check if free text
-        String query = new String();
 
-        // Now build the query if we have to
-        if(Objects.nonNull(searchFilterObject) && Objects.nonNull(searchFilterObject.getQuery())) {
-            // Handle the name filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getName())) {
-                query = this.addToQuery(query, "name", searchFilterObject.getQuery().getName(), BooleanOperator.AND);
-            }
+        // Perform the search locally
+        final Page<Instance> instancesPage = this.instanceService.search(searchFilterObject);
 
-            // Handle the status filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getStatus())) {
-                query = this.addToQuery(query, "status", searchFilterObject.getQuery().getStatus(), BooleanOperator.AND);
-            }
+        log.info("Found {} instances for search filter object", instancesPage.getTotalElements());
 
-            // Handle the version filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getVersion())) {
-                query = this.addToQuery(query, "version", searchFilterObject.getQuery().getVersion(), BooleanOperator.AND);
-            }
+        String transactionId = UUID.randomUUID().toString();
 
-            // Handle the description filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getDescription())) {
-                query = this.addToQuery(query, "description", searchFilterObject.getQuery().getDescription(), BooleanOperator.AND);
-            }
+        //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
+        String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
 
-            // Handle the specification filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getSpecificationId())) {
-                query = this.addToQuery(query, "specificationId", searchFilterObject.getQuery().getSpecificationId(), BooleanOperator.AND);
-            }
 
-            // Handle the design ID filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getDesignId())) {
-                query = this.addToQuery(query, "designId", searchFilterObject.getQuery().getDesignId(), BooleanOperator.AND);
-            }
+        //Aggreagator
 
-            // Handle the instance ID filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getInstanceId())) {
-                query = this.addToQuery(query, "instanceId", searchFilterObject.getQuery().getInstanceId(), BooleanOperator.AND);
-            }
+        //Propagate the search to the GMSP if available
+        String gmspRequestUuid = null;
+        if (!localSearchOnly) {
 
-            // Handle the service Type filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getServiceType())) {
-                query = this.addToQuery(query, "serviceType", searchFilterObject.getQuery().getServiceType(), BooleanOperator.AND);
-            }
-
-            // Handle the UN/LOCODE filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getUnlocode())) {
-                query = this.addToQuery(query, "unlocode", searchFilterObject.getQuery().getUnlocode(), BooleanOperator.AND);
-            }
-
-            // Handle the endpoint URI filter - make sure it's not empty
-            if (Objects.nonNull(searchFilterObject.getQuery().getEndpointUri()) && Strings.isNotBlank(searchFilterObject.getQuery().getEndpointUri().getPath())) {
-                query = this.addToQuery(query, "endpointUri", searchFilterObject.getQuery().getEndpointUri().toString(), BooleanOperator.AND);
-            }
-
-            // Handle the data product type filter
-            if (Objects.nonNull(searchFilterObject.getQuery().getDataProductType())) {
-                query = this.addToQuery(query, "dataProductType", searchFilterObject.getQuery().getDataProductType().name(), BooleanOperator.AND);
-            }
-
-            // Handle the combination of MMSI and IMO filters
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getMmsi()) && Strings.isNotBlank(searchFilterObject.getQuery().getImo())) {
-                // Open the sub-query for an OR statement
-                query += Strings.isBlank(query) ? "(" : " AND (";
-
-                // Add the sub-query statement
-                query = this.addToQuery(query, "mmsi", searchFilterObject.getQuery().getMmsi(), BooleanOperator.OR);
-                query = this.addToQuery(query, "imo", searchFilterObject.getQuery().getImo(), BooleanOperator.OR);
-
-                // Close the sub-query statement
-                query += ")";
-            }
-            // Otherwise, handle the the MMSI and IMO filters separately
-            else {
-                if (Strings.isNotBlank(searchFilterObject.getQuery().getMmsi())) {
-                    query = this.addToQuery(query, "mmsi", searchFilterObject.getQuery().getMmsi(), BooleanOperator.AND);
-                }
-
-                if (Strings.isNotBlank(searchFilterObject.getQuery().getImo())) {
-                    query = this.addToQuery(query, "imo", searchFilterObject.getQuery().getImo(), BooleanOperator.AND);
-                }
-            }
-
-            // Handle the keywords filter
-            if (!Arrays.isNullOrEmpty(searchFilterObject.getQuery().getKeywords())) {
-                // Open the sub-query for an OR statement
-                query += Strings.isBlank(query) ? "(" : " AND (";
-
-                for (String keyword : searchFilterObject.getQuery().getKeywords()) {
-                    query = this.addToQuery(query, "keywords", keyword, BooleanOperator.AND);
-                }
-
-                // Close the sub-query statement
-                query += ")";
-            }
+            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "", searchFilterObject, searchGeometry);
         }
-
-        // Perform the search
-        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
-                query,
-                searchGeometry,
-                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE))
-        );
 
         // Get the search object results and if possible also update the
         // certificates through the MIR.
         List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
 
+        // Foreach SearchObjectResult set the sourceMSR
+        searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
+
         // Careful cause depending on the configuration an MIR client might not
         // be available. In those case the mirClient will be null.
-        if(this.mirClient != null) {
+        if(this.mirClient != null && this.forceCertificateCheck) {
             for (SearchObjectResult searchObject : searchObjectResults) {
                 try {
                     // Retrieve the certificates from the MIR
@@ -258,9 +193,12 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         }
 
         // Finally build the response
-        ResponseSearchObject responseSearchObject = new ResponseSearchObject();
-        responseSearchObject.setSearchServiceResult(searchObjectResults);
-        return responseSearchObject;
+        SearchResult searchResult = new SearchResult();
+        searchResult.setTransactionId(transactionId);
+
+        searchResult.setServices(searchObjectResults);
+
+        return searchResult;
     }
 
     /**
@@ -297,27 +235,4 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
     }
-
-    /**
-     * A helper function to construct the SECOM discovery search search query.
-     * This is composed of various search filters alongside their valued,
-     * connected through boolean operators, e.g. AND/OR.
-     *
-     * @param query         The query constructed so far
-     * @param filterName    The new filter name to be added
-     * @param filterValue   The new filter value to be added
-     * @param operator      The boolean operator to be used
-     * @return the constructed search query
-     */
-    protected String addToQuery(String query, String filterName, String filterValue, BooleanOperator operator) {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(query);
-        if (stringBuilder.isEmpty() || query.endsWith("(")) {
-            stringBuilder.append(String.format("%s:%s", filterName, filterValue.replaceAll(":","\\\\:")));
-        } else {
-            stringBuilder.append(String.format(" %s %s:%s", operator.name(), filterName, filterValue.replaceAll(":","\\\\:")));
-        }
-        return stringBuilder.toString();
-    }
-
 }

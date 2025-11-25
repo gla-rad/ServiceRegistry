@@ -19,16 +19,18 @@ package net.maritimeconnectivity.serviceregistry.controllers;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDtDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.InstanceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPage;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.utils.HeaderUtil;
-import net.maritimeconnectivity.serviceregistry.utils.PaginationUtil;
+import net.maritimeconnectivity.serviceregistry.services.SubscriptionService;
+import net.maritimeconnectivity.serviceregistry.utils.*;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +39,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -61,6 +62,8 @@ public class InstanceController {
     @Autowired
     InstanceService instanceService;
 
+    @Autowired
+    Gmsp gmsp;
     /**
      * Object Mapper from Domain to DTO.
      */
@@ -78,6 +81,12 @@ public class InstanceController {
      */
     @Autowired
     DomainDtoMapper<Instance, InstanceDtDto> instanceDomainToDtDtoMapper;
+
+    @Autowired
+    SearchAreaCalculator searchAreaCalculator;
+
+    @Autowired
+    SubscriptionService subscriptionService;
 
     /**
      * Setup up addition model mapper configurations.
@@ -194,13 +203,31 @@ public class InstanceController {
      */
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<InstanceDto> createInstance(@Valid @RequestBody InstanceDto instanceDto) throws URISyntaxException {
-        log.debug("REST request to save Instance : {}", instanceDto);
+        log.debug("Incoming REST request to save Instance : {}", instanceDto);
         if (instanceDto.getId() != null) {
             return ResponseEntity.badRequest()
                     .headers(HeaderUtil.createFailureAlert("instance", "idexists", "A new instance cannot already have an ID"))
                     .build();
         }
-        return this.saveInstance(this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class), true);
+
+        //This is a little hack which we should probably put in a service at a later point, but it will optimize
+        // later queries a lot, such that we avoid re-calculating all indexes
+        Instance newInstance = this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class);
+
+        // Get geometry if exists in DTO
+        if (instanceDto.getGeometry() != null) {
+            List<SearchArea> areas = searchAreaCalculator.findIntersectingSearchAreas(instanceDto.getGeometry());
+            log.debug("Calculated search areas for instance {} : areas {}", instanceDto.getName(), areas.size());
+            newInstance.addSearchAreas(areas);
+        }
+
+        ResponseEntity<InstanceDto> resp = this.saveInstance(newInstance, true);
+        if (resp.getStatusCode().is2xxSuccessful()) {
+            subscriptionService.updateSubscriptions(newInstance);
+        }
+        return resp;
+
+
     }
 
     /**
@@ -215,7 +242,19 @@ public class InstanceController {
     public ResponseEntity<InstanceDto> updateInstance(@PathVariable Long id, @Valid @RequestBody InstanceDto instanceDto) throws URISyntaxException {
         log.debug("REST request to update Instance : {}", instanceDto);
         instanceDto.setId(id);
-        ResponseEntity<InstanceDto> response = saveInstance(this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class), false);
+        Instance instance = this.instanceDtoToDomainMapper.convertTo(instanceDto, Instance.class);
+
+        // Get geometry if exists in DTO
+        if (instanceDto.getGeometry() != null) {
+            List<SearchArea> areas = searchAreaCalculator.findIntersectingSearchAreas(instanceDto.getGeometry());
+            log.debug("Calculated search areas for instance {} : areas {}", instanceDto.getName(), areas.size());
+            instance.updateSearchAreas(areas);
+        }
+
+        ResponseEntity<InstanceDto> response = this.saveInstance(instance, true);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            subscriptionService.updateSubscriptions(instance);
+        }
         return response;
     }
 
@@ -228,7 +267,10 @@ public class InstanceController {
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> deleteInstance(@PathVariable Long id) {
         log.debug("REST request to delete Instance : {}", id);
+
         this.instanceService.delete(id);
+        subscriptionService.removeSubscriptions();
+
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString()))
                 .build();
@@ -305,5 +347,7 @@ public class InstanceController {
                         .headers(HeaderUtil.createEntityUpdateAlert("instance", instance.getId().toString()))
                         .body(this.instanceDomainToDtoMapper.convertTo(instance, InstanceDto.class));
     }
+
+
 
 }

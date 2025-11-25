@@ -3,6 +3,12 @@ server:
     servlet:
         context-path: ${service.variable.contextPath}
 
+logging:
+    level:
+        root: INFO
+        net.maritimeconnectivity.serviceregistry: DEBUG
+
+
 # Springboot Configuration
 spring:
     application:
@@ -19,7 +25,7 @@ spring:
                             configurer: >-
                                 class:net.maritimeconnectivity.serviceregistry.config.MSRLuceneAnalysisConfigurer
                     schema_management:
-                        strategy: validate
+                        strategy: create-or-validate
         generate-ddl: true
         hibernate:
             ddl-auto: update
@@ -115,16 +121,39 @@ net:
 info:
     msr:
         name: ${service.variable.info.name}
-        mrn: ${service.variable.info.mrn}'
+        mrn: ${service.variable.info.mrn}
         url: ${service.variable.info.url}
+        localSearchOnly: false
         operatorName: ${service.variable.info.operator.name}
         operatorMrn: ${service.variable.info.operator.mrn}
         operatorContact: ${service.variable.info.operator.contact}
         operatorUrl: ${service.variable.info.operator.url}
-        copyright: 'Copyright © 2024 Maritime Connectivity Platform Consortium'
+        copyright: 'Copyright © 2025 Maritime Connectivity Platform Consortium'
         projectLocation: 'https://github.com/maritimeconnectivity/ServiceRegistry'
         profile: ${spring.profiles.active:test}
-
+        forceCertificateCheck: false
+    mms:
+        mmtp:
+            duration:
+                minutes: 60
+        router:
+            url: wss://eu-router.dmc.international:8080
+        ownEdgerouter:
+            keyStore:
+                    path: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
+                    password: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
+            rootCA:
+                path:
+    gmsp:
+        search:
+            globalSubject: 'urn:mrn:mcp:msr:search:global'
 eureka:
     client:
         enabled: false
+
+secom:
+    security:
+        ssl:
+            keystore: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
+            keystorePassword: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
+            insecureSslPolicy: true

@@ -221,11 +221,13 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
             }
         }
 
+        boolean includeXml = true; //This always holds true for the old v1 API
         // Perform the search
-        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
+        final Page<Instance> instancesPage = this.instanceService.handle(
                 query,
                 searchGeometry,
-                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
+                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)),
+                includeXml
         );
 
         // Get the search object results and if possible also update the

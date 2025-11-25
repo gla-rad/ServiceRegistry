@@ -171,6 +171,7 @@ public class Instance implements Serializable, JsonSerializable {
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
     private Set<Doc> docs = new HashSet<>();
 
+
     /**
      * The Designs map between Service Design MRNs and Versions.
      */
@@ -190,6 +191,22 @@ public class Instance implements Serializable, JsonSerializable {
             extraction = @ContainerExtraction(BuiltinContainerExtractors.MAP_KEY)
     )
     Map<String, String> specifications = new HashMap<>();
+
+
+    @ManyToMany
+    @JoinTable(
+            name = "instance_search_area",
+            joinColumns = @JoinColumn(
+                    name = "instance_id",
+                    foreignKey = @ForeignKey(name = "fk_isa_instance")
+            ),
+            inverseJoinColumns = @JoinColumn(
+                    name = "search_area_id",
+                    foreignKey = @ForeignKey(name = "fk_isa_search_area")
+            )
+    )
+    private Set<SearchArea> searchAreas = new HashSet<>();
+
 
     /**
      * Gets id.
@@ -642,12 +659,36 @@ public class Instance implements Serializable, JsonSerializable {
         this.setGeometry(GeometryJSONConverter.convertToGeometry(geometry));
     }
 
+    public Set<SearchArea> getSearchAreas() {
+        return searchAreas;
+    }
+
+    private void addSearchArea(SearchArea area) {
+        if (area != null) { this.searchAreas.add(area); }
+    }
+
+    public void addSearchAreas(Collection<SearchArea> areas) {
+        if (areas == null) return;
+        for (SearchArea a : areas) addSearchArea(a);
+    }
+
+    // Add or remove search areas to match the provided list
+    public void updateSearchAreas(List<SearchArea> searchAreas) {
+        // Remove any areas that are not in the new list
+        this.searchAreas.removeIf(area -> !searchAreas.contains(area));
+        // Add any new areas that are not already present
+        this.searchAreas.addAll(searchAreas);
+    }
+
     /**
      * Overrides the equality operator of the class.
      *
      * @param o the object to check the equality
      * @return whether the two objects are equal
      */
+
+
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

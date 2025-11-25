@@ -1,6 +1,3 @@
-/**
- * Global variables
- */
 var searchMap = undefined;
 var instancesTable = undefined;
 var drawControl = undefined;
@@ -8,6 +5,13 @@ var drawControlFull = undefined;
 var drawControlEditOnly = undefined;
 var instanceItems = undefined;
 var geoSpatialSearchMode = "geoJson";
+var currentTransactionId = null;
+var retrieveTimers = [];
+var countdownIntervalId = null;
+var countdownRemainingMs = 0;
+const GLOBAL_COUNTDOWN_TOTAL_MS = 10000;
+
+
 
 /**
  * The Instances Search Table Column Definitions
@@ -55,7 +59,23 @@ var columnDefs = [{
     type: "hidden",
     visible: false,
     searchable: false
-}];
+}, {
+    data: "localResult",
+    title: "Local Result",
+    readonly: true,
+    hoverMsg: "Whether the result was found locally",
+    placeholder: "Whether the result was found locally",
+}, {
+    data: "sourceMSR",
+    title: "Source MSR",
+    readonly: true,
+    hoverMsg: "The MRN of the source MSR",
+    placeholder: "The MRN of the source MSR"
+}
+
+
+
+];
 
 /**
  * Standard jQuery initialisation of the page.
@@ -168,9 +188,14 @@ function searchForInstances() {
     if((!queryString || queryString.trim() === "") && (!queryGeometry)) {
         showError("Please provide a valid query to proceed with the search...");
         destroyInstancesTable();
+        hideGlobalSearchLoading()
         return;
     }
-
+    if (globalSearch) {
+        showGlobalSearchLoading()
+    } else {
+        hideGlobalSearchLoading()
+    }
     // Perform the api search
     loadInstancesTable(queryString, JSON.stringify(queryGeometry), $("#geometryWKT").val(), globalSearch);
 }
@@ -212,26 +237,47 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instanceItems.clearLayers();
     destroyInstancesTable();
 
+    // List of keywords
+    let keywords = [];
+    if (queryString && queryString.trim() !== "") {
+        keywords.push(queryString.trim());
+    }
+
     // Construct the SECOM search filter object
+    let searchParameters = {
+        'keywords': keywords,
+        'localOnly': !globalSearch,
+    }
+
     let searchFilterObject = {
-        'query': null,
+        'query': searchParameters,
         'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
-        'freetext': queryString
     }
 
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         processing: true,
         ajax: {
-            url: `api/secom/v1/searchService`,
+            url: `api/secom/v2/searchService`,
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             crossDomain: true,
-            data: function (d) {
+
+            data: function () {
                 return JSON.stringify(searchFilterObject);
             },
             dataSrc: function (json) {
-                return  (json != undefined && json.hasOwnProperty('searchServiceResult'))? json.searchServiceResult : [];
+                if (!json) return [];
+
+                // Ensure services is an array and tag local results
+                if (Array.isArray(json.services)) {
+                    return json.services.map(service => ({
+                        ...service,
+                        localResult: true
+                    }));
+                }
+
+                return [];
             },
             error: function (jqXHR, ajaxOptions, thrownError) {
                 showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));
@@ -245,10 +291,20 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         responsive: true
     });
 
+    // When the initial searchService Ajax finishes, capture transactionId and schedule follow-ups if global search
+    if (globalSearch) {
+        instancesTable.on('xhr.dt', function (e, settings, json) {
+            if (json && json.transactionId) {
+                currentTransactionId = json.transactionId;
+                scheduleRetrieveResults(currentTransactionId);
+            }
+        });
+    }
+
     // On an instance selection, draw the area on the map
-    instancesTable.on( 'select', function ( e, dt, type, indexes ) {
-        if ( type === 'row' ) {
-            loadGeometryOnMap(dt.row({selected : true}).data().geometry, searchMap, instanceItems, false);
+    instancesTable.on('select', function (e, dt, type, indexes) {
+        if (type === 'row') {
+            loadGeometryOnMap(dt.row({ selected: true }).data().geometry, searchMap, instanceItems, false);
         }
     });
 
@@ -264,6 +320,55 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         $modalDiv.modal("toggle");
     });
 }
+
+/**
+ * Schedule retrieveResults calls at +3s, +6s, +10s for the given transaction ID.
+ */
+function scheduleRetrieveResults(txId) {
+    clearRetrieveTimers();
+
+    [3000, 6000, 10000].forEach(ms => {
+        const isLast = (ms === 10000);
+        const t = setTimeout(() => fetchAndMergeResults(txId, isLast), ms);
+        retrieveTimers.push(t);
+    });
+}
+
+
+/**
+ * Clear any pending retrieve timers.
+ */
+function clearRetrieveTimers() {
+    retrieveTimers.forEach(clearTimeout);
+    retrieveTimers = [];
+}
+
+/**
+ * Fetch additional results for a transaction and append them to the table.
+ * Server handles duplicate suppression.
+ */
+function fetchAndMergeResults(txId, isLast) {
+
+
+    $.ajax({
+        url: `api/secom/v2/retrieveResults/${encodeURIComponent(txId)}`,
+        type: 'GET',
+        dataType: 'json',
+        success: function (data) {
+            const services = (data && Array.isArray(data.services)) ? data.services : [];
+            if (services.length && instancesTable) {
+                const rows = services.map(s => ({ ...s, localResult: false }));
+                instancesTable.rows.add(rows).draw(false);
+            }
+            if (isLast) markGlobalSearchComplete();
+        },
+        error: function () {
+            // Even on error, we consider the last cycle “complete”.
+            if (isLast) markGlobalSearchComplete();
+        }
+    });
+}
+
 
 /**
  * Destroys the instance results table so that it get removed from the DOM and
@@ -432,3 +537,49 @@ function clearInstanceEditPanel($modalDiv) {
     $modalDiv.find('#xml-input').val(null);
 }
 
+function startGlobalSearchCountdown() {
+    stopGlobalSearchCountdown();
+    countdownRemainingMs = GLOBAL_COUNTDOWN_TOTAL_MS;
+    updateGlobalSearchCountdownLabel();
+    countdownIntervalId = setInterval(() => {
+        countdownRemainingMs = Math.max(0, countdownRemainingMs - 1000);
+        updateGlobalSearchCountdownLabel();
+        if (countdownRemainingMs === 0) {
+            stopGlobalSearchCountdown();
+        }
+    }, 1000);
+}
+
+function stopGlobalSearchCountdown() {
+    if (countdownIntervalId) {
+        clearInterval(countdownIntervalId);
+        countdownIntervalId = null;
+    }
+}
+
+function updateGlobalSearchCountdownLabel() {
+    const secs = (countdownRemainingMs / 1000).toFixed(0);
+    $("#globalSearchCountdown").text(`(${secs}s)`);
+}
+
+function markGlobalSearchComplete() {
+    stopGlobalSearchCountdown();
+    $("#globalSearchText").text("Global search complete");
+    $("#globalSearchCountdown").text(""); // clear countdown
+    $("#globalSearchSpinner").hide();
+}
+
+
+function showGlobalSearchLoading() {
+    $("#globalSearchText").text("Fetching global search…");
+    $("#globalSearchCountdown").text("(10)");
+    $("#globalSearchSpinner").show();           // <- make spinner visible
+    $("#globalSearchStatus").removeClass("d-none");
+    startGlobalSearchCountdown();
+}
+
+
+function hideGlobalSearchLoading() {
+    stopGlobalSearchCountdown();
+    $("#globalSearchStatus").addClass("d-none");
+}
