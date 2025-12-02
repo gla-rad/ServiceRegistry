@@ -668,7 +668,7 @@ class InstanceServiceTest {
         doReturn(mockedQuery).when(this.instanceService).getSearchInstanceQueryByQueryString(any(), any(), any());
 
         // Perform the service call
-        Page<Instance> result = this.instanceService.handle("search-field:search-value", this.point, this.pageable);
+        Page<Instance> result = this.instanceService.handle("search-field:search-value", this.point, this.pageable, false);
 
         // Validate the result
         assertNotNull(result);
