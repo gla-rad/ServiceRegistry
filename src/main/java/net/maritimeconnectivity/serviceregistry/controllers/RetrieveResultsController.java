@@ -1,8 +1,6 @@
-package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
+package net.maritimeconnectivity.serviceregistry.controllers;
 
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
@@ -14,14 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.io.IOException;
 import java.util.List;
 
 @Component
 @Path("/")
 @Slf4j
 @Validated
-public class RetrieveResultsController implements GenericSecomInterface {
+public class RetrieveResultsController {
 
     /**
      * The Interface Endpoint Path.

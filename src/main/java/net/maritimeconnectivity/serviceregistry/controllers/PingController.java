@@ -1,4 +1,4 @@
-package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
+package net.maritimeconnectivity.serviceregistry.controllers;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
 @Path("/")
 @Slf4j
 @Validated
-public class PingController implements GenericSecomInterface {
+public class PingController {
 
     /**
      * The Interface Endpoint Path.

@@ -1,4 +1,4 @@
-package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
+package net.maritimeconnectivity.serviceregistry.controllers;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -27,7 +27,7 @@ import java.util.List;
 @Path("/")
 @Slf4j
 @Validated
-public class UploadResultsController implements GenericSecomInterface {
+public class UploadResultsController {
 
     /**
      * The Interface Endpoint Path.
