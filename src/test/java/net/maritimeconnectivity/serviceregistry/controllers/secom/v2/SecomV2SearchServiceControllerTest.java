@@ -74,8 +74,6 @@ class SecomV2SearchServiceControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    public DomainDtoMapper<?,?> searchObjectResultMapper;
 
     @MockitoBean
     private InstanceService instanceService;
