@@ -22,12 +22,12 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.*;
+import net.maritimeconnectivity.serviceregistry.utils.KeyStoreUtil;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-
-import static org.mockito.Mockito.mock;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 /**
  * This is a test only configuration that will get activated when the "test"
@@ -110,5 +110,11 @@ public class TestingConfiguration {
     public DomainDtoMapper searchObjectResultMapper() {
         return new DomainDtoMapper<Instance, SearchObjectResult>();
     }
+
+    /**
+     * Mock the keystore utility so that we don't connect to the MMS.
+     */
+    @MockitoBean
+    KeyStoreUtil keyStoreUtil;
 
 }

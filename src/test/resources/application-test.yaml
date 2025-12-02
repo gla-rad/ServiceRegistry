@@ -50,7 +50,7 @@ net:
 info:
     msr:
         name: ${service.variable.info.name}
-        mrn: ${service.variable.info.mrn}'
+        mrn: ${service.variable.info.mrn}
         url: ${service.variable.info.url}
         operatorName: ${service.variable.info.operator.name}
         operatorMrn: ${service.variable.info.operator.mrn}
