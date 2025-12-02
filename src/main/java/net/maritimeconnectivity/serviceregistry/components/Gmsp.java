@@ -37,23 +37,27 @@ import java.security.cert.CertificateException;
 import java.time.Duration;
 import java.util.*;
 
-/*
-Implements the GMSP (Global Maritime Search Platform) functionality for the Service Registry.
+/**
+ * Implements the GMSP (Global Maritime Search Platform) functionality for the
+ * Service Registry.
+ *
+ * @author Jakob Svenningsen (email: jakob@dmc.international)
  */
 @Component
 @Slf4j
 public class Gmsp {
 
-    private final String G1191_SEARCHAREA_PREFIX = "urn:mrn:mcp:msr:search:searcharea:";
-
-    @Autowired
-    SecomConfigProperties secomConfigProperties;
+    @Value("${info.msr.mrn}")
+    private String ownMrn;
 
     @Value("${info.mms.mmtp.duration.minutes}")
     private long messageDurationMinutes;
 
     @Value("${info.gmsp.search.globalSubject}")
     private String globalSearchSubject;
+
+    @Autowired
+    SecomConfigProperties secomConfigProperties;
 
     @Autowired
     ObjectMapper objectMapper;
@@ -70,18 +74,6 @@ public class Gmsp {
     @Autowired
     private InstanceSearchQueryBuilder queryBuilder;
 
-    @Getter
-    private boolean running = false;
-
-    private final MmsEdgeRouter mmsEdgeRouter;
-
-    private final OutgoingMmtpFactory mmtpFactory;
-
-    private final HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
-
-    @Value("${info.msr.mrn}")
-    private String ownMrn;
-
     @Autowired
     DomainDtoMapper<Instance, SearchObjectResult> searchObjectResultMapper;
 
@@ -91,6 +83,20 @@ public class Gmsp {
     @Autowired
     private SearchConsolidationService searchConsolidationService;
 
+    @Getter
+    private boolean running = false;
+
+    // Class Variables
+    private final MmsEdgeRouter mmsEdgeRouter;
+    private final OutgoingMmtpFactory mmtpFactory;
+    private final HashMap<String, GlobalSearchRequestDto> globalSearchRequests;
+
+    /**
+     * The GMSP component constructor.
+     *
+     * @param er the MMS edge router
+     * @param mmtpFactory the MMPT factory
+     */
     public Gmsp(MmsEdgeRouter er, OutgoingMmtpFactory mmtpFactory) {
         this.globalSearchRequests = new HashMap<>();
         this.mmsEdgeRouter = er;

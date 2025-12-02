@@ -237,18 +237,29 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instanceItems.clearLayers();
     destroyInstancesTable();
 
-    // List of keywords
-    let keywords = [];
-    if (queryString && queryString.trim() !== "") {
-        keywords.push(queryString.trim());
-    }
-
-    // Construct the SECOM search filter object
+    // Construct the SECOM search parameters object
     let searchParameters = {
-        'keywords': keywords,
-        'localOnly': !globalSearch,
+        'localOnly': !globalSearch
+    }
+    // Try to parse the query string
+    if (queryString && queryString.trim() !== "") {
+        // By default try to use the specified lucene indexing terms
+        if(queryString.includes(":")){
+            // Now add all terms specified - if possible
+            queryString.split(" ").forEach(term => {
+                if(term.includes(":")) {
+                    termQuery = term.split(":");
+                    searchParameters[termQuery[0]]=termQuery[1]
+                }
+            });
+        }
+        // If no query terms where specified, just use the keywords
+        else {
+            searchParameters["keywords"] = queryString.split();
+        }
     }
 
+    // Finally we can declare the SECOM search filter object
     let searchFilterObject = {
         'query': searchParameters,
         'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),

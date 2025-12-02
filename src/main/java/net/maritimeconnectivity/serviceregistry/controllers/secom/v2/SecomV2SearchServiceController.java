@@ -67,7 +67,7 @@ import static java.util.function.Predicate.not;
 @Slf4j
 public class SecomV2SearchServiceController implements SearchServiceServiceInterface {
 
-    @Value("${info.msr.forceCertificateCheck}")
+    @Value("${info.msr.forceCertificateCheck:false}")
     private boolean forceCertificateCheck;
 
     @Value("${info.msr.url}")
@@ -121,7 +121,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         boolean localSearchOnly = Optional.of(searchFilterObject.getQuery().getLocalOnly()).orElse(true);
 
-        log.info("Local seaech only set to: {}", localSearchOnly);
+        log.info("Local search only set to: {}", localSearchOnly);
 
         // If at maximum only one geometry is provided, retrieve it
         final Geometry searchGeometry =  Optional.of(searchFilterObject)
@@ -195,9 +195,9 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         // Finally build the response
         SearchResult searchResult = new SearchResult();
         searchResult.setTransactionId(transactionId);
-
         searchResult.setServices(searchObjectResults);
 
+        // And return
         return searchResult;
     }
 
