@@ -17,6 +17,8 @@
 package net.maritimeconnectivity.serviceregistry;
 
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.config.GlobalConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.Doc;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -110,11 +112,4 @@ public class TestingConfiguration {
     public DomainDtoMapper searchObjectResultMapper() {
         return new DomainDtoMapper<Instance, SearchObjectResult>();
     }
-
-    /**
-     * Mock the keystore utility so that we don't connect to the MMS.
-     */
-    @MockitoBean
-    KeyStoreUtil keyStoreUtil;
-
 }

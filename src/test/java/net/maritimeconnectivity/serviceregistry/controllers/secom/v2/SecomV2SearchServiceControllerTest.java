@@ -17,6 +17,9 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
@@ -37,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -56,12 +60,12 @@ import java.util.*;
 import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class SecomV2SearchServiceControllerTest {
 
     /**
@@ -73,12 +77,20 @@ class SecomV2SearchServiceControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-
     @MockitoBean
     private InstanceService instanceService;
 
     @MockitoBean
     private MirClient mirClient;
+
+    @MockitoBean
+    private MmsEdgeRouter mmsEdgeRouter;
+
+    @MockitoBean
+    private Gmsp gmsp;
+
+
+
 
     // Test Variables
     private List<Instance> instances;
@@ -221,6 +233,9 @@ class SecomV2SearchServiceControllerTest {
         doReturn(page).when(this.instanceService).search(any());
         doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any(), any());
         doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
+
+        doNothing().when(this.mmsEdgeRouter).init();
+        doReturn("").when(this.gmsp).globalSearch(any(), any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
