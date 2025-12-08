@@ -27,7 +27,7 @@
 		<hibernate.spatial.version>6.4.4.Final</hibernate.spatial.version>
 		<lucene.spatial.version>9.8.0</lucene.spatial.version>
 		<secomlib-version>0.0.53-SNAPSHOT</secomlib-version>
-		<secomv2lib-version>0.0.1-SNAPSHOT</secomv2lib-version>
+		<secomv2lib-version>0.0.3-SNAPSHOT</secomv2lib-version>
 	</properties>
 
 	<repositories>
@@ -120,7 +120,7 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-spatial</artifactId>
 			<version>${hibernate.spatial.version}</version>
 		</dependency>

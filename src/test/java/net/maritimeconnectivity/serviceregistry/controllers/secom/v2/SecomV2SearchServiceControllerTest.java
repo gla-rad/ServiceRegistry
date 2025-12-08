@@ -23,13 +23,9 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.ResponseSearchObjectWithCert;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import org.grad.secomv2.core.models.ResponseSearchObject;
-import org.grad.secomv2.core.models.SearchFilterObject;
-import org.grad.secomv2.core.models.SearchObjectResult;
-import org.grad.secomv2.core.models.SearchParameters;
+import org.grad.secomv2.core.models.*;
+import org.grad.secomv2.core.models.SearchResult;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -157,15 +153,18 @@ class SecomV2SearchServiceControllerTest {
     @Test
     void testSearchGeoJSON() {
         // Create the search filter object
-        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature("signature");
 
         // Create a mocked paging response
+        pageable = PageRequest.of(0, Integer.MAX_VALUE);
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
@@ -175,23 +174,21 @@ class SecomV2SearchServiceControllerTest {
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
-                        .queryParam("page", 0)
-                        .queryParam("pageSize", Integer.MAX_VALUE)
                         .build())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(ResponseSearchObject.class)
+                .expectBody(SearchResult.class)
                 .consumeWith(response -> {
-                    ResponseSearchObject result = response.getResponseBody();
+                    SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getSearchServiceResult());
-                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
+                    assertNotNull(result.getServiceInstance());
+                    assertEquals(this.instances.size(), result.getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResult searchObjectResult: result.getSearchServiceResult()) {
-                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult: result.getServiceInstance()) {
+                        int i = result.getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
@@ -212,13 +209,15 @@ class SecomV2SearchServiceControllerTest {
     @Test
     void testSearchGeoJSONWithCerts() {
         // Create the search filter object
-        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature("signature");
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
@@ -239,38 +238,31 @@ class SecomV2SearchServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(ResponseSearchObjectWithCert.class)
+                .expectBody(SearchResult.class)
                 .consumeWith(response -> {
-                    ResponseSearchObjectWithCert result = response.getResponseBody();
+                    SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getSearchServiceResult());
-                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
+                    assertNotNull(result.getServiceInstance());
+                    assertEquals(this.instances.size(), result.getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResultWithCert searchObjectResult : result.getSearchServiceResult()) {
-                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
-                        assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
-                        assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
-                        assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
-                        assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
+                    for(ServiceInstanceObject serviceInstance : result.getServiceInstance()) {
+                        int i = result.getServiceInstance().indexOf(serviceInstance);
+                        assertEquals(this.instances.get(i).getInstanceId(), serviceInstance.getInstanceId());
+                        assertEquals(this.instances.get(i).getName(), serviceInstance.getName());
+                        assertEquals(this.instances.get(i).getStatus().toString(), serviceInstance.getStatus());
+                        assertEquals(this.instances.get(i).getVersion(), serviceInstance.getVersion());
+                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), serviceInstance.getInstanceAsXml());
+                        assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, serviceInstance.getDataProductType());
 
                         // Now also check the certificates
-                        assertNotNull((searchObjectResult).getCertificates());
-                        assertEquals(1, (searchObjectResult).getCertificates().size());
+                        assertNotNull((serviceInstance).getCertificates());
+                        assertEquals(1, (serviceInstance).getCertificates().size());
 
                         // Try to compare the MIR/MSR certificate responses
-                        final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final McpCertificateDto msrResponse = searchObjectResult.getCertificates().getFirst();
-                        assertEquals(mirResponse.getId(), msrResponse.getId());
-                        assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
-                        assertEquals(mirResponse.getStart(), msrResponse.getStart());
-                        assertEquals(mirResponse.getEnd(), msrResponse.getEnd());
-                        assertEquals(mirResponse.getSerialNumber(), msrResponse.getSerialNumber());
-                        assertEquals(mirResponse.getRevokedAt(), msrResponse.getRevokedAt());
-                        assertEquals(mirResponse.getRevokeReason(), msrResponse.getRevokeReason());
-                        assertEquals(mirResponse.isRevoked(), msrResponse.isRevoked());
+                        final McpCertificateDto mirResponse = this.mcpServiceDtos.get(serviceInstance.getInstanceId()).getCertificates().getFirst();
+                        final String msrResponse = serviceInstance.getCertificates().getFirst();
+                        assertEquals(mirResponse.getCertificate(), msrResponse);
                     }
                 });
     }
@@ -283,13 +275,15 @@ class SecomV2SearchServiceControllerTest {
     @Test
     void testSearchWKT() {
         // Create the search filter object
-        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature("signature");
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
@@ -306,16 +300,16 @@ class SecomV2SearchServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(ResponseSearchObject.class)
+                .expectBody(SearchResult.class)
                 .consumeWith(response -> {
-                    ResponseSearchObject result = response.getResponseBody();
+                    SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getSearchServiceResult());
-                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
+                    assertNotNull(result.getServiceInstance());
+                    assertEquals(this.instances.size(), result.getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResult searchObjectResult: result.getSearchServiceResult()) {
-                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult: result.getServiceInstance()) {
+                        int i = result.getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
@@ -336,13 +330,15 @@ class SecomV2SearchServiceControllerTest {
     @Test
     void testSearchWKTWithCerts() {
         // Create the search filter object
-        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature("signature");
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
@@ -360,16 +356,16 @@ class SecomV2SearchServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(ResponseSearchObjectWithCert.class)
+                .expectBody(SearchResult.class)
                 .consumeWith(response -> {
-                    ResponseSearchObjectWithCert result = response.getResponseBody();
+                    SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getSearchServiceResult());
-                    assertEquals(this.instances.size(), result.getSearchServiceResult().size());
+                    assertNotNull(result.getServiceInstance());
+                    assertEquals(this.instances.size(), result.getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResultWithCert searchObjectResult : result.getSearchServiceResult()) {
-                        int i = result.getSearchServiceResult().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult : result.getServiceInstance()) {
+                        int i = result.getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
@@ -383,15 +379,8 @@ class SecomV2SearchServiceControllerTest {
 
                         // Try to compare the MIR/MSR certificate responses
                         final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final McpCertificateDto msrResponse = searchObjectResult.getCertificates().getFirst();
-                        assertEquals(mirResponse.getId(), msrResponse.getId());
-                        assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
-                        assertEquals(mirResponse.getStart(), msrResponse.getStart());
-                        assertEquals(mirResponse.getEnd(), msrResponse.getEnd());
-                        assertEquals(mirResponse.getSerialNumber(), msrResponse.getSerialNumber());
-                        assertEquals(mirResponse.getRevokedAt(), msrResponse.getRevokedAt());
-                        assertEquals(mirResponse.getRevokeReason(), msrResponse.getRevokeReason());
-                        assertEquals(mirResponse.isRevoked(), msrResponse.isRevoked());
+                        final String msrResponse = searchObjectResult.getCertificates().getFirst();
+                        assertEquals(mirResponse.getCertificate(), msrResponse);
                     }
                 });
     }

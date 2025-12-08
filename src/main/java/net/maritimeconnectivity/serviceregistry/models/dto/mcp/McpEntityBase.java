@@ -26,6 +26,9 @@ import java.math.BigInteger;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.util.function.Predicate.not;
 
 /**
  * The MCP Entity Abstract Class
@@ -165,6 +168,18 @@ public abstract class McpEntityBase {
      */
     public List<McpCertificateDto> getCertificates() {
         return certificates;
+    }
+
+    /**
+     * Get valid certificates as a list of Strings
+     *
+     * @return certificates as Strings[]
+     */
+    public List<String> getValidCertificatesAsString() {
+        return certificates.stream()
+                .filter(not(McpCertificateDto::isRevoked))
+                .map(McpCertificateDto::getCertificate)
+                .collect(Collectors.toList());
     }
 
     /**
