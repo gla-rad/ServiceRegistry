@@ -24,6 +24,7 @@ import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ import java.util.*;
  */
 @Component
 @Slf4j
+@ConditionalOnProperty(value = "info.gmsp.enabled", havingValue = "true")
 public class Gmsp {
 
     @Value("${info.msr.mrn}")

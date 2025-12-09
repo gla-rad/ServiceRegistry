@@ -145,7 +145,7 @@ info:
             rootCA:
                 path:
     gmsp:
-        enabled: true
+        enabled: false
         search:
             globalSubject: 'urn:mrn:mcp:msr:search:global'
 eureka:

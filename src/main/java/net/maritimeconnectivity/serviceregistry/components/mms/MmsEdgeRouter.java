@@ -13,6 +13,7 @@ import net.maritimeconnectivity.serviceregistry.utils.ReconnectTokenUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -54,6 +55,7 @@ import java.util.concurrent.ScheduledFuture;
  */
 @Component
 @Slf4j
+@ConditionalOnBean(Gmsp.class)
 public class MmsEdgeRouter {
 
     private final TaskScheduler scheduler;

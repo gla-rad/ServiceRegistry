@@ -91,7 +91,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @Autowired(required = false)
     MirClient mirClient;
 
-    @Autowired
+    @Autowired(required = false)
     Gmsp gmspClient;
     /**
      * Object Mapper from Domain to DTO.
@@ -145,7 +145,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         //Propagate the search to the GMSP if available
         String gmspRequestUuid = null;
-        if (!localSearchOnly) {
+        if (this.gmspClient != null && !localSearchOnly) {
 
             gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "", searchFilterObject, searchGeometry);
         }
