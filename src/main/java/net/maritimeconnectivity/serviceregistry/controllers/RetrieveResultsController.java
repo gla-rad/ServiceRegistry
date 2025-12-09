@@ -9,6 +9,7 @@ import org.grad.secomv2.core.interfaces.GenericSecomInterface;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.core.models.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -25,13 +26,25 @@ public class RetrieveResultsController {
      */
     static final String RETREIVE_RESULTS_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/retrieveResults";
 
+
     @Autowired
     SearchConsolidationService searchConsolidationService;
 
-    @Path(RETREIVE_RESULTS_INTERFACE_PATH + "/{transactionId}")
+    @Value("${info.gmsp.enabled}")
+    private boolean gmspEnabled;
+
+
+@Path(RETREIVE_RESULTS_INTERFACE_PATH + "/{transactionId}")
     @GET
     @Produces("application/json")
     public Response retrieveResults(@PathParam("transactionId") String transactionId) {
+
+        if (!gmspEnabled) {
+            log.debug("GMSP functionality is disabled, cannot retrieve results for transaction {}", transactionId);
+            return Response.status(Response.Status.NOT_IMPLEMENTED)
+                    .entity("GMSP functionality not available in this MSR, cannot retrieve results")
+                    .build();
+        }
 
         List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
 
