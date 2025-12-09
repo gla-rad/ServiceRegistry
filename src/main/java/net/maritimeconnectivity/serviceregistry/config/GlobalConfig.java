@@ -150,8 +150,7 @@ public class GlobalConfig {
                                     .map(MappingContext::getSource)
                                     .filter(Geometry.class::isInstance)
                                     .map(Geometry.class::cast)
-                                    .map(GeometryJSONConverter::convertFromGeometry)
-                                    .map(JsonNode::toString)
+                                    .map(Geometry::toString)
                                     .stream().toArray(String[]::new)))
                             .map(Instance::getGeometry, ServiceInstanceObject::setCoverageArea);
                     mapper.using(ctx ->Stream.of(Optional.of(ctx)
