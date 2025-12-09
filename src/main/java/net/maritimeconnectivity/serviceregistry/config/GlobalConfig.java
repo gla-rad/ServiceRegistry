@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.SearchObjectResultWithCert;
@@ -150,8 +151,8 @@ public class GlobalConfig {
                                     .filter(Geometry.class::isInstance)
                                     .map(Geometry.class::cast)
                                     .map(GeometryJSONConverter::convertFromGeometry)
-                                    .map(Object.class::cast)
-                                    .orElse(null)))
+                                    .map(JsonNode::toString)
+                                    .stream().toArray(String[]::new)))
                             .map(Instance::getGeometry, ServiceInstanceObject::setCoverageArea);
                     mapper.using(ctx ->Stream.of(Optional.of(ctx)
                                             .map(MappingContext::getSource)

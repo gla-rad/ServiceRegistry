@@ -49,6 +49,7 @@ import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -142,7 +143,7 @@ class SecomV2SearchServiceControllerTest {
         }
 
         // Create a pageable definition
-        this.pageable = PageRequest.of(0, 5);
+        this.pageable = PageRequest.of(0, Integer.MAX_VALUE);
     }
 
     /**
@@ -158,6 +159,14 @@ class SecomV2SearchServiceControllerTest {
         searchParameters.setName("Test");
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+        envelopeSearchFilterObject.setLocalOnly(true);
+
+        String[] envelopeCertificates = new String[1];
+        envelopeCertificates[0] = "blah";
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(envelopeCertificates);
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("thumb");
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setDigitalSignatureReference("SHA3-256");
 
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
