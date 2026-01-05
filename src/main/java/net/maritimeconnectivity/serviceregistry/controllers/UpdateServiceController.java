@@ -1,64 +1,38 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
 
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.dto.UpdateServiceDto;
-import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.services.UpdateServiceService;
 import org.grad.secomv2.core.base.SecomConstants;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
-@Component
+@RestController
 @Slf4j
 @Validated
-@Path("/")
+@RequestMapping("/" + SecomConstants.SECOM_VERSION) // e.g. "/v2"
 public class UpdateServiceController {
 
-    static final String UPDATE_SERVICE_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/updateService";
+    private final UpdateServiceService updateServiceService;
 
-    @Autowired
-    UpdateServiceService updateServiceService;
+    public UpdateServiceController(UpdateServiceService updateServiceService) {
+        this.updateServiceService = updateServiceService;
+    }
 
-    /**
-     * PUT /v2/updateService : The purpose of this interface is to allow the client to make simple updates
-     * to an existing service in the MSR.
-     *
-     * @param instanceId The instance ID of the service to be updated
-     * @return Http status 200 OK if the update was successful
-     */
-    @PUT
-    @Path("/{instanceId}")
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response updateServiceInterface(
-            @PathParam("instanceId") String instanceId,
-            UpdateServiceDto updateRequest
-    ) {
+    // PUT /v2/updateService/{instanceId}
+    @PutMapping("/updateService/{instanceId}")
+    public ResponseEntity<Void> updateServiceInterface(
+            @PathVariable Long instanceId, //spring returns 400 if not a Long
+            @Valid @RequestBody UpdateServiceDto updateRequest
+    ) throws XMLValidationException {
         log.debug("Received update for instanceId={} with body={}", instanceId, updateRequest);
         log.warn("No RBAC checks are performed on the user calling the updateService interface!");
 
-        Long id = null;
-        try {
-            id = Long.parseLong(instanceId);
-        } catch (NumberFormatException e) {
-            log.error("Invalid ID: {}", instanceId);
-            return Response.status(Response.Status.BAD_REQUEST).entity("Invalid instance ID format").build();
-        }
+        updateServiceService.updateService(instanceId, updateRequest);
 
-        try {
-            updateServiceService.updateService(id, updateRequest);
-        } catch (Exception e) {
-            log.error("Error while updating instance with id={}", instanceId, e);
-            return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error updating instance").build();
-        }
-
-
-        return Response.ok().build();
+        return ResponseEntity.ok().build();
     }
 }
-
-

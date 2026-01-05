@@ -1,63 +1,68 @@
 package net.maritimeconnectivity.serviceregistry.services;
-
-
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.pki.CertificateHandler;
 import net.maritimeconnectivity.pki.OCSPVerifier;
-import net.maritimeconnectivity.pki.PKIConfiguration;
 import net.maritimeconnectivity.pki.RevocationInfo;
 import net.maritimeconnectivity.pki.ocsp.OCSPValidationException;
+import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
+import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
 import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
+import net.maritimeconnectivity.serviceregistry.exceptions.XMLValidationException;
 import net.maritimeconnectivity.serviceregistry.models.dto.UpdateServiceDto;
-import org.bouncycastle.cert.ocsp.OCSPResp;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.security.KeyStoreException;
 import java.security.cert.CertificateExpiredException;
 import java.security.cert.CertificateNotYetValidException;
 import java.security.cert.X509Certificate;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 /**
  * Service Implementation G1191 defined updateService interface.
  *
  * @author Jakob Svenningsen (email: jakob@dmc.international)
  */
+
 @Service
 @Slf4j
 public class UpdateServiceService {
 
-    //Constructor
-    @Autowired
-    public UpdateServiceService(InstanceService instanceService) {
+    private final InstanceService instanceService;
 
+    public UpdateServiceService(InstanceService instanceService) {
+        this.instanceService = instanceService;
     }
 
-    public void updateService(Long id, UpdateServiceDto dto) throws KeyStoreException, OCSPValidationException, CertificateNotYetValidException, CertificateExpiredException {
-
-        //Certificate validation
+    public void updateService(Long id, UpdateServiceDto dto) {
+        // Certificate validation
         List<X509Certificate> chain = parseChain(dto.getCertificates());
 
         if (chain.size() < 2) {
-            throw new NoSuchElementException("Certificate chain contains no certificate for intermediate CA");
+            throw new InvalidRequestException("Certificate chain must include leaf + intermediate CA certificate");
         }
-        X509Certificate ownCert = chain.get(0);
-        X509Certificate intermediateCert = chain.get(1);
-        validateCertificate(ownCert, intermediateCert);
 
-        //Endpoint must be valid URI
-        //TODO
+        X509Certificate leaf = chain.get(0);
+        X509Certificate issuer = chain.get(1);
 
-        //apiDoc must be available and respond with an HTTP status code 200
-        //TODO
+        validateCertificate(leaf, issuer);
 
-        //statusEndpoint must be available and respond with an HTTP status code 200 and include a valid timestamp
-        //in the response.
-        //TODO
+        // TODO: validate endpoint URI
+        // TODO: apiDoc reachable and returns 200
+        // TODO: statusEndpoint reachable and returns 200 + valid timestamp
 
+        // TODO: persist/update through instanceService
+        try {
+            instanceService.updateInstanceFromDto(id, dto);
+        } catch (net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException e) {
+            throw new DataNotFoundException("Instance not found", e);
+        } catch (
+                XMLValidationException |
+                 GeometryParseException |
+                 com.fasterxml.jackson.core.JsonProcessingException |
+                 org.locationtech.jts.io.ParseException e) {
+            // 400 – invalid update payload
+            throw new InvalidRequestException("Invalid update request payload", e);
+        }
     }
+
 
     private List<X509Certificate> parseChain(List<String> pemCerts) {
         try {
@@ -69,16 +74,16 @@ public class UpdateServiceService {
         }
     }
 
-    private void validateCertificate(X509Certificate certificate, X509Certificate intermediateCert) throws OCSPValidationException, CertificateNotYetValidException, CertificateExpiredException {
-
-        //Check expiry
-        certificate.checkValidity();
-        intermediateCert.checkValidity();
-
-        //OCSP part
-        RevocationInfo revInfo = OCSPVerifier.verifyCertificateOCSP(certificate, intermediateCert);
-
+    private void validateCertificate(X509Certificate leaf, X509Certificate issuer) {
+        try {
+            leaf.checkValidity();
+            issuer.checkValidity();
+            RevocationInfo revInfo = OCSPVerifier.verifyCertificateOCSP(leaf, issuer);
+        } catch (CertificateNotYetValidException | CertificateExpiredException e) {
+            throw new InvalidRequestException("Certificate is not valid at the current time", e);
+        } catch (OCSPValidationException e) {
+            throw new InvalidRequestException("OCSP validation failed", e);
+        }
     }
-
 }
 
