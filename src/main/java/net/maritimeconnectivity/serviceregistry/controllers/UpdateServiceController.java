@@ -38,6 +38,7 @@ public class UpdateServiceController {
             UpdateServiceDto updateRequest
     ) {
         log.debug("Received update for instanceId={} with body={}", instanceId, updateRequest);
+        log.warn("No RBAC checks are performed on the user calling the updateService interface!");
 
         Long id = null;
         try {
@@ -53,8 +54,6 @@ public class UpdateServiceController {
             log.error("Error while updating instance with id={}", instanceId, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error updating instance").build();
         }
-
-
 
 
         return Response.ok().build();
