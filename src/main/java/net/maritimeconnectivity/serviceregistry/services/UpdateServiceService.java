@@ -35,7 +35,7 @@ public class UpdateServiceService {
 
     }
 
-    public void updateService(UpdateServiceDto dto) throws KeyStoreException, OCSPValidationException, CertificateNotYetValidException, CertificateExpiredException {
+    public void updateService(Long id, UpdateServiceDto dto) throws KeyStoreException, OCSPValidationException, CertificateNotYetValidException, CertificateExpiredException {
 
         //Certificate validation
         List<X509Certificate> chain = parseChain(dto.getCertificates());

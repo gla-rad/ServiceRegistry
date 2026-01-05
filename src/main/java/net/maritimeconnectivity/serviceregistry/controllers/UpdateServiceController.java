@@ -6,6 +6,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.dto.UpdateServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.UpdateServiceService;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -20,7 +21,7 @@ public class UpdateServiceController {
     static final String UPDATE_SERVICE_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/updateService";
 
     @Autowired
-    InstanceService instanceService;
+    UpdateServiceService updateServiceService;
 
     /**
      * PUT /v2/updateService : The purpose of this interface is to allow the client to make simple updates
@@ -49,7 +50,7 @@ public class UpdateServiceController {
         }
 
         try {
-            instanceService.updateInstanceFromDto(id, updateRequest);
+            updateServiceService.updateService(id, updateRequest);
         } catch (Exception e) {
             log.error("Error while updating instance with id={}", instanceId, e);
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity("Error updating instance").build();
