@@ -33,6 +33,14 @@ public class UpdateServiceService {
 
     public void updateService(Long id, UpdateServiceDto dto) {
         // Certificate validation
+
+        if (dto == null || dto.getCertificates() == null || dto.getCertificates().isEmpty()) {
+            throw new InvalidRequestException("Certificate chain is required");
+
+        }
+
+        log.warn(dto.getCertificates().toString());
+
         List<X509Certificate> chain = parseChain(dto.getCertificates());
 
         if (chain.size() < 2) {
@@ -65,25 +73,40 @@ public class UpdateServiceService {
 
 
     private List<X509Certificate> parseChain(List<String> pemCerts) {
-        try {
-            return pemCerts.stream()
-                    .map(CertificateHandler::getCertFromPem)
-                    .toList();
-        } catch (RuntimeException e) {
-            throw new InvalidRequestException("One or more certificates in the provided chain are invalid", e);
+        List<String> nonBlank = pemCerts.stream()
+                .filter(s -> s != null && !s.isBlank())
+                .toList();
+
+        if (nonBlank.isEmpty()) {
+            throw new InvalidRequestException("Certificate chain is required");
         }
+
+        List<X509Certificate> chain = nonBlank.stream()
+                .map(CertificateHandler::getCertFromPem)
+                .toList();
+
+        if (chain.stream().anyMatch(c -> c == null)) {
+            throw new InvalidRequestException("One or more certificates in the provided chain are invalid");
+        }
+
+        return chain;
     }
 
+
     private void validateCertificate(X509Certificate leaf, X509Certificate issuer) {
+        if (leaf == null || issuer == null) {
+            throw new InvalidRequestException("Certificate chain contains invalid/empty certificate(s)");
+        }
         try {
             leaf.checkValidity();
             issuer.checkValidity();
-            RevocationInfo revInfo = OCSPVerifier.verifyCertificateOCSP(leaf, issuer);
+            OCSPVerifier.verifyCertificateOCSP(leaf, issuer);
         } catch (CertificateNotYetValidException | CertificateExpiredException e) {
             throw new InvalidRequestException("Certificate is not valid at the current time", e);
         } catch (OCSPValidationException e) {
             throw new InvalidRequestException("OCSP validation failed", e);
         }
     }
-}
+    }
+
 

@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Slf4j
 @Validated
-@RequestMapping("/" + SecomConstants.SECOM_VERSION) // e.g. "/v2"
+@RequestMapping("/mvc/secom/" + SecomConstants.SECOM_VERSION)
+
 public class UpdateServiceController {
 
     private final UpdateServiceService updateServiceService;
