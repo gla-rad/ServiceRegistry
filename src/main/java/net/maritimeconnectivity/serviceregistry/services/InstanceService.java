@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128Utils;
-import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.components.InstanceSearchQueryBuilder;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
@@ -224,7 +223,7 @@ public class InstanceService {
     }
 
     @Transactional
-    public Instance updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public void updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to update Instance from DTO: {}", updateServiceDto);
 
         // First, retrieve the existing instance
@@ -245,7 +244,7 @@ public class InstanceService {
         // TODO - Find a solution for API DOC and ceritficates
 
         // Save the updated instance
-        return this.save(instance);
+        this.save(instance);
     }
 
     /**
