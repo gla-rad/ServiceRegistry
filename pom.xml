@@ -377,8 +377,13 @@
             <artifactId>jersey-server</artifactId>
             <version>2.46</version>
         </dependency>
+		<dependency>
+			<groupId>net.maritimeconnectivity.pki</groupId>
+			<artifactId>mcp-pki</artifactId>
+			<version>1.4.1</version>
+		</dependency>
 
-    </dependencies>
+	</dependencies>
 
 	<dependencyManagement>
 		<dependencies>
