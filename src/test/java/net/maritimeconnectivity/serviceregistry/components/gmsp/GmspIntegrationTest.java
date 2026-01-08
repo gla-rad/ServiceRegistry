@@ -27,6 +27,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
 import org.grad.secomv2.core.models.*;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
@@ -154,7 +155,7 @@ class GmspIntegrationTest {
         }
 
         // Create a pageable definition
-        this.pageable = PageRequest.of(0, 5);
+        this.pageable = PageRequest.of(0, Integer.MAX_VALUE);
     }
 
 
@@ -168,11 +169,12 @@ class GmspIntegrationTest {
 
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("s-124");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature("TEST SIGNATURE");
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
@@ -193,12 +195,12 @@ class GmspIntegrationTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServices());
-                    assertEquals(this.instances.size(), result.getServices().size());
+                    assertNotNull(result.getServiceInstance());
+                    assertEquals(this.instances.size(), result.getServiceInstance().size());
 
                     // Test each of the result entries
-                    for (SearchObjectResult searchObjectResult : result.getServices()) {
-                        int i = result.getServices().indexOf(searchObjectResult);
+                    for (ServiceInstanceObject searchObjectResult : result.getServiceInstance()) {
+                        int i = result.getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());

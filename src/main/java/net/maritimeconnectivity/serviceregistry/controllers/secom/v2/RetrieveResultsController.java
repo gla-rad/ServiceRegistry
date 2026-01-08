@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.interfaces.GenericSecomInterface;
-import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.core.models.SearchResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
@@ -36,7 +36,7 @@ public class RetrieveResultsController implements GenericSecomInterface {
     @Produces("application/json")
     public Response retrieveResults(@PathParam("transactionId") String transactionId) {
 
-        List<SearchObjectResult> services = searchConsolidationService.getResults(transactionId);
+        List<ServiceInstanceObject> services = searchConsolidationService.getResults(transactionId);
 
         if (services == null) {
             log.debug("User tried to retrieve results for unknown transaction {}", transactionId);
@@ -50,8 +50,8 @@ public class RetrieveResultsController implements GenericSecomInterface {
         log.debug("Found {} results for transactionId {}", services.size(), transactionId);
 
         SearchResult searchResult = new SearchResult();
-        searchResult.setTransactionId(transactionId);
-        searchResult.setServices(services); //may be empty, ensures user does not get 404 immediately
+        services.forEach(s -> { s.setTransactionId(transactionId);});
+        searchResult.setServiceInstance(services); //may be empty, ensures user does not get 404 immediately
 
         return Response.ok(searchResult).build();
     }

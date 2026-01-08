@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.config.CacheConfig;
 import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
-import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -35,8 +35,8 @@ public class SearchConsolidationService {
 
     }
 
-    public void addResults(String transactionId, List<SearchObjectResult> results) {
-        for (SearchObjectResult r : results) {
+    public void addResults(String transactionId, List<ServiceInstanceObject> results) {
+        for (ServiceInstanceObject r : results) {
             log.debug("Added result {}", r.getName());
             addResult(transactionId, r);
         }
@@ -49,7 +49,7 @@ public class SearchConsolidationService {
 
     /** Add a single result to the transaction’s consolidated set (creates the entry if absent).
      * Do not add duplicate results*/
-    public void addResult(String transactionId, SearchObjectResult result) {
+    public void addResult(String transactionId, ServiceInstanceObject result) {
         ConsolidatedSearchResult agg = getOrCreate(transactionId);
         String key = getKey(result);            // choose your canonical key; instanceId for now
         if (key != null && !key.isBlank()) {
@@ -58,7 +58,7 @@ public class SearchConsolidationService {
     }
 
     /** Read all results currently stored for the transaction (immutable snapshot). */
-    public List<SearchObjectResult> getResults(String transactionId) {
+    public List<ServiceInstanceObject> getResults(String transactionId) {
         var agg = sessions.get(transactionId, ConsolidatedSearchResult.class);
         if (agg == null) {
             log.debug("No results found for transactionId {}", transactionId);
@@ -66,10 +66,10 @@ public class SearchConsolidationService {
         }
 
         // Capture a stable snapshot exactly once
-        List<SearchObjectResult> snapshot = List.copyOf(agg.snapshot()); // defensive copy
+        List<ServiceInstanceObject> snapshot = List.copyOf(agg.snapshot()); // defensive copy
 
         // Log using the same snapshot
-        for (SearchObjectResult r : snapshot) {
+        for (ServiceInstanceObject r : snapshot) {
             log.debug("Retrieved result {}", r.getName());
         }
 
@@ -84,7 +84,7 @@ public class SearchConsolidationService {
     }
 
     /** For now: instanceId as the dedup key; adjust if you adopt a different canonical key later. */
-    private String getKey(SearchObjectResult r) {
+    private String getKey(ServiceInstanceObject r) {
         String id = r.getInstanceId();
         return (id == null) ? null : id.trim().toLowerCase();
     }
