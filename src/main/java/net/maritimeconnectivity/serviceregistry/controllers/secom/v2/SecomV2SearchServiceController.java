@@ -42,6 +42,7 @@ import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.SearchResult;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -134,8 +135,9 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                 .map(this::parseGeometry)
                 .orElse(null);
 
+        // If a status is in the query, check it is valid
         if (Strings.isNotBlank(envelopeSearchFilterObject.getQuery().getStatus())) {
-            if (!EnumUtils.isValidEnum(org.grad.secomv2.core.models.enums.InfoStatusEnum.class, envelopeSearchFilterObject.getQuery().getStatus())) {
+            if (!EnumUtils.isValidEnum(ServiceStatus.class, envelopeSearchFilterObject.getQuery().getStatus())) {
                 throw new SecomValidationException(String.format("%s is not a valid status", envelopeSearchFilterObject.getQuery().getStatus()));
             }
         }
