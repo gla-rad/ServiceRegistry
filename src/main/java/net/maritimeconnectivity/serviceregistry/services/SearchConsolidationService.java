@@ -6,6 +6,7 @@ import ch.qos.logback.core.net.server.ConcurrentServerRunner;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.config.CacheConfig;
+import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
 import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,8 @@ public class SearchConsolidationService {
         String key = getKey(result);            // choose your canonical key; instanceId for now
         if (key != null && !key.isBlank()) {
             agg.addIfNew(key, result);            // dedup happens inside the aggregator
+        } else {
+            throw new InvalidRequestException("No results found for transaction id " + transactionId);
         }
     }
 
