@@ -1,4 +1,4 @@
-package net.maritimeconnectivity.serviceregistry.controllers;
+package net.maritimeconnectivity.serviceregistry.controllers.g1191.v2;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

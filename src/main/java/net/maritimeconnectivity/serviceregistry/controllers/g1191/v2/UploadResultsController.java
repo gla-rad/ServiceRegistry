@@ -1,11 +1,10 @@
-package net.maritimeconnectivity.serviceregistry.controllers;
+package net.maritimeconnectivity.serviceregistry.controllers.g1191.v2;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
-import org.grad.secomv2.core.interfaces.GenericSecomInterface;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.beans.factory.annotation.Autowired;
