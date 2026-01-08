@@ -8,9 +8,16 @@ import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationServ
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.SearchObjectResult;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The MSR Upload Results Interface.
@@ -23,15 +30,11 @@ import java.util.List;
  */
 
 @Component
-@Path("/")
 @Slf4j
 @Validated
+@RequestMapping("api/g1191/" + SecomConstants.SECOM_VERSION)
 public class UploadResultsController {
 
-    /**
-     * The Interface Endpoint Path.
-     */
-    static final String UPLOAD_RESULTS_INTERFACE_PATH = "/" + SecomConstants.SECOM_VERSION + "/uploadResults";
 
     @Autowired
     SearchConsolidationService searchConsolidationService;
@@ -45,21 +48,26 @@ public class UploadResultsController {
      * @return Http status 200 OK if the results were successfully uploaded
      */
 
-    @Path(UPLOAD_RESULTS_INTERFACE_PATH + "/{transactionId}")
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public void searchService(@PathParam("transactionId") String transactionId,
-                              List<SearchObjectResultWithCert> searchResults) {
-
+    @PostMapping("/uploadResults/{transactionId}")
+    public ResponseEntity<Void>  uploadResults(
+        @PathVariable("transactionId") String transactionId,
+        @RequestBody List<SearchObjectResultWithCert> searchResults)
+    {
         log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
-        for (SearchObjectResultWithCert result : searchResults) {
-            log.debug("Service name: {}", result.getName());
+
+        //TODO
+        // For any request where the MRN of the sender does not conform to the MSR MRN defined in G1183 (i.e. does not
+        // begin with urn:mrn:mcp:msr ) a HTTP response with status code 400 must be returned.
+
+        if (searchResults.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
-        // Consolidate results based on transactionId cast to searchObjectResult
+
         List<SearchObjectResult> results = searchResults.stream().map(r -> (SearchObjectResult) r).toList();
         searchConsolidationService.addResults(transactionId, results);
-
+        return ResponseEntity.ok().build();
     }
+
+
 
 }
