@@ -1,4 +1,4 @@
-package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
+package net.maritimeconnectivity.serviceregistry.controllers.g1191.v2;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
@@ -65,8 +65,6 @@ public class UploadResultsController {
         List<ServiceInstanceObject> results = searchResults.stream().map(r -> (ServiceInstanceObject) r).toList();
         searchConsolidationService.addResults(transactionId, results);
         return ResponseEntity.ok().build();
-    }
-
     }
 
 }
