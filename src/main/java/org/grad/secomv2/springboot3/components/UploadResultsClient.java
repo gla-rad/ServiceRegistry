@@ -3,7 +3,7 @@
 package org.grad.secomv2.springboot3.components;
 
 import lombok.extern.slf4j.Slf4j;
-import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +26,7 @@ public class UploadResultsClient extends SecomClient {
     }
 
     //
-    public HttpStatusCode uploadResults(List<SearchObjectResult> searchResults) throws WebClientResponseException {
+    public HttpStatusCode uploadResults(List<ServiceInstanceObject> searchResults) throws WebClientResponseException {
             ResponseEntity<Void> entity = this.secomClient
                     .post()
                     .uri("") //Leave empty as the client is initialized with the absolute path

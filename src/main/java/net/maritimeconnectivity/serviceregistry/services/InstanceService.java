@@ -43,6 +43,7 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.hibernate.search.backend.lucene.LuceneBackend;
 import org.hibernate.search.backend.lucene.LuceneExtension;
@@ -709,7 +710,7 @@ public class InstanceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Instance> search(@Valid SearchFilterObject searchFilterObject) {
+    public Page<Instance> search(@Valid EnvelopeSearchFilterObject searchFilterObject) {
 
         boolean includeXml = Optional.ofNullable(searchFilterObject.getIncludeXml()).orElse(false);
 
@@ -717,7 +718,7 @@ public class InstanceService {
         return handle(
                 lusceneParams.queryString(),
                 lusceneParams.geometry(),
-                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)),
+                PageRequest.of(0, Integer.MAX_VALUE),
                 includeXml);
     }
 

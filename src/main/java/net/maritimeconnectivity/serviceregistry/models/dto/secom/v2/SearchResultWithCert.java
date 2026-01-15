@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.secom.v2;
 
 import jakarta.validation.constraints.NotNull;
-import org.grad.secomv2.core.models.SearchObjectResult;
+
 
 import java.util.List;
 

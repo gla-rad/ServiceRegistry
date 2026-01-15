@@ -29,27 +29,30 @@ import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
+import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
+import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
-import org.grad.secomv2.core.models.SearchObjectResult;
 import org.grad.secomv2.core.models.SearchResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -97,7 +100,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
      * Object Mapper from Domain to DTO.
      */
     @Autowired
-    DomainDtoMapper<Instance, SearchObjectResult> searchObjectResultMapper;
+    DomainDtoMapper<Instance, ServiceInstanceObject> searchObjectResultMapper;
 
     /**
      * POST /v2/searchService : The purpose of this interface is to search for
@@ -115,23 +118,32 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     public SearchResult searchService(@Valid SearchFilterObject searchFilterObject)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
-        // Get from searchfilterobject default to false if null
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();
 
-        log.info("Search filter object value {}", searchFilterObject.getQuery().getLocalOnly());
+        // Get from envelopeSearchFilterObject default to false if null
 
-        boolean localSearchOnly = Optional.of(searchFilterObject.getQuery().getLocalOnly()).orElse(true);
+        log.info("Search filter object value {}", envelopeSearchFilterObject.getLocalOnly());
+
+        boolean localSearchOnly = Optional.ofNullable(envelopeSearchFilterObject.getLocalOnly()).orElse(true);
 
         log.info("Local search only set to: {}", localSearchOnly);
 
+
         // If at maximum only one geometry is provided, retrieve it
-        final Geometry searchGeometry =  Optional.of(searchFilterObject)
-                .map(SearchFilterObject::getGeometry)
+        final Geometry searchGeometry =  Optional.of(envelopeSearchFilterObject)
+                .map(EnvelopeSearchFilterObject::getGeometry)
                 .map(this::parseGeometry)
                 .orElse(null);
 
+        // If a status is in the query, check it is valid
+        if (Strings.isNotBlank(envelopeSearchFilterObject.getQuery().getStatus())) {
+            if (!EnumUtils.isValidEnum(ServiceStatus.class, envelopeSearchFilterObject.getQuery().getStatus())) {
+                throw new SecomValidationException(String.format("%s is not a valid status", envelopeSearchFilterObject.getQuery().getStatus()));
+            }
+        }
 
         // Perform the search locally
-        final Page<Instance> instancesPage = this.instanceService.search(searchFilterObject);
+        final Page<Instance> instancesPage = this.instanceService.search(envelopeSearchFilterObject);
 
         log.info("Found {} instances for search filter object", instancesPage.getTotalElements());
 
@@ -152,7 +164,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         // Get the search object results and if possible also update the
         // certificates through the MIR.
-        List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
+        List<ServiceInstanceObject> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), ServiceInstanceObject.class);
 
         // Foreach SearchObjectResult set the sourceMSR
         searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
@@ -160,30 +172,27 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         // Careful cause depending on the configuration an MIR client might not
         // be available. In those case the mirClient will be null.
         if(this.mirClient != null && this.forceCertificateCheck) {
-            for (SearchObjectResult searchObject : searchObjectResults) {
+            for (ServiceInstanceObject searchObject : searchObjectResults) {
                 try {
                     // Retrieve the certificates from the MIR
                     McpServiceDto mcpEntity = this.mirClient.getServiceEntity(
                             Optional.of(searchObject)
-                                    .map(SearchObjectResult::getOrganizationId)
+                                    .map(ServiceInstanceObject::getOrganizationId)
                                     .map(Strings::trimToNull)
                                     .orElse(null),
                             Optional.of(searchObject)
-                                    .map(SearchObjectResult::getInstanceId)
+                                    .map(ServiceInstanceObject::getInstanceId)
                                     .map(Strings::trimToNull)
                                     .orElse(null),
                             Optional.of(searchObject)
-                                    .map(SearchObjectResult::getVersion)
+                                    .map(ServiceInstanceObject::getVersion)
                                     .map(Strings::trimToNull)
                                     .orElse(null)
                     );
                     // And append the valid ones to the search object
-                    ((SearchObjectResultWithCert) searchObject).setCertificates(Optional.ofNullable(mcpEntity)
-                            .map(McpEntityBase::getCertificates)
-                            .orElseGet(Collections::emptyList)
-                            .stream()
-                            .filter(not(McpCertificateDto::isRevoked))
-                            .collect(Collectors.toList()));
+                    ((ServiceInstanceObject) searchObject).setCertificates(new ArrayList<>(Optional.ofNullable(mcpEntity)
+                            .map(McpEntityBase::getValidCertificatesAsString)
+                            .orElseGet(Collections::emptyList)));
                 } catch (FeignException ex) {
                     log.error("Error while retrieving certificate for entity {}: {}",
                             searchObject.getInstanceId(),
@@ -192,10 +201,12 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
 
+        // Set the transaction ID on each Service Instance
+        searchObjectResults.forEach(r -> r.setTransactionId(transactionId));
+
         // Finally build the response
         SearchResult searchResult = new SearchResult();
-        searchResult.setTransactionId(transactionId);
-        searchResult.setServices(searchObjectResults);
+        searchResult.setServiceInstance(searchObjectResults);
 
         // And return
         return searchResult;

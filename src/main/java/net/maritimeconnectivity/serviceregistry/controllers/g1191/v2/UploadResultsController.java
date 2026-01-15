@@ -1,12 +1,11 @@
-package net.maritimeconnectivity.serviceregistry.controllers.g1191.v2;
+package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.base.SecomConstants;
-import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -48,7 +47,7 @@ public class UploadResultsController {
     @PostMapping("/uploadResults/{transactionId}")
     public ResponseEntity<Void>  uploadResults(
         @PathVariable("transactionId") String transactionId,
-        @RequestBody List<SearchObjectResultWithCert> searchResults)
+        @RequestBody List<ServiceInstanceObject> searchResults)
     {
         log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
 
@@ -59,12 +58,15 @@ public class UploadResultsController {
         if (searchResults.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-
-        List<SearchObjectResult> results = searchResults.stream().map(r -> (SearchObjectResult) r).toList();
+        for (ServiceInstanceObject result : searchResults) {
+            log.debug("Service name: {}", result.getName());
+        }
+        // Consolidate results based on transactionId cast to searchObjectResult
+        List<ServiceInstanceObject> results = searchResults.stream().map(r -> (ServiceInstanceObject) r).toList();
         searchConsolidationService.addResults(transactionId, results);
         return ResponseEntity.ok().build();
     }
 
-
+    }
 
 }

@@ -18,7 +18,7 @@ import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.grad.secomv2.core.models.SearchFilterObject;
-import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
 import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.locationtech.jts.geom.Geometry;
@@ -77,7 +77,7 @@ public class Gmsp {
     private InstanceSearchQueryBuilder queryBuilder;
 
     @Autowired
-    DomainDtoMapper<Instance, SearchObjectResult> searchObjectResultMapper;
+    DomainDtoMapper<Instance, ServiceInstanceObject> searchObjectResultMapper;
 
     @Autowired
     InstanceService instanceService;
@@ -217,7 +217,7 @@ public class Gmsp {
         log.info("Handling GMSP requests transaction ID: {}", dto.getEndpoint());
 
         //Print details of the search requets searchFilterObject
-        var q = dto.getSearchFilterObject().getQuery();
+        var q = dto.getSearchFilterObject().getEnvelope().getQuery();
 
         log.debug("Search Filter Object Keywords: {}, Name : {}", q.getKeywords(), q.getName());
 
@@ -233,9 +233,9 @@ public class Gmsp {
 
         log.debug("Searching local database");
         //Perform local search, which gives a list of SearchObjectResult objects
-        final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject());
+        final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject().getEnvelope());
 
-        List<SearchObjectResult> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), SearchObjectResultWithCert.class);
+        List<ServiceInstanceObject> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), ServiceInstanceObject.class);
         searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
         log.debug("Found {} search results for local database", searchObjectResults.size());
 
