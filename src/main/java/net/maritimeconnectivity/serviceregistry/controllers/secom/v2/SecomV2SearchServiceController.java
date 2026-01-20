@@ -142,6 +142,18 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
 
+        // If searching for an MMSI without a design ID, return a 400
+        if (envelopeSearchFilterObject.getQuery().getMmsi() != null && !envelopeSearchFilterObject.getQuery().getMmsi().isEmpty()
+        && (envelopeSearchFilterObject.getQuery().getDesignId() == null || envelopeSearchFilterObject.getQuery().getDesignId().isEmpty())) {
+            throw new SecomValidationException("Searching for an MMSI without DesignId not allowed");
+        }
+
+        // If searching for an IMO without a design ID, return a 400
+        if (envelopeSearchFilterObject.getQuery().getImo() != null && !envelopeSearchFilterObject.getQuery().getImo().isEmpty()
+                && (envelopeSearchFilterObject.getQuery().getDesignId() == null || envelopeSearchFilterObject.getQuery().getDesignId().isEmpty())) {
+            throw new SecomValidationException("Searching for an IMO without DesignId not allowed");
+        }
+
         // Perform the search locally
         final Page<Instance> instancesPage = this.instanceService.search(envelopeSearchFilterObject);
 

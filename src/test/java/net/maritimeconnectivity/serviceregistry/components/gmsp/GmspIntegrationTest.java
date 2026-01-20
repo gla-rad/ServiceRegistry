@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry.components.gmsp;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.controllers.secom.v2.UploadResultsController;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -27,6 +28,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import org.grad.secomv2.core.base.SecomSignatureProvider;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
 import org.grad.secomv2.core.models.*;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
@@ -50,9 +52,12 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import javax.xml.bind.DatatypeConverter;
+
 import static org.awaitility.Awaitility.await;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -60,11 +65,9 @@ import java.util.*;
 import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.timeout;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 
 @ActiveProfiles("test")
@@ -79,6 +82,9 @@ class GmspIntegrationTest {
      */
     @Autowired
     WebTestClient webTestClient;
+
+    @MockitoBean
+    SecomSignatureProvider secomV2SignatureProvider;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -173,14 +179,21 @@ class GmspIntegrationTest {
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("s-124");
         envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        searchFilterObject.setEnvelopeSignature("TEST SIGNATURE");
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Perform the web request
         webTestClient.post()
