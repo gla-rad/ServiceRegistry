@@ -110,4 +110,19 @@ public class UploadResultsControllerTest {
 
     }
 
+    @Test
+    void testUploadMalformedResultsToValidTransactionId() throws Exception {
+
+        //add malformed result
+        String malformedResult = "A string is an invalid result type";
+        ArrayList<String> resultsMalformed = new ArrayList<>();
+        resultsMalformed.add(malformedResult);
+
+        mockMvc.perform(post("/api/g1191/v2/uploadResults/{transactionId}", this.validTransactionId)
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .content(this.objectMapper.writeValueAsString(resultsMalformed))
+            )
+            .andExpect(status().isBadRequest())
+            .andReturn();
+    }
 }
