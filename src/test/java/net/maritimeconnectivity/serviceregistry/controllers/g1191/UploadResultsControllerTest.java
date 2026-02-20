@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -77,7 +77,7 @@ public class UploadResultsControllerTest {
     }
     @ParameterizedTest
     @MethodSource("txCases")
-    void uploadResultsOnlyInvalidXactIdThrows(String tx, int expectedStatus, boolean shouldThrow) throws Exception {
+    void uploadResultsReturnsExpectedStatus(String tx, int expectedStatus, boolean shouldThrow) throws Exception {
 
         if (shouldThrow) {
             doThrow(new InvalidRequestException("No results found for transaction id " + tx))
@@ -91,6 +91,7 @@ public class UploadResultsControllerTest {
                             .content(objectMapper.writeValueAsString(results))
             )
             .andExpect(status().is(expectedStatus));
+        verify(searchConsolidationService).addResults(eq(tx), anyList());
     }
 
 
