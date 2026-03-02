@@ -1,8 +1,6 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
-
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
-import net.maritimeconnectivity.serviceregistry.controllers.g1191.v2.UploadResultsController;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,7 +43,11 @@ public class SecomV2RetrieveResultControllerTest {
         webTestClient.get()
                 .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + transactionId)
                 .exchange()
-                .expectStatus().isNotFound();
+                .expectStatus().isNotFound()
+                .expectBody(String.class)
+                .isEqualTo("Transaction not found: " + transactionId);
+
+
 
         verify(searchConsolidationService).getResults(eq(transactionId));
     }
