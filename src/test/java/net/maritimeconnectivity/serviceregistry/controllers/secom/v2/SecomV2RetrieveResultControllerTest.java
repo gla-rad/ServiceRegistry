@@ -21,8 +21,7 @@ import java.util.List;
 import static net.maritimeconnectivity.serviceregistry.controllers.secom.v2.RetrieveResultController.RETREIVE_RESULTS_INTERFACE_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -39,7 +38,7 @@ public class SecomV2RetrieveResultControllerTest {
 
 
     @Test
-    void retrieveResultForInvalidTransactionId() {
+    void testRetrieveResultForInvalidTransactionId() {
 
         String transactionId = "invalidTransactionId";
 
@@ -61,7 +60,7 @@ public class SecomV2RetrieveResultControllerTest {
     }
 
     @Test
-    void retrieveResultForValidTransactionId() {
+    void testRetrieveResultForValidTransactionId() {
         List<ServiceInstanceObject> validResults = new ArrayList<>();
         String validTransactionId = "validTransactionId";
 
@@ -91,6 +90,56 @@ public class SecomV2RetrieveResultControllerTest {
 
     }
 
+    // Shows that the controller will actually pull new data from the service on each call
+    @Test
+    void testRetrieveResultsReturnsCurrentServiceResponseOnEachCall () {
+        String validTransactionId = "validTransactionId";
 
+        //Setup test variable
+        List<ServiceInstanceObject> validResults = new ArrayList<>();
+        final ServiceInstanceObject resultInstance = new ServiceInstanceObject();
+        resultInstance.setTransactionId(validTransactionId);
+        resultInstance.setName("testName");
+        validResults.add(resultInstance);
+
+        List<ServiceInstanceObject> validResultsNew = new ArrayList<>();
+        final ServiceInstanceObject newResultInstance = new ServiceInstanceObject();
+        newResultInstance.setTransactionId(validTransactionId);
+        newResultInstance.setName("newTestName");
+        validResultsNew.add(newResultInstance);
+
+        //Return the instance when calling getResults
+        when(searchConsolidationService.getResults(validTransactionId))
+                .thenReturn(validResults) //Call 1
+                .thenReturn(validResultsNew); //Call 2
+
+
+        webTestClient.get()
+                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SearchResult.class)
+                .value(result -> {
+                    Assertions.assertEquals(1, result.getServiceInstance().size());
+                    Assertions.assertEquals(validTransactionId, result.getServiceInstance().getFirst().getTransactionId());
+                    Assertions.assertEquals("testName", result.getServiceInstance().getFirst().getName());
+                });
+
+        webTestClient.get()
+                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SearchResult.class)
+                .value(result -> {
+                    Assertions.assertEquals(1, result.getServiceInstance().size());
+                    Assertions.assertEquals(validTransactionId, result.getServiceInstance().getFirst().getTransactionId());
+                    Assertions.assertEquals("newTestName", result.getServiceInstance().getFirst().getName());
+                });
+
+        verify(searchConsolidationService, times(2)).getResults(validTransactionId);
+
+
+
+    }
 
 }
