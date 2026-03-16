@@ -201,12 +201,11 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
 
-        // Set the transaction ID on each Service Instance
-        searchObjectResults.forEach(r -> r.setTransactionId(transactionId));
 
         // Finally build the response
         SearchResult searchResult = new SearchResult();
         searchResult.setServiceInstance(searchObjectResults);
+        searchResult.setTransactionId(transactionId);
 
         // And return
         return searchResult;

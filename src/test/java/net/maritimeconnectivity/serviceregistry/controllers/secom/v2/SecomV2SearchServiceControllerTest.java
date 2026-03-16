@@ -428,7 +428,7 @@ class SecomV2SearchServiceControllerTest {
                     assertNotNull(result);
                     assertNotNull(result.getServiceInstance());
                     assertEquals(this.instances.size(), result.getServiceInstance().size());
-                    assertNotNull(result.getServiceInstance().getFirst().getTransactionId());
+                    assertNotNull(result.getTransactionId());
                 });
 
     }

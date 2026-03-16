@@ -66,7 +66,6 @@ public class SecomV2RetrieveResultControllerTest {
 
         //Setup test variable
         final ServiceInstanceObject resultInstance = new ServiceInstanceObject();
-        resultInstance.setTransactionId(validTransactionId);
         resultInstance.setName("testName");
         validResults.add(resultInstance);
 
@@ -83,7 +82,7 @@ public class SecomV2RetrieveResultControllerTest {
                 .expectBody(SearchResult.class)
                 .value(result -> {
                     Assertions.assertEquals(1, result.getServiceInstance().size());
-                    Assertions.assertEquals(validTransactionId, result.getServiceInstance().getFirst().getTransactionId());
+                    Assertions.assertEquals(validTransactionId, result.getTransactionId());
                 });
 
         verify(searchConsolidationService).getResults(eq(validTransactionId));
@@ -98,13 +97,11 @@ public class SecomV2RetrieveResultControllerTest {
         //Setup test variable
         List<ServiceInstanceObject> validResults = new ArrayList<>();
         final ServiceInstanceObject resultInstance = new ServiceInstanceObject();
-        resultInstance.setTransactionId(validTransactionId);
         resultInstance.setName("testName");
         validResults.add(resultInstance);
 
         List<ServiceInstanceObject> validResultsNew = new ArrayList<>();
         final ServiceInstanceObject newResultInstance = new ServiceInstanceObject();
-        newResultInstance.setTransactionId(validTransactionId);
         newResultInstance.setName("newTestName");
         validResultsNew.add(newResultInstance);
 
@@ -121,7 +118,7 @@ public class SecomV2RetrieveResultControllerTest {
                 .expectBody(SearchResult.class)
                 .value(result -> {
                     Assertions.assertEquals(1, result.getServiceInstance().size());
-                    Assertions.assertEquals(validTransactionId, result.getServiceInstance().getFirst().getTransactionId());
+                    Assertions.assertEquals(validTransactionId, result.getTransactionId());
                     Assertions.assertEquals("testName", result.getServiceInstance().getFirst().getName());
                 });
 
@@ -132,7 +129,7 @@ public class SecomV2RetrieveResultControllerTest {
                 .expectBody(SearchResult.class)
                 .value(result -> {
                     Assertions.assertEquals(1, result.getServiceInstance().size());
-                    Assertions.assertEquals(validTransactionId, result.getServiceInstance().getFirst().getTransactionId());
+                    Assertions.assertEquals(validTransactionId, result.getTransactionId());
                     Assertions.assertEquals("newTestName", result.getServiceInstance().getFirst().getName());
                 });
 

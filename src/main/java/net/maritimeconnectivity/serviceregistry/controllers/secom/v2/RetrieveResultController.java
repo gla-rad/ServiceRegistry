@@ -47,7 +47,7 @@ public class RetrieveResultController implements GenericSecomInterface {
         log.debug("Found {} results for transactionId {}", services.size(), transactionId);
 
         SearchResult searchResult = new SearchResult();
-        services.forEach(s -> { s.setTransactionId(transactionId);});
+        searchResult.setTransactionId(transactionId);
         searchResult.setServiceInstance(services); //may be empty, ensures user does not get 404 immediately
 
         return Response.ok(searchResult).build();
