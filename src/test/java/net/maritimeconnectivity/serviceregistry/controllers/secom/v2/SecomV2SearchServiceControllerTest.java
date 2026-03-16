@@ -397,4 +397,40 @@ class SecomV2SearchServiceControllerTest {
                 });
     }
 
+    @Test
+    void TestGlobalSearchReturnsTransactionId() {
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
+        SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setName("Test");
+        envelopeSearchFilterObject.setLocalOnly(Boolean.FALSE); //THIS IS A GLOBAL SEARCH
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature("TEST CERT");
+
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the service calls for creating a new instance
+        doReturn(page).when(this.instanceService).search(any());
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
+                        .build())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SearchResult.class)
+                .consumeWith(response -> {
+                    SearchResult result = response.getResponseBody();
+                    assertNotNull(result);
+                    assertNotNull(result.getServiceInstance());
+                    assertEquals(this.instances.size(), result.getServiceInstance().size());
+                    assertNotNull(result.getServiceInstance().getFirst().getTransactionId());
+                });
+
+    }
+
 }
