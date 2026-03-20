@@ -97,6 +97,7 @@ public class SecomV2SignatureProviderImpl implements SecomSignatureProvider {
     @Override
     public boolean validateSignature(String[] signatureCertificates, DigitalSignatureAlgorithmEnum algorithm, byte[] signature, byte[] content) {
         // Create a new signature to sign the provided content
+
         for (String signatureCertificate : signatureCertificates) {
             try {
                 Signature sign = Signature.getInstance(algorithm.getValue());
