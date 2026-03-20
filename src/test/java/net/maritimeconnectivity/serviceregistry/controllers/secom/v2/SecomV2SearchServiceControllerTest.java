@@ -441,16 +441,26 @@ class SecomV2SearchServiceControllerTest {
         EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        envelopeSearchFilterObject.setLocalOnly(Boolean.FALSE); //THIS IS A GLOBAL SEARCH
         envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        searchFilterObject.setEnvelopeSignature("TEST CERT");
+        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
+        envelopeSearchFilterObject.setLocalOnly(false);
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
+
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service calls for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
+
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
+
 
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
