@@ -42,6 +42,7 @@ public class UploadResultsController {
      * @param transactionId The transaction ID associated with the global search
      * @param searchResults The search filter object
      * @return Http status 200 OK if the results were successfully uploaded
+     * @implNote Results with invalid signature in the envelope will be rejected by the middleware
      */
 
     @PostMapping("/uploadResults/{transactionId}")
@@ -50,6 +51,7 @@ public class UploadResultsController {
         @RequestBody List<ServiceInstanceObject> searchResults)
     {
         log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
+
 
         //TODO
         // For any request where the MRN of the sender does not conform to the MSR MRN defined in G1183 (i.e. does not
@@ -61,6 +63,12 @@ public class UploadResultsController {
         for (ServiceInstanceObject result : searchResults) {
             log.debug("Service name: {}", result.getName());
         }
+
+        //Validate the results
+
+        //Call to some validationservice
+        
+
         // Consolidate results based on transactionId cast to searchObjectResult
         List<ServiceInstanceObject> results = searchResults.stream().map(r -> (ServiceInstanceObject) r).toList();
         searchConsolidationService.addResults(transactionId, results);
