@@ -26,6 +26,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import org.grad.secomv2.core.base.SecomSignatureProvider;
 import org.grad.secomv2.core.models.*;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
@@ -51,8 +52,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
 import java.security.Provider;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -79,6 +82,9 @@ class SecomV2SearchServiceControllerTest {
 
     @MockitoBean
     private InstanceService instanceService;
+
+    @MockitoBean
+    private SecomSignatureProvider secomV2SignatureProvider;
 
     @MockitoBean
     private MirClient mirClient;
@@ -170,13 +176,21 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        searchFilterObject.setEnvelopeSignature("TEST CERT");
+        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Perform the web request
         webTestClient.post()
@@ -227,10 +241,18 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
 
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        searchFilterObject.setEnvelopeSignature("TEST CERT");
+        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
@@ -295,10 +317,18 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        searchFilterObject.setEnvelopeSignature("TEST CERT");
+        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
@@ -349,10 +379,18 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        searchFilterObject.setEnvelopeSignature("TEST CERT");
+        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service calls for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
