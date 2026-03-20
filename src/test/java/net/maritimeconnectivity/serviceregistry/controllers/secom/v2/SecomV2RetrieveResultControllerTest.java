@@ -94,6 +94,8 @@ public class SecomV2RetrieveResultControllerTest {
     void testRetrieveResultsReturnsCurrentServiceResponseOnEachCall () {
         String validTransactionId = "validTransactionId";
 
+        List<ServiceInstanceObject> emptyResults = new ArrayList<>();
+
         //Setup test variable
         List<ServiceInstanceObject> validResults = new ArrayList<>();
         final ServiceInstanceObject resultInstance = new ServiceInstanceObject();
@@ -108,7 +110,8 @@ public class SecomV2RetrieveResultControllerTest {
         //Return the instance when calling getResults
         when(searchConsolidationService.getResults(validTransactionId))
                 .thenReturn(validResults) //Call 1
-                .thenReturn(validResultsNew); //Call 2
+                .thenReturn(validResultsNew) //Call 2
+                .thenReturn(emptyResults);
 
 
         webTestClient.get()
@@ -133,7 +136,12 @@ public class SecomV2RetrieveResultControllerTest {
                     Assertions.assertEquals("newTestName", result.getServiceInstance().getFirst().getName());
                 });
 
-        verify(searchConsolidationService, times(2)).getResults(validTransactionId);
+        webTestClient.get()
+                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .exchange()
+                .expectStatus().isNoContent();
+
+        verify(searchConsolidationService, times(3)).getResults(validTransactionId);
 
 
 
