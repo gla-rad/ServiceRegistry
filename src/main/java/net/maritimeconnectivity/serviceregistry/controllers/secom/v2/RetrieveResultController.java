@@ -1,6 +1,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import jakarta.ws.rs.*;
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
@@ -40,7 +41,8 @@ public class RetrieveResultController implements GenericSecomInterface {
 
             // Build 404 directly avoiding exception mapping as this is not necessary here
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Transaction not found: " + transactionId) // or some error DTO
+                    .type(MediaType.APPLICATION_JSON)
+                    .entity("\"Transaction not found: " + transactionId + "\"")
                     .build();
         } else if (services.isEmpty()) {
             log.debug("User tried to retrieve results but no results exists for transaction {}", transactionId);
