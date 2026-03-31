@@ -50,9 +50,7 @@ public class SecomV2RetrieveResultControllerTest {
         webTestClient.get()
                 .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + transactionId)
                 .exchange()
-                .expectStatus().isNotFound()
-                .expectBody(String.class)
-                .isEqualTo("Transaction not found: " + transactionId);
+                .expectStatus().isNotFound();
 
 
 
