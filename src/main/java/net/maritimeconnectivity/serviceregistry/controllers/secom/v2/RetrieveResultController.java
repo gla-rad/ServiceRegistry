@@ -46,7 +46,7 @@ public class RetrieveResultController implements GenericSecomInterface {
             log.debug("User tried to retrieve results but no results exists for transaction {}",
                     transactionId);
 
-            return Response.status(Response.Status.NO_CONTENT)
+            return Response.status(Response.Status.OK)
                     .entity("No results for valid transaction: " + transactionId)
                     .build();
         }

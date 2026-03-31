@@ -139,7 +139,7 @@ public class SecomV2RetrieveResultControllerTest {
         webTestClient.get()
                 .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
                 .exchange()
-                .expectStatus().isNoContent();
+                .expectStatus().isOk();
 
         verify(searchConsolidationService, times(3)).getResults(validTransactionId);
 
