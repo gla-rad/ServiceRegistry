@@ -19,6 +19,7 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -84,7 +85,7 @@ class SecomV2SearchServiceControllerTest {
     private InstanceService instanceService;
 
     @MockitoBean
-    private SecomSignatureProvider secomV2SignatureProvider;
+    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
 
     @MockitoBean
     private MirClient mirClient;
