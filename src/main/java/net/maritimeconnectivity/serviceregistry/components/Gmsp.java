@@ -122,7 +122,6 @@ public class Gmsp {
      * @param searchFilterObj The object representing the SECOM searchService call
      * @param endpoint        The endpoint to which the response should be sent. The transactionID is part of the URL.
      * @return uuid to uniquely identify the global search request
-     * TODO: Consider where the check of certificate validity should be done.
      */
     public String globalSearch(String endpoint, String consumerMrn, SearchFilterObject searchFilterObj, Geometry searchGeometry) {
         if (!this.running) {
