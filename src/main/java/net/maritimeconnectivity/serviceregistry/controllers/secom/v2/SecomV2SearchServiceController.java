@@ -36,6 +36,7 @@ import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.grad.secomv2.core.exceptions.SecomNotFoundException;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
 import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
@@ -156,6 +157,13 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         // Perform the search locally
         final Page<Instance> instancesPage = this.instanceService.search(envelopeSearchFilterObject);
+
+        if (instancesPage.isEmpty() && localSearchOnly) {
+            log.debug("No instances found for search filter object");
+            throw new SecomNotFoundException("No instances found for Local search with search filter " +
+                    "object");
+        }
+
 
         log.info("Found {} instances for search filter object", instancesPage.getTotalElements());
 
