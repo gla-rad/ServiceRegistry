@@ -145,7 +145,7 @@ info:
             rootCA:
                 path:
     gmsp:
-        enabled: false
+        enabled: true
         search:
             globalSubject: 'urn:mrn:mcp:msr:search:global'
 eureka:
@@ -158,3 +158,9 @@ secom:
             keystore: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
             keystorePassword: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
             insecureSslPolicy: true
+        maritimeIdentity:
+            enabled: true
+            rootCertAlias: ${MIR_ROOT_CA_ALIAS}
+            trustStorePath: ${MIR_TRUSTSTORE_PATH}
+            trustStorePassword: ${MIR_TRUSTSTORE_PASSWORD}
+
