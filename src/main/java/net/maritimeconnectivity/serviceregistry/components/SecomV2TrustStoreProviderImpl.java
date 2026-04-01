@@ -3,6 +3,7 @@ package net.maritimeconnectivity.serviceregistry.components;
 import lombok.extern.slf4j.Slf4j;
 import org.grad.secomv2.core.base.SecomTrustStoreProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -15,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 
 @Component
+@ConditionalOnProperty(name = "secom.security.maritimeIdentity.enabled", havingValue = "true")
 @Slf4j
 public class SecomV2TrustStoreProviderImpl implements SecomTrustStoreProvider {
 
