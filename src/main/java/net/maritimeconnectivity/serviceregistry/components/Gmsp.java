@@ -235,7 +235,7 @@ public class Gmsp {
         final Page<Instance> instancesPage = this.instanceService.search(dto.getSearchFilterObject().getEnvelope());
 
         List<ServiceInstanceObject> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), ServiceInstanceObject.class);
-        searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
+        searchObjectResults.forEach(r -> r.setSourceMSRs(new String[]{ownMrn}));
         log.debug("Found {} search results for local database", searchObjectResults.size());
 
         try {

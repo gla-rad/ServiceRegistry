@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.interfaces.GenericSecomInterface;
+import org.grad.secomv2.core.models.EnvelopeSearchResultObject;
 import org.grad.secomv2.core.models.SearchResult;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @Path("/")
@@ -32,9 +34,10 @@ public class RetrieveResultController implements GenericSecomInterface {
     @Path(RETREIVE_RESULTS_INTERFACE_PATH + "/{transactionId}")
     @GET
     @Produces("application/json")
-    public Response retrieveResults(@PathParam("transactionId") String transactionId) {
+    public Response retrieveResults(@PathParam("transactionId") UUID transactionId) {
 
-        List<ServiceInstanceObject> services = searchConsolidationService.getResults(transactionId);
+        List<ServiceInstanceObject> services =
+                searchConsolidationService.getResults(transactionId.toString());
 
         if (services == null) {
             log.debug("User tried to retrieve results for unknown transaction {}", transactionId);
@@ -50,9 +53,13 @@ public class RetrieveResultController implements GenericSecomInterface {
 
         log.debug("Found {} results for transactionId {}", services.size(), transactionId);
 
+        EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
+        envelope.setTransactionId(transactionId);
+        envelope.setServiceInstance(services); //may be empty, ensures user does not get 404 immediately
         SearchResult searchResult = new SearchResult();
-        searchResult.setTransactionId(transactionId);
-        searchResult.setServiceInstance(services); //may be empty, ensures user does not get 404 immediately
+        searchResult.setEnvelope(envelope);
+        searchResult.setEnvelopeSignature("This is a signature placeholder"); // No signature is
+        // generated for the search result as it is
 
         return Response.ok(searchResult).build();
     }

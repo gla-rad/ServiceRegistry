@@ -39,10 +39,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.grad.secomv2.core.exceptions.SecomNotFoundException;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
-import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
-import org.grad.secomv2.core.models.SearchFilterObject;
-import org.grad.secomv2.core.models.SearchResult;
-import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.grad.secomv2.core.models.*;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -55,6 +52,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -167,7 +165,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         log.info("Found {} instances for search filter object", instancesPage.getTotalElements());
 
-        String transactionId = UUID.randomUUID().toString();
+        UUID transactionId = UUID.randomUUID();
 
         //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
         String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
@@ -191,7 +189,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         List<ServiceInstanceObject> searchObjectResults = this.searchObjectResultMapper.convertToList(instancesPage.getContent(), ServiceInstanceObject.class);
 
         // Foreach SearchObjectResult set the sourceMSR
-        searchObjectResults.forEach(r -> r.setSourceMSR(this.ownMrn));
+        searchObjectResults.forEach(r -> r.setSourceMSRs(new String[]{ownMrn}));
 
         // Careful cause depending on the configuration an MIR client might not
         // be available. In those case the mirClient will be null.
@@ -214,9 +212,12 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                                     .orElse(null)
                     );
                     // And append the valid ones to the search object
-                    ((ServiceInstanceObject) searchObject).setCertificates(new ArrayList<>(Optional.ofNullable(mcpEntity)
-                            .map(McpEntityBase::getValidCertificatesAsString)
-                            .orElseGet(Collections::emptyList)));
+                    ((ServiceInstanceObject) searchObject).setCertificates(
+                            Optional.ofNullable(mcpEntity)
+                                    .map(McpEntityBase::getValidCertificatesAsString) // List<String>
+                                    .map(list -> list.toArray(new String[0]))         // convert to String[]
+                                    .orElse(new String[0])                             // empty array if null
+                    );
                 } catch (FeignException ex) {
                     log.error("Error while retrieving certificate for entity {}: {}",
                             searchObject.getInstanceId(),
@@ -226,10 +227,19 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         }
 
 
+        log.debug("UUID is {}", transactionId);
         // Finally build the response
+        EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
+        envelope.setServiceInstance(searchObjectResults);
+        envelope.setTransactionId(transactionId);
+        envelope.setEnvelopeSignatureCertificate(new String[0]); // empty array
+        envelope.setEnvelopeRootCertificateThumbprint("thumbprint"); // empty string
+        envelope.setEnvelopeSignatureTime(Instant.now());// empty string
+
         SearchResult searchResult = new SearchResult();
-        searchResult.setServiceInstance(searchObjectResults);
-        searchResult.setTransactionId(transactionId);
+        searchResult.setEnvelope(envelope);
+        searchResult.setEnvelopeSignature("this is a signature placeholder");
+
 
         // And return
         return searchResult;
