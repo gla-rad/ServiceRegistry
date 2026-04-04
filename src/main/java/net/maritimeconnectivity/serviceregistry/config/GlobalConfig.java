@@ -96,8 +96,7 @@ public class GlobalConfig {
                                     .map(MappingContext::getSource)
                                     .map(Xml.class::cast)
                                     .map(Xml::getContent)
-                                    .orElse(null))
-                            .map(Instance::getInstanceAsXml, org.grad.secom.core.models.SearchObjectResult::setInstanceAsXml);
+                                    .orElse(null));
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .filter(Geometry.class::isInstance)
@@ -143,8 +142,7 @@ public class GlobalConfig {
                                     .map(MappingContext::getSource)
                                     .map(Xml.class::cast)
                                     .map(Xml::getContent)
-                                    .orElse(null))
-                            .map(Instance::getInstanceAsXml, ServiceInstanceObject::setInstanceAsXml);
+                                    .orElse(null));
                     mapper.using(ctx -> (Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .filter(Geometry.class::isInstance)
