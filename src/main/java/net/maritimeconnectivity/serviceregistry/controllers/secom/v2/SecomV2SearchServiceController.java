@@ -240,6 +240,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         searchResult.setEnvelope(envelope);
         searchResult.setEnvelopeSignature("this is a signature placeholder");
 
+        log.debug("Return code 200");
 
         // And return
         return searchResult;

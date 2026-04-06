@@ -453,7 +453,7 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable, boolean includeXml) {
+    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
@@ -462,9 +462,9 @@ public class InstanceService {
                 .map(searchResult -> {
                     List<Instance> hits = searchResult.hits();
 
-                    if (!includeXml) {
-                        hits.forEach(instance -> instance.setInstanceAsXml(null));
-                    }
+//                    if (!includeXml) {
+//                        hits.forEach(instance -> instance.setInstanceAsXml(null));
+//                    }
 
                     return new PageImpl<>(hits, pageable, searchResult.total().hitCount());
                 })
@@ -712,14 +712,11 @@ public class InstanceService {
     @Transactional(readOnly = true)
     public Page<Instance> search(@Valid EnvelopeSearchFilterObject searchFilterObject) {
 
-        boolean includeXml = Optional.ofNullable(searchFilterObject.getIncludeXml()).orElse(false);
-
         InstanceSearchQueryBuilder.QueryParams lusceneParams = queryBuilder.build(searchFilterObject);
         return handle(
                 lusceneParams.queryString(),
                 lusceneParams.geometry(),
-                PageRequest.of(0, Integer.MAX_VALUE),
-                includeXml);
+                PageRequest.of(0, Integer.MAX_VALUE));
     }
 
 

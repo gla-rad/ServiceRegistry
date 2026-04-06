@@ -61,6 +61,7 @@ public class RetrieveResultController implements GenericSecomInterface {
         searchResult.setEnvelopeSignature("This is a signature placeholder"); // No signature is
         // generated for the search result as it is
 
+        log.warn("Returned OK for GS REtrieve results");
         return Response.ok(searchResult).build();
     }
 
