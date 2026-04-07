@@ -18,6 +18,7 @@ package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
@@ -26,11 +27,14 @@ import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.ResponseSearchObjectWithCert;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
+import org.grad.secomv2.core.models.EnvelopeSearchResultObject;
+import org.grad.secomv2.core.models.SearchResult;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,6 +90,15 @@ class SecomV1SearchServiceControllerTest {
     @MockitoBean
     private MirClient mirClient;
 
+    @MockitoBean
+    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
+
+    @MockitoBean
+    private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
+
+    @MockitoBean
+    private SecomSearchResultSigningService secomSearchResultSigningService;
+
     // Test Variables
     private List<Instance> instances;
     private Map<String, McpServiceDto> mcpServiceDtos;
@@ -110,13 +123,6 @@ class SecomV1SearchServiceControllerTest {
             instance.setStatus(ServiceStatus.RELEASED);
             instance.setVersion("0.0.1");
             instance.setGeometry(factory.createPoint(new Coordinate(i, i)));
-
-            Xml xml = new Xml();
-            xml.setId(i);
-            xml.setName(String.format("XML Name %d", i));
-            xml.setComment(String.format("XML Comment %d", i));
-            xml.setContent("<xml></xml>");
-            instance.setInstanceAsXml(xml);
 
             // Add the instance to the list
             this.instances.add(instance);
@@ -146,6 +152,17 @@ class SecomV1SearchServiceControllerTest {
 
         // Create a pageable definition
         this.pageable = PageRequest.of(0, 5);
+
+        doAnswer(invocation -> {
+            EnvelopeSearchResultObject envelope = invocation.getArgument(0, EnvelopeSearchResultObject.class);
+
+            SearchResult result = new SearchResult();
+            result.setEnvelope(envelope);
+            result.setEnvelopeSignature("TEST_SIGNATURE");
+
+            return result;
+        }).when(secomSearchResultSigningService)
+                .signSearchResult(any(EnvelopeSearchResultObject.class));
     }
 
     /**
@@ -193,7 +210,6 @@ class SecomV1SearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
                     }
                 });
@@ -248,7 +264,6 @@ class SecomV1SearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
@@ -314,7 +329,6 @@ class SecomV1SearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
                     }
                 });
@@ -367,7 +381,6 @@ class SecomV1SearchServiceControllerTest {
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertEquals(SECOM_DataProductType.OTHER, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
