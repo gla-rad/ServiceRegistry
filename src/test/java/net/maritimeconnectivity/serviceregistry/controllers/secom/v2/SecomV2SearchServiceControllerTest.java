@@ -87,8 +87,6 @@ class SecomV2SearchServiceControllerTest {
     @MockitoBean
     private InstanceService instanceService;
 
-    @MockitoBean
-    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
 
     @MockitoBean
     private MirClient mirClient;
@@ -98,6 +96,9 @@ class SecomV2SearchServiceControllerTest {
 
     @MockitoBean
     private Gmsp gmsp;
+
+    @MockitoBean
+    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
 
     @MockitoBean
     private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
