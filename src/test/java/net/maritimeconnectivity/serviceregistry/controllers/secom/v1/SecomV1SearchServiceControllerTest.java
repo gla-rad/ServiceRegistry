@@ -166,7 +166,7 @@ class SecomV1SearchServiceControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
@@ -219,7 +219,7 @@ class SecomV1SearchServiceControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any());
         doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any(), any());
         doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
 
@@ -287,7 +287,7 @@ class SecomV1SearchServiceControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
@@ -339,7 +339,7 @@ class SecomV1SearchServiceControllerTest {
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service calls for creating a new instance
-        doReturn(page).when(this.instanceService).handle(any(), any(), any(), anyBoolean());
+        doReturn(page).when(this.instanceService).handle(any(), any(), any());
         doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
 
         // Perform the web request

@@ -20,6 +20,8 @@ import java.util.Base64;
 import java.util.Date;
 
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class SecomV2SignatureProviderImplTest {
 
@@ -30,7 +32,7 @@ public class SecomV2SignatureProviderImplTest {
 
     @Before
     public void setUp() throws Exception {
-        provider = new SecomV2SignatureProviderImpl();
+        SecomV2SigningIdentityProvider signingIdentityProvider = mock(SecomV2SigningIdentityProvider.class);
 
         KeyPairGenerator kpg = KeyPairGenerator.getInstance("EC");
         kpg.initialize(384);
@@ -39,9 +41,9 @@ public class SecomV2SignatureProviderImplTest {
         certificate = createSelfSignedCertificate(keyPair);
         pemCertificate = toMinifiedCert(certificate);
 
-        Field field = SecomV2SignatureProviderImpl.class.getDeclaredField("privateKey");
-        field.setAccessible(true);
-        field.set(provider, keyPair.getPrivate());
+        when(signingIdentityProvider.getPrivateKey()).thenReturn(keyPair.getPrivate());
+
+        provider = new SecomV2SignatureProviderImpl(signingIdentityProvider);
     }
 
     @Test
