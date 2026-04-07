@@ -78,28 +78,6 @@ public class SecomSearchResultSigningService {
         return searchResult;
     }
 
-//    private byte[] buildPayload(EnvelopeSearchResultObject envelope) {
-//        StringBuilder payload = new StringBuilder();
-//
-//        payload.append("[");
-//
-//        String[] certs = envelope.getEnvelopeSignatureCertificate();
-//        if (certs != null && certs.length > 0) {
-//            for (int i = 0; i < certs.length; i++) {
-//                payload.append(certs[i]);
-//                if (i < certs.length - 1) {
-//                    payload.append(".");
-//                }
-//            }
-//        }
-//
-//        payload.append("].");
-//        payload.append(envelope.getEnvelopeRootCertificateThumbprint()).append(".");
-//        payload.append(envelope.getEnvelopeSignatureTime().getEpochSecond()).append(".");
-//        payload.append(envelope.getDigitalSignatureReference().toLowerCase());
-//
-//        return payload.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
-//    }
 
     private String getRootThumbprint() {
         try {
