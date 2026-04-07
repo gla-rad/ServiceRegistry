@@ -47,16 +47,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 
 import java.time.Instant;
 import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.util.function.Predicate.not;
 
 /**
  * The SECOM Discovery Service Controller.
@@ -114,7 +110,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public SearchResult searchService(@Valid SearchFilterObject searchFilterObject)  {
+    public SearchResult searchService(@Valid SearchFilterObject searchFilterObject) {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();
