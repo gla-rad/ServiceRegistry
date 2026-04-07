@@ -1,11 +1,13 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
+import com.netflix.discovery.converters.Auto;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
+import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import org.grad.secomv2.core.base.EnvelopeSignatureBearer;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.exceptions.SecomNotFoundException;
@@ -32,6 +34,9 @@ public class RetrieveResultController implements GenericSecomInterface {
 
     @Autowired
     SearchConsolidationService searchConsolidationService;
+
+    @Autowired
+    SecomSearchResultSigningService secomSearchResultSigningService;
 
     @Path(RETREIVE_RESULTS_INTERFACE_PATH)
     @POST
@@ -61,16 +66,9 @@ public class RetrieveResultController implements GenericSecomInterface {
 
         EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
         envelope.setServiceInstance(services);
-        envelope.setTransactionId(UUID.randomUUID());
-        envelope.setEnvelopeSignatureCertificate(new String[0]); // empty array
-        envelope.setEnvelopeRootCertificateThumbprint("thumbprint"); // empty string
-        envelope.setEnvelopeSignatureTime(Instant.now());// empty string
+        envelope.setTransactionId(UUID.fromString(transactionId));
 
-        SearchResult searchResult = new SearchResult();
-        searchResult.setEnvelope(envelope);
-        searchResult.setEnvelopeSignature("this is a signature placeholder");
-
-        log.debug("Return code 200");
+        SearchResult searchResult = secomSearchResultSigningService.signSearchResult(envelope);
 
         // And return
         return searchResult;

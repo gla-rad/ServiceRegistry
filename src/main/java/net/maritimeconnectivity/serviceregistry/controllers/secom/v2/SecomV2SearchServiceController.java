@@ -32,6 +32,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.commons.lang3.EnumUtils;
@@ -85,6 +86,9 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
      */
     @Autowired
     InstanceService instanceService;
+
+    @Autowired
+    SecomSearchResultSigningService secomSearchResultSigningService;
 
     @Autowired(required = false)
     MirClient mirClient;
@@ -228,15 +232,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
         envelope.setServiceInstance(searchObjectResults);
         envelope.setTransactionId(transactionId);
-        envelope.setEnvelopeSignatureCertificate(new String[0]); // empty array
-        envelope.setEnvelopeRootCertificateThumbprint("thumbprint"); // empty string
-        envelope.setEnvelopeSignatureTime(Instant.now());// empty string
 
-        SearchResult searchResult = new SearchResult();
-        searchResult.setEnvelope(envelope);
-        searchResult.setEnvelopeSignature("this is a signature placeholder");
-
-        log.debug("Return code 200");
+        SearchResult searchResult = secomSearchResultSigningService.signSearchResult(envelope);
 
         // And return
         return searchResult;

@@ -163,4 +163,8 @@ secom:
             rootCertAlias: ${MIR_ROOT_CA_ALIAS}
             trustStorePath: ${MIR_TRUSTSTORE_PATH}
             trustStorePassword: ${MIR_TRUSTSTORE_PASSWORD}
+        signingIdentity:
+            enabled: true
+            signingIdentityPath: ${SECOM_SIGNING_IDENTITY_PATH}
+            signingIdentityPassword: ${SECOM_SIGNING_IDENTITY_PASSWORD}
 
