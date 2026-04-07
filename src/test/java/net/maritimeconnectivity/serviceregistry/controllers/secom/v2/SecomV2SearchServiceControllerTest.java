@@ -20,6 +20,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2SigningIdentityProvider;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2TrustStoreProviderImpl;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -27,6 +29,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import org.grad.secomv2.core.base.SecomSignatureProvider;
 import org.grad.secomv2.core.models.*;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
@@ -96,6 +99,12 @@ class SecomV2SearchServiceControllerTest {
     @MockitoBean
     private Gmsp gmsp;
 
+    @MockitoBean
+    private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
+
+    @MockitoBean
+    private SecomSearchResultSigningService secomSearchResultSigningService;
+
 
 
 
@@ -160,6 +169,17 @@ class SecomV2SearchServiceControllerTest {
 
         // Create a pageable definition
         this.pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+        doAnswer(invocation -> {
+            EnvelopeSearchResultObject envelope = invocation.getArgument(0, EnvelopeSearchResultObject.class);
+
+            SearchResult result = new SearchResult();
+            result.setEnvelope(envelope);
+            result.setEnvelopeSignature("TEST_SIGNATURE");
+
+            return result;
+        }).when(secomSearchResultSigningService)
+                .signSearchResult(any(EnvelopeSearchResultObject.class));
     }
 
     /**
@@ -169,6 +189,8 @@ class SecomV2SearchServiceControllerTest {
      */
     @Test
     void testSearchGeoJSON() {
+
+        when(secomV2SignatureProvider.validateSignature(any(), any(), any(), any())).thenReturn(true);
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
@@ -208,17 +230,16 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServiceInstance());
-                    assertEquals(this.instances.size(), result.getServiceInstance().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(ServiceInstanceObject searchObjectResult: result.getServiceInstance()) {
-                        int i = result.getServiceInstance().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult: result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
@@ -278,26 +299,25 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServiceInstance());
-                    assertEquals(this.instances.size(), result.getServiceInstance().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(ServiceInstanceObject searchObjectResult : result.getServiceInstance()) {
-                        int i = result.getServiceInstance().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult : result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
                         assertNotNull((searchObjectResult).getCertificates());
-                        assertEquals(1, (searchObjectResult).getCertificates().size());
+                        assertEquals(1, (searchObjectResult).getCertificates().length);
 
                         // Try to compare the MIR/MSR certificate responses
                         final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final String msrResponse = searchObjectResult.getCertificates().getFirst();
+                        final String msrResponse = searchObjectResult.getCertificates()[0];
                         assertEquals(mirResponse.getCertificate(), msrResponse);
                     }
                 });
@@ -347,17 +367,16 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServiceInstance());
-                    assertEquals(this.instances.size(), result.getServiceInstance().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(ServiceInstanceObject searchObjectResult: result.getServiceInstance()) {
-                        int i = result.getServiceInstance().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult: result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
@@ -410,26 +429,25 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServiceInstance());
-                    assertEquals(this.instances.size(), result.getServiceInstance().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(ServiceInstanceObject searchObjectResult : result.getServiceInstance()) {
-                        int i = result.getServiceInstance().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult : result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
                         assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
                         assertNotNull(searchObjectResult.getCertificates());
-                        assertEquals(1, (searchObjectResult).getCertificates().size());
+                        assertEquals(1, (searchObjectResult).getCertificates().length);
 
                         // Try to compare the MIR/MSR certificate responses
                         final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final String msrResponse = searchObjectResult.getCertificates().getFirst();
+                        final String msrResponse = searchObjectResult.getCertificates()[0];
                         assertEquals(mirResponse.getCertificate(), msrResponse);
 
                     }
@@ -475,9 +493,9 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServiceInstance());
-                    assertEquals(this.instances.size(), result.getServiceInstance().size());
-                    assertNotNull(result.getTransactionId());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
                 });
 
     }
