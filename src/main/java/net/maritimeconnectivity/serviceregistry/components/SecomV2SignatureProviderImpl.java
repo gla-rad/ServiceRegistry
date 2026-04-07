@@ -5,6 +5,7 @@ import org.grad.secomv2.core.base.DigitalSignatureCertificate;
 import org.grad.secomv2.core.base.SecomSignatureProvider;
 import org.grad.secomv2.core.models.enums.DigitalSignatureAlgorithmEnum;
 import org.grad.secomv2.core.utils.SecomPemUtils;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.security.InvalidKeyException;
@@ -16,6 +17,7 @@ import java.security.cert.CertificateException;
 
 @Component
 @Slf4j
+@ConditionalOnProperty(name = "secom.security.signingIdentity.enabled", havingValue = "true")
 public class SecomV2SignatureProviderImpl implements SecomSignatureProvider {
 
     private final SecomV2SigningIdentityProvider signingIdentityProvider;
