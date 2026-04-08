@@ -1,38 +1,17 @@
 package net.maritimeconnectivity.serviceregistry.controllers;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.Response;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import lombok.extern.slf4j.Slf4j;
-import org.grad.secomv2.core.base.SecomConstants;
-import org.grad.secomv2.core.interfaces.GenericSecomInterface;
-import org.springframework.stereotype.Component;
-import org.springframework.validation.annotation.Validated;
 
-
-/*
-    A controller to check the availability of the MSR itself.
-    Useful for frontend applications using the MSR as a backend to check if it is up.
- */
-@Component
-@Path("/")
+@RestController
 @Slf4j
-@Validated
 public class PingController {
 
-    /**
-     * The Interface Endpoint Path.
-     */
-    static final String PING_CONTROLLER_PATH = "/" + SecomConstants.SECOM_VERSION + "/ping";
-
-
-    // Simple ping to return OK when the MSR is running
-    @Path(PING_CONTROLLER_PATH)
-    @GET
-    @Produces("*/*")
-    public Response ping() {
-        return Response.ok().build();
+    @GetMapping("/v2/ping")
+    public ResponseEntity<Void> ping() {
+        return ResponseEntity.ok().build();
     }
 }
-
-
-
-
