@@ -181,8 +181,9 @@ public class Gmsp {
             String uuid = endpoint.substring(endpoint.lastIndexOf('/') + 1);
 
             //Create consolidated result entry
-            this.searchConsolidationService.createConsolidationEntry(uuid);
-            log.debug("Create consolidated entry for transaction ID: {}", uuid);
+            this.searchConsolidationService.createConsolidationEntry(uuid, consumerMrn);
+            log.debug("Create consolidated entry for transaction ID: {} Consumer {}",
+                    uuid, consumerMrn);
 
             // Send each message to the MMS Edge Router
             for (OutgoingMmtpMessage msg : messages) {

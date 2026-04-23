@@ -17,18 +17,21 @@ public class ConsolidatedSearchResult {
 
     @Getter
     private final String transactionId;
+    @Getter
+    private final String uid;
     private final Map<String, ServiceInstanceObject> results;
 
     private final Set<String> polled;
 
-    private ConsolidatedSearchResult(String transactionId) {
+    private ConsolidatedSearchResult(String transactionId, String uid) {
         this.transactionId = transactionId;
+        this.uid = uid;
         this.results = new ConcurrentHashMap<>();
         this.polled = ConcurrentHashMap.newKeySet(); //Thread safe set
     }
 
-    public static ConsolidatedSearchResult create(String transactionId) {
-        return new ConsolidatedSearchResult(transactionId);
+    public static ConsolidatedSearchResult create(String transactionId, String uid) {
+        return new ConsolidatedSearchResult(transactionId, uid);
     }
 
     /**

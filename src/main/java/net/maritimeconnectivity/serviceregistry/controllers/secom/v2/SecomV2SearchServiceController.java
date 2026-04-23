@@ -163,7 +163,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         }
 
 
-        log.info("Found {} instances for search filter object", instancesPage.getTotalElements());
+        log.info("Found {} instances for search filter object");
 
         UUID transactionId = UUID.randomUUID();
 
@@ -181,7 +181,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         if (this.gmspClient != null && !localSearchOnly) {
 
 
-            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "", searchFilterObject, searchGeometry);
+            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "TESTMRN",
+                    searchFilterObject, searchGeometry);
         }
 
         // Get the search object results and if possible also update the

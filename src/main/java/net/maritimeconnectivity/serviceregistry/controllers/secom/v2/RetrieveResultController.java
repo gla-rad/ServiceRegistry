@@ -54,7 +54,7 @@ public class RetrieveResultController implements GenericSecomInterface {
 
 
         List<ServiceInstanceObject> services =
-                searchConsolidationService.getResults(transactionId);
+                searchConsolidationService.getResults(transactionId, "TESTMRN2");
 
         if (services == null) {
             log.debug("User tried to retrieve results for unknown transaction {}", transactionId);

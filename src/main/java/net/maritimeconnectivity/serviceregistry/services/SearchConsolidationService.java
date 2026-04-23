@@ -8,6 +8,7 @@ import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.config.CacheConfig;
 import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
 import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
+import org.grad.secom.core.exceptions.SecomNotAuthorisedException;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
@@ -15,6 +16,7 @@ import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Service implementation for consolidating search results obtained from local and global search
@@ -43,15 +45,16 @@ public class SearchConsolidationService {
         }
     }
 
-    public void createConsolidationEntry(String transactionId) {
-        ConsolidatedSearchResult agg = getOrCreate(transactionId);
-        log.debug("Created consolidation entry for transactionId {}", transactionId);
+    public void createConsolidationEntry(String transactionId, String uid) {
+        ConsolidatedSearchResult agg = create(transactionId, uid);
+        sessions.put(transactionId, agg);
+        log.warn("Created consolidation entry for transaction {}", transactionId);
     }
 
     /** Add a single result to the transaction’s consolidated set (creates the entry if absent).
      * Do not add duplicate results*/
     public void addResult(String transactionId, ServiceInstanceObject result) {
-        ConsolidatedSearchResult agg = getOrCreate(transactionId);
+        ConsolidatedSearchResult agg = get(transactionId);
         String key = getKey(result);            // choose your canonical key; instanceId for now
         if (key != null && !key.isBlank()) {
             agg.addIfNew(key, result);            // dedup happens inside the aggregator
@@ -61,11 +64,22 @@ public class SearchConsolidationService {
     }
 
     /** Read all results currently stored for the transaction (immutable snapshot). */
-    public List<ServiceInstanceObject> getResults(String transactionId) {
+    public List<ServiceInstanceObject> getResults(String transactionId, String uid) {
         var agg = sessions.get(transactionId, ConsolidatedSearchResult.class);
         if (agg == null) {
             log.debug("No results found for transactionId {}", transactionId);
             return null;
+        }
+
+        if (!Objects.equals(agg.getUid(), uid)) {
+            log.warn(
+                    "Securitu violaten for user on transaction {}. Expected uid {}, got {}",
+                    transactionId,
+                    agg.getUid(),
+                    uid
+            );
+           throw new SecomNotAuthorisedException("Not authorized to access results for this " +
+                   "transactionId");
         }
 
         // Capture a stable snapshot exactly once
@@ -82,8 +96,13 @@ public class SearchConsolidationService {
 
 
 
-    private ConsolidatedSearchResult getOrCreate(String transactionId) {
-        return sessions.get(transactionId, () -> ConsolidatedSearchResult.create(transactionId));
+    private ConsolidatedSearchResult get(String transactionId) {
+        Cache.ValueWrapper value = sessions.get(transactionId);
+        return value != null ? (ConsolidatedSearchResult) value.get() : null;
+    }
+
+    private ConsolidatedSearchResult create(String transactionId, String uid) {
+        return ConsolidatedSearchResult.create(transactionId, uid);
     }
 
     /** For now: instanceId as the dedup key; adjust if you adopt a different canonical key later. */
