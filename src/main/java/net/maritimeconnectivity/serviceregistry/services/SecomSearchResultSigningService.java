@@ -45,9 +45,6 @@ public class SecomSearchResultSigningService {
         envelope.setEnvelopeSignatureCertificate(getSigningCertificateArray());
         envelope.setEnvelopeRootCertificateThumbprint(this.getRootThumbprint());
         envelope.setEnvelopeSignatureTime(Instant.now());
-        envelope.setDigitalSignatureReference(
-                secomV2SignatureProvider.getSignatureAlgorithm().getValue()
-        );
 
         byte[] payload = envelope.getCsvString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
 
