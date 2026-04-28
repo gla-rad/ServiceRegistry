@@ -69,8 +69,6 @@ public class SecomSearchResultSigningService {
                 signature,
                 payload
         );
-        log.debug("Signature valid: {}", valid);
-
 
         return searchResult;
     }
