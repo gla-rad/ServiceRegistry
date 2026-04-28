@@ -60,12 +60,16 @@ public class UploadResultsController {
         if (searchResults.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
+
         for (ServiceInstanceObject result : searchResults) {
             log.debug("Service name: {}", result.getName());
 
-            for (String source : result.getSourceMSRs()) {
-                log.debug("Source MSR {}", source);
+            if (result.getSourceMSRs() != null) {
+                for (String source : result.getSourceMSRs()) {
+                    log.debug("Source MSR {}", source);
+                }
             }
+
         }
 
         //Validate the results
