@@ -26,18 +26,17 @@ public class UploadResultsClient extends SecomClient {
     }
 
     //
-    public HttpStatusCode uploadResults(List<ServiceInstanceObject> searchResults) throws WebClientResponseException {
-            ResponseEntity<Void> entity = this.secomClient
-                    .post()
-                    .uri("") //Leave empty as the client is initialized with the absolute path
-                    .contentType(MediaType.APPLICATION_JSON)
-                    //Mock empty body
-                    .bodyValue(searchResults)
-                    .retrieve()
-                    .toBodilessEntity()
-                    .block(); //Waits for response
+    public HttpStatusCode uploadResults(List<ServiceInstanceObject> searchResults) {
+        ResponseEntity<Void> entity = this.secomClient
+                .post()
+                .uri("")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(searchResults)
+                .exchangeToMono(response -> response.toBodilessEntity())
+                .block();
 
         assert entity != null;
         return entity.getStatusCode();
     }
+
 }

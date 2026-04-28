@@ -168,7 +168,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         UUID transactionId = UUID.randomUUID();
 
         //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
-        String callBackEndpoint = String.format("%s/api/secom/v2/uploadResults/%s", msrBaseUrl, transactionId);
+        String callBackEndpoint = String.format("%s/api/g1191/v2/uploadResults/%s", msrBaseUrl,
+                transactionId);
 
 
         //Aggreagator
