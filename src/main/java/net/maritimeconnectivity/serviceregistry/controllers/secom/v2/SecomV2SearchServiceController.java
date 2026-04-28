@@ -181,7 +181,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         if (this.gmspClient != null && !localSearchOnly) {
 
 
-            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "TESTMRN",
+            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "TESTMRN2",
                     searchFilterObject, searchGeometry);
         }
 
