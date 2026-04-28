@@ -6,6 +6,7 @@ import net.maritimeconnectivity.serviceregistry.components.SecomV2SigningIdentit
 import net.maritimeconnectivity.serviceregistry.components.SecomV2TrustStoreProviderImpl;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
+import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
 import org.grad.secomv2.core.models.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -54,6 +56,9 @@ public class SecomV2RetrieveResultControllerTest {
     @MockitoBean
     private SecomSearchResultSigningService secomSearchResultSigningService;
 
+    @MockitoBean
+    CertificateParsingUtil certificateParsingUtil;
+
     private RetrieveResultObject retrieveResultObject;
 
     @BeforeEach
@@ -78,19 +83,18 @@ public class SecomV2RetrieveResultControllerTest {
 
     @Test
     void testRetrieveResultForInvalidTransactionId() {
-
         String transactionId = "invalidTransactionId";
-
         String uid = "TESTMRN2";
 
-        this.retrieveResultObject.getEnvelope().setTransactionId(transactionId);
+        retrieveResultObject.getEnvelope().setTransactionId(transactionId);
 
-        //Return null when calling the getresults
+        doReturn(uid)
+                .when(certificateParsingUtil)
+                .getMrnFromCertificate(any());
+
         doReturn(null)
                 .when(searchConsolidationService)
-                .getResults(transactionId, uid);
-
-        // Mock the signature validation
+                .getResults(eq(transactionId), eq(uid));
 
         webTestClient.post()
                 .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
@@ -98,7 +102,8 @@ public class SecomV2RetrieveResultControllerTest {
                 .exchange()
                 .expectStatus().isNotFound();
 
-
+        verify(certificateParsingUtil)
+                .getMrnFromCertificate(any());
 
         verify(searchConsolidationService)
                 .getResults(eq(transactionId), eq(uid));
@@ -109,6 +114,11 @@ public class SecomV2RetrieveResultControllerTest {
         List<ServiceInstanceObject> validResults = new ArrayList<>();
         String validTransactionId = UUID.randomUUID().toString();
         String uid = "TESTMRN2";
+
+        doReturn(uid)
+                .when(certificateParsingUtil)
+                .getMrnFromCertificate(any());
+
 
         //Setup test variable
         final ServiceInstanceObject resultInstance = new ServiceInstanceObject();
@@ -164,6 +174,10 @@ public class SecomV2RetrieveResultControllerTest {
         validResultsNew.add(newResultInstance);
 
         this.retrieveResultObject.getEnvelope().setTransactionId(validTransactionId);
+
+        doReturn(uid)
+                .when(certificateParsingUtil)
+                .getMrnFromCertificate(any());
 
         //Return the instance when calling getResults
         when(searchConsolidationService.getResults(validTransactionId, uid))
