@@ -8,6 +8,7 @@ import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
+import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
 import org.grad.secomv2.core.base.EnvelopeSignatureBearer;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.exceptions.SecomNotFoundException;
@@ -38,6 +39,10 @@ public class RetrieveResultController implements GenericSecomInterface {
     @Autowired
     SecomSearchResultSigningService secomSearchResultSigningService;
 
+    @Autowired
+    CertificateParsingUtil certificateParsingUtil;
+
+
     @Path(RETREIVE_RESULTS_INTERFACE_PATH)
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
@@ -45,6 +50,9 @@ public class RetrieveResultController implements GenericSecomInterface {
     public SearchResult retrieveResult(@Valid RetrieveResultObject retrieveResultObject) {
 
         EnvelopeRetrieveResultObject envelopeSearchResultObject = retrieveResultObject.getEnvelope();
+
+        String consumerMrn =
+                certificateParsingUtil.getMrnFromCertificate(envelopeSearchResultObject.getEnvelopeSignatureCertificate());
 
 
         String transactionId = envelopeSearchResultObject.getTransactionId();
@@ -54,7 +62,7 @@ public class RetrieveResultController implements GenericSecomInterface {
 
 
         List<ServiceInstanceObject> services =
-                searchConsolidationService.getResults(transactionId, "TESTMRN2");
+                searchConsolidationService.getResults(transactionId, consumerMrn);
 
         if (services == null) {
             log.debug("User tried to retrieve results for unknown transaction {}", transactionId);

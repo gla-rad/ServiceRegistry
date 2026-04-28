@@ -33,6 +33,7 @@ import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
+import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.commons.lang3.EnumUtils;
@@ -95,6 +96,10 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
     @Autowired(required = false)
     Gmsp gmspClient;
+
+    @Autowired
+    CertificateParsingUtil certificateParsingUtil;
+
     /**
      * Object Mapper from Domain to DTO.
      */
@@ -119,7 +124,13 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();
 
-        // Get from envelopeSearchFilterObject default to false if null
+        // Extract consumer MRN from certificate
+        String consumerMrn =
+                certificateParsingUtil.getMrnFromCertificate(envelopeSearchFilterObject.getEnvelopeSignatureCertificate());
+
+        log.warn("Extracted MRN from certificate: {}", consumerMrn);
+
+
 
         log.info("Search filter object value {}", envelopeSearchFilterObject.getLocalOnly());
 
@@ -182,7 +193,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         if (this.gmspClient != null && !localSearchOnly) {
 
 
-            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, "TESTMRN2",
+            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, consumerMrn,
                     searchFilterObject, searchGeometry);
         }
 

@@ -62,6 +62,10 @@ public class UploadResultsController {
         }
         for (ServiceInstanceObject result : searchResults) {
             log.debug("Service name: {}", result.getName());
+
+            for (String source : result.getSourceMSRs()) {
+                log.debug("Source MSR {}", source);
+            }
         }
 
         //Validate the results
