@@ -81,12 +81,16 @@ public class SecomV2RetrieveResultControllerTest {
 
         String transactionId = "invalidTransactionId";
 
+        String uid = "TESTMRN2";
+
         this.retrieveResultObject.getEnvelope().setTransactionId(transactionId);
 
         //Return null when calling the getresults
         doReturn(null)
                 .when(searchConsolidationService)
-                .getResults(eq(transactionId));
+                .getResults(transactionId, uid);
+
+        // Mock the signature validation
 
         webTestClient.post()
                 .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
@@ -96,13 +100,15 @@ public class SecomV2RetrieveResultControllerTest {
 
 
 
-        verify(searchConsolidationService).getResults(eq(transactionId));
+        verify(searchConsolidationService)
+                .getResults(eq(transactionId), eq(uid));
     }
 
     @Test
     void testRetrieveResultForValidTransactionId() {
         List<ServiceInstanceObject> validResults = new ArrayList<>();
         String validTransactionId = UUID.randomUUID().toString();
+        String uid = "TESTMRN2";
 
         //Setup test variable
         final ServiceInstanceObject resultInstance = new ServiceInstanceObject();
@@ -111,10 +117,15 @@ public class SecomV2RetrieveResultControllerTest {
 
         this.retrieveResultObject.getEnvelope().setTransactionId(validTransactionId);
 
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
+
         //Return the instance when calling getResults
         doReturn(validResults)
                 .when(searchConsolidationService)
-                .getResults(eq(validTransactionId));
+                .getResults(eq(validTransactionId), any());
+
+
 
         webTestClient.post()
                 .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
@@ -129,7 +140,7 @@ public class SecomV2RetrieveResultControllerTest {
                 });
 
         verify(secomSearchResultSigningService).signSearchResult(any());
-        verify(searchConsolidationService).getResults(eq(validTransactionId));
+        verify(searchConsolidationService).getResults(eq(validTransactionId), any());
 
     }
 
@@ -137,6 +148,7 @@ public class SecomV2RetrieveResultControllerTest {
     @Test
     void testRetrieveResultsReturnsCurrentServiceResponseOnEachCall () {
         String validTransactionId = UUID.randomUUID().toString();
+        String uid = "TESTMRN2";
 
         List<ServiceInstanceObject> emptyResults = new ArrayList<>();
 
@@ -154,7 +166,7 @@ public class SecomV2RetrieveResultControllerTest {
         this.retrieveResultObject.getEnvelope().setTransactionId(validTransactionId);
 
         //Return the instance when calling getResults
-        when(searchConsolidationService.getResults(validTransactionId))
+        when(searchConsolidationService.getResults(validTransactionId, uid))
                 .thenReturn(validResults) //Call 1
                 .thenReturn(validResultsNew) //Call 2
                 .thenReturn(emptyResults);
@@ -192,7 +204,7 @@ public class SecomV2RetrieveResultControllerTest {
                 .exchange()
                 .expectStatus().isOk();
 
-        verify(searchConsolidationService, times(3)).getResults(validTransactionId);
+        verify(searchConsolidationService, times(3)).getResults(validTransactionId, uid);
 
 
 

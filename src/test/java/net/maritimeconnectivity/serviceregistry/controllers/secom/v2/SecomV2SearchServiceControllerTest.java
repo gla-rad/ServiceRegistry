@@ -200,7 +200,6 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
         envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
         envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
         envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
@@ -264,7 +263,6 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
 
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
         envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
         envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
         envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
@@ -339,7 +337,6 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
         envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
         envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
         envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
@@ -400,7 +397,6 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
         envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
         envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
         envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
@@ -464,7 +460,6 @@ class SecomV2SearchServiceControllerTest {
         envelopeSearchFilterObject.setQuery(searchParameters);
         envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
-        envelopeSearchFilterObject.setDigitalSignatureReference("sha3_384");
         envelopeSearchFilterObject.setLocalOnly(false);
         envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
         envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
