@@ -79,19 +79,21 @@ public class UploadResultsControllerTest {
     @MethodSource("txCases")
     void uploadResultsReturnsExpectedStatus(String tx, int expectedStatus, boolean shouldThrow) throws Exception {
 
-        if (shouldThrow) {
-            doThrow(new InvalidRequestException("No results found for transaction id " + tx))
-                    .when(searchConsolidationService)
-                    .addResults(eq(tx), anyList());
-        }
+        when(searchConsolidationService.entryExistsForTransaction(tx))
+                .thenReturn(!shouldThrow);
 
         mockMvc.perform(
-                    post("/api/g1191/v2/uploadResults/{transactionId}", tx)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(results))
-            )
-            .andExpect(status().is(expectedStatus));
-        verify(searchConsolidationService).addResults(eq(tx), anyList());
+                        post("/api/g1191/v2/uploadResults/{transactionId}", tx)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(results))
+                )
+                .andExpect(status().is(expectedStatus));
+
+        if (shouldThrow) {
+            verify(searchConsolidationService, never()).addResults(any(), anyList());
+        } else {
+            verify(searchConsolidationService).addResults(eq(tx), anyList());
+        }
     }
 
 
