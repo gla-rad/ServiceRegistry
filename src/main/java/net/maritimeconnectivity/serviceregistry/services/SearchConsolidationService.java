@@ -51,6 +51,10 @@ public class SearchConsolidationService {
         log.warn("Created consolidation entry for transaction {}", transactionId);
     }
 
+    public boolean entryExistsForTransaction(String transactionId) {
+        return sessions.get(transactionId) != null;
+    }
+
     /** Add a single result to the transaction’s consolidated set (creates the entry if absent).
      * Do not add duplicate results*/
     public void addResult(String transactionId, ServiceInstanceObject result) {

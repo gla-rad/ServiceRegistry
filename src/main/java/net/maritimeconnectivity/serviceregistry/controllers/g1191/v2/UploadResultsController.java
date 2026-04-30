@@ -53,6 +53,11 @@ public class UploadResultsController {
         log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
 
 
+        //Check that xactId exists
+        if (transactionId == null || !searchConsolidationService.entryExistsForTransaction(transactionId)) {
+            return ResponseEntity.badRequest().build();
+        }
+
         //TODO
         // For any request where the MRN of the sender does not conform to the MSR MRN defined in G1183 (i.e. does not
         // begin with urn:mrn:mcp:msr ) a HTTP response with status code 400 must be returned.
@@ -60,6 +65,8 @@ public class UploadResultsController {
         if (searchResults.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
+
+
 
         for (ServiceInstanceObject result : searchResults) {
             log.debug("Service name: {}", result.getName());
