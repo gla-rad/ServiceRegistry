@@ -139,6 +139,15 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         log.info("Local search only set to: {}", localSearchOnly);
 
 
+        //Reject
+
+        SearchParameters query = envelopeSearchFilterObject.getQuery();
+
+        if (query.isEmpty()) {
+            throw new SecomValidationException("Query is empty");
+        }
+
+
         // If at maximum only one geometry is provided, retrieve it
         final Geometry searchGeometry =  Optional.of(envelopeSearchFilterObject)
                 .map(EnvelopeSearchFilterObject::getGeometry)
@@ -173,8 +182,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                     "object");
         }
 
-
-        log.info("Found {} instances for search filter object");
 
         UUID transactionId = UUID.randomUUID();
 
@@ -242,6 +249,47 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         log.debug("UUID is {}", transactionId);
         // Finally build the response
+
+        //Put placeholders for old code missing correct attributes
+        // Normalize legacy data so it validates against OpenAPI
+        searchObjectResults.forEach(r -> {
+            if (r.getApiDoc() == null) {
+                r.setApiDoc("https://example.com");
+            }
+
+            if (r.getDescription() == null) {
+                r.setDescription("Description placeholder");
+            }
+
+            if (r.getOrganizationId() == null) {
+                r.setOrganizationId("urn:mrn:mcp:org:mcc:legacy");
+            }
+
+            // Normalize enum casing
+            if ("PROVISIONAL".equals(r.getStatus())) {
+                r.setStatus("provisional");
+            }
+
+            // Trim invalid whitespace
+            if (r.getInstanceId() != null) {
+                r.setInstanceId(r.getInstanceId().trim());
+            }
+
+            if (r.getEndpointUri() != null) {
+                r.setEndpointUri(r.getEndpointUri().trim());
+            }
+
+            if (r.getName() != null) {
+                r.setName(r.getName().trim());
+            }
+
+            // Fix clearly broken legacy IDs
+            if ("urn:mrn:".equals(r.getInstanceId())) {
+                r.setInstanceId("urn:mrn:mcp:entity:mcc:legacy:placeholder");
+            }
+        });
+
+
         EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
         envelope.setServiceInstance(searchObjectResults);
         envelope.setTransactionId(transactionId);
