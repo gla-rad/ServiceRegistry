@@ -169,7 +169,7 @@ public class GlobalConfig {
                                     .map(Instance.class::cast)
                                     .map(Instance::getStatus)
                                     .map(ServiceStatus::name)
-                                    .orElse(""))
+                                    .orElse(null))
                             .map(src -> src, ServiceInstanceObject::setStatus);
                 });
         // ================================================================== //
