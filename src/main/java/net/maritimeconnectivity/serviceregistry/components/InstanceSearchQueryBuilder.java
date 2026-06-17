@@ -56,8 +56,9 @@ public class InstanceSearchQueryBuilder {
             }
 
             // Handle the status filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getStatus())) {
-                query = this.addToQuery(query, "status", searchFilterObject.getQuery().getStatus(), BooleanOperator.AND);
+            if (searchFilterObject.getQuery().getStatus() != null) {
+                query = this.addToQuery(query, "status",
+                        searchFilterObject.getQuery().getStatus().toString(), BooleanOperator.AND);
             }
 
             // Handle the version filter

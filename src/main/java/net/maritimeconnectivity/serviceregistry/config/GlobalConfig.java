@@ -21,6 +21,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.grad.secomv2.core.models.enums.ServiceInstanceStatusEnum;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
@@ -169,6 +170,7 @@ public class GlobalConfig {
                                     .map(Instance.class::cast)
                                     .map(Instance::getStatus)
                                     .map(ServiceStatus::name)
+                                    .map(ServiceInstanceStatusEnum::valueOf)
                                     .orElse(null))
                             .map(src -> src, ServiceInstanceObject::setStatus);
                 });

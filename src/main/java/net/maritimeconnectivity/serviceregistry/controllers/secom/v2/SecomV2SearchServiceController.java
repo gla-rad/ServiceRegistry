@@ -139,12 +139,12 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         log.info("Local search only set to: {}", localSearchOnly);
 
 
-        //Reject
-
         SearchParameters query = envelopeSearchFilterObject.getQuery();
+        String unparsedGeom = envelopeSearchFilterObject.getGeometry();
 
-        if (query.isEmpty()) {
-            throw new SecomValidationException("Query is empty");
+        //Reject when no query or geometry is provided
+        if ((unparsedGeom == null || unparsedGeom.isEmpty()) && (query == null || query.isEmpty())) {
+            throw new SecomValidationException("No valid search parameters provided. Please provide either a geometry or a query.");
         }
 
 
@@ -153,13 +153,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                 .map(EnvelopeSearchFilterObject::getGeometry)
                 .map(this::parseGeometry)
                 .orElse(null);
-
-        // If a status is in the query, check it is valid
-        if (Strings.isNotBlank(envelopeSearchFilterObject.getQuery().getStatus())) {
-            if (!EnumUtils.isValidEnum(ServiceStatus.class, envelopeSearchFilterObject.getQuery().getStatus())) {
-                throw new SecomValidationException(String.format("%s is not a valid status", envelopeSearchFilterObject.getQuery().getStatus()));
-            }
-        }
 
         // If searching for an MMSI without a design ID, return a 400
         if (envelopeSearchFilterObject.getQuery().getMmsi() != null && !envelopeSearchFilterObject.getQuery().getMmsi().isEmpty()
@@ -263,11 +256,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
             if (r.getOrganizationId() == null) {
                 r.setOrganizationId("urn:mrn:mcp:org:mcc:legacy");
-            }
-
-            // Normalize enum casing
-            if ("PROVISIONAL".equals(r.getStatus())) {
-                r.setStatus("provisional");
             }
 
             // Trim invalid whitespace
