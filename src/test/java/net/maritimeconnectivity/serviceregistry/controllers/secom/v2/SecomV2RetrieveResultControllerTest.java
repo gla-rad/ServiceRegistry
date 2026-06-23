@@ -97,7 +97,7 @@ public class SecomV2RetrieveResultControllerTest {
                 .getResults(eq(transactionId), eq(uid));
 
         webTestClient.post()
-                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
+                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + transactionId)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -138,7 +138,7 @@ public class SecomV2RetrieveResultControllerTest {
 
 
         webTestClient.post()
-                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
+                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk()
@@ -187,7 +187,7 @@ public class SecomV2RetrieveResultControllerTest {
 
 
         webTestClient.post()
-                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
+                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk()
@@ -200,7 +200,7 @@ public class SecomV2RetrieveResultControllerTest {
                 });
 
         webTestClient.post()
-                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
+                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk()
@@ -213,7 +213,7 @@ public class SecomV2RetrieveResultControllerTest {
                 });
 
         webTestClient.post()
-                .uri("/api/secom/" + RETREIVE_RESULTS_INTERFACE_PATH)
+                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk();
