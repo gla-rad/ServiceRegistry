@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SigningIdentityProvider;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2TrustStoreProviderImpl;
+import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.EnvelopeSearchResultObject;
 import org.grad.secomv2.core.models.SearchResult;
 import org.springframework.stereotype.Service;
@@ -85,7 +86,7 @@ public class SecomSearchResultSigningService {
             }
 
             byte[] der = cert.getEncoded();
-            byte[] digest = MessageDigest.getInstance("SHA-256").digest(der);
+            byte[] digest = MessageDigest.getInstance(SecomConstants.CERTIFICATE_THUMBPRINT_HASH).digest(der);
 
             return this.hexFormatter.formatHex(digest);
         } catch (Exception e) {
