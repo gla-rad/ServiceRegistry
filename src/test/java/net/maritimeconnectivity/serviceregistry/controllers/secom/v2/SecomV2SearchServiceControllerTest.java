@@ -238,7 +238,8 @@ class SecomV2SearchServiceControllerTest {
                         int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
@@ -306,7 +307,8 @@ class SecomV2SearchServiceControllerTest {
                         int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
@@ -373,7 +375,8 @@ class SecomV2SearchServiceControllerTest {
                         int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
@@ -434,7 +437,8 @@ class SecomV2SearchServiceControllerTest {
                         int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
