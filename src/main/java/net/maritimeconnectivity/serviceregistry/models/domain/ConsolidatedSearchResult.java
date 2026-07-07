@@ -1,8 +1,9 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
 import lombok.Getter;
-import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
 
+import java.security.Provider;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -16,18 +17,21 @@ public class ConsolidatedSearchResult {
 
     @Getter
     private final String transactionId;
-    private final Map<String, SearchObjectResult> results;
+    @Getter
+    private final String uid;
+    private final Map<String, ServiceInstanceObject> results;
 
     private final Set<String> polled;
 
-    private ConsolidatedSearchResult(String transactionId) {
+    private ConsolidatedSearchResult(String transactionId, String uid) {
         this.transactionId = transactionId;
+        this.uid = uid;
         this.results = new ConcurrentHashMap<>();
         this.polled = ConcurrentHashMap.newKeySet(); //Thread safe set
     }
 
-    public static ConsolidatedSearchResult create(String transactionId) {
-        return new ConsolidatedSearchResult(transactionId);
+    public static ConsolidatedSearchResult create(String transactionId, String uid) {
+        return new ConsolidatedSearchResult(transactionId, uid);
     }
 
     /**
@@ -37,7 +41,7 @@ public class ConsolidatedSearchResult {
      * @param result the result to add
      * @return true if the result was added, false if it was a duplicate
      */
-    public boolean addIfNew(String key, SearchObjectResult result) {
+    public boolean addIfNew(String key, ServiceInstanceObject result) {
         if (key == null || key.isBlank()) {
             return false; // skip invalid or empty keys
         }
@@ -52,11 +56,11 @@ public class ConsolidatedSearchResult {
      * Avoids concurrent modification issues, as more results may be added by GMSP
      * Will only return results that have not been polled before!
      */
-    public Collection<SearchObjectResult> snapshot() {
-        List<SearchObjectResult> out = new ArrayList<>();
+    public Collection<ServiceInstanceObject> snapshot() {
+        List<ServiceInstanceObject> out = new ArrayList<>();
 
         //We want both key and val., so iterate the entry set
-        for (Map.Entry<String, SearchObjectResult> e : results.entrySet()) {
+        for (Map.Entry<String, ServiceInstanceObject> e : results.entrySet()) {
             String key = e.getKey();
             if (polled.add(key)) { //Adds key only if not already present and returns true
                 out.add(e.getValue());

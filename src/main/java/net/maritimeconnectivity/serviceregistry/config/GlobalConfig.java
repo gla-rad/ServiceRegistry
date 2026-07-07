@@ -20,6 +20,8 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
+import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.grad.secomv2.core.models.enums.ServiceInstanceStatusEnum;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.modelmapper.ModelMapper;
@@ -95,8 +97,7 @@ public class GlobalConfig {
                                     .map(MappingContext::getSource)
                                     .map(Xml.class::cast)
                                     .map(Xml::getContent)
-                                    .orElse(null))
-                            .map(Instance::getInstanceAsXml, org.grad.secom.core.models.SearchObjectResult::setInstanceAsXml);
+                                    .orElse(null));
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .filter(Geometry.class::isInstance)
@@ -129,7 +130,7 @@ public class GlobalConfig {
         // Provide a configuration for all the SECOM V2 mappings here to keep tidy    //
         // ========================================================================== //
         // Create a map between the instances and the SECOM search result object
-        modelMapper.createTypeMap(Instance.class, net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert.class)
+        modelMapper.createTypeMap(Instance.class, ServiceInstanceObject.class)
                 .implicitMappings()
                 .addMappings(mapper -> {
                     mapper.using(ctx -> Optional.of(ctx)
@@ -137,41 +138,41 @@ public class GlobalConfig {
                                     .map(List.class::cast)
                                     .map(l -> l.toArray(new String[]{}))
                                     .orElse(new String[]{}))
-                            .map(Instance::getKeywords, org.grad.secomv2.core.models.SearchObjectResult::setKeywords);
+                            .map(Instance::getKeywords, ServiceInstanceObject::setKeywords);
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .map(Xml.class::cast)
                                     .map(Xml::getContent)
-                                    .orElse(null))
-                            .map(Instance::getInstanceAsXml, org.grad.secomv2.core.models.SearchObjectResult::setInstanceAsXml);
-                    mapper.using(ctx -> Optional.of(ctx)
+                                    .orElse(null));
+                    mapper.using(ctx -> (Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .filter(Geometry.class::isInstance)
                                     .map(Geometry.class::cast)
-                                    .map(GeometryJSONConverter::convertFromGeometry)
-                                    .orElse(null))
-                            .map(Instance::getGeometry, org.grad.secomv2.core.models.SearchObjectResult::setGeometry);
+                                    .map(Geometry::toString)
+                                    .stream().toArray(String[]::new)))
+                            .map(Instance::getGeometry, ServiceInstanceObject::setCoverageArea);
                     mapper.using(ctx ->Stream.of(Optional.of(ctx)
                                             .map(MappingContext::getSource)
                                             .filter(List.class::isInstance)
                                             .map(List.class::cast)
                                             .map(List::toArray)
-                                            .orElseGet(() -> new org.grad.secom.core.models.enums.SECOM_DataProductType[]{SECOM_DataProductType.OTHER}))
-                                            .filter(org.grad.secom.core.models.enums.SECOM_DataProductType.class::isInstance)
-                                            .map(org.grad.secom.core.models.enums.SECOM_DataProductType.class::cast)
-                                            .map(org.grad.secom.core.models.enums.SECOM_DataProductType::getDescription)
-                                            .map(org.grad.secomv2.core.models.enums.SECOM_DataProductType::fromDescription)
-                                            .toList()
-                                            .toArray(new org.grad.secomv2.core.models.enums.SECOM_DataProductType[]{})
+                                            .orElseGet(() -> new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}))
+                                    .filter(SECOM_DataProductType.class::isInstance)
+                                    .map(SECOM_DataProductType.class::cast)
+                                    .map(SECOM_DataProductType::getDescription)
+                                    .map(org.grad.secomv2.core.models.enums.SECOM_DataProductType::fromDescription)
+                                    .toList()
+                                    .toArray(new org.grad.secomv2.core.models.enums.SECOM_DataProductType[]{})
                             )
-                            .map(Instance::getDataProductType, org.grad.secomv2.core.models.SearchObjectResult::setDataProductType);
+                            .map(Instance::getDataProductType, ServiceInstanceObject::setDataProductType);
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .map(Instance.class::cast)
                                     .map(Instance::getStatus)
                                     .map(ServiceStatus::name)
-                                    .orElse(""))
-                            .map(src -> src, net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert::setStatus);
+                                    .map(ServiceInstanceStatusEnum::valueOf)
+                                    .orElse(null))
+                            .map(src -> src, ServiceInstanceObject::setStatus);
                 });
         // ================================================================== //
 

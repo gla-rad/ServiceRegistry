@@ -17,17 +17,23 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import net.maritimeconnectivity.serviceregistry.components.Gmsp;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2SigningIdentityProvider;
+import net.maritimeconnectivity.serviceregistry.components.SecomV2TrustStoreProviderImpl;
+import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchResultWithCert;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
+import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
+import org.grad.secomv2.core.base.SecomSignatureProvider;
 import org.grad.secomv2.core.models.*;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
+import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -49,7 +56,10 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
 import reactor.core.publisher.Mono;
 
+import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
+import java.security.Provider;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -57,12 +67,12 @@ import java.util.*;
 import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
+@Import(TestingConfiguration.class)
 class SecomV2SearchServiceControllerTest {
 
     /**
@@ -74,14 +84,30 @@ class SecomV2SearchServiceControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    public DomainDtoMapper<?,?> searchObjectResultMapper;
-
     @MockitoBean
     private InstanceService instanceService;
 
+
     @MockitoBean
     private MirClient mirClient;
+
+    @MockitoBean
+    private MmsEdgeRouter mmsEdgeRouter;
+
+    @MockitoBean
+    private Gmsp gmsp;
+
+    @MockitoBean
+    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
+
+    @MockitoBean
+    private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
+
+    @MockitoBean
+    private SecomSearchResultSigningService secomSearchResultSigningService;
+
+
+
 
     // Test Variables
     private List<Instance> instances;
@@ -143,7 +169,18 @@ class SecomV2SearchServiceControllerTest {
         }
 
         // Create a pageable definition
-        this.pageable = PageRequest.of(0, 5);
+        this.pageable = PageRequest.of(0, Integer.MAX_VALUE);
+
+        doAnswer(invocation -> {
+            EnvelopeSearchResultObject envelope = invocation.getArgument(0, EnvelopeSearchResultObject.class);
+
+            SearchResult result = new SearchResult();
+            result.setEnvelope(envelope);
+            result.setEnvelopeSignature("TEST_SIGNATURE");
+
+            return result;
+        }).when(secomSearchResultSigningService)
+                .signSearchResult(any(EnvelopeSearchResultObject.class));
     }
 
     /**
@@ -153,20 +190,30 @@ class SecomV2SearchServiceControllerTest {
      */
     @Test
     void testSearchGeoJSON() {
+
+        when(secomV2SignatureProvider.validateSignature(any(), any(), any(), any())).thenReturn(true);
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Perform the web request
         webTestClient.post()
@@ -183,17 +230,17 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServices());
-                    assertEquals(this.instances.size(), result.getServices().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResult searchObjectResult: result.getServices()) {
-                        int i = result.getServices().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult: result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
@@ -210,20 +257,32 @@ class SecomV2SearchServiceControllerTest {
     void testSearchGeoJSONWithCerts() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("{\"type\":\"GeometryCollection\",\"geometries\":[{\"type\":\"LineString\",\"coordinates\":[[0,50],[0,52]]}]}");
+
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
         doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any(), any());
         doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
+
+        doNothing().when(this.mmsEdgeRouter).init();
+        doReturn("").when(this.gmsp).globalSearch(any(), any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
@@ -236,38 +295,31 @@ class SecomV2SearchServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(SearchResultWithCert.class)
+                .expectBody(SearchResult.class)
                 .consumeWith(response -> {
-                    SearchResultWithCert result = response.getResponseBody();
+                    SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServices());
-                    assertEquals(this.instances.size(), result.getServices().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResultWithCert searchObjectResult : result.getServices()) {
-                        int i = result.getServices().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult : result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
                         assertNotNull((searchObjectResult).getCertificates());
-                        assertEquals(1, (searchObjectResult).getCertificates().size());
+                        assertEquals(1, (searchObjectResult).getCertificates().length);
 
                         // Try to compare the MIR/MSR certificate responses
                         final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final McpCertificateDto msrResponse = searchObjectResult.getCertificates().getFirst();
-                        assertEquals(mirResponse.getId(), msrResponse.getId());
-                        assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
-                        assertEquals(mirResponse.getStart(), msrResponse.getStart());
-                        assertEquals(mirResponse.getEnd(), msrResponse.getEnd());
-                        assertEquals(mirResponse.getSerialNumber(), msrResponse.getSerialNumber());
-                        assertEquals(mirResponse.getRevokedAt(), msrResponse.getRevokedAt());
-                        assertEquals(mirResponse.getRevokeReason(), msrResponse.getRevokeReason());
-                        assertEquals(mirResponse.isRevoked(), msrResponse.isRevoked());
+                        final String msrResponse = searchObjectResult.getCertificates()[0];
+                        assertEquals(mirResponse.getCertificate(), msrResponse);
                     }
                 });
     }
@@ -281,15 +333,23 @@ class SecomV2SearchServiceControllerTest {
     void testSearchWKT() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
@@ -307,17 +367,17 @@ class SecomV2SearchServiceControllerTest {
                 .consumeWith(response -> {
                     SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServices());
-                    assertEquals(this.instances.size(), result.getServices().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResult searchObjectResult: result.getServices()) {
-                        int i = result.getServices().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult: result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
                     }
                 });
@@ -334,15 +394,23 @@ class SecomV2SearchServiceControllerTest {
     void testSearchWKTWithCerts() {
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
         SearchParameters searchParameters = new SearchParameters();
         searchParameters.setName("Test");
-        searchFilterObject.setQuery(searchParameters);
-        searchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
-        searchFilterObject.setPage(0);
-        searchFilterObject.setPageSize(Integer.MAX_VALUE);
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the signature validation
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service calls for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
@@ -357,40 +425,79 @@ class SecomV2SearchServiceControllerTest {
                 .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody(SearchResultWithCert.class)
+                .expectBody(SearchResult.class)
                 .consumeWith(response -> {
-                    SearchResultWithCert result = response.getResponseBody();
+                    SearchResult result = response.getResponseBody();
                     assertNotNull(result);
-                    assertNotNull(result.getServices());
-                    assertEquals(this.instances.size(), result.getServices().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
 
                     // Test each of the result entries
-                    for(SearchObjectResultWithCert searchObjectResult : result.getServices()) {
-                        int i = result.getServices().indexOf(searchObjectResult);
+                    for(ServiceInstanceObject searchObjectResult : result.getEnvelope().getServiceInstance()) {
+                        int i = result.getEnvelope().getServiceInstance().indexOf(searchObjectResult);
                         assertEquals(this.instances.get(i).getInstanceId(), searchObjectResult.getInstanceId());
                         assertEquals(this.instances.get(i).getName(), searchObjectResult.getName());
-                        assertEquals(this.instances.get(i).getStatus().toString(), searchObjectResult.getStatus());
+                        assertEquals(this.instances.get(i).getStatus().toString(),
+                                searchObjectResult.getStatus().toString());
                         assertEquals(this.instances.get(i).getVersion(), searchObjectResult.getVersion());
-                        assertEquals(this.instances.get(i).getInstanceAsXml().getContent(), searchObjectResult.getInstanceAsXml());
                         assertArrayEquals(new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}, searchObjectResult.getDataProductType());
 
                         // Now also check the certificates
                         assertNotNull(searchObjectResult.getCertificates());
-                        assertEquals(1, (searchObjectResult).getCertificates().size());
+                        assertEquals(1, (searchObjectResult).getCertificates().length);
 
                         // Try to compare the MIR/MSR certificate responses
                         final McpCertificateDto mirResponse = this.mcpServiceDtos.get(searchObjectResult.getInstanceId()).getCertificates().getFirst();
-                        final McpCertificateDto msrResponse = searchObjectResult.getCertificates().getFirst();
-                        assertEquals(mirResponse.getId(), msrResponse.getId());
-                        assertEquals(mirResponse.getCertificate(), msrResponse.getCertificate());
-                        assertEquals(mirResponse.getStart(), msrResponse.getStart());
-                        assertEquals(mirResponse.getEnd(), msrResponse.getEnd());
-                        assertEquals(mirResponse.getSerialNumber(), msrResponse.getSerialNumber());
-                        assertEquals(mirResponse.getRevokedAt(), msrResponse.getRevokedAt());
-                        assertEquals(mirResponse.getRevokeReason(), msrResponse.getRevokeReason());
-                        assertEquals(mirResponse.isRevoked(), msrResponse.isRevoked());
+                        final String msrResponse = searchObjectResult.getCertificates()[0];
+                        assertEquals(mirResponse.getCertificate(), msrResponse);
+
                     }
                 });
+    }
+
+    @Test
+    void TestGlobalSearchReturnsTransactionId() {
+        SearchFilterObject searchFilterObject = new SearchFilterObject();
+        EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
+        SearchParameters searchParameters = new SearchParameters();
+        searchParameters.setName("Test");
+        envelopeSearchFilterObject.setQuery(searchParameters);
+        envelopeSearchFilterObject.setGeometry("LINESTRING ( 0 50, 0 52 )");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        envelopeSearchFilterObject.setLocalOnly(false);
+        envelopeSearchFilterObject.setEnvelopeSignatureCertificate(new String[]{"MIIEMjCCA7egAwIBAgIUVP8ZKm4agOebq+T/l3OT4"});
+        envelopeSearchFilterObject.setEnvelopeSignatureTime(Instant.now());
+        envelopeSearchFilterObject.setEnvelopeRootCertificateThumbprint("8cfef0a9acd79be3d48c21510334d1692e7e82eb73f1aa869f4368a3590906e8");
+        searchFilterObject.setEnvelope(envelopeSearchFilterObject);
+        searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
+
+
+        // Create a mocked paging response
+        Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
+
+        // Mock the service calls for creating a new instance
+        doReturn(page).when(this.instanceService).search(any());
+
+        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
+
+
+        webTestClient.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
+                        .build())
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(BodyInserters.fromPublisher(Mono.just(searchFilterObject), SearchFilterObject.class))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(SearchResult.class)
+                .consumeWith(response -> {
+                    SearchResult result = response.getResponseBody();
+                    assertNotNull(result);
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                    assertEquals(this.instances.size(), result.getEnvelope().getServiceInstance().size());
+                    assertNotNull(result.getEnvelope().getServiceInstance());
+                });
+
     }
 
 }

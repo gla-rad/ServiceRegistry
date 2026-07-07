@@ -7,6 +7,7 @@ import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,6 +23,7 @@ import java.util.Set;
  */
 @Service
 @Slf4j
+@ConditionalOnBean(Gmsp.class)
 public class SubscriptionService {
 
     @Value("${info.gmsp.search.globalSubject}")

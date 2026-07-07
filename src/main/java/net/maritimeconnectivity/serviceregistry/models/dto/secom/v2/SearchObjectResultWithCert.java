@@ -17,7 +17,8 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.secom.v2;
 
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
-import org.grad.secomv2.core.models.SearchObjectResult;
+import org.grad.secom.core.models.SearchObjectResult;
+
 
 import java.util.List;
 

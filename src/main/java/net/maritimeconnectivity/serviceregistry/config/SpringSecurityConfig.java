@@ -76,7 +76,9 @@ class SpringSecurityConfig {
     /**
      * The default application name.
      */
-    @Value("${gla.rad.aton-service.resources.open:/,/index,/webjars/**,/static/src/**,/static/css/**,/static/images/**,/api/xmls/schemas/**,/api/secom/**}")
+    @Value("${gla.rad.aton-service.resources.open:/,/index,/webjars/**,/static/src/**," +
+            "/static/css/**,/static/images/**,/api/xmls/schemas/**,/api/secom/**," +
+            "/api/g1191/v2/uploadResults/**}")
     private String[] openResources;
 
     /**

@@ -11,6 +11,7 @@ import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.assertj.core.util.Arrays;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
+import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
@@ -32,16 +33,16 @@ public class InstanceSearchQueryBuilder {
 
     public record QueryParams(String queryString, Geometry geometry) {}
 
-    public QueryParams build(@Valid SearchFilterObject searchFilterObject) {
+    public QueryParams build(@Valid EnvelopeSearchFilterObject searchFilterObject) {
         Geometry geometry = Optional.ofNullable(searchFilterObject)
-                .map(SearchFilterObject::getGeometry)
+                .map(EnvelopeSearchFilterObject::getGeometry)
                 .map(this::parseGeometry)
                 .orElse(null);
         String q = buildQueryString(searchFilterObject);
         return new QueryParams(q, geometry);
     }
 
-    private String buildQueryString(SearchFilterObject searchFilterObject) {
+    private String buildQueryString(EnvelopeSearchFilterObject searchFilterObject) {
         // If at maximum only one geometry is provided, retrieve it
 
         // Check if free text
@@ -55,8 +56,9 @@ public class InstanceSearchQueryBuilder {
             }
 
             // Handle the status filter
-            if (Strings.isNotBlank(searchFilterObject.getQuery().getStatus())) {
-                query = this.addToQuery(query, "status", searchFilterObject.getQuery().getStatus(), BooleanOperator.AND);
+            if (searchFilterObject.getQuery().getStatus() != null) {
+                query = this.addToQuery(query, "status",
+                        searchFilterObject.getQuery().getStatus().toString(), BooleanOperator.AND);
             }
 
             // Handle the version filter

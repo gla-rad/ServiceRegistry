@@ -73,5 +73,6 @@ info:
             rootCA:
                 path:
     gmsp:
+        enabled: true
         search:
             globalSubject: 'urn:mrn:mcp:msr:search:global'

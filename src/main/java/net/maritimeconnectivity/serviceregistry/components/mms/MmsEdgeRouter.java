@@ -13,6 +13,8 @@ import net.maritimeconnectivity.serviceregistry.utils.ReconnectTokenUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -54,6 +56,7 @@ import java.util.concurrent.ScheduledFuture;
  */
 @Component
 @Slf4j
+@ConditionalOnProperty(value = "info.gmsp.enabled", havingValue = "true")
 public class MmsEdgeRouter {
 
     private final TaskScheduler scheduler;
@@ -416,7 +419,7 @@ public class MmsEdgeRouter {
 
          @Override
         public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-            session.setTextMessageSizeLimit(100 * 1024 * 1024); // 100 MiB
+            session.setBinaryMessageSizeLimit(100 * 1024 * 1024); // 100 MiB
             log.debug("WebSocket connection established with {}, buffer {}", session.getRemoteAddress(), session.getTextMessageSizeLimit());
 
         }

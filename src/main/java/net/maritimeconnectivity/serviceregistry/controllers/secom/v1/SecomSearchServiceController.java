@@ -226,8 +226,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         final Page<Instance> instancesPage = this.instanceService.handle(
                 query,
                 searchGeometry,
-                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE)),
-                includeXml
+                PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
         );
 
         // Get the search object results and if possible also update the

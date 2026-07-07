@@ -21,7 +21,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128Utils;
-import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.components.InstanceSearchQueryBuilder;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
@@ -44,6 +43,7 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.hibernate.search.backend.lucene.LuceneBackend;
 import org.hibernate.search.backend.lucene.LuceneExtension;
@@ -224,7 +224,7 @@ public class InstanceService {
     }
 
     @Transactional
-    public Instance updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public void updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
         log.debug("Request to update Instance from DTO: {}", updateServiceDto);
 
         // First, retrieve the existing instance
@@ -245,7 +245,7 @@ public class InstanceService {
         // TODO - Find a solution for API DOC and ceritficates
 
         // Save the updated instance
-        return this.save(instance);
+        this.save(instance);
     }
 
     /**
@@ -453,7 +453,7 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable, boolean includeXml) {
+    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
@@ -462,9 +462,9 @@ public class InstanceService {
                 .map(searchResult -> {
                     List<Instance> hits = searchResult.hits();
 
-                    if (!includeXml) {
-                        hits.forEach(instance -> instance.setInstanceAsXml(null));
-                    }
+//                    if (!includeXml) {
+//                        hits.forEach(instance -> instance.setInstanceAsXml(null));
+//                    }
 
                     return new PageImpl<>(hits, pageable, searchResult.total().hitCount());
                 })
@@ -710,16 +710,13 @@ public class InstanceService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Instance> search(@Valid SearchFilterObject searchFilterObject) {
-
-        boolean includeXml = Optional.ofNullable(searchFilterObject.getIncludeXml()).orElse(false);
+    public Page<Instance> search(@Valid EnvelopeSearchFilterObject searchFilterObject) {
 
         InstanceSearchQueryBuilder.QueryParams lusceneParams = queryBuilder.build(searchFilterObject);
         return handle(
                 lusceneParams.queryString(),
                 lusceneParams.geometry(),
-                PageRequest.of(Optional.ofNullable(searchFilterObject.getPage()).orElse(0), Optional.ofNullable(searchFilterObject.getPageSize()).orElse(Integer.MAX_VALUE)),
-                includeXml);
+                PageRequest.of(0, Integer.MAX_VALUE));
     }
 
 

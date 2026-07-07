@@ -82,7 +82,7 @@ public class InstanceController {
     @Autowired
     SearchAreaCalculator searchAreaCalculator;
 
-    @Autowired
+    @Autowired(required = false)
     SubscriptionService subscriptionService;
 
     /**
@@ -219,7 +219,7 @@ public class InstanceController {
         }
 
         ResponseEntity<InstanceDto> resp = this.saveInstance(newInstance, true);
-        if (resp.getStatusCode().is2xxSuccessful()) {
+        if (this.subscriptionService != null && resp.getStatusCode().is2xxSuccessful()) {
             subscriptionService.updateSubscriptions(newInstance);
         }
         return resp;
@@ -266,7 +266,9 @@ public class InstanceController {
         log.debug("REST request to delete Instance : {}", id);
 
         this.instanceService.delete(id);
-        subscriptionService.removeSubscriptions();
+        if (this.subscriptionService != null) {
+            subscriptionService.removeSubscriptions();
+        }
 
         return ResponseEntity.ok()
                 .headers(HeaderUtil.createEntityDeletionAlert("instance", id.toString()))
