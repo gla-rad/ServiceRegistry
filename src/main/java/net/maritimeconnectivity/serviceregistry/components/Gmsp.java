@@ -25,7 +25,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -77,7 +76,7 @@ public class Gmsp {
     SearchAreaCalculator sac;
 
     @Autowired
-    private InstanceSearchQueryBuilder queryBuilder;
+    InstanceSearchQueryBuilder queryBuilder;
 
     @Autowired
     DomainDtoMapper<Instance, ServiceInstanceObject> searchObjectResultMapper;
@@ -86,7 +85,7 @@ public class Gmsp {
     InstanceService instanceService;
 
     @Autowired
-    private SearchConsolidationService searchConsolidationService;
+    SearchConsolidationService searchConsolidationService;
 
     @Getter
     private boolean running = false;
@@ -108,6 +107,12 @@ public class Gmsp {
         this.mmtpFactory = mmtpFactory;
     }
 
+    /**
+     * The initialization function of the GMSP Component.
+     * <p/>
+     * This operation will subscribe the Service Registry to the global search
+     * subject of the MMS Edge Router and will initialize the subscription.
+     */
     @PostConstruct
     public void init() {
         if (this.mmsEdgeRouter.isConnected()) {
@@ -139,7 +144,7 @@ public class Gmsp {
                     consumerMrn,
                     searchFilterObj
             );
-            String searchMessageJson = writeJsonSearchMessage(searchMessageDto);
+            String searchMessageJson = mmsSearchMessageDTOtoJSON(searchMessageDto);
 
             List<OutgoingMmtpMessage> messages = new ArrayList<>();
 
@@ -207,10 +212,6 @@ public class Gmsp {
         return null;
     }
 
-    private String writeJsonSearchMessage(MmsSearchMessageDto mmsSearchMessageDto) throws JsonProcessingException {
-        return objectMapper.writeValueAsString(mmsSearchMessageDto);
-    }
-
     /**
      * Callback function to handle incoming global search requests from the MMS Router.
      * @param dto The DTO containing the search request details.
@@ -247,12 +248,22 @@ public class Gmsp {
         log.debug("Uploaded {} results via SECOM Upload interface {}", searchObjectResults.size(), dto.getEndpoint());
     }
 
-
-    public MmsSearchMessageDto parseSearchDto(String json) throws JsonProcessingException {
-        return objectMapper.readValue(json, MmsSearchMessageDto.class);
-    }
-
-    public HttpStatusCode uploadResults(URL url,
+    /**
+     * This helper function will perform the UploadResults operation using the
+     * SECOM Client. The UploadResults is not an official SECOM operation and
+     * therefore not supported out of the box from the SECOMLib. We can however
+     * use the SECOMLib WebClient to perform a SECOM-like call.
+     *
+     * @param url the URL to connect the SECOMLib WebClient to
+     * @param secomConfigProperties the SECOM Configuration Properties
+     * @param searchResults the search results to be uploaded
+     * @throws IOException – for IO exceptions
+     * @throws KeyStoreException – for exceptions while handling the key-store
+     * @throws NoSuchAlgorithmException – for exceptions onthe key-store alghorithm
+     * @throws CertificateException – for certificate exceptions
+     * @throws UnrecoverableKeyException – for certificate key exceptions
+     */
+    protected void uploadResults(URL url,
                                         SecomConfigProperties secomConfigProperties,
                                         List<ServiceInstanceObject> searchResults) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
         // Create a SECOM client
@@ -269,11 +280,16 @@ public class Gmsp {
                 .exchangeToMono(response -> response.toBodilessEntity())
                 .block();
 
-        // And return the entity
+        // Assert the success of the operation
         assert entity != null;
-        return entity.getStatusCode();
     }
 
+    /**
+     * A common global search callback function that decreases the
+     * global search request count.
+     *
+     * @param uuid the global search request UUID
+     */
     public void globalSearchRequestCallback(String uuid) {
         GlobalSearchRequestDto gsr = this.globalSearchRequests.get(uuid);
         if (gsr != null) {
@@ -281,39 +297,10 @@ public class Gmsp {
         }
     }
 
-    public boolean isSent(String gsrUuid) {
-        if  (this.globalSearchRequests.containsKey(gsrUuid)) {
-            return this.globalSearchRequests.get(gsrUuid).isSent();
-        }
-        return false;
-    }
-
-    public void subscribe(String subject) {
-        // Subscribe to the subject for incoming messages
-        OutgoingMmtpMessage subscriptionMessage = mmtpFactory.createSubscribeMessage(subject);
-        try {
-            mmsEdgeRouter.subscribe(subscriptionMessage);
-            log.debug("Subscribed to subject: {}", subject);
-        } catch (Exception e) {
-            log.error("Error subscribing to subject {}: {}", subject, e.getMessage());
-        }
-    }
-
-    public void unsubscribe(String subject) {
-        // Unsubscribe from the subject for incoming messages
-        OutgoingMmtpMessage unsubscriptionMessage = mmtpFactory.createUnsubscribeMessage(subject);
-        try {
-            mmsEdgeRouter.unsubscribe(unsubscriptionMessage);
-            log.debug("Unsubscribed from subject: {}", subject);
-        } catch (Exception e) {
-            log.error("Error unsubscribing from subject {}: {}", subject, e.getMessage());
-        }
-    }
-
-    public Set<String> getSubscriptions() {
-        return mmsEdgeRouter.getSubscriptions();
-    }
-
+    /**
+     * Initializes the previous subscriptions, already stored in the database.
+     * This operation is useful to bring back the GMSP to the correct state.
+     */
     public void initializeSubscriptionsFromDb() {
         List<SearchArea> allAreasInDb = instanceRepo.findAllInstanceSearchAreasUsed();
         ArrayList<String> allSubjectsInDb = this.sac.areaToSubjectMapper(allAreasInDb);
@@ -325,4 +312,81 @@ public class Gmsp {
             }
         }
     }
+
+    /**
+     * Ensurs that the global search request has been successfully sent.
+     *
+     * @param gsrUuid the global search request UUID
+     * @return whether the global search request has been successfully sent or not
+     */
+    public boolean isSent(String gsrUuid) {
+        if  (this.globalSearchRequests.containsKey(gsrUuid)) {
+            return this.globalSearchRequests.get(gsrUuid).isSent();
+        }
+        return false;
+    }
+
+    /**
+     * Subscribes the GMSP to a specific subject of the MMS Edge Router.
+     *
+     * @param subject the MMS Edge Router subject to subscribe to
+     */
+    public void subscribe(String subject) {
+        // Subscribe to the subject for incoming messages
+        OutgoingMmtpMessage subscriptionMessage = mmtpFactory.createSubscribeMessage(subject);
+        try {
+            mmsEdgeRouter.subscribe(subscriptionMessage);
+            log.debug("Subscribed to subject: {}", subject);
+        } catch (Exception e) {
+            log.error("Error subscribing to subject {}: {}", subject, e.getMessage());
+        }
+    }
+
+    /**
+     * Unsubscribes the GMSP from a specific subject of the MMS Edge Router.
+     *
+     * @param subject the MMS Edge Router subject to unsubscribe from
+     */
+    public void unsubscribe(String subject) {
+        // Unsubscribe from the subject for incoming messages
+        OutgoingMmtpMessage unsubscriptionMessage = mmtpFactory.createUnsubscribeMessage(subject);
+        try {
+            mmsEdgeRouter.unsubscribe(unsubscriptionMessage);
+            log.debug("Unsubscribed from subject: {}", subject);
+        } catch (Exception e) {
+            log.error("Error unsubscribing from subject {}: {}", subject, e.getMessage());
+        }
+    }
+
+    /**
+     * Returns a list of the active subscriptions of the GMSP.
+     *
+     * @return The actibe GMSP subscriptions
+     */
+    public Set<String> getSubscriptions() {
+        return mmsEdgeRouter.getSubscriptions();
+    }
+
+    /**
+     * A simple helper function to encode the MMS Seatch Message DTO to JSON.
+     *
+     * @param mmsSearchMessageDto the MMS Search Message DTO
+     * @return the JSON encoding
+     * @throws JsonProcessingException on JSON encoding failures
+     */
+    public String mmsSearchMessageDTOtoJSON(MmsSearchMessageDto mmsSearchMessageDto) throws JsonProcessingException {
+        return objectMapper.writeValueAsString(mmsSearchMessageDto);
+    }
+
+    /**
+     * A simple helper function to decode  the MMS Seatch Message DTO from JSON.
+     *
+     * @param json the JSON encoding of the MMS Search Message DTO
+     * @return the MMS Search Message DTO
+     * @throws JsonProcessingException on JSON decoding failures
+     */
+    public MmsSearchMessageDto mmsSearchMessageDTOfromJSON(String json) throws JsonProcessingException {
+        return objectMapper.readValue(json, MmsSearchMessageDto.class);
+    }
+
 }

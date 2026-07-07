@@ -1,6 +1,5 @@
 package net.maritimeconnectivity.serviceregistry.components.mms;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -13,11 +12,9 @@ import net.maritimeconnectivity.serviceregistry.utils.ReconnectTokenUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.web.socket.BinaryMessage;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
@@ -38,7 +35,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -284,7 +280,7 @@ public class MmsEdgeRouter {
                                 // Attempt to parse the content to a MmsSearchMessageDto
                                 MmsSearchMessageDto msgDto = null;
                                 try {
-                                    msgDto = gmsp.parseSearchDto(new String(rawContent));
+                                    msgDto = gmsp.mmsSearchMessageDTOfromJSON(new String(rawContent));
                                     gmsp.handleIncomingGlobalSearch(msgDto);
                                 } catch (UnrecoverableKeyException | CertificateException | IOException |
                                          KeyStoreException | NoSuchAlgorithmException e) {
