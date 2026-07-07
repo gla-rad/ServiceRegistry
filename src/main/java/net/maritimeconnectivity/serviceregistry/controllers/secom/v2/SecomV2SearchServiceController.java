@@ -32,17 +32,14 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
-import org.apache.commons.lang3.EnumUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.grad.secomv2.core.exceptions.SecomNotFoundException;
 import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.SearchServiceServiceInterface;
 import org.grad.secomv2.core.models.*;
-import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +50,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 
-import java.time.Instant;
 import java.util.*;
 
 /**
@@ -87,9 +83,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
      */
     @Autowired
     InstanceService instanceService;
-
-    @Autowired
-    SecomSearchResultSigningService secomSearchResultSigningService;
 
     @Autowired(required = false)
     MirClient mirClient;
@@ -125,12 +118,10 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();
 
         // Extract consumer MRN from certificate
-        String consumerMrn =
-                certificateParsingUtil.getMrnFromCertificate(envelopeSearchFilterObject.getEnvelopeSignatureCertificate());
+        String consumerMrn = certificateParsingUtil.getMrnFromCertificate(
+                envelopeSearchFilterObject.getEnvelopeSignatureCertificate());
 
-        log.warn("Extracted MRN from certificate: {}", consumerMrn);
-
-
+        log.info("Extracted MRN from certificate: {}", consumerMrn);
 
         log.info("Search filter object value {}", envelopeSearchFilterObject.getLocalOnly());
 
@@ -138,7 +129,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
 
         log.info("Local search only set to: {}", localSearchOnly);
 
-
+        // Extract the search parameter query
         SearchParameters query = envelopeSearchFilterObject.getQuery();
         String unparsedGeom = envelopeSearchFilterObject.getGeometry();
 
@@ -146,7 +137,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         if ((unparsedGeom == null || unparsedGeom.isEmpty()) && (query == null || query.isEmpty())) {
             throw new SecomValidationException("No valid search parameters provided. Please provide either a geometry or a query.");
         }
-
 
         // If at maximum only one geometry is provided, retrieve it
         final Geometry searchGeometry =  Optional.of(envelopeSearchFilterObject)
@@ -175,15 +165,15 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                     "object");
         }
 
-
+        // Create a transaction ID for this transaction
+        // TODO: Isn't this login better suited for a service?
         UUID transactionId = UUID.randomUUID();
 
         //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
         String callBackEndpoint = String.format("%s/api/g1191/v2/uploadResults/%s", msrBaseUrl,
                 transactionId);
 
-
-        //Aggreagator
+        //Aggregator
 
         //Propagate the search to the GMSP if available
         String gmspRequestUuid = null;
@@ -239,8 +229,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         }
 
-
         log.debug("UUID is {}", transactionId);
+
         // Finally build the response
 
         //Put placeholders for old code missing correct attributes
@@ -277,12 +267,14 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
             }
         });
 
-
-        EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
+        // Build the envelope
+        final EnvelopeSearchResultObject envelope = new EnvelopeSearchResultObject();
         envelope.setServiceInstance(searchObjectResults);
         envelope.setTransactionId(transactionId);
 
-        SearchResult searchResult = secomSearchResultSigningService.signSearchResult(envelope);
+        // Build the search result
+        final SearchResult searchResult = new SearchResult();
+        searchResult.setEnvelope(envelope);
 
         // And return
         return searchResult;

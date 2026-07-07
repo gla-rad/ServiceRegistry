@@ -2,7 +2,6 @@ package net.maritimeconnectivity.serviceregistry.services;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.pki.CertificateHandler;
 import net.maritimeconnectivity.pki.OCSPVerifier;
-import net.maritimeconnectivity.pki.RevocationInfo;
 import net.maritimeconnectivity.pki.ocsp.OCSPValidationException;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
@@ -55,7 +54,6 @@ public class UpdateServiceService {
         // TODO: validate endpoint URI
         // TODO: apiDoc reachable and returns 200
         // TODO: statusEndpoint reachable and returns 200 + valid timestamp
-
         // TODO: persist/update through instanceService
         try {
             instanceService.updateInstanceFromDto(id, dto);

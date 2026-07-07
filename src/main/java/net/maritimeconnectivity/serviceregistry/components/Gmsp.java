@@ -12,25 +12,28 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import net.maritimeconnectivity.serviceregistry.models.dto.gmsp.GlobalSearchRequestDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mms.MmsSearchMessageDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.v2.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.grad.secomv2.springboot3.components.SecomClient;
 import org.grad.secomv2.springboot3.components.SecomConfigProperties;
-import org.grad.secomv2.springboot3.components.UploadResultsClient;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URL;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -221,11 +224,7 @@ public class Gmsp {
 
         log.debug("Search Filter Object Keywords: {}, Name : {}", q.getKeywords(), q.getName());
 
-
-        UploadResultsClient uploadSecomClient = new UploadResultsClient(
-                URI.create(dto.getEndpoint()).toURL(),
-                secomConfigProperties
-        );
+        // Check whether we can initialise a SECOM client
         if (secomConfigProperties == null) {
             log.error("SecomConfigProperties is null, cannot initialize UploadResultsClient");
             return;
@@ -240,7 +239,7 @@ public class Gmsp {
         log.debug("Found {} search results for local database", searchObjectResults.size());
 
         try {
-            uploadSecomClient.uploadResults(searchObjectResults);
+            uploadResults(URI.create(dto.getEndpoint()).toURL(), secomConfigProperties, searchObjectResults);
         } catch (WebClientResponseException e){
             log.error("Error uploading results via SECOM Upload interface, CODE:", e);
             return;
@@ -253,6 +252,27 @@ public class Gmsp {
         return objectMapper.readValue(json, MmsSearchMessageDto.class);
     }
 
+    public HttpStatusCode uploadResults(URL url,
+                                        SecomConfigProperties secomConfigProperties,
+                                        List<ServiceInstanceObject> searchResults) throws UnrecoverableKeyException, CertificateException, IOException, KeyStoreException, NoSuchAlgorithmException {
+        // Create a SECOM client
+        final SecomClient secomClient = new SecomClient(
+                url,
+                secomConfigProperties);
+
+        // Make the bespoke G1191 UploadResults query
+        final ResponseEntity<Void> entity = secomClient.getSecomClient()
+                .post()
+                .uri("")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(searchResults)
+                .exchangeToMono(response -> response.toBodilessEntity())
+                .block();
+
+        // And return the entity
+        assert entity != null;
+        return entity.getStatusCode();
+    }
 
     public void globalSearchRequestCallback(String uuid) {
         GlobalSearchRequestDto gsr = this.globalSearchRequests.get(uuid);

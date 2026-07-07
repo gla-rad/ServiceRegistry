@@ -27,7 +27,6 @@ import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.ResponseSearchObjectWithCert;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
@@ -96,9 +95,6 @@ class SecomV1SearchServiceControllerTest {
     @MockitoBean
     private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
 
-    @MockitoBean
-    private SecomSearchResultSigningService secomSearchResultSigningService;
-
     // Test Variables
     private List<Instance> instances;
     private Map<String, McpServiceDto> mcpServiceDtos;
@@ -152,17 +148,6 @@ class SecomV1SearchServiceControllerTest {
 
         // Create a pageable definition
         this.pageable = PageRequest.of(0, 5);
-
-        doAnswer(invocation -> {
-            EnvelopeSearchResultObject envelope = invocation.getArgument(0, EnvelopeSearchResultObject.class);
-
-            SearchResult result = new SearchResult();
-            result.setEnvelope(envelope);
-            result.setEnvelopeSignature("TEST_SIGNATURE");
-
-            return result;
-        }).when(secomSearchResultSigningService)
-                .signSearchResult(any(EnvelopeSearchResultObject.class));
     }
 
     /**

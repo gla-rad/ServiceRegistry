@@ -5,7 +5,6 @@ import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProvi
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SigningIdentityProvider;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2TrustStoreProviderImpl;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
-import net.maritimeconnectivity.serviceregistry.services.SecomSearchResultSigningService;
 import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
 import org.grad.secomv2.core.models.*;
 import org.junit.jupiter.api.Assertions;
@@ -15,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -25,7 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static net.maritimeconnectivity.serviceregistry.controllers.secom.v2.RetrieveResultController.RETREIVE_RESULTS_INTERFACE_PATH;
+import static org.grad.secomv2.core.interfaces.RetrieveResultServiceInterface.RETRIEVE_RESULT_INTERFACE_PATH;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -54,31 +52,16 @@ public class SecomV2RetrieveResultControllerTest {
     private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
 
     @MockitoBean
-    private SecomSearchResultSigningService secomSearchResultSigningService;
-
-    @MockitoBean
     CertificateParsingUtil certificateParsingUtil;
 
     private RetrieveResultObject retrieveResultObject;
 
     @BeforeEach
     void setUp() {
-        doAnswer(invocation -> {
-            EnvelopeSearchResultObject envelope = invocation.getArgument(0, EnvelopeSearchResultObject.class);
-
-            SearchResult result = new SearchResult();
-            result.setEnvelope(envelope);
-            result.setEnvelopeSignature("TEST_SIGNATURE");
-
-            return result;
-        }).when(secomSearchResultSigningService)
-                .signSearchResult(any(EnvelopeSearchResultObject.class));
-
         EnvelopeRetrieveResultObject envelopeSearchResultObject = new EnvelopeRetrieveResultObject();
         retrieveResultObject = new RetrieveResultObject();
         retrieveResultObject.setEnvelope(envelopeSearchResultObject);
         retrieveResultObject.setEnvelopeSignature("TEST_SIGNATURE");
-
     }
 
     @Test
@@ -92,12 +75,33 @@ public class SecomV2RetrieveResultControllerTest {
                 .when(certificateParsingUtil)
                 .getMrnFromCertificate(any());
 
+        webTestClient.post()
+                .uri("/api/secom" + RETRIEVE_RESULT_INTERFACE_PATH)
+                .bodyValue(retrieveResultObject)
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        verify(certificateParsingUtil)
+                .getMrnFromCertificate(any());
+    }
+
+    @Test
+    void testRetrieveResultForNonExistentTransactionId() {
+        String transactionId = String.valueOf(UUID.randomUUID());
+        String uid = "TESTMRN2";
+
+        retrieveResultObject.getEnvelope().setTransactionId(transactionId);
+
+        doReturn(uid)
+                .when(certificateParsingUtil)
+                .getMrnFromCertificate(any());
+
         doReturn(null)
                 .when(searchConsolidationService)
                 .getResults(eq(transactionId), eq(uid));
 
         webTestClient.post()
-                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + transactionId)
+                .uri("/api/secom" + RETRIEVE_RESULT_INTERFACE_PATH)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isNotFound();
@@ -138,7 +142,7 @@ public class SecomV2RetrieveResultControllerTest {
 
 
         webTestClient.post()
-                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .uri("/api/secom" + RETRIEVE_RESULT_INTERFACE_PATH)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk()
@@ -149,9 +153,7 @@ public class SecomV2RetrieveResultControllerTest {
                             result.getEnvelope().getTransactionId().toString());
                 });
 
-        verify(secomSearchResultSigningService).signSearchResult(any());
         verify(searchConsolidationService).getResults(eq(validTransactionId), any());
-
     }
 
     // Shows that the controller will actually pull new data from the service on each call
@@ -187,7 +189,7 @@ public class SecomV2RetrieveResultControllerTest {
 
 
         webTestClient.post()
-                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .uri("/api/secom" + RETRIEVE_RESULT_INTERFACE_PATH)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk()
@@ -200,7 +202,7 @@ public class SecomV2RetrieveResultControllerTest {
                 });
 
         webTestClient.post()
-                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .uri("/api/secom" + RETRIEVE_RESULT_INTERFACE_PATH)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk()
@@ -213,15 +215,12 @@ public class SecomV2RetrieveResultControllerTest {
                 });
 
         webTestClient.post()
-                .uri("/api/secom" + RETREIVE_RESULTS_INTERFACE_PATH + "/" + validTransactionId)
+                .uri("/api/secom" + RETRIEVE_RESULT_INTERFACE_PATH)
                 .bodyValue(retrieveResultObject)
                 .exchange()
                 .expectStatus().isOk();
 
         verify(searchConsolidationService, times(3)).getResults(validTransactionId, uid);
-
-
-
     }
 
 }
