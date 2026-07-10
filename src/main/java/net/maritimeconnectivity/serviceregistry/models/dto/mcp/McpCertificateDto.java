@@ -16,11 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.mcp;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeSerializer;
-import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeDeserializer;
-
 import java.math.BigInteger;
 import java.time.LocalDateTime;
 
@@ -36,16 +31,10 @@ public class McpCertificateDto {
 
     private BigInteger id;
     private String certificate;
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime start;
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime end;
     private String serialNumber;
     private boolean revoked;
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime revokedAt;
     private String revokeReason;
 

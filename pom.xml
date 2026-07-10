@@ -6,25 +6,24 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.3</version>
+		<version>4.0.6</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.1.0-SNAPSHOT</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
 	<properties>
 		<java.version>25</java.version>
-		<spring-cloud.version>2025.0.0</spring-cloud.version>
-		<springdoc.version>2.8.9</springdoc.version>
-		<bootstrap.version>5.3.3</bootstrap.version>
+		<spring-cloud.version>2025.1.1</spring-cloud.version>
+		<springdoc.version>3.0.3</springdoc.version>
+		<bootstrap.version>5.3.8</bootstrap.version>
 		<jquery.version>3.7.1</jquery.version>
-		<fa.version>6.5.1</fa.version>
-		<hibernate.search-orm.version>7.1.1.Final</hibernate.search-orm.version>
-		<hibernate.spatial.version>6.4.4.Final</hibernate.spatial.version>
+		<fa.version>7.2.0</fa.version>
+		<hibernate.search-orm.version>8.2.1.Final</hibernate.search-orm.version>
 		<lucene.spatial.version>9.8.0</lucene.spatial.version>
 		<secomlib-version>0.0.53-SNAPSHOT</secomlib-version>
 		<secomv2lib-version>0.1.2-SNAPSHOT</secomv2lib-version>
@@ -54,36 +53,61 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.0.0-M2</version>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>
+						-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
+						-Xshare:off
+					</argLine>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<executable>true</executable>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.3</version>
-                <configuration>
-                    <argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
-                </configuration>
-            </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<configuration>
-					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-							<version>${lombok.version}</version>
-						</path>
-					</annotationProcessorPaths>
-				</configuration>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-testCompile</id>
+						<phase>test-compile</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -142,9 +166,8 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-spatial</artifactId>
-			<version>${hibernate.spatial.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.search</groupId>
@@ -215,12 +238,11 @@
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
-			<version>3.2.0</version>
+			<version>3.2.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<scope>provided</scope>
 		</dependency>
 
 		<!-- Flyway Database Migration-->
@@ -240,21 +262,21 @@
 			<artifactId>secom-core-jakarta</artifactId>
 			<version>${secomlib-version}</version>
 		</dependency>
-		<dependency>
-			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-springboot3</artifactId>
-			<version>${secomlib-version}</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>org.grad.secom</groupId>-->
+<!--			<artifactId>secom-springboot3</artifactId>-->
+<!--			<version>${secomlib-version}</version>-->
+<!--		</dependency>-->
 
 		<!-- SECOM v2.0 -->
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-v2-core-jakarta</artifactId>
+			<artifactId>secom-v2-core-springboot</artifactId>
 			<version>${secomv2lib-version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-v2-springboot3</artifactId>
+			<artifactId>secom-v2-springboot4</artifactId>
 			<version>${secomv2lib-version}</version>
 		</dependency>
 
@@ -360,6 +382,11 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

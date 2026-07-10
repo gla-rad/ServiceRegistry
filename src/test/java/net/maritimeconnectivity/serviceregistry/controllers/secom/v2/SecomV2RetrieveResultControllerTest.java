@@ -12,7 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
@@ -49,7 +49,7 @@ public class SecomV2RetrieveResultControllerTest {
     private SecomV2TrustStoreProviderImpl secomV2TrustStoreProvider;
 
     @MockitoBean
-    private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
+    private org.grad.secomv2.core.components.SecomSignatureAdvice secomSignatureAdvice;
 
     @MockitoBean
     CertificateParsingUtil certificateParsingUtil;

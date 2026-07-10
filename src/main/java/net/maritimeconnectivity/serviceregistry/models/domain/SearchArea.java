@@ -1,6 +1,6 @@
 package net.maritimeconnectivity.serviceregistry.models.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryBinder;

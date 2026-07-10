@@ -16,9 +16,9 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.ResponseEntity;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -108,11 +108,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
      */
     @Tag(name = "SECOM")
     @Transactional
-    @Path(SEARCH_SERVICE_INTERFACE_PATH)
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public SearchResult searchService(@Valid SearchFilterObject searchFilterObject) {
+    public ResponseEntity<SearchResult> searchService(@Valid SearchFilterObject searchFilterObject) {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();
@@ -277,7 +273,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         searchResult.setEnvelope(envelope);
 
         // And return
-        return searchResult;
+        return ResponseEntity.ok(searchResult);
     }
 
     /**
@@ -309,7 +305,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         else {
             try{
                 return GeometryJSONConverter.convertToGeometry(this.objectMapper.readTree(geometryString));
-            } catch (JsonProcessingException ex) {
+            } catch (JacksonException ex) {
                 throw new SecomValidationException(ex.getMessage());
             }
         }

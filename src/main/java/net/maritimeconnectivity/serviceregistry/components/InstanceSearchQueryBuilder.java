@@ -1,8 +1,7 @@
 package net.maritimeconnectivity.serviceregistry.components;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOperator;
@@ -177,7 +176,7 @@ public class InstanceSearchQueryBuilder {
         else {
             try {
                 return GeometryJSONConverter.convertToGeometry(this.objectMapper.readTree(geometryString));
-            } catch (JsonProcessingException ex) {
+            } catch (JacksonException ex) {
                 throw new SecomValidationException(ex.getMessage());
             }
         }

@@ -16,11 +16,9 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.mcp;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
 import jakarta.validation.constraints.NotNull;
-import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeSerializer;
-import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeDeserializer;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -48,11 +46,7 @@ public abstract class McpEntityBase {
     private String idOrganization;
     @NotNull
     private String mrn;
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createdAt;
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime updatedAt;
     private List<McpCertificateDto> certificates;
 

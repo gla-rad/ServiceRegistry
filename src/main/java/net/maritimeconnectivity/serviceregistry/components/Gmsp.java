@@ -1,7 +1,7 @@
 package net.maritimeconnectivity.serviceregistry.components;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +18,8 @@ import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationServ
 import net.maritimeconnectivity.serviceregistry.utils.SearchAreaCalculator;
 import org.grad.secomv2.core.models.SearchFilterObject;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
-import org.grad.secomv2.springboot3.components.SecomClient;
-import org.grad.secomv2.springboot3.components.SecomConfigProperties;
+import org.grad.secomv2.springboot4.components.SecomClient;
+import org.grad.secomv2.springboot4.components.SecomConfigProperties;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -203,7 +203,7 @@ public class Gmsp {
             this.globalSearchRequests.put(gsrUuid, gsr);
 
             return gsrUuid;
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             log.error("Error writing JSON for MmsSearchMessageDto", e);
         } catch (IOException e) {
             log.error("Error sending message via MmsEdgeRouter", e);
@@ -372,9 +372,9 @@ public class Gmsp {
      *
      * @param mmsSearchMessageDto the MMS Search Message DTO
      * @return the JSON encoding
-     * @throws JsonProcessingException on JSON encoding failures
+     * @throws JacksonException on JSON encoding failures
      */
-    public String mmsSearchMessageDTOtoJSON(MmsSearchMessageDto mmsSearchMessageDto) throws JsonProcessingException {
+    public String mmsSearchMessageDTOtoJSON(MmsSearchMessageDto mmsSearchMessageDto) throws JacksonException {
         return objectMapper.writeValueAsString(mmsSearchMessageDto);
     }
 
@@ -383,9 +383,9 @@ public class Gmsp {
      *
      * @param json the JSON encoding of the MMS Search Message DTO
      * @return the MMS Search Message DTO
-     * @throws JsonProcessingException on JSON decoding failures
+     * @throws JacksonException on JSON decoding failures
      */
-    public MmsSearchMessageDto mmsSearchMessageDTOfromJSON(String json) throws JsonProcessingException {
+    public MmsSearchMessageDto mmsSearchMessageDTOfromJSON(String json) throws JacksonException {
         return objectMapper.readValue(json, MmsSearchMessageDto.class);
     }
 

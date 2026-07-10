@@ -11,6 +11,7 @@ import org.grad.secomv2.core.exceptions.SecomValidationException;
 import org.grad.secomv2.core.interfaces.RetrieveResultServiceInterface;
 import org.grad.secomv2.core.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
@@ -30,10 +31,7 @@ public class RetrieveResultController implements RetrieveResultServiceInterface 
     CertificateParsingUtil certificateParsingUtil;
 
     @Path(RETRIEVE_RESULT_INTERFACE_PATH)
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public SearchResult retrieveResult(@Valid RetrieveResultObject retrieveResultObject) {
+    public ResponseEntity<SearchResult> retrieveResult(@Valid RetrieveResultObject retrieveResultObject) {
 
         EnvelopeRetrieveResultObject envelopeSearchResultObject = retrieveResultObject.getEnvelope();
 
@@ -70,7 +68,7 @@ public class RetrieveResultController implements RetrieveResultServiceInterface 
         searchResult.setEnvelope(envelope);
 
         // And return
-        return searchResult;
+        return ResponseEntity.ok(searchResult);
 
     }
 

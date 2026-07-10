@@ -16,12 +16,10 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
+import tools.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
-import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.ResponseSearchObjectWithCert;
@@ -32,8 +30,6 @@ import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
 import org.grad.secom.core.models.SearchParameters;
 import org.grad.secom.core.models.enums.SECOM_DataProductType;
-import org.grad.secomv2.core.models.EnvelopeSearchResultObject;
-import org.grad.secomv2.core.models.SearchResult;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +38,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -64,7 +60,6 @@ import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
@@ -91,9 +86,6 @@ class SecomV1SearchServiceControllerTest {
 
     @MockitoBean
     private SecomV2SignatureProviderImpl secomV2SignatureProvider;
-
-    @MockitoBean
-    private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
 
     // Test Variables
     private List<Instance> instances;

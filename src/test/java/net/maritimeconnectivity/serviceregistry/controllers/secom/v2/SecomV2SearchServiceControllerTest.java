@@ -16,12 +16,10 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
-import net.maritimeconnectivity.serviceregistry.components.SecomV2SigningIdentityProvider;
-import net.maritimeconnectivity.serviceregistry.components.SecomV2TrustStoreProviderImpl;
 import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
@@ -29,10 +27,8 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import org.grad.secomv2.core.base.SecomSignatureProvider;
 import org.grad.secomv2.core.models.*;
 import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
-import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceInstance;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -41,7 +37,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.SecurityAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -57,7 +53,6 @@ import reactor.core.publisher.Mono;
 
 import javax.xml.bind.DatatypeConverter;
 import java.math.BigInteger;
-import java.security.Provider;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -100,7 +95,7 @@ class SecomV2SearchServiceControllerTest {
     private SecomV2SignatureProviderImpl secomV2SignatureProvider;
 
     @MockitoBean
-    private org.grad.secomv2.core.components.SecomSignatureFilter secomSignatureFilter;
+    private org.grad.secomv2.core.components.SecomSignatureAdvice secomSignatureAdvice;
 
     // Test Variables
     private List<Instance> instances;
@@ -126,7 +121,7 @@ class SecomV2SearchServiceControllerTest {
             instance.setStatus(ServiceStatus.RELEASED);
             instance.setVersion("0.0.1");
             instance.setGeometry(factory.createPoint(new Coordinate(i, i)));
-            instance.setDataProductType(Collections.singletonList(org.grad.secom.core.models.enums.SECOM_DataProductType.OTHER));
+            instance.setDataProductType(Collections.singletonList(org.grad.secomv2.core.models.enums.SECOM_DataProductType.OTHER));
 
             Xml xml = new Xml();
             xml.setId(i);

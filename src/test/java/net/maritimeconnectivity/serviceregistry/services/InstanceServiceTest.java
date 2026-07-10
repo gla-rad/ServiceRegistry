@@ -16,7 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import tools.jackson.core.JacksonException;
 import net.maritimeconnectivity.serviceregistry.exceptions.DataNotFoundException;
 import net.maritimeconnectivity.serviceregistry.exceptions.DuplicateDataException;
 import net.maritimeconnectivity.serviceregistry.exceptions.GeometryParseException;
@@ -276,7 +276,7 @@ class InstanceServiceTest {
      * the validation checks are successful.
      */
     @Test
-    void testSaveWithGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
+    void testSaveWithGeometry() throws XMLValidationException, GeometryParseException, ParseException, JacksonException, DataNotFoundException {
         doReturn(this.newInstance).when(this.instanceRepo).save(any());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
         doReturn(Optional.of(new UserToken()).map(t -> {t.setOrganisation("org"); return t;})).when(this.userContext).getJwtToken();
@@ -311,7 +311,7 @@ class InstanceServiceTest {
      * instance geometry.
      */
     @Test
-    void testSaveNoGeometry() throws XMLValidationException, GeometryParseException, ParseException, JsonProcessingException, DataNotFoundException {
+    void testSaveNoGeometry() throws XMLValidationException, GeometryParseException, ParseException, JacksonException, DataNotFoundException {
         doAnswer(i -> i.getArguments()[0]).when(this.instanceRepo).save(any());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
         doReturn(Optional.of(new UserToken()).map(t -> {t.setOrganisation("org"); return t;})).when(this.userContext).getJwtToken();
@@ -377,7 +377,7 @@ class InstanceServiceTest {
      * Test that we can update the status of a service in a separate call.
      */
     @Test
-    void testUpdateStatus() throws DataNotFoundException, XMLValidationException, GeometryParseException, JAXBException, ParseException, JsonProcessingException {
+    void testUpdateStatus() throws DataNotFoundException, XMLValidationException, GeometryParseException, JAXBException, ParseException, JacksonException {
         doReturn(this.existingInstance).when(this.instanceRepo).findOneWithEagerRelationships(this.existingInstance.getId());
         doNothing().when(this.instanceService).validateInstanceForSave(any());
 

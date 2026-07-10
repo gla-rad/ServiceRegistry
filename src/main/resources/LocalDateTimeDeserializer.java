@@ -16,9 +16,12 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import org.locationtech.jts.geom.Geometry;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -41,27 +44,11 @@ import static org.grad.secomv2.core.base.SecomConstants.SECOM_DATE_TIME_FORMATTE
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-
-public class LocalDateTimeDeserializer extends StdDeserializer<LocalDateTime> {
-
-    /**
-     * Instantiates a new Byte array de serializer.
-     */
-    protected LocalDateTimeDeserializer() {
-        this(null);
-    }
-
-    /**
-     * Instantiates a new Byte array de serializer.
-     *
-     * @param t the byte array class
-     */
-    protected LocalDateTimeDeserializer(Class<LocalDateTime> t) {
-        super(t);
-    }
+public class LocalDateTimeDeserializer extends ValueDeserializer<LocalDateTime> {
 
     @Override
-    public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+    public LocalDateTime deserialize(JsonParser jsonParser,
+                                DeserializationContext deserializationContext) throws JacksonException {
         try {
             long timestamp = jsonParser.getValueAsLong();
             return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime();

@@ -16,8 +16,8 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128Utils;
@@ -199,7 +199,7 @@ public class InstanceService {
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JacksonException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
         // First, validate the object
@@ -224,7 +224,7 @@ public class InstanceService {
     }
 
     @Transactional
-    public void updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public void updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JacksonException, ParseException {
         log.debug("Request to update Instance from DTO: {}", updateServiceDto);
 
         // First, retrieve the existing instance
@@ -272,7 +272,7 @@ public class InstanceService {
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
-    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException, DuplicateKeyException {
+    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JacksonException, GeometryParseException, DuplicateKeyException {
         log.debug("Request to update status of Instance : {}", id);
 
         // Try to find if the instance does indeed exist
@@ -294,7 +294,7 @@ public class InstanceService {
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException ex) {
+        } catch (JAXBException | XMLValidationException | ParseException | JacksonException | GeometryParseException | DuplicateKeyException ex) {
             log.error("Problem during instance status update.", ex);
             throw ex;
         }

@@ -16,9 +16,12 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +63,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
+import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
 
 /**
  * The SECOM Discovery Service Controller.
@@ -67,10 +71,10 @@ import static java.util.function.Predicate.not;
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
 @Component
-@Path("/")
+@RequestMapping("/api/secom")
 @Validated
 @Slf4j
-public class SecomSearchServiceController implements SearchServiceSecomInterface {
+public class SecomSearchServiceController {
 
     /**
      * The Object Mapper.
@@ -104,10 +108,9 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
      */
     @Tag(name = "SECOM")
     @Transactional
-    @Path(SEARCH_SERVICE_INTERFACE_PATH)
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
+    @PostMapping(path = "/v1/searchService",
+            consumes = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE },
+            produces = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE })
     public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject,
                                               @QueryParam("page") @Min(0) Integer page,
                                               @QueryParam("pageSize") @Min(0) Integer pageSize)  {
@@ -303,7 +306,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         else {
             try{
                 return GeometryJSONConverter.convertToGeometry(this.objectMapper.readTree(geometryString));
-            } catch (JsonProcessingException ex) {
+            } catch (JacksonException ex) {
                 throw new SecomValidationException(ex.getMessage());
             }
         }

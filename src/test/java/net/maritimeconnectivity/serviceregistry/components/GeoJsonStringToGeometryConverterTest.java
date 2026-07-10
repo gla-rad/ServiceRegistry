@@ -16,7 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.components;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import org.junit.jupiter.api.BeforeEach;

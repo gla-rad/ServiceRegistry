@@ -62,7 +62,6 @@ public class UpdateServiceService {
         } catch (
                 XMLValidationException |
                  GeometryParseException |
-                 com.fasterxml.jackson.core.JsonProcessingException |
                  org.locationtech.jts.io.ParseException e) {
             // 400 – invalid update payload
             throw new InvalidRequestException("Invalid update request payload", e);

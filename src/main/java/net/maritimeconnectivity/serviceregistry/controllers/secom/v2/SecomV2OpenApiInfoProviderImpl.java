@@ -6,12 +6,10 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.servers.Server;
-import org.grad.secomv2.springboot3.openapi.SecomV2OpenApiInfoProvider;
+import org.grad.secomv2.springboot4.openapi.SecomV2OpenApiInfoProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -67,10 +65,10 @@ public class SecomV2OpenApiInfoProviderImpl implements SecomV2OpenApiInfoProvide
      * @return The OpenAPI documentation details
      */
     @Override
-    public OpenAPI getOpenApiInfo() {
+    public OpenAPI getSecomOpenApiInfo() {
         return new OpenAPI().schema("secom-v1", new Schema<>().$schema("openapi.json"))
                 .info(this.apiInfo())
-                .servers(serverUrls.stream().map(url -> new Server().url(url)).toList())
+                //.servers(serverUrls.stream().map(url -> new Server().url(url)).toList())
                 .externalDocs(new ExternalDocumentation()
                         .description("SpringShop Wiki Documentation")
                         .url("https://springshop.wiki.github.org/docs"));

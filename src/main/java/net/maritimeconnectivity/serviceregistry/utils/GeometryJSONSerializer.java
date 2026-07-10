@@ -16,23 +16,23 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationContext;
+import tools.jackson.databind.ValueSerializer;
 import org.locationtech.jts.geom.Geometry;
-
-import java.io.IOException;
 
 /**
  * The type Geometry json serializer.
  */
-public class GeometryJSONSerializer extends JsonSerializer<Geometry> {
+public class GeometryJSONSerializer extends ValueSerializer<Geometry> {
 
     @Override
     public void serialize(Geometry geometry,
                           JsonGenerator jsonGenerator,
-                          SerializerProvider serializerProvider) throws IOException {
-        jsonGenerator.writeObject(GeometryJSONConverter.convertFromGeometry(geometry));
+                          SerializationContext serializationContext) throws JacksonException {
+        jsonGenerator.writeTree(GeometryJSONConverter.convertFromGeometry(geometry));
     }
 
 }
+

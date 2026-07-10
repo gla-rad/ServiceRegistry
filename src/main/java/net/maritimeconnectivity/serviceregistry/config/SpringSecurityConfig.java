@@ -21,8 +21,8 @@ import net.maritimeconnectivity.serviceregistry.config.keycloak.KeycloakGrantedA
 import net.maritimeconnectivity.serviceregistry.config.keycloak.KeycloakJwtAuthenticationConverter;
 import net.maritimeconnectivity.serviceregistry.config.keycloak.KeycloakLogoutHandler;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
-import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
+import org.springframework.boot.security.autoconfigure.actuate.web.servlet.EndpointRequest;
 import org.springframework.boot.actuate.info.InfoEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -42,16 +42,18 @@ import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.channel.ChannelProcessingFilter;
 import org.springframework.security.web.authentication.session.RegisterSessionAuthenticationStrategy;
 import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.firewall.HttpFirewall;
 import org.springframework.security.web.firewall.StrictHttpFirewall;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.ForwardedHeaderFilter;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * The Spring Security Configuration.
@@ -168,6 +170,33 @@ class SpringSecurityConfig {
     }
 
     /**
+     * The CORS Configuration, to echo back the established the allowed
+     * operations and headers.
+     *
+     * @return the security CORS configuration
+     */
+    @Bean
+    CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        // Previously the filter echoed the Origin header back — i.e. "any origin, with credentials".
+        // allowedOrigins("*") is rejected when credentials are enabled, but
+        // allowedOriginPatterns("*") reproduces the echo behaviour exactly:
+        config.setAllowedOriginPatterns(List.of("*"));
+        config.setAllowCredentials(true);                     // Access-Control-Allow-Credentials: true
+
+        config.setAllowedMethods(List.of("POST", "GET", "OPTIONS", "DELETE", "PUT"));
+        config.setMaxAge(3600L);                              // Access-Control-Max-Age: 3600
+        config.setAllowedHeaders(List.of(
+                "Content-Type", "Accept", "X-Requested-With", "remember-me", "authorization"));
+        config.setExposedHeaders(List.of("X-Total-Count"));   // Access-Control-Expose-Headers
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
+
+    /**
      * Defines the security web-filter chains.
      *
      * Allows open access to the health and info actuator endpoints.
@@ -180,7 +209,7 @@ class SpringSecurityConfig {
                                            ClientRegistrationRepository clientRegistrationRepository,
                                            RestTemplate restTemplate) throws Exception {
         // Register the CORS preflight filter
-        http.addFilterBefore(new SimpleCorsFilter(), ChannelProcessingFilter.class);
+        http.cors((cors) -> cors.configurationSource(corsConfigurationSource()));
         // Authenticate through configured OpenID Provider
         http.oauth2Login(login -> login
                 .loginPage("/oauth2/authorization/keycloak")
@@ -202,13 +231,11 @@ class SpringSecurityConfig {
                         )).permitAll()
                         .requestMatchers(EndpointRequest.toAnyEndpoint())
                         .hasRole("ACTUATOR")
-                        .requestMatchers(new AntPathRequestMatcher("/**", HttpMethod.OPTIONS.name()))
+                        .requestMatchers(HttpMethod.OPTIONS, "/**")
                         .permitAll() // Allow preflight requests
-                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs", HttpMethod.GET.name()))
+                        .requestMatchers(HttpMethod.GET, "/v3/api-docs")
                         .permitAll() // Allow request to Swagger file
-                        .requestMatchers(Arrays.stream(this.openResources)
-                                .map(AntPathRequestMatcher::new)
-                                .toArray(AntPathRequestMatcher[]::new))
+                        .requestMatchers(this.openResources)
                         .permitAll()
                         .anyRequest().authenticated()
                 )
@@ -219,6 +246,7 @@ class SpringSecurityConfig {
                 );
         // Disable the CSRF
         http.csrf(AbstractHttpConfigurer::disable);
+
 
         // Build and return the chain
         return http.build();

@@ -16,27 +16,25 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
 import org.locationtech.jts.geom.Geometry;
-
-import java.io.IOException;
 
 /**
  * The type Geometry json deserializer.
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class GeometryJSONDeserializer extends JsonDeserializer<Geometry> {
+public class GeometryJSONDeserializer extends ValueDeserializer<Geometry> {
 
     @Override
     public Geometry deserialize(JsonParser jsonParser,
-                                DeserializationContext deserializationContext) throws IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        return GeometryJSONConverter.convertToGeometry(mapper.readTree(jsonParser));
+                                DeserializationContext deserializationContext) throws JacksonException {
+        JsonNode node = jsonParser.readValueAsTree();
+        return GeometryJSONConverter.convertToGeometry(node);
     }
 
 }

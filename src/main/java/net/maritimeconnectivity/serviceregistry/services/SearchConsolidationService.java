@@ -1,16 +1,12 @@
 package net.maritimeconnectivity.serviceregistry.services;
 
 
-import ch.qos.logback.core.net.server.Client;
-import ch.qos.logback.core.net.server.ConcurrentServerRunner;
 import lombok.extern.slf4j.Slf4j;
-import net.maritimeconnectivity.serviceregistry.components.Gmsp;
 import net.maritimeconnectivity.serviceregistry.config.CacheConfig;
 import net.maritimeconnectivity.serviceregistry.exceptions.InvalidRequestException;
 import net.maritimeconnectivity.serviceregistry.models.domain.ConsolidatedSearchResult;
 import org.grad.secom.core.exceptions.SecomNotAuthorisedException;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
