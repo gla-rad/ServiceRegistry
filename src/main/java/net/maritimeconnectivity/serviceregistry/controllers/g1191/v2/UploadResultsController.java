@@ -1,30 +1,26 @@
 package net.maritimeconnectivity.serviceregistry.controllers.g1191.v2;
 
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import org.grad.secomv2.core.base.SecomConstants;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * The MSR Upload Results Interface.
  * </p>
  * This interface definition can be used by the SECOM-compliant MSRs participating in GMSP
  * to upload result of a SECOM searchService request.
- * Interface placed outside SECOM libary as it is not part of the SECOM standard, but unoficially an addition to SECOM
+ * Interface placed outside SECOM library as it is not part of the SECOM standard, but unofficially an addition to SECOM
  * used by the MSR.
  * @author Jakob Svenningsen (email: jakob@dmc.international)
  */
-
 @RestController
 @Slf4j
 @Validated
@@ -52,7 +48,6 @@ public class UploadResultsController {
     {
         log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
 
-
         //Check that xactId exists
         if (transactionId == null || !searchConsolidationService.entryExistsForTransaction(transactionId)) {
             return ResponseEntity.badRequest().build();
@@ -65,8 +60,6 @@ public class UploadResultsController {
         if (searchResults.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-
-
 
         for (ServiceInstanceObject result : searchResults) {
             log.debug("Service name: {}", result.getName());

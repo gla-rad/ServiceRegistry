@@ -87,7 +87,6 @@ swagger:
     contactEmail: Nikolaos.Vastardis@gla-rad.org
     license: Apache-2.0
     licenseUrl: 'http://www.apache.org/licenses/LICENSE-2.0'
-    serverUrls: /,/api/secom
 
 # MCP Service Registry Configuration
 net:
