@@ -16,11 +16,8 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import tools.jackson.core.JacksonException;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
@@ -39,7 +36,6 @@ import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.interfaces.SearchServiceSecomInterface;
 import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
@@ -48,14 +44,11 @@ import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 
 import java.util.Collections;
 import java.util.List;
@@ -64,7 +57,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.util.function.Predicate.not;
-import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEARCH_SERVICE_INTERFACE_PATH;
 
 /**
  * The SECOM Discovery Service Controller.
@@ -117,11 +109,11 @@ public class SecomSearchServiceController {
     @Tag(name = "SECOM")
     @Transactional
     @PostMapping(path = SEARCH_SERVICE_INTERFACE_PATH,
-            consumes = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE },
-            produces = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE })
+            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            produces = { MediaType.APPLICATION_JSON_VALUE })
     public ResponseSearchObject searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
-                                              @QueryParam("page") @Min(0) Integer page,
-                                              @QueryParam("pageSize") @Min(0) Integer pageSize)  {
+                                              @RequestParam("page") @Min(0) Integer page,
+                                              @RequestParam("pageSize") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
