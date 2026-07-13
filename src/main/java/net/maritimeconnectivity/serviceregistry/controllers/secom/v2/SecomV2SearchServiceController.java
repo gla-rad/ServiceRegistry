@@ -86,12 +86,21 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     @Autowired
     InstanceService instanceService;
 
+    /**
+     * The MIR Client for the certificate operations.
+     */
     @Autowired(required = false)
     MirClient mirClient;
 
+    /**
+     * The GMSP Client for the global search.
+     */
     @Autowired(required = false)
     Gmsp gmspClient;
 
+    /**
+     * The Certificate Parting Utility
+     */
     @Autowired
     CertificateParsingUtil certificateParsingUtil;
 

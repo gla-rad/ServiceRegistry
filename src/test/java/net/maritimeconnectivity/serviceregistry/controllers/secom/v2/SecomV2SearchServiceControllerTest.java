@@ -16,12 +16,10 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
+import org.grad.secomv2.core.components.SecomSignatureAdvice;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
-import tools.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
-import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
-import net.maritimeconnectivity.serviceregistry.components.mms.MmsEdgeRouter;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
@@ -77,27 +75,30 @@ class SecomV2SearchServiceControllerTest {
     @Autowired
     WebTestClient webTestClient;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
+    /**
+     * Mock the Instance Service.
+     */
     @MockitoBean
     private InstanceService instanceService;
 
-
+    /**
+     * Mock the MIR Client for the certificate operations.
+     */
     @MockitoBean
     private MirClient mirClient;
 
+    /**
+     * Mock the GMSP Client for the global search.
+     */
     @MockitoBean
-    private MmsEdgeRouter mmsEdgeRouter;
+    private Gmsp gmspClient;
 
+    /**
+     * Mock the SECOM Signature Advice to simulate the envelope signature
+     * generation operation as well. The unit tests won't work without this.
+     */
     @MockitoBean
-    private Gmsp gmsp;
-
-    @MockitoBean
-    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
-
-    @MockitoBean
-    private org.grad.secomv2.core.components.SecomSignatureAdvice secomSignatureAdvice;
+    private SecomSignatureAdvice secomSignatureAdvice;
 
     // Test Variables
     private List<Instance> instances;
@@ -170,7 +171,7 @@ class SecomV2SearchServiceControllerTest {
     @Test
     void testSearchGeoJSON() {
 
-        when(secomV2SignatureProvider.validateSignature(any(), any(), any(), any())).thenReturn(true);
+        //when(secomV2SignatureProvider.validateSignature(any(), any(), any(), any())).thenReturn(true);
         // Create the search filter object
         SearchFilterObject searchFilterObject = new SearchFilterObject();
         EnvelopeSearchFilterObject envelopeSearchFilterObject = new EnvelopeSearchFilterObject();
@@ -190,9 +191,6 @@ class SecomV2SearchServiceControllerTest {
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
-
-        // Mock the signature validation
-        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Perform the web request
         webTestClient.post()
@@ -252,16 +250,11 @@ class SecomV2SearchServiceControllerTest {
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
-        // Mock the signature validation
-        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
-
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
         doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any(), any());
         doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
-
-        doNothing().when(this.mmsEdgeRouter).init();
-        doReturn("").when(this.gmsp).globalSearch(any(), any(), any(), any());
+        doReturn("").when(this.gmspClient).globalSearch(any(), any(), any(), any());
 
         // Perform the web request
         webTestClient.post()
@@ -327,9 +320,6 @@ class SecomV2SearchServiceControllerTest {
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
-        // Mock the signature validation
-        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
-
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
 
@@ -387,9 +377,6 @@ class SecomV2SearchServiceControllerTest {
 
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
-
-        // Mock the signature validation
-        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
 
         // Mock the service calls for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
@@ -450,15 +437,11 @@ class SecomV2SearchServiceControllerTest {
         searchFilterObject.setEnvelope(envelopeSearchFilterObject);
         searchFilterObject.setEnvelopeSignature(DatatypeConverter.printHexBinary("TEST SIGNATURE".getBytes()));
 
-
         // Create a mocked paging response
         Page<Instance> page = new PageImpl<>(this.instances, this.pageable, this.instances.size());
 
         // Mock the service calls for creating a new instance
         doReturn(page).when(this.instanceService).search(any());
-
-        doReturn(true).when(this.secomV2SignatureProvider).validateSignature(any(),any(),any(),any());
-
 
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder

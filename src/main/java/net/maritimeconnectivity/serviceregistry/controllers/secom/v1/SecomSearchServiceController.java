@@ -89,8 +89,14 @@ public class SecomSearchServiceController {
     @Autowired
     InstanceService instanceService;
 
+    /**
+     * The MIR Client for the certificate operations.
+     */
     @Autowired(required = false)
     MirClient mirClient;
+
+    // Test Constants
+    public static final String SEARCH_SERVICE_INTERFACE_PATH = "/v1/searchService";
 
     /**
      * Object Mapper from Domain to DTO.
@@ -110,7 +116,7 @@ public class SecomSearchServiceController {
     @Deprecated
     @Tag(name = "SECOM")
     @Transactional
-    @PostMapping(path = "/v1/searchService",
+    @PostMapping(path = SEARCH_SERVICE_INTERFACE_PATH,
             consumes = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE },
             produces = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE })
     public ResponseSearchObject searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
@@ -226,7 +232,6 @@ public class SecomSearchServiceController {
             }
         }
 
-        boolean includeXml = true; //This always holds true for the old v1 API
         // Perform the search
         final Page<Instance> instancesPage = this.instanceService.handle(
                 query,

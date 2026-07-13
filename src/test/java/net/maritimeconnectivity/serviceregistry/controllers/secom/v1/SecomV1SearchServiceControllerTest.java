@@ -21,8 +21,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import tools.jackson.databind.ObjectMapper;
-import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
@@ -61,6 +59,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -81,21 +80,17 @@ class SecomV1SearchServiceControllerTest {
     @Autowired
     WebTestClient webTestClient;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
-
+    /**
+     * Mock the Instance Service.
+     */
     @MockitoBean
     private InstanceService instanceService;
 
+    /**
+     * Mock the MIR Client for the certificate operations.
+     */
     @MockitoBean
     private MirClient mirClient;
-
-    @MockitoBean
-    private SecomV2SignatureProviderImpl secomV2SignatureProvider;
-
-    // Test Constants
-    private static String SEARCH_SERVICE_INTERFACE_PATH = "/v1/searchService";
 
     // Test Variables
     private List<Instance> instances;
