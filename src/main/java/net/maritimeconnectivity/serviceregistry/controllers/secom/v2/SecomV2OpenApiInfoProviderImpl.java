@@ -13,10 +13,10 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * The SECOM OpenApi Provider Implementation
+ * The SECOM v2.0 OpenApi Provider Implementation
  * <p/>
  * Provides the definition of the service OpenAPI documentation so that it can
- * be used for the description of the SECOM V2 interfaces.
+ * be used for the description of the SECOM v2.0 interfaces.
  *
  * @author - Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */

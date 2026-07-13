@@ -65,17 +65,7 @@ var columnDefs = [{
     readonly: true,
     hoverMsg: "Whether the result was found locally",
     placeholder: "Whether the result was found locally",
-}, {
-    data: "sourceMSR",
-    title: "Source MSR",
-    readonly: true,
-    hoverMsg: "The MRN of the source MSR",
-    placeholder: "The MRN of the source MSR"
-}
-
-
-
-];
+}];
 
 /**
  * Standard jQuery initialisation of the page.
@@ -239,7 +229,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
 
     // Construct the SECOM search parameters object
     let searchParameters = {
-        'localOnly': !globalSearch
+        //'localOnly': !globalSearch
     }
     // Try to parse the query string
     if (queryString && queryString.trim() !== "") {
@@ -269,7 +259,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     instancesTable = $('#instancesTable').DataTable({
         processing: true,
         ajax: {
-            url: `api/secom/v2/searchService`,
+            url: `api/secom/v1/searchService`,
             type: 'POST',
             contentType: 'application/json; charset=utf-8',
             crossDomain: true,
@@ -281,8 +271,8 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
                 if (!json) return [];
 
                 // Ensure services is an array and tag local results
-                if (Array.isArray(json.services)) {
-                    return json.services.map(service => ({
+                if (Array.isArray(json.searchServiceResult)) {
+                    return json.searchServiceResult.map(service => ({
                         ...service,
                         localResult: true
                     }));

@@ -6,22 +6,22 @@ import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.media.Schema;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.util.List;
-
-//import org.grad.secom.springboot3.openapi.SecomOpenApiInfoProvider;
+import static org.grad.secomv2.core.base.SecomConstants.API_PATH;
 
 /**
- * The SECOM OpenApi Provider Implementation
+ * The SECOM v1.0 OpenApi Provider Implementation
  * <p/>
  * Provides the definition of the service OpenAPI documentation so that it can
- * be used for the description of the SECOM interfaces.
+ * be used for the description of the SECOM v1.0 interfaces.
  *
  * @author - Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Component
+@Configuration
 public class SecomOpenApiInfoProviderImpl {
 
 
@@ -52,22 +52,44 @@ public class SecomOpenApiInfoProviderImpl {
     @Value("${swagger.licenceUrl:http://www.apache.org/licenses/LICENSE-2.0}" )
     private String swaggerLicenceUrl;
 
-    @Value("${swagger.secomOpenApiConfig:#{null}}" )
-    private String secomOpenApiConfig;
+    /**
+     * Automatically create a group for the SECOM v2 interfaces
+     *
+     * @return a grouped open api SECOM group
+     */
+    @Bean
+    public GroupedOpenApi secomApiV1() {
+        return GroupedOpenApi.builder()
+                .group("SECOM V1 API")
+                .pathsToMatch(API_PATH + "/" + "v1" + "/**")
+                .addOpenApiCustomizer((openAPI) -> {
+                    this.copyOpenApi(getSecomOpenApiInfo(), openAPI);
+                })
+                .build();
+    }
 
     /**
-     * Definition of the server URLS to access the API.
+     * A helper function to copy as many fields as possible from one OpenAPI
+     * documentation to another.
+     *
+     * @param source the source OpenAPI documentations
+     * @param dest the destination OpenAPI documentation
      */
-    @Value("${swagger.serverUrls:}")
-    List<String> serverUrls;
+    private void copyOpenApi(OpenAPI source, OpenAPI dest) {
+        if(source.getInfo() != null) dest.setInfo(source.getInfo());
+        if(source.getServers() != null) dest.setServers(source.getServers());
+        if(source.getExternalDocs() != null) dest.setExternalDocs(source.getExternalDocs());
+        if(source.getTags() != null) dest.getTags().addAll(source.getTags());
+        if(source.getSecurity() != null) dest.setSecurity(source.getSecurity());
+        if(source.getExtensions() != null) dest.setExtensions(source.getExtensions());
+    }
 
     /**
      * Returns the OpenAPI documentation details.
      *
      * @return The OpenAPI documentation details
      */
-    //@Override
-    public OpenAPI getSecomOpenApiInfo() {
+    private OpenAPI getSecomOpenApiInfo() {
         return new OpenAPI().schema("secom-v1", new Schema<>().$schema("openapi.json"))
                 .info(this.apiInfo())
                 //.servers(serverUrls.stream().map(url -> new Server().url(url)).toList())

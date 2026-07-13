@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.core.JacksonException;
@@ -109,7 +110,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
      */
     @Tag(name = "SECOM")
     @Transactional
-    public ResponseEntity<SearchResult> searchService(@Valid SearchFilterObject searchFilterObject) {
+    public ResponseEntity<SearchResult> searchService(@Valid @RequestBody SearchFilterObject searchFilterObject) {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();

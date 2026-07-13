@@ -270,17 +270,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- SECOM -->
+		<!-- SECOM v1.0 -->
+		<!-- This is deprecated so only the core package is included -->
 		<dependency>
 			<groupId>org.grad.secom</groupId>
 			<artifactId>secom-core-jakarta</artifactId>
 			<version>${secomlib-version}</version>
 		</dependency>
-<!--		<dependency>-->
-<!--			<groupId>org.grad.secom</groupId>-->
-<!--			<artifactId>secom-springboot3</artifactId>-->
-<!--			<version>${secomlib-version}</version>-->
-<!--		</dependency>-->
 
 		<!-- SECOM v2.0 -->
 		<dependency>

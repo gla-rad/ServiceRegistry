@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.core.JacksonException;
@@ -112,7 +113,7 @@ public class SecomSearchServiceController {
     @PostMapping(path = "/v1/searchService",
             consumes = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE },
             produces = { org.springframework.http.MediaType.APPLICATION_JSON_VALUE })
-    public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject,
+    public ResponseSearchObject searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
                                               @QueryParam("page") @Min(0) Integer page,
                                               @QueryParam("pageSize") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
