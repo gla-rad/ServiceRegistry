@@ -17,6 +17,8 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
@@ -57,8 +59,7 @@ import java.util.*;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Component
-@Path("/")
+@RestController
 @Validated
 @Slf4j
 public class SecomV2SearchServiceController implements SearchServiceServiceInterface {

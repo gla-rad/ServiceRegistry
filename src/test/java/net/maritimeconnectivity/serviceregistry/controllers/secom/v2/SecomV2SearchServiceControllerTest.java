@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
 import tools.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
@@ -66,6 +67,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("test")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
+@AutoConfigureWebTestClient
 @Import(TestingConfiguration.class)
 class SecomV2SearchServiceControllerTest {
 
@@ -121,7 +123,7 @@ class SecomV2SearchServiceControllerTest {
             instance.setStatus(ServiceStatus.RELEASED);
             instance.setVersion("0.0.1");
             instance.setGeometry(factory.createPoint(new Coordinate(i, i)));
-            instance.setDataProductType(Collections.singletonList(org.grad.secomv2.core.models.enums.SECOM_DataProductType.OTHER));
+            instance.setDataProductType(Collections.singletonList(SECOM_DataProductType.OTHER));
 
             Xml xml = new Xml();
             xml.setId(i);

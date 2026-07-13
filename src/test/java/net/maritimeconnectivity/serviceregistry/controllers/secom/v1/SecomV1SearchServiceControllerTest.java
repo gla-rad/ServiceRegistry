@@ -16,6 +16,11 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
+import net.maritimeconnectivity.serviceregistry.TestingConfiguration;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import tools.jackson.databind.ObjectMapper;
 import net.maritimeconnectivity.serviceregistry.components.SecomV2SignatureProviderImpl;
 import net.maritimeconnectivity.serviceregistry.feign.MirClient;
@@ -56,7 +61,6 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
-import static org.grad.secom.core.interfaces.SearchServiceSecomInterface.SEARCH_SERVICE_INTERFACE_PATH;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
@@ -64,8 +68,11 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 @ActiveProfiles("test")
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {SecurityAutoConfiguration.class})
+@AutoConfigureWebTestClient
+@Import(TestingConfiguration.class)
 class SecomV1SearchServiceControllerTest {
 
     /**
@@ -86,6 +93,9 @@ class SecomV1SearchServiceControllerTest {
 
     @MockitoBean
     private SecomV2SignatureProviderImpl secomV2SignatureProvider;
+
+    // Test Constants
+    private static String SEARCH_SERVICE_INTERFACE_PATH = "/v1/searchService";
 
     // Test Variables
     private List<Instance> instances;
@@ -165,7 +175,7 @@ class SecomV1SearchServiceControllerTest {
         // Perform the web request
         webTestClient.post()
                 .uri(uriBuilder -> uriBuilder
-                        .path("/api/secom/" + SEARCH_SERVICE_INTERFACE_PATH)
+                        .path("/api/secom" + SEARCH_SERVICE_INTERFACE_PATH)
                         .queryParam("page", 0)
                         .queryParam("pageSize", Integer.MAX_VALUE)
                         .build())

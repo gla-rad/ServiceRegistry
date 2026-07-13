@@ -63,6 +63,7 @@ class GeometryJSONSerializerTest {
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         JsonGenerator jsonGenerator = this.objectMapper.createGenerator(os);
         this.serializer.serialize(this.geometry, jsonGenerator, this.objectMapper._serializationContext());
+        jsonGenerator.flush();
         assertEquals(this.json, os.toString("UTF-8"));
     }
 }

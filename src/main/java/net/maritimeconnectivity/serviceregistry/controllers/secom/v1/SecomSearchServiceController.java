@@ -70,7 +70,7 @@ import static org.grad.secomv2.core.interfaces.SearchServiceServiceInterface.SEA
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Component
+@RestController
 @RequestMapping("/api/secom")
 @Validated
 @Slf4j
@@ -106,6 +106,7 @@ public class SecomSearchServiceController {
      * @param pageSize           the maximum page size
      * @return the result list of the search
      */
+    @Deprecated
     @Tag(name = "SECOM")
     @Transactional
     @PostMapping(path = "/v1/searchService",

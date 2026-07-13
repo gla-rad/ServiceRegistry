@@ -19,8 +19,8 @@ package net.maritimeconnectivity.serviceregistry.config;
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.domain.Xml;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
-import org.grad.secom.core.models.enums.SECOM_DataProductType;
 import org.grad.secomv2.core.models.ServiceInstanceObject;
+import org.grad.secomv2.core.models.enums.SECOM_DataProductType;
 import org.grad.secomv2.core.models.enums.ServiceInstanceStatusEnum;
 import org.iala_aism.g1128.v1_7.serviceinstanceschema.ServiceStatus;
 import org.locationtech.jts.geom.Geometry;
@@ -33,13 +33,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static java.util.function.Predicate.not;
 
 /**
  * The Global Configuration.
@@ -105,16 +101,19 @@ public class GlobalConfig {
                                     .map(GeometryJSONConverter::convertFromGeometry)
                                     .orElse(null))
                             .map(Instance::getGeometry, org.grad.secom.core.models.SearchObjectResult::setGeometry);
-                    mapper.using(ctx -> Stream.of(Optional.of(ctx)
-                                    .map(MappingContext::getSource)
-                                    .filter(List.class::isInstance)
-                                    .map(List.class::cast)
-                                    .map(List::toArray)
-                                    .orElseGet(() -> new org.grad.secom.core.models.enums.SECOM_DataProductType[]{}))
+                    mapper.using(ctx ->Stream.of(Optional.of(ctx)
+                                            .map(MappingContext::getSource)
+                                            .filter(List.class::isInstance)
+                                            .map(List.class::cast)
+                                            .map(List::toArray)
+                                            .orElseGet(() -> new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}))
+                                    .filter(SECOM_DataProductType.class::isInstance)
+                                    .map(SECOM_DataProductType.class::cast)
+                                    .map(SECOM_DataProductType::getDescription)
+                                    .map(org.grad.secom.core.models.enums.SECOM_DataProductType::fromDescription)
                                     .findFirst()
-                                    .filter(not(org.grad.secom.core.models.enums.SECOM_DataProductType.OTHER::equals))
                                     .orElse(org.grad.secom.core.models.enums.SECOM_DataProductType.OTHER)
-                             )
+                            )
                             .map(Instance::getDataProductType, org.grad.secom.core.models.SearchObjectResult::setDataProductType);
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
@@ -151,20 +150,6 @@ public class GlobalConfig {
                                     .map(Geometry::toString)
                                     .stream().toArray(String[]::new)))
                             .map(Instance::getGeometry, ServiceInstanceObject::setCoverageArea);
-                    mapper.using(ctx ->Stream.of(Optional.of(ctx)
-                                            .map(MappingContext::getSource)
-                                            .filter(List.class::isInstance)
-                                            .map(List.class::cast)
-                                            .map(List::toArray)
-                                            .orElseGet(() -> new SECOM_DataProductType[]{SECOM_DataProductType.OTHER}))
-                                    .filter(SECOM_DataProductType.class::isInstance)
-                                    .map(SECOM_DataProductType.class::cast)
-                                    .map(SECOM_DataProductType::getDescription)
-                                    .map(org.grad.secomv2.core.models.enums.SECOM_DataProductType::fromDescription)
-                                    .toList()
-                                    .toArray(new org.grad.secomv2.core.models.enums.SECOM_DataProductType[]{})
-                            )
-                            .map(Instance::getDataProductType, ServiceInstanceObject::setDataProductType);
                     mapper.using(ctx -> Optional.of(ctx)
                                     .map(MappingContext::getSource)
                                     .map(Instance.class::cast)

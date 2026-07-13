@@ -24,7 +24,7 @@ public class CertificateParsingUtil {
 
         try {
             X509Certificate parsedCert = SecomPemUtils.getCertFromPem(cert);
-
+            parsedCert.getIssuerUniqueID();
             LdapName ldapDN = new LdapName(parsedCert.getSubjectX500Principal().getName());
             for (Rdn rdn : ldapDN.getRdns()) {
                 if (rdn.getType().equalsIgnoreCase("UID")) {
