@@ -17,6 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
@@ -111,9 +112,9 @@ public class SecomSearchServiceController {
     @PostMapping(path = SEARCH_SERVICE_INTERFACE_PATH,
             consumes = { MediaType.APPLICATION_JSON_VALUE },
             produces = { MediaType.APPLICATION_JSON_VALUE })
-    public ResponseSearchObject searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
-                                              @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
-                                              @RequestParam(value = "pageSize", defaultValue = "100") @Min(0) Integer pageSize)  {
+    public ResponseEntity<ResponseSearchObject> searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
+                                                              @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+                                                              @RequestParam(value = "pageSize", defaultValue = "100") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
@@ -269,7 +270,9 @@ public class SecomSearchServiceController {
         // Finally build the response
         ResponseSearchObject responseSearchObject = new ResponseSearchObject();
         responseSearchObject.setSearchServiceResult(searchObjectResults);
-        return responseSearchObject;
+
+        // And return
+        return ResponseEntity.ok(responseSearchObject);
     }
 
     /**

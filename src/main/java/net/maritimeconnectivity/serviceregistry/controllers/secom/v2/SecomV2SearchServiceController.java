@@ -180,13 +180,10 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         //Aggregator
 
         //Propagate the search to the GMSP if available
-        String gmspRequestUuid = null;
-
         log.debug("gmspClient is null: {}", this.gmspClient == null);
         log.debug("localSearchOnly: {}", localSearchOnly);
+        final String gmspRequestUuid;
         if (this.gmspClient != null && !localSearchOnly) {
-
-
             gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, consumerMrn,
                     searchFilterObject, searchGeometry);
         }
@@ -215,7 +212,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                                     .orElse(null)
                     );
                     // And append the valid ones to the search object
-                    ((ServiceInstanceObject) searchObject).setCertificates(
+                    searchObject.setCertificates(
                             Optional.ofNullable(mcpEntity)
                                     .map(McpEntityBase::getValidCertificatesAsString) // List<String>
                                     .map(list -> list.toArray(new String[0]))         // convert to String[]
@@ -228,7 +225,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                 }
             }
         }
-
         log.debug("UUID is {}", transactionId);
 
         // Finally build the response

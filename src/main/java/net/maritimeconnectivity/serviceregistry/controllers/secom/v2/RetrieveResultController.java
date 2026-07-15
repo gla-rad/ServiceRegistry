@@ -1,8 +1,8 @@
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.services.SearchConsolidationService;
 import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
@@ -12,26 +12,40 @@ import org.grad.secomv2.core.interfaces.RetrieveResultServiceInterface;
 import org.grad.secomv2.core.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 
-@Component
-@Path("/")
-@Slf4j
+/**
+ * The SECOM Retrieve Results Controller.
+ *
+ * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
+ */
+@RestController
 @Validated
+@Slf4j
 public class RetrieveResultController implements RetrieveResultServiceInterface {
 
+    /**
+     * The Search Consolidation Service.
+     */
     @Autowired
     SearchConsolidationService searchConsolidationService;
 
+    /**
+     * The Certificate Parting Utility
+     */
     @Autowired
     CertificateParsingUtil certificateParsingUtil;
 
-    @Path(RETRIEVE_RESULT_INTERFACE_PATH)
-    public ResponseEntity<SearchResult> retrieveResult(@Valid RetrieveResultObject retrieveResultObject) {
+    @Tag(name = "SECOM")
+    @Transactional
+    public ResponseEntity<SearchResult> retrieveResult(@Valid @RequestBody RetrieveResultObject retrieveResultObject) {
 
         EnvelopeRetrieveResultObject envelopeSearchResultObject = retrieveResultObject.getEnvelope();
 
@@ -69,7 +83,6 @@ public class RetrieveResultController implements RetrieveResultServiceInterface 
 
         // And return
         return ResponseEntity.ok(searchResult);
-
     }
 
 }
