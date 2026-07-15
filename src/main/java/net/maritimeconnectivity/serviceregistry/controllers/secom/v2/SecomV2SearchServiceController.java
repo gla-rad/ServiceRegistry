@@ -16,6 +16,7 @@
 
 package net.maritimeconnectivity.serviceregistry.controllers.secom.v2;
 
+import org.grad.secomv2.core.utils.SecomPemUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,7 +25,6 @@ import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.ws.rs.*;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.serviceregistry.components.DomainDtoMapper;
 import net.maritimeconnectivity.serviceregistry.components.Gmsp;
@@ -33,7 +33,6 @@ import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
-import net.maritimeconnectivity.serviceregistry.utils.CertificateParsingUtil;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
@@ -96,12 +95,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
     Gmsp gmspClient;
 
     /**
-     * The Certificate Parting Utility
-     */
-    @Autowired
-    CertificateParsingUtil certificateParsingUtil;
-
-    /**
      * Object Mapper from Domain to DTO.
      */
     @Autowired
@@ -122,8 +115,7 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         EnvelopeSearchFilterObject envelopeSearchFilterObject = searchFilterObject.getEnvelope();
 
         // Extract consumer MRN from certificate
-        String consumerMrn = certificateParsingUtil.getMrnFromCertificate(
-                envelopeSearchFilterObject.getEnvelopeSignatureCertificate());
+        String consumerMrn = SecomPemUtils.getMrnFromEnvelope(envelopeSearchFilterObject);
 
         log.info("Extracted MRN from certificate: {}", consumerMrn);
 
