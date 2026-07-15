@@ -112,8 +112,8 @@ public class SecomSearchServiceController {
             consumes = { MediaType.APPLICATION_JSON_VALUE },
             produces = { MediaType.APPLICATION_JSON_VALUE })
     public ResponseSearchObject searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
-                                              @RequestParam("page") @Min(0) Integer page,
-                                              @RequestParam("pageSize") @Min(0) Integer pageSize)  {
+                                              @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+                                              @RequestParam(value = "pageSize", defaultValue = "100") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
@@ -248,10 +248,6 @@ public class SecomSearchServiceController {
                                     .orElse(null),
                             Optional.of(searchObject)
                                     .map(SearchObjectResult::getInstanceId)
-                                    .map(Strings::trimToNull)
-                                    .orElse(null),
-                            Optional.of(searchObject)
-                                    .map(SearchObjectResult::getVersion)
                                     .map(Strings::trimToNull)
                                     .orElse(null)
                     );

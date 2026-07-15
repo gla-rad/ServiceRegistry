@@ -252,7 +252,7 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     // Finally we can declare the SECOM search filter object
     let searchFilterObject = {
         'query': searchParameters,
-        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
+        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim()
     }
 
     // Now initialise the instances table

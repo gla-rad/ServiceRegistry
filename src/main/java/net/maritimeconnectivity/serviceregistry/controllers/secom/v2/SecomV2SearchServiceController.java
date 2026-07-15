@@ -212,10 +212,6 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
                             Optional.of(searchObject)
                                     .map(ServiceInstanceObject::getInstanceId)
                                     .map(Strings::trimToNull)
-                                    .orElse(null),
-                            Optional.of(searchObject)
-                                    .map(ServiceInstanceObject::getVersion)
-                                    .map(Strings::trimToNull)
                                     .orElse(null)
                     );
                     // And append the valid ones to the search object

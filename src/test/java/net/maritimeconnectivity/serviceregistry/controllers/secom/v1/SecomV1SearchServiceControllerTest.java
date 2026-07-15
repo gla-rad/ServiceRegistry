@@ -218,8 +218,8 @@ class SecomV1SearchServiceControllerTest {
 
         // Mock the service call for creating a new instance
         doReturn(page).when(this.instanceService).handle(any(), any(), any());
-        doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any(), any());
-        doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
+        doAnswer(i -> this.mcpServiceDtos.get(i.getArguments()[1])).when(this.mirClient).getServiceEntity(any(), any());
+        doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any());
 
         // Perform the web request
         webTestClient.post()
@@ -336,7 +336,7 @@ class SecomV1SearchServiceControllerTest {
 
         // Mock the service calls for creating a new instance
         doReturn(page).when(this.instanceService).handle(any(), any(), any());
-        doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any(), any());
+        doAnswer(i -> this.mcpServiceDtos.get((String)i.getArgument(1))).when(this.mirClient).getServiceEntity(any(), any());
 
         // Perform the web request
         webTestClient.post()

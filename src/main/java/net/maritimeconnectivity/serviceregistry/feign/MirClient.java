@@ -46,8 +46,8 @@ public interface MirClient {
     @GetMapping("/oidc/api/org/{org}/device/{mrn}")
     McpDeviceDto getDeviceEntity(@PathVariable("org") String org, @PathVariable("mrn") String mrn);
 
-    @GetMapping("/org/{org}/service/{mrn}/{version}")
-    McpServiceDto getServiceEntity(@PathVariable("org") String org, @PathVariable("mrn") String mrn, @PathVariable("version") String version);
+    @GetMapping("/org/{org}/service/{mrn}")
+    McpServiceDto getServiceEntity(@PathVariable("org") String org, @PathVariable("mrn") String mrn);
 
     @GetMapping("/org/{org}/user/{mrn}")
     McpUserDto getUserEntity(@PathVariable("org") String org, @PathVariable("mrn") String mrn);
