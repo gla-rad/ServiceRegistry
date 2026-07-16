@@ -11,7 +11,23 @@ var countdownIntervalId = null;
 var countdownRemainingMs = 0;
 const GLOBAL_COUNTDOWN_TOTAL_MS = 10000;
 
+/**
+ * The SECOM search parameters that are defined as lists.
+ * @type {Array}
+ */
+const searchParameterLists = ["keywords"];
 
+/**
+ * The SECOM service instance status values, which are transferred as their
+ * numeric representation.
+ * @type {Object}
+ */
+const serviceInstanceStatus = {
+    0: "PROVISIONAL",
+    1: "RELEASED",
+    2: "DEPRECATED",
+    3: "DELETED"
+};
 
 /**
  * The Instances Search Table Column Definitions
@@ -40,25 +56,31 @@ var columnDefs = [{
     title: "Data",
     readonly : true,
     hoverMsg: "Data product type",
-    placeholder: "Type of the data product"
+    placeholder: "Type of the data product",
+    defaultContent: "",
+    render: data => Array.isArray(data) ? data.join(", ") : (data || "")
 }, {
     data: "status",
     title: "Status",
     readonly : true,
     hoverMsg: "Status of service",
-    placeholder: "Status of the service"
+    placeholder: "Status of the service",
+    defaultContent: "",
+    render: data => serviceInstanceStatus[data] || ""
 }, {
     data: "endpointUri",
     title: "Endpoint URI",
     readonly : true,
     hoverMsg: "Access point of service",
-    placeholder: "Access point of the service"
+    placeholder: "Access point of the service",
+    defaultContent: ""
 }, {
-    data: "instanceAsXml",
-    title: "Instance as XML",
+    data: "coverageArea",
+    title: "Coverage Area",
     type: "hidden",
     visible: false,
-    searchable: false
+    searchable: false,
+    defaultContent: ""
 }, {
     data: "localResult",
     title: "Local Result",
@@ -162,6 +184,47 @@ $(() => {
 });
 
 /**
+ * Loads the PKCS#12 keystore selected by the user, so that the SECOM search
+ * envelopes can be signed with the identity it contains.
+ */
+function loadSigningKeystore() {
+    var $status = $("#signingKeystoreStatus");
+    var file = $("#signingKeystore").prop("files")[0];
+
+    // Sanity check
+    if(!file) {
+        SecomSigning.clearKeystore();
+        showKeystoreStatus("Please select a keystore file to load...", false);
+        return;
+    }
+
+    // Try to load the keystore and report back to the user
+    $status.removeClass("d-none").html("Loading the keystore...");
+    SecomSigning.loadKeystore(file, $("#signingKeystorePassword").val())
+        .then(info => {
+            showKeystoreStatus(`Signing as <strong>${info.mrn || "an unknown identity"}</strong> `
+                + `using ${info.algorithm}, with a certificate chain of ${info.chainLength}.`, true);
+        })
+        .catch(ex => {
+            SecomSigning.clearKeystore();
+            showKeystoreStatus(`Unable to load the keystore: ${ex.message}`, false);
+        });
+}
+
+/**
+ * Displays the outcome of the last keystore loading operation.
+ *
+ * @param  {string} message         The message to be displayed
+ * @param  {boolean} success        Whether the operation was successful
+ */
+function showKeystoreStatus(message, success) {
+    $("#signingKeystoreStatus")
+        .removeClass("d-none text-success text-danger")
+        .addClass(success ? "text-success" : "text-danger")
+        .html(message);
+}
+
+/**
  * The primary function to search for instances using the back-end API.
  */
 function searchForInstances() {
@@ -177,6 +240,14 @@ function searchForInstances() {
     // Sanity Check
     if((!queryString || queryString.trim() === "") && (!queryGeometry)) {
         showError("Please provide a valid query to proceed with the search...");
+        destroyInstancesTable();
+        hideGlobalSearchLoading()
+        return;
+    }
+
+    // SECOM v2 will only accept signed search envelopes
+    if(!SecomSigning.isLoaded()) {
+        showError("Please load a signing keystore to proceed with the search...");
         destroyInstancesTable();
         hideGlobalSearchLoading()
         return;
@@ -228,9 +299,8 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
     destroyInstancesTable();
 
     // Construct the SECOM search parameters object
-    let searchParameters = {
-        //'localOnly': !globalSearch
-    }
+    let searchParameters = {}
+
     // Try to parse the query string
     if (queryString && queryString.trim() !== "") {
         // By default try to use the specified lucene indexing terms
@@ -239,7 +309,12 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
             queryString.split(" ").forEach(term => {
                 if(term.includes(":")) {
                     termQuery = term.split(":");
-                    searchParameters[termQuery[0]]=termQuery[1]
+                    // The list-valued parameters always have to be provided as
+                    // arrays, otherwise the generated envelope signature will
+                    // not match the one expected by the server.
+                    searchParameters[termQuery[0]] = searchParameterLists.includes(termQuery[0])
+                        ? [termQuery[1]]
+                        : termQuery[1];
                 }
             });
         }
@@ -249,41 +324,48 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         }
     }
 
-    // Finally we can declare the SECOM search filter object
-    let searchFilterObject = {
+    // Finally we can declare the SECOM search filter envelope
+    let searchFilterEnvelope = {
         'query': searchParameters,
-        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim()
+        'geometry': geoSpatialSearchMode === 'geoJson' ? queryGeoJSON : queryWKT.trim(),
+        'localOnly': !globalSearch
     }
 
     // Now initialise the instances table
     instancesTable = $('#instancesTable').DataTable({
         processing: true,
-        ajax: {
-            url: `api/secom/v1/searchService`,
-            type: 'POST',
-            contentType: 'application/json; charset=utf-8',
-            crossDomain: true,
+        // The SECOM v2 envelopes have to be signed before they are submitted,
+        // which is an asynchronous operation, so the request is performed
+        // manually here, instead of letting DataTables handle it.
+        ajax: function (data, callback, settings) {
+            SecomSigning.signSearchFilterObject(searchFilterEnvelope)
+                .then(searchFilterObject => $.ajax({
+                    url: `api/secom/v2/searchService`,
+                    type: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    crossDomain: true,
+                    data: JSON.stringify(searchFilterObject)
+                }))
+                .then(json => {
+                    // Pick up the transaction ID for the global search follow-ups
+                    if (globalSearch && json && json.envelope && json.envelope.transactionId) {
+                        currentTransactionId = json.envelope.transactionId;
+                        scheduleRetrieveResults(currentTransactionId);
+                    }
 
-            data: function () {
-                return JSON.stringify(searchFilterObject);
-            },
-            dataSrc: function (json) {
-                if (!json) return [];
-
-                // Ensure services is an array and tag local results
-                if (Array.isArray(json.searchServiceResult)) {
-                    return json.searchServiceResult.map(service => ({
-                        ...service,
-                        localResult: true
-                    }));
-                }
-
-                return [];
-            },
-            error: function (jqXHR, ajaxOptions, thrownError) {
-                showError(getErrorFromHeader(jqXHR, "Error while trying to search for instances!"));
-                destroyInstancesTable();
-            }
+                    // Ensure the service instances are an array and tag them as local results
+                    const services = json && json.envelope && Array.isArray(json.envelope.serviceInstance)
+                        ? json.envelope.serviceInstance
+                        : [];
+                    callback({data: services.map(service => ({...service, localResult: true}))});
+                })
+                .catch(error => {
+                    // The signing errors are local, while the AJAX ones carry a response
+                    showError(error.status
+                        ? getErrorFromHeader(error, "Error while trying to search for instances!")
+                        : `Error while trying to sign the search request: ${error.message}`);
+                    destroyInstancesTable();
+                });
         },
         columns: columnDefs,
         dom: "Brtip",
@@ -292,20 +374,11 @@ function loadInstancesTable(queryString, queryGeoJSON, queryWKT, globalSearch) {
         responsive: true
     });
 
-    // When the initial searchService Ajax finishes, capture transactionId and schedule follow-ups if global search
-    if (globalSearch) {
-        instancesTable.on('xhr.dt', function (e, settings, json) {
-            if (json && json.transactionId) {
-                currentTransactionId = json.transactionId;
-                scheduleRetrieveResults(currentTransactionId);
-            }
-        });
-    }
-
     // On an instance selection, draw the area on the map
     instancesTable.on('select', function (e, dt, type, indexes) {
         if (type === 'row') {
-            loadGeometryOnMap(dt.row({ selected: true }).data().geometry, searchMap, instanceItems, false);
+            loadGeometryOnMap(getCoverageAreaGeoJson(dt.row({ selected: true }).data()),
+                searchMap, instanceItems, false);
         }
     });
 
@@ -335,7 +408,6 @@ function scheduleRetrieveResults(txId) {
     });
 }
 
-
 /**
  * Clear any pending retrieve timers.
  */
@@ -349,27 +421,55 @@ function clearRetrieveTimers() {
  * Server handles duplicate suppression.
  */
 function fetchAndMergeResults(txId, isLast) {
-
-
-    $.ajax({
-        url: `api/secom/v2/retrieveResults/${encodeURIComponent(txId)}`,
-        type: 'GET',
-        dataType: 'json',
-        success: function (data) {
-            const services = (data && Array.isArray(data.services)) ? data.services : [];
+    // Just like the search, the retrieve result envelope has to be signed
+    SecomSigning.signRetrieveResultObject(txId)
+        .then(retrieveResultObject => $.ajax({
+            url: `api/secom/v2/retrieveResult`,
+            type: 'POST',
+            contentType: 'application/json; charset=utf-8',
+            crossDomain: true,
+            data: JSON.stringify(retrieveResultObject)
+        }))
+        .then(json => {
+            const services = json && json.envelope && Array.isArray(json.envelope.serviceInstance)
+                ? json.envelope.serviceInstance
+                : [];
             if (services.length && instancesTable) {
-                const rows = services.map(s => ({ ...s, localResult: false }));
-                instancesTable.rows.add(rows).draw(false);
+                instancesTable.rows.add(services.map(s => ({ ...s, localResult: false }))).draw(false);
             }
             if (isLast) markGlobalSearchComplete();
-        },
-        error: function () {
+        })
+        .catch(() => {
             // Even on error, we consider the last cycle “complete”.
             if (isLast) markGlobalSearchComplete();
-        }
-    });
+        });
 }
 
+/**
+ * The SECOM v2 service instances describe their coverage areas as a list of
+ * WKT strings, so a conversion is required before they can be displayed onto
+ * the search map.
+ *
+ * @param  {Object} instance        The SECOM service instance object
+ * @return {Object} the GeoJSON representation of the instance coverage area
+ */
+function getCoverageAreaGeoJson(instance) {
+    // Sanity check
+    if(!instance || !Array.isArray(instance.coverageArea) || instance.coverageArea.length === 0) {
+        return undefined;
+    }
+
+    // Parse all the provided coverage areas and combine them
+    try {
+        return {
+            type: "GeometryCollection",
+            geometries: instance.coverageArea.map(wkt => Terraformer.WKT.parse(wkt))
+        };
+    } catch(ex) {
+        console.error(ex);
+        return undefined;
+    }
+}
 
 /**
  * Destroys the instance results table so that it get removed from the DOM and

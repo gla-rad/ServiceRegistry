@@ -366,6 +366,11 @@
 			<version>4.0.13</version>
 		</dependency>
 		<dependency>
+			<groupId>org.webjars.npm</groupId>
+			<artifactId>node-forge</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+		<dependency>
 			<groupId>com.google.protobuf</groupId>
 			<artifactId>protobuf-java</artifactId>
 			<version>4.29.4</version>
