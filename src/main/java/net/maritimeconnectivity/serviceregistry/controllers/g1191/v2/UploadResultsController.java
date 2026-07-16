@@ -13,12 +13,13 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * The MSR Upload Results Interface.
+ * The MSR IALA G1191 Upload Results Interface.
  * </p>
- * This interface definition can be used by the SECOM-compliant MSRs participating in GMSP
- * to upload result of a SECOM searchService request.
- * Interface placed outside SECOM library as it is not part of the SECOM standard, but unofficially an addition to SECOM
- * used by the MSR.
+ * This interface definition can be used by the SECOM-compliant MSRs
+ * participating in GMSP to upload result of a SECOM searchService request.
+ * Interface placed outside SECOM library as it is not part of the SECOM
+ * standard, but unofficially an addition to SECOM used by the MSR.
+ *
  * @author Jakob Svenningsen (email: jakob@dmc.international)
  */
 @RestController
@@ -28,28 +29,29 @@ import java.util.List;
 public class UploadResultsController {
 
 
+    /**
+     * The GMSP Search Consolidation Service
+     */
     @Autowired
     SearchConsolidationService searchConsolidationService;
 
     /**
-     * POST /v2/uploadResults : The purpose of this interface is to upload results to a global searhService
-     * request that has been propagated to the MSR over the GMSP.
+     * POST /v2/uploadResults : The purpose of this interface is to upload
+     * results to a global searhService request that has been propagated
+     * to the MSR over the GMSP.
      *
      * @param transactionId The transaction ID associated with the global search
      * @param searchResults The search filter object
      * @return Http status 200 OK if the results were successfully uploaded
      * @implNote Results with invalid signature in the envelope will be rejected by the middleware
      */
-
     @PostMapping("/uploadResults/{transactionId}")
-    public ResponseEntity<Void>  uploadResults(
-        @PathVariable("transactionId") String transactionId,
-        @RequestBody List<ServiceInstanceObject> searchResults)
-    {
+    public ResponseEntity<Void>  uploadResults(@PathVariable("transactionId") String transactionId,
+                                               @RequestBody List<ServiceInstanceObject> searchResults) {
         log.debug("UPLOADCONTROLLER: Received {} search results for transactionId: {}", searchResults.size(), transactionId);
 
         //Check that xactId exists
-        if (transactionId == null || !searchConsolidationService.entryExistsForTransaction(transactionId)) {
+        if (transactionId == null || !this.searchConsolidationService.entryExistsForTransaction(transactionId)) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -69,17 +71,15 @@ public class UploadResultsController {
                     log.debug("Source MSR {}", source);
                 }
             }
-
         }
 
         //Validate the results
 
         //Call to some validationservice
-        
 
         // Consolidate results based on transactionId cast to searchObjectResult
         List<ServiceInstanceObject> results = searchResults.stream().map(r -> (ServiceInstanceObject) r).toList();
-        searchConsolidationService.addResults(transactionId, results);
+        this.searchConsolidationService.addResults(transactionId, results);
         return ResponseEntity.ok().build();
     }
 

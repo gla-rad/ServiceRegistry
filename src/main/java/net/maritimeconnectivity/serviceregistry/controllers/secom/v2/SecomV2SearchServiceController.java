@@ -166,7 +166,8 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         UUID transactionId = UUID.randomUUID();
 
         //CallbackUrl is  /V2/UPLOADRESULTS/[TRANSACTIONID]
-        String callBackEndpoint = String.format("%s/api/g1191/v2/uploadResults/%s", msrBaseUrl,
+        String callBackEndpoint = String.format("%s/api/g1191/v2/uploadResults/%s",
+                msrBaseUrl,
                 transactionId);
 
         //Aggregator
@@ -176,8 +177,11 @@ public class SecomV2SearchServiceController implements SearchServiceServiceInter
         log.debug("localSearchOnly: {}", localSearchOnly);
         final String gmspRequestUuid;
         if (this.gmspClient != null && !localSearchOnly) {
-            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint, consumerMrn,
-                    searchFilterObject, searchGeometry);
+            gmspRequestUuid = gmspClient.globalSearch(callBackEndpoint,
+                    consumerMrn,
+                    searchFilterObject,
+                    searchGeometry);
+            log.debug("global search initiated with GMSP UUID: {}", gmspRequestUuid);
         }
 
         // Get the search object results and if possible also update the

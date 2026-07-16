@@ -42,7 +42,7 @@ public class RetrieveResultController implements RetrieveResultServiceInterface 
      * transaction is identified by the transactionId field in the response to the initial
      * searchService request.
      *
-     * @param retrieveResultObject    The search filter object
+     * @param retrieveResultObject The search filter object
      * @return the result object
      */
     @Tag(name = "SECOM")
@@ -64,8 +64,8 @@ public class RetrieveResultController implements RetrieveResultServiceInterface 
             throw new SecomValidationException(ex.getMessage());
         }
 
-        // Now try retieving the results from the consolidation service
-        final List<ServiceInstanceObject> services = searchConsolidationService
+        // Now try retrieving the results from the consolidation service
+        final List<ServiceInstanceObject> services = this.searchConsolidationService
                 .getResults(transactionUUID.toString(), consumerMrn);
 
         // Handle no results yet
