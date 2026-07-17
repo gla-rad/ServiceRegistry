@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.source="https://github.com/maritimeconnectivity/S
 WORKDIR /app
 
 # Copy the Spring Boot JAR file into the container
-COPY target/mcp-serviceregistry-core-1.0.0-SNAPSHOT.jar /app/
+COPY target/mcp-serviceregistry-core-1.2.0-SNAPSHOT.jar /app/
 
 # Create a modules path just in case
 ENV LOADER_PATH /modules
@@ -34,4 +34,4 @@ ENV CONFIG_DIR=/conf
 
 EXPOSE 8444
 
-CMD ["java", "-jar", "mcp-serviceregistry-core-1.0.0-SNAPSHOT.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
+CMD ["java", "-jar", "mcp-serviceregistry-core-1.2.0-SNAPSHOT.jar", "--spring.config.location=optional:classpath:/,optional:file:${CONFIG_DIR}/"]
