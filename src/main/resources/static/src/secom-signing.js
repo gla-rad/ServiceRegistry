@@ -84,7 +84,7 @@ const SecomSigning = (function () {
      * @return {string} the lower case hex SHA-256 thumbprint of the certificate
      */
     function getCertThumbprint(certAsn1) {
-        const md = forge.md.sha256.create();
+        const md = forge.md.sha384.create();
         md.update(toDerBytes(certAsn1));
         return md.digest().toHex();
     }

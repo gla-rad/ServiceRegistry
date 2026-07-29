@@ -26,7 +26,7 @@
 		<hibernate.search-orm.version>8.2.1.Final</hibernate.search-orm.version>
 		<lucene.spatial.version>9.8.0</lucene.spatial.version>
 		<secomlib-version>0.0.53-SNAPSHOT</secomlib-version>
-		<secomv2lib-version>0.1.2</secomv2lib-version>
+		<secomv2lib-version>0.1.4</secomv2lib-version>
         <mockito.version>5.19.0</mockito.version>
 	</properties>
 
