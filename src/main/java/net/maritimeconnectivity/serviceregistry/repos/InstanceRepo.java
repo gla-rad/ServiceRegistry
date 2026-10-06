@@ -16,6 +16,7 @@
 package net.maritimeconnectivity.serviceregistry.repos;
 
 import net.maritimeconnectivity.serviceregistry.models.domain.Instance;
+import net.maritimeconnectivity.serviceregistry.models.domain.SearchArea;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -102,4 +103,7 @@ public interface InstanceRepo extends JpaRepository<Instance, Long> {
             "and instance.version = :version")
     Optional<Instance> findByDomainIdAndVersionEagerRelationships(@Param("id") String id, @Param("version") String version);
 
+
+    @Query("select distinct sa from Instance i join i.searchAreas sa")
+    List<SearchArea> findAllInstanceSearchAreasUsed();
 }

@@ -16,14 +16,21 @@
 
 package net.maritimeconnectivity.serviceregistry.utils;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import org.grad.secom.core.base.DateTimeDeSerializer;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.JsonParser;
+import tools.jackson.databind.DeserializationContext;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ValueDeserializer;
+import org.locationtech.jts.geom.Geometry;
 
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
+
+import static java.util.function.Predicate.not;
+import static org.grad.secomv2.core.base.SecomConstants.SECOM_DATE_TIME_FORMATTER;
 
 /**
  * The LocalDateDeserializer Class.
@@ -37,17 +44,21 @@ import java.time.ZoneId;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-
-public class LocalDateTimeDeserializer extends DateTimeDeSerializer {
+public class LocalDateTimeDeserializer extends ValueDeserializer<LocalDateTime> {
 
     @Override
-    public LocalDateTime deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
+    public LocalDateTime deserialize(JsonParser jsonParser,
+                                DeserializationContext deserializationContext) throws JacksonException {
         try {
-            long timestamp = jsonParser.getLongValue();
+            long timestamp = jsonParser.getValueAsLong();
             return Instant.ofEpochMilli(timestamp).atZone(ZoneId.systemDefault()).toLocalDateTime();
         } catch (IOException ex) {
             // In case of errors, try the standard SECOM approach
-            return super.deserialize(jsonParser, deserializationContext);
+            final String value = jsonParser.getCodec().readValue(jsonParser, String.class);
+            return Optional.ofNullable(value)
+                    .filter(not(String::isBlank))
+                    .map(v -> LocalDateTime.parse(v, SECOM_DATE_TIME_FORMATTER))
+                    .orElse(null);
         }
     }
 

@@ -359,6 +359,8 @@ function validateXml($modalDiv) {
                 updateTable($modalDiv.find("table#"+field).attr("id"), new Map(response[field][field].map(i => [i.id, i.version])));
             } else if ($("#"+field).length > 0 && ["status","serviceTypes"].includes(field)) {
                 $modalDiv.find("#"+field).val(response[field]).change();
+            } else if ($("#"+"organizationId").length > 0 && ["providedBy"].includes(field)) {
+                $modalDiv.find("#"+"organizationId").val(response[field]["organizationId"]).change();
             }
         }
         // Update the instance coverage area

@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.controllers.secom;
+package net.maritimeconnectivity.serviceregistry.controllers.secom.v1;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 import feign.FeignException;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -29,13 +31,12 @@ import net.maritimeconnectivity.serviceregistry.models.domain.enums.BooleanOpera
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpEntityBase;
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpServiceDto;
-import net.maritimeconnectivity.serviceregistry.models.dto.secom.SearchObjectResultWithCert;
+import net.maritimeconnectivity.serviceregistry.models.dto.secom.v1.SearchObjectResultWithCert;
 import net.maritimeconnectivity.serviceregistry.services.InstanceService;
 import net.maritimeconnectivity.serviceregistry.utils.GeometryJSONConverter;
 import net.maritimeconnectivity.serviceregistry.utils.WKTUtil;
 import org.apache.logging.log4j.util.Strings;
 import org.grad.secom.core.exceptions.SecomValidationException;
-import org.grad.secom.core.interfaces.SearchServiceSecomInterface;
 import org.grad.secom.core.models.ResponseSearchObject;
 import org.grad.secom.core.models.SearchFilterObject;
 import org.grad.secom.core.models.SearchObjectResult;
@@ -44,14 +45,11 @@ import org.locationtech.jts.io.ParseException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import jakarta.ws.rs.*;
-import jakarta.ws.rs.core.MediaType;
 
 import java.util.Collections;
 import java.util.List;
@@ -66,11 +64,11 @@ import static java.util.function.Predicate.not;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-@Component
-@Path("/")
+@RestController
+@RequestMapping("/api/secom")
 @Validated
 @Slf4j
-public class SecomSearchServiceController implements SearchServiceSecomInterface {
+public class SecomSearchServiceController {
 
     /**
      * The Object Mapper.
@@ -84,8 +82,14 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
     @Autowired
     InstanceService instanceService;
 
+    /**
+     * The MIR Client for the certificate operations.
+     */
     @Autowired(required = false)
     MirClient mirClient;
+
+    // Test Constants
+    public static final String SEARCH_SERVICE_INTERFACE_PATH = "/v1/searchService";
 
     /**
      * Object Mapper from Domain to DTO.
@@ -102,15 +106,15 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
      * @param pageSize           the maximum page size
      * @return the result list of the search
      */
+    @Deprecated
     @Tag(name = "SECOM")
     @Transactional
-    @Path(SEARCH_SERVICE_INTERFACE_PATH)
-    @POST
-    @Consumes(MediaType.APPLICATION_JSON)
-    @Produces(MediaType.APPLICATION_JSON)
-    public ResponseSearchObject searchService(@Valid SearchFilterObject searchFilterObject,
-                                              @QueryParam("page") @Min(0) Integer page,
-                                              @QueryParam("pageSize") @Min(0) Integer pageSize)  {
+    @PostMapping(path = SEARCH_SERVICE_INTERFACE_PATH,
+            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            produces = { MediaType.APPLICATION_JSON_VALUE })
+    public ResponseEntity<ResponseSearchObject> searchService(@Valid @RequestBody SearchFilterObject searchFilterObject,
+                                                              @RequestParam(value = "page", defaultValue = "0") @Min(0) Integer page,
+                                                              @RequestParam(value = "pageSize", defaultValue = "100") @Min(0) Integer pageSize)  {
         log.debug("REST request to search for a page of Instances for search filter object: {}", searchFilterObject);
 
         // If at maximum only one geometry is provided, retrieve it
@@ -126,7 +130,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         // Now build the query if we have to
         if(isFreeText) {
             query = searchFilterObject.getFreetext();
-        } else {
+        } else if(Objects.nonNull(searchFilterObject.getQuery())) {
             // Handle the name filter
             if (Strings.isNotBlank(searchFilterObject.getQuery().getName())) {
                 query = this.addToQuery(query, "name", searchFilterObject.getQuery().getName(), BooleanOperator.AND);
@@ -222,7 +226,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         }
 
         // Perform the search
-        final Page<Instance> instancesPage = this.instanceService.handleSearchQueryRequest(
+        final Page<Instance> instancesPage = this.instanceService.handle(
                 query,
                 searchGeometry,
                 PageRequest.of(Optional.ofNullable(page).orElse(0), Optional.ofNullable(pageSize).orElse(Integer.MAX_VALUE))
@@ -246,10 +250,6 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
                             Optional.of(searchObject)
                                     .map(SearchObjectResult::getInstanceId)
                                     .map(Strings::trimToNull)
-                                    .orElse(null),
-                            Optional.of(searchObject)
-                                    .map(SearchObjectResult::getVersion)
-                                    .map(Strings::trimToNull)
                                     .orElse(null)
                     );
                     // And append the valid ones to the search object
@@ -270,7 +270,9 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         // Finally build the response
         ResponseSearchObject responseSearchObject = new ResponseSearchObject();
         responseSearchObject.setSearchServiceResult(searchObjectResults);
-        return responseSearchObject;
+
+        // And return
+        return ResponseEntity.ok(responseSearchObject);
     }
 
     /**
@@ -302,7 +304,7 @@ public class SecomSearchServiceController implements SearchServiceSecomInterface
         else {
             try{
                 return GeometryJSONConverter.convertToGeometry(this.objectMapper.readTree(geometryString));
-            } catch (JsonProcessingException ex) {
+            } catch (JacksonException ex) {
                 throw new SecomValidationException(ex.getMessage());
             }
         }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.maritimeconnectivity.serviceregistry.models.dto.secom;
+package net.maritimeconnectivity.serviceregistry.models.dto.secom.v1;
 
 import java.util.List;
 

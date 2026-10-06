@@ -6,26 +6,28 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.0</version>
+		<version>4.0.7</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
 	<groupId>net.maritimeconnectivity.serviceregistry</groupId>
 	<artifactId>mcp-serviceregistry-core</artifactId>
-	<version>0.0.8</version>
+	<version>1.3</version>
 	<name>mcp-serviceregistry-core</name>
 	<description>MCP Service Registry Core</description>
 
 	<properties>
-		<java.version>21</java.version>
-		<spring-cloud.version>2025.0.0</spring-cloud.version>
-		<springdoc.version>2.5.0</springdoc.version>
-		<bootstrap.version>5.3.2</bootstrap.version>
+		<java.version>25</java.version>
+		<spring-cloud.version>2025.1.2</spring-cloud.version>
+		<springdoc.version>3.0.3</springdoc.version>
+		<bootstrap.version>5.3.8</bootstrap.version>
 		<jquery.version>3.7.1</jquery.version>
-		<fa.version>6.5.1</fa.version>
-		<hibernate.search-orm.version>7.1.1.Final</hibernate.search-orm.version>
-		<hibernate.spatial.version>6.4.4.Final</hibernate.spatial.version>
+		<fa.version>7.2.0</fa.version>
+		<hibernate.search-orm.version>8.2.1.Final</hibernate.search-orm.version>
 		<lucene.spatial.version>9.8.0</lucene.spatial.version>
+		<secomlib-version>0.0.53-SNAPSHOT</secomlib-version>
+		<secomv2lib-version>0.1.4</secomv2lib-version>
+        <mockito.version>5.19.0</mockito.version>
 	</properties>
 
 	<repositories>
@@ -51,15 +53,66 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-deploy-plugin</artifactId>
-				<version>3.0.0-M2</version>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>
+						-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar
+						-Xshare:off
+					</argLine>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<executable>true</executable>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>default-compile</id>
+						<phase>compile</phase>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+					<execution>
+						<id>default-testCompile</id>
+						<phase>test-compile</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+						<configuration>
+							<annotationProcessorPaths>
+								<path>
+									<groupId>org.projectlombok</groupId>
+									<artifactId>lombok</artifactId>
+								</path>
+							</annotationProcessorPaths>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>11.14.1</version>
 			</plugin>
 		</plugins>
 	</build>
@@ -118,9 +171,16 @@
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.hibernate.orm</groupId>
 			<artifactId>hibernate-spatial</artifactId>
-			<version>${hibernate.spatial.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate.search</groupId>
@@ -170,17 +230,17 @@
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-api</artifactId>
-			<version>0.11.5</version>
+			<version>0.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-impl</artifactId>
-			<version>0.11.5</version>
+			<version>0.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
-			<version>0.11.5</version>
+			<version>0.13.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>
@@ -191,18 +251,21 @@
 		<dependency>
 			<groupId>org.modelmapper</groupId>
 			<artifactId>modelmapper</artifactId>
-			<version>3.2.0</version>
+			<version>3.2.6</version>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
-
-		<!-- Swagger -->
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>${springdoc.version}</version>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>3.1.8</version>
+		</dependency>
+		<dependency>
+			<groupId>net.maritimeconnectivity.pki</groupId>
+			<artifactId>mcp-pki</artifactId>
+			<version>1.4.1</version>
 		</dependency>
 
 		<!-- Flyway Database Migration-->
@@ -216,11 +279,31 @@
 			<scope>runtime</scope>
 		</dependency>
 
-		<!-- SECOM -->
+		<!-- SECOM v1.0 -->
+		<!-- This is deprecated so only the core package is included -->
 		<dependency>
 			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-springboot3</artifactId>
-			<version>0.0.49</version>
+			<artifactId>secom-core-jakarta</artifactId>
+			<version>${secomlib-version}</version>
+		</dependency>
+
+		<!-- SECOM v2.0 -->
+		<dependency>
+			<groupId>org.grad.secom</groupId>
+			<artifactId>secom-v2-core-springboot</artifactId>
+			<version>${secomv2lib-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.grad.secom</groupId>
+			<artifactId>secom-v2-springboot4</artifactId>
+			<version>${secomv2lib-version}</version>
+		</dependency>
+
+		<!-- Swagger -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>${springdoc.version}</version>
 		</dependency>
 
 		<!-- G-1128 Schemas -->
@@ -293,6 +376,16 @@
 		</dependency>
 		<dependency>
 			<groupId>org.webjars.npm</groupId>
+			<artifactId>node-forge</artifactId>
+			<version>1.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.protobuf</groupId>
+			<artifactId>protobuf-java</artifactId>
+			<version>4.29.4</version>
+		</dependency>
+		<dependency>
+			<groupId>org.webjars.npm</groupId>
 			<artifactId>select2-bootstrap-5-theme</artifactId>
 			<version>1.3.0</version>
 			<exclusions>
@@ -303,10 +396,26 @@
 			</exclusions>
 		</dependency>
 
+		<!--Websocket -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-websocket</artifactId>
+		</dependency>
+
 		<!-- Testing -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-webtestclient</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -317,12 +426,6 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.mockito</groupId>
-			<artifactId>mockito-inline</artifactId>
-			<version>3.8.0</version>
 			<scope>test</scope>
 		</dependency>
 

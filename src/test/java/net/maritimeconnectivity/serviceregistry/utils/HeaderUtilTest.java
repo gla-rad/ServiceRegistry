@@ -31,9 +31,9 @@ class HeaderUtilTest {
     void testCreateAlert() {
         HttpHeaders headers = HeaderUtil.createAlert("message", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-mcsrApp-alert"));
+        assertTrue(headers.containsHeader("X-mcsrApp-alert"));
         assertEquals("[message]", headers.get("X-mcsrApp-alert").toString());
-        assertTrue(headers.containsKey("X-mcsrApp-params"));
+        assertTrue(headers.containsHeader("X-mcsrApp-params"));
         assertEquals("[param]", headers.get("X-mcsrApp-params").toString());
     }
 
@@ -44,8 +44,8 @@ class HeaderUtilTest {
     void testCreateEntityCreationAlert() {
         HttpHeaders headers = HeaderUtil.createEntityCreationAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-mcsrApp-alert"));
-        assertTrue(headers.containsKey("X-mcsrApp-params"));
+        assertTrue(headers.containsHeader("X-mcsrApp-alert"));
+        assertTrue(headers.containsHeader("X-mcsrApp-params"));
         assertEquals("[param]", headers.get("X-mcsrApp-params").toString());
     }
 
@@ -56,8 +56,8 @@ class HeaderUtilTest {
     void testCreateEntityUpdateAlert() {
         HttpHeaders headers = HeaderUtil.createEntityUpdateAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-mcsrApp-alert"));
-        assertTrue(headers.containsKey("X-mcsrApp-params"));
+        assertTrue(headers.containsHeader("X-mcsrApp-alert"));
+        assertTrue(headers.containsHeader("X-mcsrApp-params"));
         assertEquals("[param]", headers.get("X-mcsrApp-params").toString());
     }
 
@@ -68,8 +68,8 @@ class HeaderUtilTest {
     void testCreateEntityDeletionAlert() {
         HttpHeaders headers = HeaderUtil.createEntityDeletionAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-mcsrApp-alert"));
-        assertTrue(headers.containsKey("X-mcsrApp-params"));
+        assertTrue(headers.containsHeader("X-mcsrApp-alert"));
+        assertTrue(headers.containsHeader("X-mcsrApp-params"));
         assertEquals("[param]", headers.get("X-mcsrApp-params").toString());
     }
 
@@ -80,8 +80,8 @@ class HeaderUtilTest {
     void testCreateEntityStatusUpdateAlert() {
         HttpHeaders headers = HeaderUtil.createEntityStatusUpdateAlert("entity", "param");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-mcsrApp-alert"));
-        assertTrue(headers.containsKey("X-mcsrApp-params"));
+        assertTrue(headers.containsHeader("X-mcsrApp-alert"));
+        assertTrue(headers.containsHeader("X-mcsrApp-params"));
         assertEquals("[param]", headers.get("X-mcsrApp-params").toString());
     }
 
@@ -92,9 +92,9 @@ class HeaderUtilTest {
     void testCreateFailureAlert() {
         HttpHeaders headers = HeaderUtil.createFailureAlert("entity", "key", "message");
         assertNotNull(headers);
-        assertTrue(headers.containsKey("X-mcsrApp-error"));
+        assertTrue(headers.containsHeader("X-mcsrApp-error"));
         assertEquals("[error.key]", headers.get("X-mcsrApp-error").toString());
-        assertTrue(headers.containsKey("X-mcsrApp-params"));
+        assertTrue(headers.containsHeader("X-mcsrApp-params"));
         assertEquals("[entity]", headers.get("X-mcsrApp-params").toString());
     }
 }

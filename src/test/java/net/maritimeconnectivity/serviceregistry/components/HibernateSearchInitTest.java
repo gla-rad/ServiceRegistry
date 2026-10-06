@@ -71,7 +71,7 @@ class HibernateSearchInitTest {
         try (MockedStatic<Search> mockedSearch = Mockito.mockStatic(Search.class)) {
             mockedSearch.when(() -> Search.session(this.entityManager)).thenReturn(this.searchSession);
 
-            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class), any(Class.class));
+            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class), any(Class.class), any(Class.class));
             doReturn(this.massIndexer).when(this.massIndexer).threadsToLoadObjects(anyInt());
             doNothing().when(this.massIndexer).startAndWait();
 
@@ -92,7 +92,7 @@ class HibernateSearchInitTest {
         try (MockedStatic<Search> mockedSearch = Mockito.mockStatic(Search.class)) {
             mockedSearch.when(() -> Search.session(this.entityManager)).thenReturn(this.searchSession);
 
-            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class), any(Class.class));
+            doReturn(this.massIndexer).when(this.searchSession).massIndexer(any(Class.class), any(Class.class), any(Class.class));
             doReturn(this.massIndexer).when(this.massIndexer).threadsToLoadObjects(anyInt());
             doThrow(InterruptedException.class).when(this.massIndexer).startAndWait();
 

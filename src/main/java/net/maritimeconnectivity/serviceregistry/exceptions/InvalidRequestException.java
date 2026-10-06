@@ -50,4 +50,12 @@ public class InvalidRequestException extends MSRBaseException {
         super(message, t, httpStatus);
     }
 
+    /**
+     * Instantiates a new Invalid Request exception with a custom message.
+     *
+     * @param message the message
+     */
+    public InvalidRequestException(String message) {
+        super(message, null, httpStatus);
+    }
 }

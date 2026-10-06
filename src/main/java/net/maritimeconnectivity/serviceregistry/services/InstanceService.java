@@ -16,13 +16,16 @@
 
 package net.maritimeconnectivity.serviceregistry.services;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import net.maritimeconnectivity.eNav.utils.G1128Utils;
+import net.maritimeconnectivity.serviceregistry.components.InstanceSearchQueryBuilder;
 import net.maritimeconnectivity.serviceregistry.exceptions.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.*;
 import net.maritimeconnectivity.serviceregistry.models.domain.enums.G1128Schemas;
+import net.maritimeconnectivity.serviceregistry.models.dto.UpdateServiceDto;
 import net.maritimeconnectivity.serviceregistry.models.dto.datatables.DtPagingRequest;
 import net.maritimeconnectivity.serviceregistry.repos.InstanceRepo;
 import net.maritimeconnectivity.serviceregistry.utils.*;
@@ -40,6 +43,8 @@ import org.apache.lucene.spatial.prefix.tree.SpatialPrefixTree;
 import org.apache.lucene.spatial.query.SpatialArgs;
 import org.apache.lucene.spatial.query.SpatialOperation;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.grad.secomv2.core.models.EnvelopeSearchFilterObject;
+import org.grad.secomv2.core.models.SearchFilterObject;
 import org.hibernate.search.backend.lucene.LuceneBackend;
 import org.hibernate.search.backend.lucene.LuceneExtension;
 import org.hibernate.search.backend.lucene.search.sort.dsl.LuceneSearchSortFactory;
@@ -59,6 +64,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -127,6 +133,9 @@ public class InstanceService {
     @Autowired
     EntityManagerFactory entityManagerFactory;
 
+    @Autowired
+    private InstanceSearchQueryBuilder queryBuilder;
+
     // Service Variables
     private final String[] searchFields = new String[] {
             "name",
@@ -190,7 +199,7 @@ public class InstanceService {
      * @return the persisted entity
      */
     @Transactional
-    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JsonProcessingException, ParseException {
+    public Instance save(Instance instance) throws DataNotFoundException, XMLValidationException, GeometryParseException, JacksonException, ParseException {
         log.debug("Request to save Instance : {}", instance);
 
         // First, validate the object
@@ -212,6 +221,31 @@ public class InstanceService {
 
         // The save and return
         return this.instanceRepo.save(instance);
+    }
+
+    @Transactional
+    public void updateInstanceFromDto(Long id, @Valid UpdateServiceDto updateServiceDto) throws DataNotFoundException, XMLValidationException, GeometryParseException, JacksonException, ParseException {
+        log.debug("Request to update Instance from DTO: {}", updateServiceDto);
+
+        // First, retrieve the existing instance
+        final Instance instance  = this.findOne(id);
+
+        if (!Objects.equals(updateServiceDto.getVersion(), instance.getVersion())) {
+            instance.setVersion(updateServiceDto.getVersion());
+        }
+
+        if (!Objects.equals(updateServiceDto.getEndpointUri(), instance.getEndpointUri())) {
+            instance.setEndpointUri(updateServiceDto.getEndpointUri());
+        }
+
+        if (!Objects.equals(updateServiceDto.getStatusEndpoint(), instance.getStatusEndpointUri())) {
+            instance.setStatusEndpointUri(updateServiceDto.getStatusEndpoint());
+        }
+
+        // TODO - Find a solution for API DOC and ceritficates
+
+        // Save the updated instance
+        this.save(instance);
     }
 
     /**
@@ -238,7 +272,7 @@ public class InstanceService {
      * @throws Exception any exceptions thrown while updating the status
      */
     @Transactional
-    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JsonProcessingException, GeometryParseException, DuplicateKeyException {
+    public void updateStatus(Long id, ServiceStatus status) throws DataNotFoundException, JAXBException, XMLValidationException, ParseException, JacksonException, GeometryParseException, DuplicateKeyException {
         log.debug("Request to update status of Instance : {}", id);
 
         // Try to find if the instance does indeed exist
@@ -260,7 +294,7 @@ public class InstanceService {
             instance.setStatus(status);
             instance.setInstanceAsXml(instanceXml);
             save(instance);
-        } catch (JAXBException | XMLValidationException | ParseException | JsonProcessingException | GeometryParseException | DuplicateKeyException ex) {
+        } catch (JAXBException | XMLValidationException | ParseException | JacksonException | GeometryParseException | DuplicateKeyException ex) {
             log.error("Problem during instance status update.", ex);
             throw ex;
         }
@@ -419,13 +453,21 @@ public class InstanceService {
      * @return the paged response
      */
     @Transactional(readOnly = true)
-    public Page<Instance> handleSearchQueryRequest(String queryString, Geometry geometry, Pageable pageable) {
+    public Page<Instance> handle(String queryString, Geometry geometry, Pageable pageable) {
         // Create the search query - always sort by name
         SearchQuery searchQuery = this.getSearchInstanceQueryByQueryString(queryString, geometry, new Sort(new SortedSetSortField("name_sort", false)));
         // Map the results to a paged response
         return Optional.of(searchQuery)
                 .map(query -> query.fetch(pageable.getPageNumber() * pageable.getPageSize(), pageable.getPageSize()))
-                .map(searchResult -> new PageImpl<Instance>(searchResult.hits(), pageable, searchResult.total().hitCount()))
+                .map(searchResult -> {
+                    List<Instance> hits = searchResult.hits();
+
+//                    if (!includeXml) {
+//                        hits.forEach(instance -> instance.setInstanceAsXml(null));
+//                    }
+
+                    return new PageImpl<>(hits, pageable, searchResult.total().hitCount());
+                })
                 .orElseGet(() -> new PageImpl<>(Collections.emptyList(), pageable, 0));
     }
 
@@ -666,5 +708,23 @@ public class InstanceService {
                 .map(strategy::makeQuery)
                 .orElse(null);
     }
+
+    @Transactional(readOnly = true)
+    public Page<Instance> search(@Valid EnvelopeSearchFilterObject searchFilterObject) {
+
+        InstanceSearchQueryBuilder.QueryParams lusceneParams = queryBuilder.build(searchFilterObject);
+        return handle(
+                lusceneParams.queryString(),
+                lusceneParams.geometry(),
+                PageRequest.of(0, Integer.MAX_VALUE));
+    }
+
+
+
+
+
+
+
+
 
 }

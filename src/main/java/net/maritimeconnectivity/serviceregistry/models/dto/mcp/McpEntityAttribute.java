@@ -16,11 +16,6 @@
 
 package net.maritimeconnectivity.serviceregistry.models.dto.mcp;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import net.maritimeconnectivity.serviceregistry.utils.LocalDateTimeDeserializer;
-import org.grad.secom.core.base.DateTimeSerializer;
-
 import java.time.LocalDateTime;
 
 /**
@@ -33,11 +28,7 @@ public class McpEntityAttribute {
     // Class Variables
     private String attributeName;
     private String attributeValue;
-    @JsonSerialize(using = DateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createdAt;
-    @JsonSerialize(using = DateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime updatedAt;
 
     /**

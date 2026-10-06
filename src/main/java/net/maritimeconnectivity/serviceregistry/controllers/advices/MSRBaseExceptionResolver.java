@@ -53,6 +53,7 @@ public class MSRBaseExceptionResolver extends ResponseEntityExceptionHandler {
      */
     @ExceptionHandler(MSRBaseException.class)
     protected ResponseEntity<Object> handleConflict(MSRBaseException ex, WebRequest request) {
+
         final String entityName = Optional.of(request)
                 .filter(ServletWebRequest.class::isInstance)
                 .map(ServletWebRequest.class::cast)
@@ -63,19 +64,13 @@ public class MSRBaseExceptionResolver extends ResponseEntityExceptionHandler {
                 .map(array -> array[2])
                 .map(s -> s.replaceAll("s$", ""))
                 .orElse("general-entity");
-        final String requestBody = Optional.of(request)
-                .filter(ServletWebRequest.class::isInstance)
-                .map(ServletWebRequest.class::cast)
-                .map(ServletWebRequest::getRequest)
-                .map(r -> { try { return r.getReader(); } catch (IOException e) { return null; } })
-                .map(BufferedReader::lines)
-                .orElseGet(Stream::empty)
-                .collect(Collectors.joining(System.lineSeparator()));
-        return handleExceptionInternal(ex,
-                requestBody,
+
+        // Don’t try to re-read the request body here
+        return handleExceptionInternal(
+                ex,
+                ex.getMessage(), // or a structured error DTO
                 HeaderUtil.createFailureAlert(entityName, ex.getMessage(), ex.toString()),
                 ex.getHttpStatus(),
-                request);
-    }
-
-}
+                request
+        );
+    }}
