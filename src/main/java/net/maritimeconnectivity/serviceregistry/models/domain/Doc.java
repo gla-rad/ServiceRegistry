@@ -75,7 +75,7 @@ public class Doc implements Serializable {
     @Column(name = "filecontent_content_type", nullable = false)
     private String filecontentContentType;
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.EAGER)
     @IndexedEmbedded(includePaths = "id_sort")
     @JsonIgnore
     @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
