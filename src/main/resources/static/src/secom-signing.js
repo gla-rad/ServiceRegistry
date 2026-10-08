@@ -411,7 +411,7 @@ const SecomSigning = (function () {
         if (attribute === null || attribute === undefined) {
             return '';
         } else if (Array.isArray(attribute)) {
-            return `${attribute.join(', ')}`;
+            return attribute.join(',');
         }
         return String(attribute);
     }
