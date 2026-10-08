@@ -7,7 +7,7 @@
 #     sudo docker run -t -i --rm -p 8444:8444 -v /path/to/config-directory/on/machine:/conf <image-id>
 #
 # You can also push to docker-hub like:
-#     docker push glarad/mc-service-registry:tagname
+#     docker push maritimeconnectivity/mc-service-registry:tagname
 #
 # A customized conf file (application.yaml) must be available in the folder mounted to /conf.
 # When using in non-local environment it is recommended to generate new trust and keystores and place them in
