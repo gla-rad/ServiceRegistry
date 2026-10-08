@@ -76,15 +76,15 @@ const SecomSigning = (function () {
     }
 
     /**
-     * Generates the SHA-256 thumbprint of the provided certificate. Note that
+     * Generates the SHA-384 thumbprint of the provided certificate. Note that
      * the SECOM library generates the thumbprints in lower case hex, and
      * compares them verbatim, so the case here is important.
      *
      * @param {Object} certAsn1         The forge ASN.1 object of the certificate
-     * @return {string} the lower case hex SHA-256 thumbprint of the certificate
+     * @return {string} the lower case hex SHA-384 thumbprint of the certificate
      */
     function getCertThumbprint(certAsn1) {
-        const md = forge.md.sha256.create();
+        const md = forge.md.sha384.create();
         md.update(toDerBytes(certAsn1));
         return md.digest().toHex();
     }
@@ -411,7 +411,7 @@ const SecomSigning = (function () {
         if (attribute === null || attribute === undefined) {
             return '';
         } else if (Array.isArray(attribute)) {
-            return `[${attribute.join(', ')}]`;
+            return `${attribute.join(', ')}`;
         }
         return String(attribute);
     }

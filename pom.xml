@@ -25,7 +25,6 @@
 		<fa.version>7.2.0</fa.version>
 		<hibernate.search-orm.version>8.2.1.Final</hibernate.search-orm.version>
 		<lucene.spatial.version>9.8.0</lucene.spatial.version>
-		<secomlib-version>0.0.53-SNAPSHOT</secomlib-version>
 		<secomv2lib-version>0.9.1</secomv2lib-version>
         <mockito.version>5.19.0</mockito.version>
 	</properties>
@@ -277,14 +276,6 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 			<scope>runtime</scope>
-		</dependency>
-
-		<!-- SECOM v1.0 -->
-		<!-- This is deprecated so only the core package is included -->
-		<dependency>
-			<groupId>org.grad.secom</groupId>
-			<artifactId>secom-core-jakarta</artifactId>
-			<version>${secomlib-version}</version>
 		</dependency>
 
 		<!-- SECOM v2.0 -->

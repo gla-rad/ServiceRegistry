@@ -17,7 +17,7 @@
 package net.maritimeconnectivity.serviceregistry.models.dto.secom.v2;
 
 import net.maritimeconnectivity.serviceregistry.models.dto.mcp.McpCertificateDto;
-import org.grad.secom.core.models.SearchObjectResult;
+import org.grad.secomv2.core.models.SearchResult;
 
 
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.List;
  *
  * @author Nikolaos Vastardis (email: Nikolaos.Vastardis@gla-rad.org)
  */
-public class SearchObjectResultWithCert extends SearchObjectResult {
+public class SearchObjectResultWithCert extends SearchResult {
 
     // Class Variables
     List<McpCertificateDto> certificates;
