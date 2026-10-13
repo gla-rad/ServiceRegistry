@@ -26,9 +26,24 @@ service:
             client:
                 id: ${KEYCLOAK_CLIENT_ID:mcp_service_registry}
                 secret: ${KEYCLOAK_CLIENT_SECRET:secret}
+        secom:
+            keystore:
+                path: ${SECOM_KEYSTORE_PATH:/conf/keystore}
+                password: ${SECOM_KEYSTORE_PASSWORD:password}
+            truststore:
+                path: ${SECOM_TRUSTSTORE_PATH:/conf/truststore}
+                password: ${SECOM_TRUSTSTORE_PASSWORD:password}
+                rootCertAlias: ${SECOM_ROOT_CERT_ALIAS:root}
         mir:
             server:
                 url: ${MCP_MIR_URL:http://localhost:8443/oidc/api}
+        mms:
+            router:
+                endpoint: ${OWN_EDGE_ROUTER_CONNECTION_ENDPOINT:wss://eu-router.dmc.international:8080}
+            edgeRouter:
+                keystore:
+                    path: ${OWN_EDGE_ROUTER_KEYSTORE_PATH:/conf/keystore.jks}
+                    password: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD:password}
         info:
             name: ${SERVICE_INFO_NAME:Test MSR Instance}
             mrn: ${SERVICE_INFO_MRN:urn:mrn:mcp:msr:test:testMSR1}

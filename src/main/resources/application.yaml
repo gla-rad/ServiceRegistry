@@ -119,13 +119,11 @@ info:
             duration:
                 minutes: 60
         router:
-            url: wss://eu-router.dmc.international:8080
+            url: ${service.variable.mms.router.endpoint}
         ownEdgerouter:
             keyStore:
-                    path: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
-                    password: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
-            rootCA:
-                path:
+                path: ${service.variable.mms.edgeRouter.keystore.path}
+                password: ${service.variable.mms.edgeRouter.keystore.password}
     gmsp:
         enabled: true
         search:
@@ -137,16 +135,13 @@ eureka:
 secom:
     security:
         ssl:
-            keystore: ${OWN_EDGE_ROUTER_KEYSTORE_PATH}
-            keystorePassword: ${OWN_EDGE_ROUTER_KEYSTORE_PASSWORD}
+            enabled: true
+            keystore: ${service.variable.secom.keystore.path}
+            keystoreType: PKCS12
+            keystorePassword: ${service.variable.secom.keystore.password}
+            truststore: ${service.variable.secom.truststore.path}
+            truststoreType: PKCS12
+            truststorePassword: ${service.variable.secom.truststore.password}
+            rootCertAlias: ${service.variable.secom.truststore.rootCertAlias}
             insecureSslPolicy: true
-        maritimeIdentity:
-            enabled: true
-            rootCertAlias: ${MIR_ROOT_CA_ALIAS}
-            trustStorePath: ${MIR_TRUSTSTORE_PATH}
-            trustStorePassword: ${MIR_TRUSTSTORE_PASSWORD}
-        signingIdentity:
-            enabled: true
-            signingIdentityPath: ${SECOM_SIGNING_IDENTITY_PATH}
-            signingIdentityPassword: ${SECOM_SIGNING_IDENTITY_PASSWORD}
 
