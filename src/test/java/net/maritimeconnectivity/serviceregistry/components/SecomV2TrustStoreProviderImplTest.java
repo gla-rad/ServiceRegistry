@@ -74,11 +74,11 @@ class SecomV2TrustStoreProviderImplTest {
         this.secomConfigProperties.setTruststore(truststore.toString());
         this.secomConfigProperties.setTruststorePassword(STORE_PASSWORD);
         this.secomConfigProperties.setTruststoreType("PKCS12");
+        this.secomConfigProperties.setRootCertAlias(ROOT_ALIAS);
 
         // Create the tested component
         this.secomV2TrustStoreProvider = new SecomV2TrustStoreProviderImpl();
         this.secomV2TrustStoreProvider.secomConfigProperties = this.secomConfigProperties;
-        ReflectionTestUtils.setField(this.secomV2TrustStoreProvider, "rootCertAlias", ROOT_ALIAS);
     }
 
     /**
@@ -147,7 +147,7 @@ class SecomV2TrustStoreProviderImplTest {
      */
     @Test
     void testGetRootCertificateUnknownAlias() throws Exception {
-        ReflectionTestUtils.setField(this.secomV2TrustStoreProvider, "rootCertAlias", "unknown");
+        this.secomConfigProperties.setRootCertAlias("unknown");
         this.secomV2TrustStoreProvider.initialise();
 
         assertNull(this.secomV2TrustStoreProvider.getRootCertificate());
