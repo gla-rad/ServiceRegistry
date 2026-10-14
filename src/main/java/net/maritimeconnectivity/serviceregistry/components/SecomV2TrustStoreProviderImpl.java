@@ -55,12 +55,6 @@ public class SecomV2TrustStoreProviderImpl implements SecomTrustStoreProvider {
     SecomConfigProperties secomConfigProperties;
 
     /**
-     * The Root Certificate Alias to retrieve it from the truststore.
-     */
-    @Value("${secom.security.ssl.rootCertAlias}")
-    private String rootCertAlias;
-
-    /**
      * The loaded trust store.
      */
     private KeyStore trustStore;
@@ -91,7 +85,7 @@ public class SecomV2TrustStoreProviderImpl implements SecomTrustStoreProvider {
      */
     @Override
     public String getCARootCertificateAlias() {
-        return this.rootCertAlias;
+        return this.secomConfigProperties.getRootCertAlias();
     }
 
     /**
