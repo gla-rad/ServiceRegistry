@@ -134,7 +134,7 @@ public class InstanceSearchQueryBuilder {
                 query += Strings.isBlank(query) ? "(" : " AND (";
 
                 for (String keyword : searchFilterObject.getQuery().getKeywords()) {
-                    query = this.addToQuery(query, "keywords", keyword, BooleanOperator.AND);
+                    query = this.addToQuery(query, "keywords", keyword, BooleanOperator.OR);
                 }
 
                 // Close the sub-query statement
